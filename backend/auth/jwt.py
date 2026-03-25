@@ -177,9 +177,27 @@ class AuthConfig:
     blacklist_cleanup_interval: int = 3600
 
     def __post_init__(self):
-        """初始化后生成密钥对（如果未提供）"""
+        """初始化后验证密钥对（如果未提供）"""
         if self.private_key_pem is None or self.public_key_pem is None:
-            logger.warning("未提供RSA密钥对，将生成新的临时密钥对")
+            import os
+
+            environment = os.getenv("ENVIRONMENT", "development").lower()
+
+            if environment in ("production", "prod"):
+                raise ValueError(
+                    "安全错误: RSA密钥对在生产环境必须通过环境变量提供。\n"
+                    "请设置以下环境变量：\n"
+                    "  - JWT_PRIVATE_KEY: RSA私钥PEM格式\n"
+                    "  - JWT_PUBLIC_KEY: RSA公钥PEM格式\n\n"
+                    "生成密钥对命令:\n"
+                    "  openssl genrsa -out private.pem 2048\n"
+                    "  openssl rsa -in private.pem -pubout -out public.pem"
+                )
+
+            logger.warning(
+                "未提供RSA密钥对，生成临时密钥对（仅限开发环境）。"
+                "重启后所有令牌将失效。"
+            )
             private_key, public_key = self._generate_rsa_key_pair()
             self.private_key_pem = private_key
             self.public_key_pem = public_key
