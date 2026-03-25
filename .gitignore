@@ -1,0 +1,83 @@
+# 智能知识系统 - Git忽略文件配置
+# 遵循开发规则：安全第一，不提交敏感数据
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# 数据库
+*.db
+*.db-shm
+*.db-wal
+data/data.db
+
+# 日志
+*.log
+logs/
+
+# 敏感配置
+.env
+.env.local
+.env.*.local
+config/secrets/
+
+# 临时文件
+*.tmp
+*.bak
+*.backup
+part*.txt
+
+# Docker
+docker-compose.override.yml
+
+# Node
+node_modules/
+package-lock.json
+
+# 备份
+*_backup*
+*~
+
+# 系统文件
+Thumbs.db
+.DS_Store

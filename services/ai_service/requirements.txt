@@ -1,0 +1,42 @@
+# AI Service Requirements
+# Core dependencies for BGE-M3 embedding, ASR, and OCR services
+
+# Web Framework
+fastapi==0.128.8
+uvicorn[standard]==0.40.0
+python-multipart==0.0.22
+
+# ML/DL Core
+torch==2.5.1
+torchaudio==2.5.1
+transformers==4.46.0
+sentence-transformers==3.3.1
+
+# Embedding Service (BGE-M3)
+flagembedding==1.3.0
+
+# ASR Service (FunASR)
+funasr==1.1.20
+modelscope==1.19.2
+
+# OCR Service (PaddleOCR)
+paddlepaddle==3.0.0rc1
+paddleocr==2.9.0
+pypinyin==0.53.0
+
+# Image Processing
+pillow==11.1.0
+opencv-python-headless==4.11.0.86
+
+# Utilities
+numpy==1.26.4
+pandas==2.2.3
+pydantic==2.10.5
+python-dotenv==1.0.1
+
+# HTTP Client
+httpx==0.28.1
+aiofiles==24.1.0
+
+# Logging
+loguru==0.7.3
