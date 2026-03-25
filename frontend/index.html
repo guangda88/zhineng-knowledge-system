@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能知识系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 智能知识系统</h1>
+            <p class="subtitle">气功 · 中医 · 儒家</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="search">搜索</button>
+            <button class="tab" data-tab="documents">文档</button>
+            <button class="tab" data-tab="ask">问答</button>
+            <button class="tab" data-tab="reasoning">推理</button>
+        </nav>
+
+        <main>
+            <!-- 搜索页面 -->
+            <section id="search-section" class="tab-content active">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="搜索知识库..." />
+                    <button id="search-btn">搜索</button>
+                    <select id="category-filter">
+                        <option value="">全部分类</option>
+                        <option value="气功">气功</option>
+                        <option value="中医">中医</option>
+                        <option value="儒家">儒家</option>
+                    </select>
+                </div>
+                <div id="search-results"></div>
+            </section>
+
+            <!-- 文档列表页面 -->
+            <section id="documents-section" class="tab-content">
+                <div class="toolbar">
+                    <select id="doc-category-filter">
+                        <option value="">全部分类</option>
+                        <option value="气功">气功</option>
+                        <option value="中医">中医</option>
+                        <option value="儒家">儒家</option>
+                    </select>
+                    <button id="refresh-docs">刷新</button>
+                </div>
+                <div id="documents-list"></div>
+            </section>
+
+            <!-- 问答页面 -->
+            <section id="ask-section" class="tab-content">
+                <div class="chat-container">
+                    <div id="chat-messages" class="messages"></div>
+                    <div class="chat-input">
+                        <textarea id="question-input" placeholder="输入您的问题..." rows="2"></textarea>
+                        <button id="send-btn">发送</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 推理页面 -->
+            <section id="reasoning-section" class="tab-content">
+                <div class="reasoning-container">
+                    <div class="reasoning-controls">
+                        <div class="control-group">
+                            <label for="reasoning-mode">推理模式：</label>
+                            <select id="reasoning-mode">
+                                <option value="auto">自动选择</option>
+                                <option value="cot">链式推理 (CoT)</option>
+                                <option value="react">ReAct 模式</option>
+                                <option value="graph_rag">图谱推理</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="reasoning-category">领域：</label>
+                            <select id="reasoning-category">
+                                <option value="">全部领域</option>
+                                <option value="气功">气功</option>
+                                <option value="中医">中医</option>
+                                <option value="儒家">儒家</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="use-rag" checked>
+                                使用 RAG 检索
+                            </label>
+                        </div>
+                    </div>
+                    <div class="reasoning-input">
+                        <textarea id="reasoning-question" placeholder="输入复杂问题，如：八段锦和太极拳有什么区别？" rows="3"></textarea>
+                        <button id="reasoning-btn">🧠 开始推理</button>
+                    </div>
+                    <div id="reasoning-result" class="reasoning-result hidden">
+                        <div class="result-header">
+                            <h3>推理结果</h3>
+                            <span id="reasoning-meta"></span>
+                        </div>
+                        <div id="reasoning-steps" class="reasoning-steps"></div>
+                        <div id="reasoning-answer" class="reasoning-answer"></div>
+                        <div id="reasoning-sources" class="reasoning-sources"></div>
+                    </div>
+                </div>
+
+                <!-- 知识图谱可视化 -->
+                <div class="graph-container">
+                    <div class="graph-header">
+                        <h3>知识图谱</h3>
+                        <button id="build-graph-btn">构建图谱</button>
+                    </div>
+                    <div id="graph-stats" class="graph-stats"></div>
+                    <div id="graph-visualization" class="graph-visualization">
+                        <canvas id="graph-canvas"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>智能知识系统 v1.0.0 | <a href="/docs">API 文档</a></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

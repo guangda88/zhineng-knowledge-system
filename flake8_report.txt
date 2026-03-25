@@ -1,0 +1,231 @@
+backend/auth/jwt.py:22:1: F401 'typing.Awaitable' imported but unused
+backend/auth/jwt.py:22:1: F401 'typing.Callable' imported but unused
+backend/auth/jwt.py:26:1: F401 'cryptography.hazmat.primitives.hashes' imported but unused
+backend/auth/middleware.py:18:1: F401 'typing.List' imported but unused
+backend/auth/middleware.py:18:1: F401 'typing.Tuple' imported but unused
+backend/auth/middleware.py:24:1: F401 '.jwt.TokenPayload' imported but unused
+backend/auth/middleware.py:24:1: F401 '.jwt.TokenType' imported but unused
+backend/cache/__init__.py:28:1: F811 redefinition of unused 'cached' from line 13
+backend/cache/decorators.py:7:1: F401 'functools' imported but unused
+backend/cache/decorators.py:9:1: F401 'inspect' imported but unused
+backend/cache/decorators.py:12:1: F401 'typing.Union' imported but unused
+backend/cache/decorators.py:618:28: F541 f-string is missing placeholders
+backend/cache/manager.py:8:1: F401 'json' imported but unused
+backend/cache/manager.py:14:1: F401 'datetime.datetime' imported but unused
+backend/cache/manager.py:14:1: F401 'datetime.timedelta' imported but unused
+backend/config.py:7:1: E302 expected 2 blank lines, found 1
+backend/config.py:9:1: W293 blank line contains whitespace
+backend/config.py:22:1: W293 blank line contains whitespace
+backend/config.py:25:1: W293 blank line contains whitespace
+backend/config.py:29:1: W293 blank line contains whitespace
+backend/config.py:33:1: W293 blank line contains whitespace
+backend/config.py:37:1: W293 blank line contains whitespace
+backend/config.py:40:1: W293 blank line contains whitespace
+backend/domains/general.py:61:23: F541 f-string is missing placeholders
+backend/main.py:18:1: F401 'config.Config' imported but unused
+backend/main.py:21:1: F401 'services.retrieval.VectorRetriever' imported but unused
+backend/main.py:21:1: F401 'services.retrieval.BM25Retriever' imported but unused
+backend/main.py:28:1: F401 'domains.base.DomainType' imported but unused
+backend/main.py:31:1: F401 'gateway.CircuitBreakerRegistry' imported but unused
+backend/main.py:34:1: F401 'monitoring.HealthStatus' imported but unused
+backend/main.py:750:20: F541 f-string is missing placeholders
+backend/main.py:990:1: F811 redefinition of unused 'health_check' from line 209
+backend/main_optimized.py:12:1: F401 'functools.lru_cache' imported but unused
+backend/main_optimized.py:50:26: W291 trailing whitespace
+backend/main_optimized.py:51:24: W291 trailing whitespace
+backend/main_optimized.py:63:1: W293 blank line contains whitespace
+backend/main_optimized.py:67:1: W293 blank line contains whitespace
+backend/main_optimized.py:71:1: W293 blank line contains whitespace
+backend/main_optimized.py:90:1: E302 expected 2 blank lines, found 1
+backend/main_optimized.py:95:1: E302 expected 2 blank lines, found 1
+backend/main_optimized.py:125:1: W293 blank line contains whitespace
+backend/main_optimized.py:141:1: W293 blank line contains whitespace
+backend/main_optimized.py:153:1: W293 blank line contains whitespace
+backend/main_optimized.py:160:13: E722 do not use bare 'except'
+backend/main_optimized.py:163:1: W293 blank line contains whitespace
+backend/main_optimized.py:179:1: W293 blank line contains whitespace
+backend/main_optimized.py:184:9: E722 do not use bare 'except'
+backend/main_optimized.py:193:1: W293 blank line contains whitespace
+backend/main_optimized.py:197:1: W293 blank line contains whitespace
+backend/main_optimized.py:199:74: W291 trailing whitespace
+backend/main_optimized.py:203:1: W293 blank line contains whitespace
+backend/main_optimized.py:216:1: W293 blank line contains whitespace
+backend/main_optimized.py:218:1: W293 blank line contains whitespace
+backend/main_optimized.py:222:51: W291 trailing whitespace
+backend/main_optimized.py:223:30: W291 trailing whitespace
+backend/main_optimized.py:230:51: W291 trailing whitespace
+backend/main_optimized.py:231:30: W291 trailing whitespace
+backend/main_optimized.py:236:1: W293 blank line contains whitespace
+backend/main_optimized.py:248:1: W293 blank line contains whitespace
+backend/main_optimized.py:252:1: W293 blank line contains whitespace
+backend/main_optimized.py:254:1: W293 blank line contains whitespace
+backend/main_optimized.py:257:41: W291 trailing whitespace
+backend/main_optimized.py:258:30: W291 trailing whitespace
+backend/main_optimized.py:265:41: W291 trailing whitespace
+backend/main_optimized.py:266:30: W291 trailing whitespace
+backend/main_optimized.py:270:1: W293 blank line contains whitespace
+backend/main_optimized.py:272:1: W293 blank line contains whitespace
+backend/main_optimized.py:280:1: W293 blank line contains whitespace
+backend/main_optimized.py:282:1: W293 blank line contains whitespace
+backend/main_optimized.py:286:80: W291 trailing whitespace
+backend/main_optimized.py:292:1: W293 blank line contains whitespace
+backend/main_optimized.py:314:1: W293 blank line contains whitespace
+backend/main_optimized.py:321:1: W293 blank line contains whitespace
+backend/monitoring/health.py:8:1: F401 'typing.List' imported but unused
+backend/monitoring/metrics.py:7:1: F401 'asyncio' imported but unused
+backend/monitoring/metrics.py:298:9: F811 redefinition of unused 'asyncio' from line 7
+backend/monitoring/prometheus.py:10:1: F401 '.metrics.MetricType' imported but unused
+backend/services/reasoning/base.py:112:9: F841 local variable 'question_lower' is assigned to but never used
+backend/services/reasoning/cot.py:7:1: F401 'asyncio' imported but unused
+backend/services/reasoning/cot.py:234:16: F541 f-string is missing placeholders
+backend/services/reasoning/cot.py:266:21: E126 continuation line over-indented for hanging indent
+backend/services/reasoning/graph_rag.py:8:1: F401 'json' imported but unused
+backend/services/reasoning/graph_rag.py:9:1: F401 'typing.Set' imported but unused
+backend/services/reasoning/graph_rag.py:11:1: F401 'collections.defaultdict' imported but unused
+backend/services/reasoning/graph_rag.py:16:1: F401 '.base.QueryType' imported but unused
+backend/services/reasoning/graph_rag.py:410:23: E128 continuation line under-indented for visual indent
+backend/services/reasoning/graph_rag.py:445:20: E226 missing whitespace around arithmetic operator
+backend/services/reasoning/graph_rag.py:485:20: E226 missing whitespace around arithmetic operator
+backend/services/reasoning/react.py:13:1: F401 '.base.QueryType' imported but unused
+backend/services/reasoning/react.py:140:72: W504 line break after binary operator
+backend/services/reasoning/react.py:141:24: E131 continuation line unaligned for hanging indent
+backend/services/reasoning/react.py:315:20: F821 undefined name 'asyncio'
+backend/services/retrieval/__init__.py:9:21: W291 trailing whitespace
+backend/services/retrieval/bm25.py:18:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:21:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:30:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:43:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:51:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:56:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:64:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:66:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:74:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:78:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:80:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:84:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:87:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:96:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:100:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:103:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:111:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:120:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:125:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:132:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:137:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:140:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:147:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:149:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:158:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:163:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:169:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:174:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:189:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:195:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:206:1: W293 blank line contains whitespace
+backend/services/retrieval/bm25.py:210:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:19:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:22:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:32:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:43:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:46:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:53:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:58:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:62:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:65:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:71:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:76:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:79:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:85:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:87:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:95:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:99:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:106:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:110:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:119:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:128:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:131:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:144:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:146:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:157:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:164:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:170:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:173:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:179:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:184:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:192:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:194:1: W293 blank line contains whitespace
+backend/services/retrieval/hybrid.py:196:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:9:1: F401 'typing.List' imported but unused
+backend/services/retrieval/ima_importer.py:9:1: F401 'typing.Any' imported but unused
+backend/services/retrieval/ima_importer.py:10:1: F401 'datetime.datetime' imported but unused
+backend/services/retrieval/ima_importer.py:17:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:21:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:27:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:35:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:39:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:42:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:47:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:53:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:56:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:59:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:68:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:73:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:79:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:82:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:85:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:94:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:98:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:101:21: F841 local variable 'path_parts' is assigned to but never used
+backend/services/retrieval/ima_importer.py:103:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:112:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:114:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:117:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:120:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:124:1: W293 blank line contains whitespace
+backend/services/retrieval/ima_importer.py:129:9: F841 local variable 'qigong_knowledge' is assigned to but never used
+backend/services/retrieval/ima_importer.py:136:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:10:1: F401 'datetime.datetime' imported but unused
+backend/services/retrieval/vector.py:18:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:21:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:30:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:40:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:46:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:52:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:56:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:59:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:66:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:69:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:76:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:80:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:82:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:86:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:89:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:95:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:105:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:111:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:118:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:140:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:143:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:156:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:159:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:163:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:166:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:176:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:180:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:185:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:191:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:194:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:198:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:201:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:208:45: W291 trailing whitespace
+backend/services/retrieval/vector.py:209:34: W291 trailing whitespace
+backend/services/retrieval/vector.py:210:43: W291 trailing whitespace
+backend/services/retrieval/vector.py:213:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:217:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:219:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:222:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:228:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:234:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:238:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:240:1: W293 blank line contains whitespace
+backend/services/retrieval/vector.py:242:1: W293 blank line contains whitespace

@@ -1,0 +1,167 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: zhineng-postgres
+    environment:
+      POSTGRES_USER: zhineng
+      POSTGRES_PASSWORD: zhineng123
+      POSTGRES_DB: zhineng_kb
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zhineng -d zhineng_kb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: zhineng-redis
+    command: redis-server --appendonly yes --requirepass redis123
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zhineng-api
+    environment:
+      DATABASE_URL: postgresql://zhineng:zhineng123@postgres:5432/zhineng_kb
+      REDIS_URL: redis://:redis123@redis:6379/0
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      LOG_LEVEL: INFO
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: zhineng-nginx
+    ports:
+      - "8008:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  # ========== 阶段5: 监控服务 ==========
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: zhineng-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command: ['--config.file=/etc/prometheus/prometheus.yml']
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: zhineng-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  # Redis Exporter for monitoring Redis
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: zhineng-redis-exporter
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: redis123
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+  # Postgres Exporter for monitoring PostgreSQL
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: zhineng-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://zhineng:zhineng123@postgres:5436/zhineng_kb?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  zhineng-network:
+    driver: bridge

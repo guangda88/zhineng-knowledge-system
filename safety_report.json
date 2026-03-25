@@ -1,0 +1,845 @@
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
+{
+    "report_meta": {
+        "scan_target": "files",
+        "scanned": [
+            "services/web_app/backend/requirements.txt"
+        ],
+        "scanned_full_path": [
+            "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+        ],
+        "target_languages": [
+            "python"
+        ],
+        "policy_file": null,
+        "policy_file_source": "local",
+        "audit_and_monitor": false,
+        "api_key": false,
+        "account": "",
+        "local_database_path": null,
+        "safety_version": "3.7.0",
+        "timestamp": "2026-03-05 06:06:12",
+        "packages_found": 32,
+        "vulnerabilities_found": 2,
+        "vulnerabilities_ignored": 0,
+        "remediations_recommended": 0,
+        "telemetry": {
+            "safety_options": {
+                "files": {
+                    "-r": 1
+                },
+                "json": {
+                    "--json": 1
+                }
+            },
+            "safety_version": "3.7.0",
+            "safety_source": "cli",
+            "os_type": "Linux",
+            "os_release": "6.8.0-101-generic",
+            "os_description": "Linux-6.8.0-101-generic-x86_64-with-glibc2.39",
+            "python_version": "3.12.3",
+            "safety_command": "check"
+        },
+        "git": {
+            "branch": "master",
+            "tag": "",
+            "commit": "80187c309e1d6234b8080203951ede6267411cac",
+            "dirty": "True",
+            "origin": "https://guangda:Liuqing%400404591@zhinenggitea.iepose.cn/guangda/zhineng-knowledge-system.git"
+        },
+        "project": null,
+        "json_version": "1.1",
+        "remediations_attempted": 0,
+        "remediations_completed": 0,
+        "remediation_mode": "NON_INTERACTIVE"
+    },
+    "scanned_packages": {
+        "fastapi": {
+            "name": "fastapi",
+            "version": "0.128.8",
+            "requirements": [
+                {
+                    "raw": "fastapi==0.128.8",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fastapi",
+                    "specifier": "==0.128.8",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "uvicorn": {
+            "name": "uvicorn",
+            "version": "0.40.0",
+            "requirements": [
+                {
+                    "raw": "uvicorn[standard]==0.40.0",
+                    "extras": [
+                        "standard"
+                    ],
+                    "marker": null,
+                    "name": "uvicorn",
+                    "specifier": "==0.40.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "python-multipart": {
+            "name": "python-multipart",
+            "version": "0.0.20",
+            "requirements": [
+                {
+                    "raw": "python-multipart==0.0.20",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-multipart",
+                    "specifier": "==0.0.20",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "sqlalchemy": {
+            "name": "sqlalchemy",
+            "version": "2.0.46",
+            "requirements": [
+                {
+                    "raw": "sqlalchemy==2.0.46",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sqlalchemy",
+                    "specifier": "==2.0.46",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "asyncpg": {
+            "name": "asyncpg",
+            "version": "0.31.0",
+            "requirements": [
+                {
+                    "raw": "asyncpg==0.31.0  # Async PostgreSQL driver - latest stable",
+                    "extras": [],
+                    "marker": null,
+                    "name": "asyncpg",
+                    "specifier": "==0.31.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "psycopg2-binary": {
+            "name": "psycopg2-binary",
+            "version": "2.9.11",
+            "requirements": [
+                {
+                    "raw": "psycopg2-binary==2.9.11",
+                    "extras": [],
+                    "marker": null,
+                    "name": "psycopg2-binary",
+                    "specifier": "==2.9.11",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pgvector": {
+            "name": "pgvector",
+            "version": "0.4.2",
+            "requirements": [
+                {
+                    "raw": "pgvector==0.4.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pgvector",
+                    "specifier": "==0.4.2",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "alembic": {
+            "name": "alembic",
+            "version": "1.18.4",
+            "requirements": [
+                {
+                    "raw": "alembic==1.18.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "alembic",
+                    "specifier": "==1.18.4",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pymilvus": {
+            "name": "pymilvus",
+            "version": "2.6.9",
+            "requirements": [
+                {
+                    "raw": "pymilvus==2.6.9",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pymilvus",
+                    "specifier": "==2.6.9",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "elasticsearch": {
+            "name": "elasticsearch",
+            "version": "9.3.0",
+            "requirements": [
+                {
+                    "raw": "elasticsearch==9.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "elasticsearch",
+                    "specifier": "==9.3.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "httpx": {
+            "name": "httpx",
+            "version": "0.28.1",
+            "requirements": [
+                {
+                    "raw": "httpx==0.28.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httpx",
+                    "specifier": "==0.28.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pydantic": {
+            "name": "pydantic",
+            "version": "2.12.5",
+            "requirements": [
+                {
+                    "raw": "pydantic==2.12.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic",
+                    "specifier": "==2.12.5",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pydantic-settings": {
+            "name": "pydantic-settings",
+            "version": "2.12.0",
+            "requirements": [
+                {
+                    "raw": "pydantic-settings==2.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic-settings",
+                    "specifier": "==2.12.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pyyaml": {
+            "name": "pyyaml",
+            "version": "6.0.3",
+            "requirements": [
+                {
+                    "raw": "pyyaml==6.0.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pyyaml",
+                    "specifier": "==6.0.3",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "python-jose": {
+            "name": "python-jose",
+            "version": "3.5.0",
+            "requirements": [
+                {
+                    "raw": "python-jose[cryptography]==3.5.0",
+                    "extras": [
+                        "cryptography"
+                    ],
+                    "marker": null,
+                    "name": "python-jose",
+                    "specifier": "==3.5.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "passlib": {
+            "name": "passlib",
+            "version": "1.7.4",
+            "requirements": [
+                {
+                    "raw": "passlib[bcrypt]==1.7.4",
+                    "extras": [
+                        "bcrypt"
+                    ],
+                    "marker": null,
+                    "name": "passlib",
+                    "specifier": "==1.7.4",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "bcrypt": {
+            "name": "bcrypt",
+            "version": "4.0.1",
+            "requirements": [
+                {
+                    "raw": "bcrypt==4.0.1  # Compatible with passlib 1.7.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "bcrypt",
+                    "specifier": "==4.0.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "itsdangerous": {
+            "name": "itsdangerous",
+            "version": "2.2.0",
+            "requirements": [
+                {
+                    "raw": "itsdangerous==2.2.0  # CSRF protection token signing",
+                    "extras": [],
+                    "marker": null,
+                    "name": "itsdangerous",
+                    "specifier": "==2.2.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "redis": {
+            "name": "redis",
+            "version": "7.1.1",
+            "requirements": [
+                {
+                    "raw": "redis[hiredis]==7.1.1",
+                    "extras": [
+                        "hiredis"
+                    ],
+                    "marker": null,
+                    "name": "redis",
+                    "specifier": "==7.1.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "python-dotenv": {
+            "name": "python-dotenv",
+            "version": "1.2.1",
+            "requirements": [
+                {
+                    "raw": "python-dotenv==1.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-dotenv",
+                    "specifier": "==1.2.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "aiofiles": {
+            "name": "aiofiles",
+            "version": "25.1.0",
+            "requirements": [
+                {
+                    "raw": "aiofiles==25.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiofiles",
+                    "specifier": "==25.1.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "structlog": {
+            "name": "structlog",
+            "version": "25.2.0",
+            "requirements": [
+                {
+                    "raw": "structlog==25.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "structlog",
+                    "specifier": "==25.2.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "prometheus-client": {
+            "name": "prometheus-client",
+            "version": "0.21.1",
+            "requirements": [
+                {
+                    "raw": "prometheus-client==0.21.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "prometheus-client",
+                    "specifier": "==0.21.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "openpyxl": {
+            "name": "openpyxl",
+            "version": "3.1.5",
+            "requirements": [
+                {
+                    "raw": "openpyxl==3.1.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "openpyxl",
+                    "specifier": "==3.1.5",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "xlrd": {
+            "name": "xlrd",
+            "version": "2.0.2",
+            "requirements": [
+                {
+                    "raw": "xlrd==2.0.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "xlrd",
+                    "specifier": "==2.0.2",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pypdf2": {
+            "name": "pypdf2",
+            "version": "3.0.1",
+            "requirements": [
+                {
+                    "raw": "PyPDF2==3.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyPDF2",
+                    "specifier": "==3.0.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pdfplumber": {
+            "name": "pdfplumber",
+            "version": "0.11.9",
+            "requirements": [
+                {
+                    "raw": "pdfplumber==0.11.9",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pdfplumber",
+                    "specifier": "==0.11.9",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pytest": {
+            "name": "pytest",
+            "version": "8.3.4",
+            "requirements": [
+                {
+                    "raw": "pytest==8.3.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest",
+                    "specifier": "==8.3.4",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pytest-asyncio": {
+            "name": "pytest-asyncio",
+            "version": "0.24.0",
+            "requirements": [
+                {
+                    "raw": "pytest-asyncio==0.24.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest-asyncio",
+                    "specifier": "==0.24.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pytest-cov": {
+            "name": "pytest-cov",
+            "version": "6.0.0",
+            "requirements": [
+                {
+                    "raw": "pytest-cov==6.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest-cov",
+                    "specifier": "==6.0.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "pytest-mock": {
+            "name": "pytest-mock",
+            "version": "3.14.0",
+            "requirements": [
+                {
+                    "raw": "pytest-mock==3.14.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest-mock",
+                    "specifier": "==3.14.0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        },
+        "aiosqlite": {
+            "name": "aiosqlite",
+            "version": null,
+            "requirements": [
+                {
+                    "raw": "aiosqlite",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiosqlite",
+                    "specifier": ">=0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                },
+                {
+                    "raw": "aiosqlite",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiosqlite",
+                    "specifier": ">=0",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ]
+        }
+    },
+    "affected_packages": {
+        "pypdf2": {
+            "name": "pypdf2",
+            "version": "3.0.1",
+            "requirements": [
+                {
+                    "raw": "PyPDF2==3.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyPDF2",
+                    "specifier": "==3.0.1",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ],
+            "found": null,
+            "insecure_versions": [
+                "1.15",
+                "1.16",
+                "1.17",
+                "1.18",
+                "1.19",
+                "1.20",
+                "1.21",
+                "1.22",
+                "1.23",
+                "1.24",
+                "1.25",
+                "1.25.1",
+                "1.26.0",
+                "1.27.0",
+                "1.27.1",
+                "1.27.10",
+                "1.27.11",
+                "1.27.12",
+                "1.27.2",
+                "1.27.3",
+                "1.27.4",
+                "1.27.5",
+                "1.27.6",
+                "1.27.7",
+                "1.27.8",
+                "1.27.9",
+                "1.28.0",
+                "1.28.1",
+                "1.28.2",
+                "1.28.3",
+                "1.28.4",
+                "1.28.5",
+                "1.28.6",
+                "2.0.0",
+                "2.1.0",
+                "2.10.0",
+                "2.10.1",
+                "2.10.2",
+                "2.10.3",
+                "2.10.4",
+                "2.10.5",
+                "2.10.6",
+                "2.10.7",
+                "2.10.8",
+                "2.10.9",
+                "2.1.1",
+                "2.11.0",
+                "2.11.1",
+                "2.11.2",
+                "2.12.0",
+                "2.12.1",
+                "2.2.0",
+                "2.2.1",
+                "2.3.0",
+                "2.3.1",
+                "2.4.0",
+                "2.4.1",
+                "2.4.2",
+                "2.5.0",
+                "2.6.0",
+                "2.7.0",
+                "2.8.0",
+                "2.8.1",
+                "2.9.0",
+                "3.0.0",
+                "3.0.1"
+            ],
+            "secure_versions": [],
+            "latest_version_without_known_vulnerabilities": "",
+            "latest_version": "3.0.1",
+            "more_info_url": "https://data.safetycli.com/p/pypi/pypdf2/97c/"
+        },
+        "python-multipart": {
+            "name": "python-multipart",
+            "version": "0.0.20",
+            "requirements": [
+                {
+                    "raw": "python-multipart==0.0.20",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-multipart",
+                    "specifier": "==0.0.20",
+                    "url": null,
+                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                }
+            ],
+            "found": null,
+            "insecure_versions": [
+                "0.0.1",
+                "0.0.10",
+                "0.0.11",
+                "0.0.12",
+                "0.0.13",
+                "0.0.14",
+                "0.0.15",
+                "0.0.16",
+                "0.0.17",
+                "0.0.18",
+                "0.0.19",
+                "0.0.2",
+                "0.0.20",
+                "0.0.21",
+                "0.0.3",
+                "0.0.4",
+                "0.0.5",
+                "0.0.6",
+                "0.0.7",
+                "0.0.8",
+                "0.0.9"
+            ],
+            "secure_versions": [
+                "0.0.22"
+            ],
+            "latest_version_without_known_vulnerabilities": "0.0.22",
+            "latest_version": "0.0.22",
+            "more_info_url": "https://data.safetycli.com/p/pypi/python-multipart/97c/"
+        }
+    },
+    "announcements": [
+        {
+            "type": "warning",
+            "message": "Warning: aiosqlite is unpinned. Safety by default does not report on potential vulnerabilities in unpinned packages. It is recommended to pin your dependencies unless this is a library meant for distribution. To learn more about reporting these, specifier range handling, and options for scanning unpinned packages visit https://docs.pyup.io/docs/safety-range-specs"
+        }
+    ],
+    "vulnerabilities": [
+        {
+            "vulnerability_id": "59234",
+            "package_name": "pypdf2",
+            "ignored": {},
+            "ignored_reason": null,
+            "ignored_expires": null,
+            "vulnerable_spec": [
+                ">=2.2.0,<=3.0.1"
+            ],
+            "all_vulnerable_specs": [
+                ">=2.2.0,<=3.0.1"
+            ],
+            "analyzed_version": "3.0.1",
+            "analyzed_requirement": {
+                "raw": "PyPDF2==3.0.1",
+                "extras": [],
+                "marker": null,
+                "name": "PyPDF2",
+                "specifier": "==3.0.1",
+                "url": null,
+                "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+            },
+            "advisory": "Pypdf2 is vulnerable to CVE-2023-36464: An attacker may craft a PDF which leads to an infinite loop if '__parse_content_stream' is executed. That is, for example, the case if the user extracted text from such a PDF. Users may modify the line 'while peek not in (b\"\\r\", b\"\\n\")' in 'pypdf/generic/_data_structures.py' to 'while peek not in (b\"\\r\", b\"\\n\", b\"\")' as a workaround.\r\nhttps://github.com/py-pdf/pypdf/pull/1828\r\nhttps://github.com/py-pdf/pypdf/security/advisories/GHSA-4vvm-4w3v-6mr8",
+            "is_transitive": false,
+            "published_date": null,
+            "fixed_versions": [],
+            "closest_versions_without_known_vulnerabilities": [],
+            "resources": [],
+            "CVE": "CVE-2023-36464",
+            "severity": null,
+            "affected_versions": [],
+            "more_info_url": "https://data.safetycli.com/v/59234/97c"
+        },
+        {
+            "vulnerability_id": "85155",
+            "package_name": "python-multipart",
+            "ignored": {},
+            "ignored_reason": null,
+            "ignored_expires": null,
+            "vulnerable_spec": [
+                "<0.0.22"
+            ],
+            "all_vulnerable_specs": [
+                "<0.0.22"
+            ],
+            "analyzed_version": "0.0.20",
+            "analyzed_requirement": {
+                "raw": "python-multipart==0.0.20",
+                "extras": [],
+                "marker": null,
+                "name": "python-multipart",
+                "specifier": "==0.0.20",
+                "url": null,
+                "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+            },
+            "advisory": "Affected versions of the python-multipart package are vulnerable to Path Traversal due to unsafe filesystem path construction when preserving user-supplied upload filenames. When UPLOAD_DIR is configured and UPLOAD_KEEP_FILENAME=True, the upload-to-disk code builds the destination path with os.path.join(file_dir, fname) after the upload exceeds MAX_MEMORY_FILE_SIZE, allowing absolute-path filenames (for example, those starting with /) to override the intended base directory.",
+            "is_transitive": false,
+            "published_date": null,
+            "fixed_versions": [],
+            "closest_versions_without_known_vulnerabilities": [],
+            "resources": [],
+            "CVE": "CVE-2026-24486",
+            "severity": null,
+            "affected_versions": [],
+            "more_info_url": "https://data.safetycli.com/v/85155/97c"
+        }
+    ],
+    "ignored_vulnerabilities": [],
+    "remediations": {
+        "pypdf2": {
+            "requirements": {
+                "==3.0.1": {
+                    "vulnerabilities_found": 1,
+                    "version": "3.0.1",
+                    "requirement": {
+                        "raw": "PyPDF2==3.0.1",
+                        "extras": [],
+                        "marker": null,
+                        "name": "PyPDF2",
+                        "specifier": "==3.0.1",
+                        "url": null,
+                        "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    },
+                    "more_info_url": "https://data.safetycli.com/p/pypi/pypdf2/97c/"
+                }
+            },
+            "current_version": null,
+            "vulnerabilities_found": null,
+            "recommended_version": null,
+            "other_recommended_versions": [],
+            "more_info_url": null
+        },
+        "python-multipart": {
+            "requirements": {
+                "==0.0.20": {
+                    "vulnerabilities_found": 1,
+                    "version": "0.0.20",
+                    "requirement": {
+                        "raw": "python-multipart==0.0.20",
+                        "extras": [],
+                        "marker": null,
+                        "name": "python-multipart",
+                        "specifier": "==0.0.20",
+                        "url": null,
+                        "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    },
+                    "more_info_url": "https://data.safetycli.com/p/pypi/python-multipart/97c/"
+                }
+            },
+            "current_version": null,
+            "vulnerabilities_found": null,
+            "recommended_version": null,
+            "other_recommended_versions": [],
+            "more_info_url": null
+        }
+    },
+    "remediations_results": {
+        "vulnerabilities_fixed": [],
+        "remediations_applied": {},
+        "remediations_skipped": {}
+    }
+}
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
