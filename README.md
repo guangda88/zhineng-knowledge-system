@@ -226,13 +226,32 @@ zhineng-knowledge-system/
 └── DEVELOPMENT_RULES.md  # 开发规范
 ```
 
+### 分支策略
+
+```
+main (生产分支，稳定版本)
+  ↑
+develop (开发分支，集成测试)
+  ↑
+feature/xxx (功能分支)
+fix/xxx (修复分支)
+```
+
+- **main**: 生产环境，保持稳定
+- **develop**: 开发集成，接受feature/fix分支PR
+- **feature/***: 新功能开发
+- **fix/***: Bug修复
+
+详见：[分支策略文档](.github/BRANCH_STRATEGY.md) | [分支命名规范](.github/FEATURE_BRANCH_NAMING.md)
+
 ### 开发流程
 
 1. 从 `develop` 创建功能分支
 2. 开发并遵循开发规范
 3. 运行测试：`pytest tests/ -v`
 4. 提交代码：遵循 Conventional Commits
-5. 合并到 `develop`
+5. PR回 `develop` 分支
+6. 测试通过后合并到 `develop`
 
 详见：[开发规则文档](DEVELOPMENT_RULES.md)
 
