@@ -1,0 +1,16 @@
+# Pre-commit 配置
+repos:
+  - repo: local
+    hooks:
+      - id: format-check
+        name: 代码格式检查
+        entry: isort backend/ --profile black --check-only
+        language: python
+      - id: lint-check
+        name: 代码规范检查
+        entry: flake8 backend/ --max-line-length=100
+        language: python
+      - id: test-check
+        name: 测试检查
+        entry: pytest tests/ -v --tb=short
+        language: python

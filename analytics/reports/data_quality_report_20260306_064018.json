@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-03-06T06:40:18.333390",
+  "data_quality_score": 98.5,
+  "metrics": {
+    "users": {
+      "score": 100.0,
+      "completeness": 100.0,
+      "accuracy": 100.0,
+      "consistency": 100.0,
+      "validity": 100.0,
+      "uniqueness": 100.0,
+      "total_count": 10
+    },
+    "documents": {
+      "score": 100.0,
+      "completeness": 100.0,
+      "accuracy": 100.0,
+      "consistency": 100.0,
+      "validity": 100.0,
+      "uniqueness": 100.0,
+      "total_count": 10
+    },
+    "search_history": {
+      "score": 95.0,
+      "completeness": 100.0,
+      "accuracy": 95.0,
+      "consistency": 100.0,
+      "validity": 100.0,
+      "uniqueness": 100.0,
+      "total_count": 50
+    }
+  }
+}
