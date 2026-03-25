@@ -1,16 +1,201 @@
-# Pre-commit 配置
+# Pre-commit hooks configuration
+# 智能知识系统 - 代码质量门禁
+# See https://pre-commit.com for more information
+#
+# 快速开始:
+#   pip install pre-commit
+#   pre-commit install
+#   pre-commit run --all-files
+#
+# 常用命令:
+#   pre-commit run --all-files              # 检查所有文件
+#   pre-commit run <hook-name> --all-files  # 运行特定钩子
+#   pre-commit autoupdate                   # 更新钩子版本
+#   git commit --no-verify -m "msg"         # 跳过钩子（不推荐）
+
+default_language_version:
+  python: python3.12
+
+default_stages: [pre-commit]
+
+# 排除文件/目录
+exclude: |
+  (?x)^(
+    venv/|
+    \.venv/|
+    build/|
+    dist/|
+    \.eggs/|
+    \.tox/|
+    \.pytest_cache/|
+    \.mypy_cache/|
+    htmlcov/|
+    \.git/|
+    data/|
+    logs/|
+    .*\.egg-info/|
+    migrations/
+  )
+
 repos:
-  - repo: local
-    hooks:
-      - id: format-check
-        name: 代码格式检查
-        entry: isort backend/ --profile black --check-only
-        language: python
-      - id: lint-check
-        name: 代码规范检查
-        entry: flake8 backend/ --max-line-length=100
-        language: python
-      - id: test-check
-        name: 测试检查
-        entry: pytest tests/ -v --tb=short
-        language: python
+  # ===========================
+  # 通用文件检查与自动修复
+  # ===========================
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+      # 修复尾随空格
+  - id: trailing-whitespace
+    name: 清理尾随空格
+    exclude: ^(docs/.*\.md|\.md$)
+
+      # 确保文件以换行符结尾
+  - id: end-of-file-fixer
+    name: 确保文件以换行符结尾
+
+      # YAML 语法检查
+  - id: check-yaml
+    name: YAML语法检查
+    args: [--unsafe]
+
+      # TOML 语法检查
+  - id: check-toml
+    name: TOML语法检查
+
+      # 检查大文件 (>1MB)
+  - id: check-added-large-files
+    name: 检查大文件
+    args: [--maxkb=1000]
+
+      # 检测私钥泄露
+  - id: detect-private-key
+    name: 检测私钥泄露
+
+      # 检查合并冲突标记
+  - id: check-merge-conflict
+    name: 检查合并冲突标记
+
+      # 修复混合行尾
+  - id: mixed-line-ending
+    name: 修复混合行尾
+    args: [--fix=lf]
+
+      # JSON 语法检查
+  - id: check-json
+    name: JSON语法检查
+
+      # 检查可执行文件有 shebang
+  - id: check-executables-have-shebangs
+    name: 检查 shebang
+
+      # 调试语句检查 (pytest breakpoint)
+  - id: debug-statements
+    name: 检查调试语句
+
+      # 检查符号链接
+  - id: check-symlinks
+    name: 检查符号链接
+
+  # ===========================
+  # Python 代码格式化 (Black)
+  # ===========================
+- repo: https://github.com/psf/black
+  rev: 25.1.0
+  hooks:
+  - id: black
+    name: 代码格式化 (Black)
+    language_version: python3.12
+    args: [--line-length=100, --target-version=py312]
+
+  # ===========================
+  # Import 排序 (isort)
+  # ===========================
+- repo: https://github.com/PyCQA/isort
+  rev: 6.0.1
+  hooks:
+  - id: isort
+    name: Import排序 (isort)
+    args: [--profile=black, --line-length=100]
+
+  # ===========================
+  # Python 代码规范检查 (flake8)
+  # ===========================
+- repo: https://github.com/PyCQA/flake8
+  rev: 7.1.1
+  hooks:
+  - id: flake8
+    name: 代码检查 (flake8)
+    args: [--config=.flake8]
+    additional_dependencies:
+    - flake8-docstrings
+    - flake8-bugbear
+    - flake8-comprehensions
+
+  # ===========================
+  # 安全检查 (bandit)
+  # ===========================
+- repo: https://github.com/PyCQA/bandit
+  rev: 1.8.3
+  hooks:
+  - id: bandit
+    name: 安全检查 (bandit)
+    args: [-c, pyproject.toml, -r]
+    additional_dependencies: ['bandit[toml]']
+    exclude: ^tests/.*\.py$
+
+  # ===========================
+  # 类型检查 (mypy)
+  # ===========================
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.15.0
+  hooks:
+  - id: mypy
+    name: 类型检查 (mypy)
+    language_version: python3.12
+    args: [--config-file=pyproject.toml]
+    additional_dependencies:
+    - types-requests
+    - types-PyYAML
+
+  # ===========================
+  # YAML 格式化 (可选)
+  # ===========================
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.14.0
+  hooks:
+  - id: pretty-format-yaml
+    name: YAML格式化
+    args: [--autofix, --indent, '2']
+    exclude: ^(docs/.*\.md|\.md$)
+
+  # ===========================
+  # 针对项目特定文件的钩子
+  # ===========================
+- repo: local
+  hooks:
+      # 检查 docker-compose 文件语法
+  - id: docker-compose-check
+    name: Docker Compose 语法检查
+    entry: docker-compose -f docker-compose.yml config
+    language: system
+    files: docker-compose.*\.yml$
+    pass_filenames: false
+
+      # 检查 shell 脚本语法
+  - id: shellcheck
+    name: Shell 脚本检查
+    entry: shellcheck
+    language: system
+    files: \.sh$
+
+# CI 配置 - 在 CI 中跳过自动修复钩子
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [black, isort, trailing-whitespace, end-of-file-fixer, pretty-format-yaml]
+  submodules: false

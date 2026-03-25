@@ -1,0 +1,91 @@
+# 性能测试配置
+
+# 目标服务器
+target:
+  host: ${TARGET_HOST:http://localhost:8000}
+  health_check_path: /health
+
+# 测试场景配置
+scenarios:
+  # 快速冒烟测试
+  quick:
+    users: 10
+    spawn_rate: 2
+    run_time: 30s
+    description: 快速验证服务可用性
+
+  # 标准负载测试
+  standard:
+    users: 50
+    spawn_rate: 5
+    run_time: 1m
+    description: 常规业务负载
+
+  # 峰值负载测试
+  peak:
+    users: 100
+    spawn_rate: 10
+    run_time: 2m
+    description: 目标峰值负载
+
+  # 压力测试
+  stress:
+    users: 200
+    spawn_rate: 20
+    run_time: 5m
+    description: 超出正常负载的压力测试
+
+  # 耐久测试
+  endurance:
+    users: 50
+    spawn_rate: 5
+    run_time: 30m
+    description: 长时间稳定性测试
+
+# 性能目标阈值 (毫秒)
+performance_targets:
+  p50: 200
+  p95: 1000
+  p99: 2000
+  rps: 100
+
+# 端点配置
+endpoints:
+- name: documents
+  path: /api/v1/documents
+  method: GET
+  expected_status: [200, 404]
+  critical: true
+
+- name: search
+  path: /api/v1/search
+  method: GET
+  expected_status: [200, 404]
+  critical: true
+
+- name: ask
+  path: /api/v1/ask
+  method: POST
+  expected_status: [200, 429]
+  critical: true
+
+- name: hybrid_search
+  path: /api/v1/search/hybrid
+  method: POST
+  expected_status: [200, 503]
+  critical: true
+
+# 报告配置
+reporting:
+  output_dir: reports
+  formats:
+  - html
+  - csv
+  - markdown
+  include_charts: true
+
+# 监控配置
+monitoring:
+  collect_system_metrics: true
+  collect_database_metrics: true
+  collect_cache_metrics: true
