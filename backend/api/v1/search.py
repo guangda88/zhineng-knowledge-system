@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from cache.decorators import cached_api_categories, cached_api_search, cached_api_stats
+from common import get_document_stats, rows_to_list, search_documents
+from common.typing import JSONResponse
 from core.database import init_db_pool
 from core.request_stats import get_request_stats
 from fastapi import APIRouter, Query
@@ -76,36 +78,15 @@ async def search_documents(
     q: str = Query(..., min_length=1, max_length=200),
     category: Optional[str] = None,
     limit: int = Query(10, ge=1, le=100),
-) -> Dict[str, Any]:
+) -> JSONResponse:
     """关键词搜索（缓存5分钟）"""
     pool = await init_db_pool()
-    search_pattern = f"%{q}%"
-
-    if category:
-        rows = await pool.fetch(
-            """SELECT id, title, content, category
-               FROM documents
-               WHERE category = $1 AND (title ILIKE $2 OR content ILIKE $2)
-               ORDER BY id LIMIT $3""",
-            category,
-            search_pattern,
-            limit,
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT id, title, content, category
-               FROM documents
-               WHERE title ILIKE $1 OR content ILIKE $1
-               ORDER BY id LIMIT $2""",
-            search_pattern,
-            limit,
-        )
-
-    return {"query": q, "total": len(rows), "results": [dict(row) for row in rows]}
+    results = await search_documents(pool, q, category, limit)
+    return {"query": q, "total": len(results), "results": results}
 
 
-@router.post("/hybrid", response_model=Dict[str, Any])
-async def hybrid_search(request: HybridSearchRequest) -> Dict[str, Any]:
+@router.post("/hybrid", response_model=JSONResponse)
+async def hybrid_search(request: HybridSearchRequest) -> JSONResponse:
     """
     混合检索API
 
@@ -130,8 +111,8 @@ async def hybrid_search(request: HybridSearchRequest) -> Dict[str, Any]:
     return {"query": request.query, "total": len(results), "results": results}
 
 
-@router.post("/embeddings/update", response_model=Dict[str, Any])
-async def update_embeddings(request: EmbeddingUpdateRequest) -> Dict[str, Any]:
+@router.post("/embeddings/update", response_model=JSONResponse)
+async def update_embeddings(request: EmbeddingUpdateRequest) -> JSONResponse:
     """
     更新文档嵌入向量
 
@@ -163,8 +144,8 @@ async def update_embeddings(request: EmbeddingUpdateRequest) -> Dict[str, Any]:
         }
 
 
-@router.get("/retrieval/status", response_model=Dict[str, Any])
-async def retrieval_status() -> Dict[str, Any]:
+@router.get("/retrieval/status", response_model=JSONResponse)
+async def retrieval_status() -> JSONResponse:
     """
     获取检索服务状态
 
@@ -197,25 +178,8 @@ extra_router = APIRouter(tags=["search"])
 async def ask_question(request: ChatRequest) -> ChatResponse:
     """智能问答（简单版本）"""
     pool = await init_db_pool()
-    search_pattern = f"%{request.question}%"
 
-    if request.category:
-        rows = await pool.fetch(
-            """SELECT id, title, content
-               FROM documents
-               WHERE category = $1 AND (title ILIKE $2 OR content ILIKE $2) LIMIT 3""",
-            request.category,
-            search_pattern,
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT id, title, content
-               FROM documents
-               WHERE title ILIKE $1 OR content ILIKE $1 LIMIT 3""",
-            search_pattern,
-        )
-
-    sources = [dict(row) for row in rows]
+    sources = await search_documents(pool, request.question, request.category, 3)
 
     if sources:
         answer = f"根据知识库找到 {len(sources)} 条相关内容：\n\n"
@@ -236,9 +200,9 @@ async def ask_question(request: ChatRequest) -> ChatResponse:
     return ChatResponse(answer=answer, sources=sources, session_id=session_id)
 
 
-@extra_router.get("/api/v1/categories", response_model=Dict[str, Any])
+@extra_router.get("/api/v1/categories", response_model=JSONResponse)
 @cached_api_categories(ttl=1800)  # 30分钟缓存
-async def get_categories() -> Dict[str, Any]:
+async def get_categories() -> JSONResponse:
     """获取所有分类（缓存30分钟）"""
     pool = await init_db_pool()
     rows = await pool.fetch(
@@ -246,26 +210,17 @@ async def get_categories() -> Dict[str, Any]:
            FROM documents GROUP BY category ORDER BY count DESC"""
     )
 
-    return {"categories": [dict(row) for row in rows]}
+    return {"categories": rows_to_list(rows)}
 
 
-@extra_router.get("/api/v1/stats", response_model=Dict[str, Any])
+@extra_router.get("/api/v1/stats", response_model=JSONResponse)
 @cached_api_stats(ttl=300)  # 5分钟缓存
-async def get_stats() -> Dict[str, Any]:
+async def get_stats() -> JSONResponse:
     """系统统计"""
     pool = await init_db_pool()
     request_stats = get_request_stats()
 
-    doc_count, category_stats = await asyncio.gather(
-        pool.fetchval("SELECT COUNT(*) FROM documents"),
-        pool.fetch(
-            """SELECT category, COUNT(*) as count
-               FROM documents GROUP BY category"""
-        ),
-    )
+    stats = await get_document_stats(pool)
+    stats["request_stats"] = request_stats
 
-    return {
-        "document_count": doc_count,
-        "category_stats": [dict(row) for row in category_stats],
-        "request_stats": request_stats,
-    }
+    return stats

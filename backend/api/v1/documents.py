@@ -4,6 +4,8 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
+from common import fetch_one_or_404, rows_to_list, search_documents
+from common.typing import JSONResponse
 from core.database import init_db_pool
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -33,7 +35,7 @@ async def list_documents(
     category: Optional[str] = None,
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
-) -> Dict[str, Any]:
+) -> JSONResponse:
     """获取文档列表"""
     pool = await init_db_pool()
 
@@ -54,27 +56,24 @@ async def list_documents(
             offset,
         )
 
-    return {"total": len(rows), "documents": [dict(row) for row in rows]}
+    return {"total": len(rows), "documents": rows_to_list(rows)}
 
 
 @router.get("/{doc_id}")
-async def get_document(doc_id: int) -> Dict[str, Any]:
+async def get_document(doc_id: int) -> JSONResponse:
     """获取单个文档"""
     pool = await init_db_pool()
-    row = await pool.fetchrow(
+    return await fetch_one_or_404(
+        pool,
         """SELECT id, title, content, category, tags, created_at
            FROM documents WHERE id = $1""",
         doc_id,
+        error_message="文档不存在",
     )
-
-    if not row:
-        raise HTTPException(status_code=404, detail="文档不存在")
-
-    return dict(row)
 
 
 @router.post("", status_code=201)
-async def create_document(doc: DocumentCreate) -> Dict[str, Any]:
+async def create_document(doc: DocumentCreate) -> JSONResponse:
     """创建文档"""
     pool = await init_db_pool()
 

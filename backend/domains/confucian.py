@@ -7,11 +7,12 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from .base import BaseDomain, DomainConfig, DomainType, QueryResult
+from .mixins import DatabaseSearchMixin, QueryFormatterMixin
 
 logger = logging.getLogger(__name__)
 
 
-class ConfucianDomain(BaseDomain):
+class ConfucianDomain(DatabaseSearchMixin, QueryFormatterMixin, BaseDomain):
     """儒家领域
 
     专注于儒家思想、经典、文化等知识
@@ -60,23 +61,11 @@ class ConfucianDomain(BaseDomain):
         """执行儒家领域查询"""
         self._stats.query_count += 1
         sources = await self.search(question, top_k=3)
-
-        if sources:
-            content = f'【儒家知识】关于"{question}"：\n\n'
-            for i, source in enumerate(sources[:3], 1):
-                content += f"{i}. {source.get('title', '')}\n"
-                content += f"   {source.get('content', '')[:150]}...\n\n"
-            confidence = 0.8
-        else:
-            content = f'抱歉，在儒家知识库中没有找到关于"{question}"的相关内容。'
-            confidence = 0.2
-
-        return QueryResult(
-            content=content,
+        return self.format_query_result(
+            question=question,
             sources=sources,
-            confidence=confidence,
-            domain=self.name,
-            metadata={"domain_type": "儒家"}
+            domain_name=self.name,
+            domain_label="儒家",
         )
 
     async def search(
@@ -86,23 +75,9 @@ class ConfucianDomain(BaseDomain):
         **kwargs
     ) -> List[Dict[str, Any]]:
         """搜索儒家文档"""
-        if not self._db_pool:
-            return []
-
-        try:
-            search_pattern = f"%{query}%"
-            rows = await self._db_pool.fetch(
-                """SELECT id, title, content, category
-                   FROM documents
-                   WHERE category = '儒家'
-                   AND (title ILIKE $1 OR content ILIKE $1)
-                   LIMIT $2""",
-                search_pattern, top_k
-            )
-            return [dict(row) for row in rows]
-        except Exception as e:
-            logger.error(f"儒家领域搜索失败: {e}")
-            return []
+        return await self.search_by_category(
+            self._db_pool, query, "儒家", top_k
+        )
 
     async def get_quote_by_keyword(self, keyword: str) -> List[Dict[str, Any]]:
         """根据关键词获取经典语录"""
