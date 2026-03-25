@@ -8,35 +8,52 @@ import hashlib
 import json
 import logging
 import time
-from typing import Optional, Any, Dict, List, Callable, TypeVar, Awaitable
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
 
 from .memory_cache import MemoryCache
 from .redis_cache import RedisCache, RedisConfig
 
 logger = logging.getLogger(__name__)
 
+# 尝试导入缓存指标收集器
+try:
+    from monitoring.cache_metrics import (
+        CacheLevel,
+        CacheMetricsCollector,
+        CacheMetricsMiddleware,
+        get_cache_metrics_collector,
+    )
+
+    CACHE_METRICS_AVAILABLE = True
+except ImportError:
+    CACHE_METRICS_AVAILABLE = False
+    logger.warning("缓存指标收集器不可用，监控功能将受限")
+
 T = TypeVar("T")
 
 
 class CacheLevel(Enum):
     """缓存级别"""
+
     L1 = "memory"  # 内存缓存
-    L2 = "redis"   # Redis缓存
+    L2 = "redis"  # Redis缓存
 
 
 class CacheStrategy(Enum):
     """缓存策略"""
+
     WRITE_THROUGH = "write_through"  # 写入时同步更新所有层级
-    WRITE_BACK = "write_back"        # 写入时只更新L1，异步更新L2
-    WRITE_AROUND = "write_around"    # 写入时不更新缓存
+    WRITE_BACK = "write_back"  # 写入时只更新L1，异步更新L2
+    WRITE_AROUND = "write_around"  # 写入时不更新缓存
 
 
 @dataclass
 class CacheConfig:
     """缓存配置"""
+
     enabled: bool = True
     default_ttl: int = 3600  # 默认TTL（秒）
     max_size: int = 1000  # L1缓存最大条目数
@@ -46,16 +63,18 @@ class CacheConfig:
     strategy: CacheStrategy = CacheStrategy.WRITE_THROUGH
 
     # 各类资源的TTL配置
-    ttl_config: Dict[str, int] = field(default_factory=lambda: {
-        "query_result": 3600,      # 查询结果缓存1小时
-        "vector_search": 1800,     # 向量搜索缓存30分钟
-        "llm_response": 7200,      # LLM响应缓存2小时
-        "document": 86400,         # 文档内容缓存1天
-        "domain_stats": 300,       # 领域统计缓存5分钟
-        "health_check": 60,        # 健康检查缓存1分钟
-        "embedding": 604800,       # 嵌入向量缓存7天
-        "bm25_index": 86400,       # BM25索引缓存1天
-    })
+    ttl_config: Dict[str, int] = field(
+        default_factory=lambda: {
+            "query_result": 3600,  # 查询结果缓存1小时
+            "vector_search": 1800,  # 向量搜索缓存30分钟
+            "llm_response": 7200,  # LLM响应缓存2小时
+            "document": 86400,  # 文档内容缓存1天
+            "domain_stats": 300,  # 领域统计缓存5分钟
+            "health_check": 60,  # 健康检查缓存1分钟
+            "embedding": 604800,  # 嵌入向量缓存7天
+            "bm25_index": 86400,  # BM25索引缓存1天
+        }
+    )
 
     # 预热配置
     warm_up_enabled: bool = True
@@ -69,6 +88,7 @@ class CacheConfig:
 @dataclass
 class CacheStats:
     """缓存统计信息"""
+
     hits: int = 0
     misses: int = 0
     sets: int = 0
@@ -123,6 +143,7 @@ class CacheManager:
         config: Optional[CacheConfig] = None,
         redis_url: Optional[str] = None,
         redis_config: Optional[RedisConfig] = None,
+        enable_metrics: bool = True,
     ):
         """初始化缓存管理器
 
@@ -130,13 +151,13 @@ class CacheManager:
             config: 缓存配置
             redis_url: Redis连接URL（已弃用，建议使用redis_config）
             redis_config: Redis配置
+            enable_metrics: 是否启用指标收集
         """
         self.config = config or CacheConfig()
 
         # L1: 内存缓存
         self._l1_cache = MemoryCache(
-            max_size=self.config.max_size,
-            default_ttl=self.config.default_ttl
+            max_size=self.config.max_size, default_ttl=self.config.default_ttl
         )
 
         # L2: Redis缓存（可选）
@@ -146,10 +167,7 @@ class CacheManager:
                 if redis_config:
                     self._l2_cache = RedisCache(config=redis_config)
                 else:
-                    self._l2_cache = RedisCache(
-                        url=redis_url,
-                        key_prefix=self.config.key_prefix
-                    )
+                    self._l2_cache = RedisCache(url=redis_url, key_prefix=self.config.key_prefix)
                 logger.info("Redis缓存已启用")
             except Exception as e:
                 logger.warning(f"Redis缓存初始化失败，仅使用内存缓存: {e}")
@@ -162,6 +180,17 @@ class CacheManager:
         self._hot_keys: Dict[str, int] = {}
         self._hot_keys_lock = asyncio.Lock()
         self._hot_keys_threshold = 10  # 访问次数阈值
+
+        # 缓存指标收集器
+        self._metrics_collector: Optional[CacheMetricsCollector] = None
+        self._metrics_middleware: Optional[CacheMetricsMiddleware] = None
+        if enable_metrics and CACHE_METRICS_AVAILABLE:
+            try:
+                self._metrics_collector = get_cache_metrics_collector()
+                self._metrics_middleware = CacheMetricsMiddleware(self._metrics_collector)
+                logger.info("缓存指标收集器已启用")
+            except Exception as e:
+                logger.warning(f"缓存指标收集器初始化失败: {e}")
 
     def is_enabled(self) -> bool:
         """检查缓存是否启用"""
@@ -185,7 +214,7 @@ class CacheManager:
 
         # 如果键太长，使用哈希
         if len(full_key) > 200:
-            key_hash = hashlib.md5(full_key.encode()).hexdigest()[:8]
+            key_hash = hashlib.md5(full_key.encode(), usedforsecurity=False).hexdigest()[:8]
             full_key = f"{self.config.key_prefix}hash:{key_hash}"
 
         return full_key
@@ -239,6 +268,7 @@ class CacheManager:
 
         # 采样
         import random
+
         if random.random() > self.config.stats_sample_rate:
             return
 
@@ -279,6 +309,7 @@ class CacheManager:
         if not self.is_enabled():
             return default
 
+        start_time = time.time()
         full_key = self._make_key(key, namespace)
 
         # 先查L1
@@ -287,9 +318,18 @@ class CacheManager:
             if value is not None:
                 await self._update_stats(hit=True, l1_hit=True)
                 await self._track_hot_key(full_key)
+
+                # 记录指标
+                if self._metrics_collector:
+                    self._metrics_collector.record_hit(CacheLevel.L1, namespace, "get")
+                    duration = time.time() - start_time
+                    self._metrics_collector.record_latency(duration, "get")
+
                 return value
         except Exception as e:
             logger.warning(f"L1缓存读取失败: {e}")
+            if self._metrics_collector:
+                self._metrics_collector.record_error(CacheLevel.L1, "get_failed")
 
         # 再查L2
         if self._l2_cache:
@@ -303,12 +343,27 @@ class CacheManager:
                     if update_l1:
                         await self._l1_cache.set(full_key, value, ttl=self._get_ttl(namespace))
 
+                    # 记录指标
+                    if self._metrics_collector:
+                        self._metrics_collector.record_hit(CacheLevel.L2, namespace, "get")
+                        duration = time.time() - start_time
+                        self._metrics_collector.record_latency(duration, "get")
+
                     return value
             except Exception as e:
                 logger.warning(f"L2缓存读取失败: {e}")
                 await self._update_stats(error=True)
+                if self._metrics_collector:
+                    self._metrics_collector.record_error(CacheLevel.L2, "get_failed")
 
         await self._update_stats(miss=True)
+
+        # 记录未命中
+        if self._metrics_collector:
+            self._metrics_collector.record_miss(namespace, "get")
+            duration = time.time() - start_time
+            self._metrics_collector.record_latency(duration, "get")
+
         return default
 
     async def get_many(
@@ -356,42 +411,63 @@ class CacheManager:
         if not self.is_enabled():
             return
 
+        start_time = time.time()
         full_key = self._make_key(key, namespace)
 
         # 确定TTL
         if ttl is None:
             ttl = self._get_ttl(namespace)
 
-        # 根据策略设置缓存
-        if self.config.strategy == CacheStrategy.WRITE_THROUGH:
-            # 同步写入所有层级
-            await self._l1_cache.set(full_key, value, ttl=ttl)
-            if self._l2_cache:
-                await self._l2_cache.set(full_key, value, ttl=ttl)
+        try:
+            # 根据策略设置缓存
+            strategy = self.config.strategy
+            # 支持字符串和枚举
+            if isinstance(strategy, str):
+                strategy = CacheStrategy(strategy)
 
-        elif self.config.strategy == CacheStrategy.WRITE_BACK:
-            # 只写L1，异步写L2
-            await self._l1_cache.set(full_key, value, ttl=ttl)
-            if self._l2_cache:
-                # 使用后台任务而不是create_task来避免未等待的协程警告
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        loop.call_soon(lambda: asyncio.create_task(
-                            self._l2_cache.set(full_key, value, ttl=ttl)
-                        ))
-                    else:
-                        # 如果事件循环未运行，直接等待
-                        await self._l2_cache.set(full_key, value, ttl=ttl)
-                except RuntimeError:
-                    # 事件循环不可用，回退到同步写入
+            if strategy == CacheStrategy.WRITE_THROUGH:
+                # 同步写入所有层级
+                await self._l1_cache.set(full_key, value, ttl=ttl)
+                if self._l2_cache:
                     await self._l2_cache.set(full_key, value, ttl=ttl)
 
-        else:  # WRITE_AROUND
-            # 不写缓存
-            pass
+            elif strategy == CacheStrategy.WRITE_BACK:
+                # 只写L1，异步写L2
+                await self._l1_cache.set(full_key, value, ttl=ttl)
+                if self._l2_cache:
+                    # 使用后台任务而不是create_task来避免未等待的协程警告
+                    try:
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            loop.call_soon(
+                                lambda: asyncio.create_task(
+                                    self._l2_cache.set(full_key, value, ttl=ttl)
+                                )
+                            )
+                        else:
+                            # 如果事件循环未运行，直接等待
+                            await self._l2_cache.set(full_key, value, ttl=ttl)
+                    except RuntimeError:
+                        # 事件循环不可用，回退到同步写入
+                        await self._l2_cache.set(full_key, value, ttl=ttl)
 
-        await self._update_stats(set_op=True)
+            else:  # WRITE_AROUND
+                # 不写缓存
+                pass
+
+            await self._update_stats(set_op=True)
+
+            # 记录指标
+            if self._metrics_collector:
+                self._metrics_collector.record_set(namespace)
+                duration = time.time() - start_time
+                self._metrics_collector.record_latency(duration, "set")
+
+        except Exception as e:
+            logger.error(f"缓存设置失败: {e}")
+            if self._metrics_collector:
+                self._metrics_collector.record_error(CacheLevel.L1, "set_failed")
+            raise
 
     async def set_many(
         self,
@@ -406,10 +482,7 @@ class CacheManager:
             namespace: 命名空间
             ttl: 过期时间（秒）
         """
-        tasks = [
-            self.set(key, value, namespace, ttl)
-            for key, value in mapping.items()
-        ]
+        tasks = [self.set(key, value, namespace, ttl) for key, value in mapping.items()]
         await asyncio.gather(*tasks)
 
     async def delete(
@@ -443,10 +516,7 @@ class CacheManager:
             keys: 缓存键列表
             namespace: 命名空间
         """
-        tasks = [
-            self.delete(key, namespace)
-            for key in keys
-        ]
+        tasks = [self.delete(key, namespace) for key in keys]
         await asyncio.gather(*tasks)
 
     async def delete_pattern(self, pattern: str, namespace: str = "") -> None:
@@ -522,7 +592,7 @@ class CacheManager:
         Returns:
             统计信息
         """
-        return {
+        stats = {
             "enabled": self.is_enabled(),
             "hits": self._stats.hits,
             "misses": self._stats.misses,
@@ -538,6 +608,12 @@ class CacheManager:
             "l2_available": self._l2_cache is not None,
             "strategy": self.config.strategy.value,
         }
+
+        # 添加缓存指标收集器的统计
+        if self._metrics_collector:
+            stats["metrics_collector"] = self._metrics_collector.get_stats()
+
+        return stats
 
     def reset_stats(self) -> None:
         """重置统计信息"""
@@ -576,7 +652,7 @@ class CacheManager:
 
         # 分批预热
         for i in range(0, len(data), batch_size):
-            batch = dict(list(data.items())[i:i + batch_size])
+            batch = dict(list(data.items())[i : i + batch_size])
 
             for key, value in batch.items():
                 try:
@@ -629,10 +705,7 @@ class CacheManager:
         threshold = threshold or self._hot_keys_threshold
 
         async with self._hot_keys_lock:
-            return [
-                key for key, count in self._hot_keys.items()
-                if count >= threshold
-            ]
+            return [key for key, count in self._hot_keys.items() if count >= threshold]
 
     def reset_hot_keys(self) -> None:
         """重置热键追踪"""
@@ -754,6 +827,7 @@ def cached(
     Returns:
         装饰器函数
     """
+
     def decorator(func: Callable):
         async def wrapper(*args, **kwargs):
             # 获取缓存管理器
@@ -779,4 +853,5 @@ def cached(
             return result
 
         return wrapper
+
     return decorator

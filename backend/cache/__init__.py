@@ -10,64 +10,68 @@
 - 统计监控
 """
 
-from .manager import (
-    CacheManager,
-    get_cache_manager,
-    setup_cache,
-    CacheConfig,
-    CacheStats,
-    CacheLevel,
-    CacheStrategy,
-    cached,
-)
-
-from .redis_cache import RedisCache, RedisConfig, RedisStatus
-
-from .memory_cache import MemoryCache
-
 from .decorators import (
-    cached,
-    cached_query,
-    cached_vector_search,
-    cached_llm,
-    cached_document,
-    cached_stats,
-    invalidate_cache,
-    CacheWarmer,
     CacheAside,
+    CacheKeyGenerator,
+    CacheWarmer,
+    RateLimiterCache,
+    cached,
+    cached_api_categories,
+    cached_api_domain_stats,
+    cached_api_search,
+    cached_api_stats,
+    cached_document,
+    cached_llm,
+    cached_query,
+    cached_stats,
+    cached_vector_search,
+    invalidate_cache,
     memoize_async,
     rate_limit,
-    RateLimiterCache,
-    CacheKeyGenerator,
 )
+from .manager import (
+    CacheConfig,
+    CacheLevel,
+    CacheManager,
+    CacheStats,
+    CacheStrategy,
+    cached,
+    get_cache_manager,
+    setup_cache,
+)
+from .memory_cache import MemoryCache
+from .redis_cache import RedisCache, RedisConfig, RedisStatus
 
 __all__ = [
     # Manager
-    'CacheManager',
-    'get_cache_manager',
-    'setup_cache',
-    'CacheConfig',
-    'CacheStats',
-    'CacheLevel',
-    'CacheStrategy',
-
+    "CacheManager",
+    "get_cache_manager",
+    "setup_cache",
+    "CacheConfig",
+    "CacheStats",
+    "CacheLevel",
+    "CacheStrategy",
     # Backends
-    'RedisCache',
-    'RedisConfig',
-    'RedisStatus',
-    'MemoryCache',
-
+    "RedisCache",
+    "RedisConfig",
+    "RedisStatus",
+    "MemoryCache",
     # Decorators
-    'cached_query',
-    'cached_vector_search',
-    'cached_llm',
-    'cached_document',
-    'cached_stats',
-    'invalidate_cache',
-    'CacheWarmer',
-    'CacheAside',
-    'memoize_async',
-    'rate_limit',
-    'RateLimiterCache',
-    'CacheKeyGenerator',
+    "cached",
+    "cached_query",
+    "cached_vector_search",
+    "cached_llm",
+    "cached_document",
+    "cached_stats",
+    "cached_api_search",
+    "cached_api_categories",
+    "cached_api_domain_stats",
+    "cached_api_stats",
+    "invalidate_cache",
+    "CacheWarmer",
+    "CacheAside",
+    "memoize_async",
+    "rate_limit",
+    "RateLimiterCache",
+    "CacheKeyGenerator",
 ]

@@ -1,12 +1,42 @@
 [flake8]
+# 最大行长度
 max-line-length = 100
+
+# 忽略的错误码
+# E203: 检测冒号前的空格（与 Black 冲突）
+# W503: 二元运算符前换行（与 Black 冲突）
+# E501: 行过长（由 Black 处理）
 ignore = E203, W503, E501
+
+# 每个文件的忽略规则
 per-file-ignores =
     __init__.py:F401
+    tests/*:S101
+
+# 排除目录
 exclude =
     .git,
     __pycache__,
     venv,
     .venv,
     build,
-    dist
+    dist,
+    .eggs,
+    *.egg,
+    .tox,
+    .pytest_cache,
+    .mypy_cache,
+    htmlcov,
+    migrations
+
+# 启用的插件
+enable-extensions =
+    # G: flake8-logging-format
+    # B: flake8-bugbear
+    # C: flake8-comprehensions
+
+# 文档字符串约定
+docstring-convention = google
+
+# 最大复杂度
+max-complexity = 15

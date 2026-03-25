@@ -255,6 +255,107 @@ fix/xxx (修复分支)
 
 详见：[开发规则文档](DEVELOPMENT_RULES.md)
 
+### 开发者环境设置
+
+#### 快速安装
+
+```bash
+# 运行自动安装脚本（推荐）
+bash setup-dev-env.sh
+
+# 或使用脚本单独安装钩子
+bash scripts/install_hooks.sh
+```
+
+#### 手动安装
+
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate
+
+# 安装开发依赖
+pip install black isort flake8 bandit mypy pre-commit
+
+# 安装预提交钩子
+pre-commit install
+```
+
+#### 预提交钩子
+
+项目配置了以下自动化检查：
+
+| 类别 | 钩子 | 功能 | 自动修复 |
+|------|------|------|----------|
+| **格式化** | black | 代码格式化 | ✅ |
+| | isort | import 排序 | ✅ |
+| | pretty-format-yaml | YAML 格式化 | ✅ |
+| **规范检查** | flake8 | 代码规范检查 | ❌ |
+| | trailing-whitespace | 清理尾随空格 | ✅ |
+| | end-of-file-fixer | 文件换行符结尾 | ✅ |
+| **语法检查** | check-yaml | YAML 语法检查 | ❌ |
+| | check-toml | TOML 语法检查 | ❌ |
+| | check-json | JSON 语法检查 | ❌ |
+| **安全检查** | detect-private-key | 检测私钥泄露 | ❌ |
+| | bandit | 安全漏洞检查 | ❌ |
+| | debug-statements | 检查调试语句 | ❌ |
+| **类型检查** | mypy | 类型检查 | ❌ |
+| **其他** | check-added-large-files | 检查大文件 | ❌ |
+| | check-merge-conflict | 检查合并冲突 | ❌ |
+
+#### 常用命令
+
+```bash
+# === Pre-commit 钩子 ===
+# 手动运行所有钩子
+pre-commit run --all-files
+
+# 运行特定钩子
+pre-commit run black --all-files
+
+# 跳过钩子提交（不推荐）
+git commit --no-verify -m "message"
+
+# 更新钩子版本
+pre-commit autoupdate
+
+# 查看钩子状态
+pre-commit run --show-diff-on-failure
+
+# === 代码质量脚本 ===
+# 检查代码质量
+bash scripts/check_code.sh
+
+# 自动格式化代码
+bash scripts/format_code.sh
+
+# 仅检查不修改
+bash scripts/format_code.sh -c
+
+# 检查特定目录
+bash scripts/check_code.sh backend/
+
+# === 环境检查 ===
+# 检查开发环境
+bash setup-dev-env.sh -c
+
+# === 钩子管理 ===
+# 更新钩子
+bash scripts/install_hooks.sh -u
+
+# 安装并运行钩子
+bash scripts/install_hooks.sh -r
+```
+
+#### 配置文件
+
+| 文件 | 用途 |
+|------|------|
+| `.pre-commit-config.yaml` | Pre-commit 钩子配置 |
+| `.flake8` | Flake8 代码规范配置 |
+| `pyproject.toml` | Black、isort、mypy、bandit 配置 |
+| `pytest.ini` | Pytest 测试配置 |
+
 ---
 
 ## 部署指南

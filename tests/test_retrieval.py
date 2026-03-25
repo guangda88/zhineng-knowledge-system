@@ -2,10 +2,11 @@
 遵循开发规则：测试覆盖检索功能
 """
 
-import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
+
 import asyncpg
+import pytest
 
 
 class TestVectorRetriever:
@@ -38,11 +39,11 @@ class TestVectorRetriever:
         mock_conn = AsyncMock()
         mock_conn.fetch.return_value = [
             {
-                'id': 1,
-                'title': '测试文档',
-                'content': '测试内容',
-                'category': '气功',
-                'similarity': 0.85
+                "id": 1,
+                "title": "测试文档",
+                "content": "测试内容",
+                "category": "气功",
+                "similarity": 0.85,
             }
         ]
         mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
@@ -51,8 +52,8 @@ class TestVectorRetriever:
         results = await retriever.search("气功", top_k=5)
 
         assert len(results) == 1
-        assert results[0]['id'] == 1
-        assert results[0]['similarity'] == 0.85
+        assert results[0]["id"] == 1
+        assert results[0]["similarity"] == 0.85
 
 
 class TestBM25Retriever:
@@ -62,25 +63,22 @@ class TestBM25Retriever:
     async def mock_pool(self):
         """模拟数据库连接池"""
         pool = AsyncMock(spec=asyncpg.Pool)
+        # 创建正确的上下文管理器mock
+        mock_conn = AsyncMock()
+        mock_conn.fetchval.return_value = 1  # 文档数量
+        mock_conn.fetch.return_value = [
+            {"id": 1, "title": "八段锦", "content": "八段锦是一种气功功法", "category": "气功"}
+        ]
+        # 使用 MagicMock 作为 acquire 返回的上下文管理器
+        acquire_context = MagicMock()
+        acquire_context.__aenter__.return_value = mock_conn
+        pool.acquire.return_value = acquire_context
         return pool
 
     @pytest.mark.asyncio
     async def test_search(self, mock_pool):
         """测试BM25搜索"""
         from backend.services.retrieval.bm25 import BM25Retriever
-
-        # 模拟查询结果
-        mock_conn = AsyncMock()
-        mock_conn.fetch.return_value = [
-            {
-                'id': 1,
-                'title': '八段锦',
-                'content': '八段锦是一种气功功法',
-                'category': '气功',
-                'score': 5.2
-            }
-        ]
-        mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
 
         retriever = BM25Retriever(mock_pool)
         await retriever.initialize()
@@ -96,6 +94,14 @@ class TestHybridRetriever:
     async def mock_pool(self):
         """模拟数据库连接池"""
         pool = AsyncMock(spec=asyncpg.Pool)
+        # 创建正确的上下文管理器mock
+        mock_conn = AsyncMock()
+        mock_conn.fetchval.return_value = 0  # 文档数量为0，跳过初始化逻辑
+        mock_conn.fetch.return_value = []
+        # 使用 MagicMock 作为 acquire 返回的上下文管理器
+        acquire_context = MagicMock()
+        acquire_context.__aenter__.return_value = mock_conn
+        pool.acquire.return_value = acquire_context
         return pool
 
     @pytest.mark.asyncio
@@ -117,19 +123,19 @@ class TestHybridRetriever:
         retriever = HybridRetriever(mock_pool)
 
         vector_results = [
-            {'id': 1, 'title': 'A', 'similarity': 0.9},
-            {'id': 2, 'title': 'B', 'similarity': 0.7}
+            {"id": 1, "title": "A", "similarity": 0.9},
+            {"id": 2, "title": "B", "similarity": 0.7},
         ]
         bm25_results = [
-            {'id': 2, 'title': 'B', 'score': 5.0},
-            {'id': 3, 'title': 'C', 'score': 4.0}
+            {"id": 2, "title": "B", "score": 5.0},
+            {"id": 3, "title": "C", "score": 4.0},
         ]
 
         merged = retriever._rrf_merge(vector_results, bm25_results)
 
         assert len(merged) == 3
         # ID 2 应该在两者中都出现，得分最高
-        assert merged[0]['id'] == 2
+        assert merged[0]["id"] == 2
 
 
 class TestDomains:
@@ -210,8 +216,8 @@ class TestDomainRegistry:
     @pytest.mark.asyncio
     async def test_register_and_get(self):
         """测试注册和获取"""
-        from backend.domains.registry import DomainRegistry
         from backend.domains.qigong import QigongDomain
+        from backend.domains.registry import DomainRegistry
 
         registry = DomainRegistry()
         domain = QigongDomain(db_pool=None)
@@ -224,9 +230,9 @@ class TestDomainRegistry:
     @pytest.mark.asyncio
     async def test_get_enabled(self):
         """测试获取启用的领域"""
-        from backend.domains.registry import DomainRegistry
-        from backend.domains.qigong import QigongDomain
         from backend.domains.general import GeneralDomain
+        from backend.domains.qigong import QigongDomain
+        from backend.domains.registry import DomainRegistry
 
         registry = DomainRegistry()
         registry.register(QigongDomain(db_pool=None))
@@ -241,8 +247,8 @@ class TestDomainRegistry:
     @pytest.mark.asyncio
     async def test_route(self):
         """测试路由"""
-        from backend.domains.registry import DomainRegistry
         from backend.domains.qigong import QigongDomain
+        from backend.domains.registry import DomainRegistry
 
         registry = DomainRegistry()
         registry.register(QigongDomain(db_pool=None))
@@ -280,9 +286,9 @@ class TestAPIGateway:
     @pytest.mark.asyncio
     async def test_route(self):
         """测试路由"""
-        from backend.gateway.router import APIGateway
         from backend.domains.qigong import QigongDomain
         from backend.domains.registry import DomainRegistry
+        from backend.gateway.router import APIGateway
 
         registry = DomainRegistry()
         registry.register(QigongDomain(db_pool=None))
@@ -302,9 +308,7 @@ class TestRateLimiter:
         """测试内存速率限制器"""
         from backend.gateway.rate_limiter import InMemoryRateLimiter, RateLimit
 
-        limiter = InMemoryRateLimiter(
-            default_limit=RateLimit(requests=5, window=60)
-        )
+        limiter = InMemoryRateLimiter(default_limit=RateLimit(requests=5, window=60))
 
         # 前5次请求应该通过
         for i in range(5):
@@ -322,8 +326,7 @@ class TestRateLimiter:
         from backend.gateway.rate_limiter import InMemoryRateLimiter, RateLimit
 
         limiter = InMemoryRateLimiter(
-            default_limit=RateLimit(requests=1, window=60),
-            whitelist=["trusted_ip"]
+            default_limit=RateLimit(requests=1, window=60), whitelist=["trusted_ip"]
         )
 
         # 白名单IP应该不受限制
@@ -335,11 +338,10 @@ class TestRateLimiter:
     @pytest.mark.asyncio
     async def test_token_bucket(self):
         """测试令牌桶算法"""
-        from backend.gateway.rate_limiter import TokenBucketRateLimiter, RateLimit
+        from backend.gateway.rate_limiter import RateLimit, TokenBucketRateLimiter
 
         limiter = TokenBucketRateLimiter(
-            default_limit=RateLimit(requests=10, window=60),
-            burst_multiplier=2.0
+            default_limit=RateLimit(requests=10, window=60), burst_multiplier=2.0
         )
 
         # 令牌桶应该支持突发流量
@@ -360,13 +362,10 @@ class TestCircuitBreaker:
         from backend.gateway.circuit_breaker import (
             CircuitBreaker,
             CircuitBreakerConfig,
-            CircuitBreakerOpenError
+            CircuitBreakerOpenError,
         )
 
-        breaker = CircuitBreaker(
-            "test",
-            CircuitBreakerConfig(failure_threshold=3, timeout=60)
-        )
+        breaker = CircuitBreaker("test", CircuitBreakerConfig(failure_threshold=3, timeout=60))
 
         # 模拟连续失败
         async def failing_func():

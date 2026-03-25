@@ -9,19 +9,19 @@ import hashlib
 import inspect
 import json
 import logging
+from enum import Enum
+from functools import wraps
 from typing import (
     Any,
     Callable,
-    Optional,
-    TypeVar,
-    ParamSpec,
     Coroutine,
-    Union,
     Dict,
     List,
+    Optional,
+    ParamSpec,
+    TypeVar,
+    Union,
 )
-from functools import wraps
-from enum import Enum
 
 from .manager import CacheManager
 
@@ -98,10 +98,10 @@ def _generate_cache_key(
 
     # 根据策略生成键
     if strategy == CacheKeyGenerator.HASH:
-        params_hash = hashlib.md5(params_str.encode()).hexdigest()[:16]
+        params_hash = hashlib.md5(params_str.encode(), usedforsecurity=False).hexdigest()[:16]
         cache_key = f"{base_key}:{params_hash}"
     elif strategy == CacheKeyGenerator.JSON:
-        params_hash = hashlib.md5(params_str.encode()).hexdigest()
+        params_hash = hashlib.md5(params_str.encode(), usedforsecurity=False).hexdigest()
         cache_key = f"{base_key}:{params_hash}"
     else:  # SIMPLE
         params_short = params_str[:50]
@@ -308,6 +308,7 @@ class CacheWarmer:
             tasks = []
 
             for func, args, kwargs, namespace, ttl in batch:
+
                 async def warm_task(f=func, a=args, kw=kwargs, ns=namespace, t=ttl):
                     try:
                         result = await f(*a, **kw)
@@ -332,9 +333,7 @@ class CacheWarmer:
                 else:
                     results["skipped"] += 1
 
-            logger.info(
-                f"预热进度: {min(i + batch_size, results['total'])}/{results['total']}"
-            )
+            logger.info(f"预热进度: {min(i + batch_size, results['total'])}/{results['total']}")
 
         # 清空任务列表
         self._warmup_tasks.clear()
@@ -478,11 +477,7 @@ def memoize_async(ttl: Optional[int] = None, max_size: int = 128):
                 oldest_key = min(cache.keys(), key=lambda k: cache[k][1])
                 del cache[oldest_key]
 
-            expiry = (
-                asyncio.get_event_loop().time() + ttl
-                if ttl
-                else float("inf")
-            )
+            expiry = asyncio.get_event_loop().time() + ttl if ttl else float("inf")
             cache[key] = (result, expiry)
 
             return result
@@ -494,6 +489,84 @@ def memoize_async(ttl: Optional[int] = None, max_size: int = 128):
         return wrapper
 
     return decorator
+
+
+def cached_api_search(ttl: int = 300):
+    """API搜索结果缓存装饰器 (TTL: 5分钟)
+
+    专为/api/v1/search端点设计，支持查询参数和分类筛选
+
+    Args:
+        ttl: 过期时间（秒）
+
+    Example:
+        @cached_api_search()
+        async def search_documents(q: str, category: str = None):
+            return await search_service.query(q, category)
+    """
+    return cached(
+        namespace="api_search", ttl=ttl, key_prefix="search", key_strategy=CacheKeyGenerator.HASH
+    )
+
+
+def cached_api_categories(ttl: int = 1800):
+    """API分类列表缓存装饰器 (TTL: 30分钟)
+
+    专为/api/v1/categories端点设计
+
+    Args:
+        ttl: 过期时间（秒）
+
+    Example:
+        @cached_api_categories()
+        async def get_categories():
+            return await db.fetch_categories()
+    """
+    return cached(
+        namespace="api_categories",
+        ttl=ttl,
+        key_prefix="categories",
+        key_strategy=CacheKeyGenerator.SIMPLE,
+    )
+
+
+def cached_api_domain_stats(ttl: int = 600):
+    """API领域统计缓存装饰器 (TTL: 10分钟)
+
+    专为/api/v1/domains/{domain}/stats端点设计
+
+    Args:
+        ttl: 过期时间（秒）
+
+    Example:
+        @cached_api_domain_stats()
+        async def get_domain_stats(domain: str):
+            return await domain_service.get_stats(domain)
+    """
+    return cached(
+        namespace="api_domain_stats",
+        ttl=ttl,
+        key_prefix="domain_stats",
+        key_strategy=CacheKeyGenerator.HASH,
+    )
+
+
+def cached_api_stats(ttl: int = 300):
+    """API系统统计缓存装饰器 (TTL: 5分钟)
+
+    专为/api/v1/stats端点设计，缓存文档数量和分类统计信息
+
+    Args:
+        ttl: 过期时间（秒）
+
+    Example:
+        @cached_api_stats()
+        async def get_stats():
+            return await db.fetch_stats()
+    """
+    return cached(
+        namespace="api_stats", ttl=ttl, key_prefix="stats", key_strategy=CacheKeyGenerator.SIMPLE
+    )
 
 
 class RateLimiterCache:

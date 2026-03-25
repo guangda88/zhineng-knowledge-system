@@ -5,12 +5,12 @@
 
 import logging
 import time
-from typing import Dict, List, Optional, Any, Callable
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import defaultdict
+from typing import Any, Callable, Dict, List, Optional
 
-from domains import get_registry, DomainRegistry
+from backend.domains import DomainRegistry, get_registry
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class ServiceEndpoint:
             "health": self.health,
             "connections": self.connections,
             "response_time": self.response_time,
-            "error_count": self.error_count
+            "error_count": self.error_count,
         }
 
 
@@ -60,7 +60,7 @@ class RoutingResult:
         return {
             "domain": self.domain,
             "endpoint": self.endpoint.to_dict() if self.endpoint else None,
-            "strategy": self.strategy
+            "strategy": self.strategy,
         }
 
 
@@ -86,7 +86,7 @@ class APIGateway:
             "qigong": ["气功", "八段锦", "五禽戏", "太极拳", "功法", "养生", "呼吸"],
             "tcm": ["中医", "中药", "针灸", "经络", "穴位", "方剂", "辨证"],
             "confucian": ["儒家", "孔子", "论语", "孟子", "仁义", "礼智"],
-            "general": []  # 默认
+            "general": [],  # 默认
         }
 
     def add_endpoint(self, domain: str, endpoint: ServiceEndpoint) -> None:
@@ -106,9 +106,7 @@ class APIGateway:
             domain: 领域名称
             url: 端点URL
         """
-        self._endpoints[domain] = [
-            ep for ep in self._endpoints[domain] if ep.url != url
-        ]
+        self._endpoints[domain] = [ep for ep in self._endpoints[domain] if ep.url != url]
 
     def set_routing_strategy(self, strategy: RoutingStrategy) -> None:
         """设置路由策略
@@ -143,12 +141,7 @@ class APIGateway:
         # 返回分数最高的领域
         return max(scores.items(), key=lambda x: x[1])[0]
 
-    async def route(
-        self,
-        question: str,
-        context: Optional[str] = None,
-        **kwargs
-    ) -> RoutingResult:
+    async def route(self, question: str, context: Optional[str] = None, **kwargs) -> RoutingResult:
         """路由请求到合适的领域
 
         Args:
@@ -190,7 +183,7 @@ class APIGateway:
             domain=domain,
             handler=domain_instance.query,
             endpoint=endpoint,
-            strategy=self._strategy.value
+            strategy=self._strategy.value,
         )
 
     def _select_endpoint(self, domain: str) -> Optional[ServiceEndpoint]:
@@ -222,10 +215,7 @@ class APIGateway:
             return healthy_endpoints[0]
 
     async def route_multi(
-        self,
-        question: str,
-        domains: Optional[List[str]] = None,
-        **kwargs
+        self, question: str, domains: Optional[List[str]] = None, **kwargs
     ) -> List[Any]:
         """多领域路由
 
@@ -239,8 +229,7 @@ class APIGateway:
         """
         if domains:
             target_domains = [
-                self._registry.get(name) for name in domains
-                if self._registry.get(name)
+                self._registry.get(name) for name in domains if self._registry.get(name)
             ]
         else:
             # 获取所有启用的领域
@@ -264,21 +253,15 @@ class APIGateway:
         """
         return {
             "strategy": self._strategy.value,
-            "total_requests": sum(
-                v for k, v in self._metrics.items()
-                if k.startswith("domain_")
-            ),
+            "total_requests": sum(v for k, v in self._metrics.items() if k.startswith("domain_")),
             "domain_distribution": {
-                k: v for k, v in self._metrics.items()
-                if k.startswith("domain_")
+                k: v for k, v in self._metrics.items() if k.startswith("domain_")
             },
             "endpoints": {
-                domain: [ep.to_dict() for ep in eps]
-                for domain, eps in self._endpoints.items()
+                domain: [ep.to_dict() for ep in eps] for domain, eps in self._endpoints.items()
             },
-            "avg_routing_time": self._metrics.get("routing_time", 0) / max(
-                sum(v for k, v in self._metrics.items() if k.startswith("domain_")), 1
-            )
+            "avg_routing_time": self._metrics.get("routing_time", 0)
+            / max(sum(v for k, v in self._metrics.items() if k.startswith("domain_")), 1),
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -293,7 +276,7 @@ class APIGateway:
             "status": "healthy",
             "strategy": self._strategy.value,
             "domains": domain_health,
-            "endpoints_count": sum(len(eps) for eps in self._endpoints.values())
+            "endpoints_count": sum(len(eps) for eps in self._endpoints.values()),
         }
 
     def reset_metrics(self) -> None:

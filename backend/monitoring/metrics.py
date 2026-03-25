@@ -3,13 +3,13 @@
 收集和聚合系统指标
 """
 
-import time
 import asyncio
-from typing import Dict, List, Optional, Any, Callable
+import logging
+import time
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import defaultdict
-import logging
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class Metric:
             "value": self.value,
             "labels": self.labels,
             "timestamp": self.timestamp,
-            "help": self.help
+            "help": self.help,
         }
 
 
@@ -61,21 +61,14 @@ class MetricsCollector:
 
     def __init__(self):
         """初始化指标收集器"""
-        self._counters: Dict[str, Dict[tuple, float]] = defaultdict(lambda: defaultdict(float))
-        self._gauges: Dict[str, Dict[tuple, float]] = defaultdict(lambda: defaultdict(float))
-        self._histograms: Dict[str, Dict[tuple, List[HistogramBucket]]] = defaultdict(
-            lambda: [HistogramBucket(0.5), HistogramBucket(1.0), HistogramBucket(2.5),
-                     HistogramBucket(5.0), HistogramBucket(10.0), HistogramBucket(float('inf'))]
-        )
-        self._histogram_sums: Dict[str, Dict[tuple, float]] = defaultdict(lambda: defaultdict(float))
-        self._histogram_counts: Dict[str, Dict[tuple, int]] = defaultdict(lambda: defaultdict(int))
+        self._counters: Dict[str, Dict[tuple, float]] = defaultdict(dict)
+        self._gauges: Dict[str, Dict[tuple, float]] = defaultdict(dict)
+        self._histograms: Dict[str, Dict[tuple, List[HistogramBucket]]] = defaultdict(dict)
+        self._histogram_sums: Dict[str, Dict[tuple, float]] = defaultdict(dict)
+        self._histogram_counts: Dict[str, Dict[tuple, int]] = defaultdict(dict)
 
     def increment_counter(
-        self,
-        name: str,
-        value: float = 1.0,
-        labels: Optional[Dict[str, str]] = None,
-        help: str = ""
+        self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None, help: str = ""
     ) -> None:
         """增加计数器
 
@@ -86,15 +79,13 @@ class MetricsCollector:
             help: 帮助信息
         """
         key = self._make_key(labels)
+        if key not in self._counters[name]:
+            self._counters[name][key] = 0.0
         self._counters[name][key] += value
         logger.debug(f"Counter {name} += {value}, labels={labels}")
 
     def set_gauge(
-        self,
-        name: str,
-        value: float,
-        labels: Optional[Dict[str, str]] = None,
-        help: str = ""
+        self, name: str, value: float, labels: Optional[Dict[str, str]] = None, help: str = ""
     ) -> None:
         """设置仪表值
 
@@ -109,11 +100,7 @@ class MetricsCollector:
         logger.debug(f"Gauge {name} = {value}, labels={labels}")
 
     def observe_histogram(
-        self,
-        name: str,
-        value: float,
-        labels: Optional[Dict[str, str]] = None,
-        help: str = ""
+        self, name: str, value: float, labels: Optional[Dict[str, str]] = None, help: str = ""
     ) -> None:
         """观察直方图值
 
@@ -124,6 +111,18 @@ class MetricsCollector:
             help: 帮助信息
         """
         key = self._make_key(labels)
+
+        # 如果key不存在，初始化直方图桶
+        if key not in self._histograms[name]:
+            self._histograms[name][key] = [
+                HistogramBucket(0.5),
+                HistogramBucket(1.0),
+                HistogramBucket(2.5),
+                HistogramBucket(5.0),
+                HistogramBucket(10.0),
+                HistogramBucket(float("inf")),
+            ]
+
         buckets = self._histograms[name][key]
 
         # 更新桶计数
@@ -132,14 +131,15 @@ class MetricsCollector:
                 bucket.count += 1
 
         # 更新总和和计数
+        if key not in self._histogram_sums[name]:
+            self._histogram_sums[name][key] = 0.0
+        if key not in self._histogram_counts[name]:
+            self._histogram_counts[name][key] = 0
+
         self._histogram_sums[name][key] += value
         self._histogram_counts[name][key] += 1
 
-    def get_counter(
-        self,
-        name: str,
-        labels: Optional[Dict[str, str]] = None
-    ) -> float:
+    def get_counter(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
         """获取计数器值
 
         Args:
@@ -152,11 +152,7 @@ class MetricsCollector:
         key = self._make_key(labels)
         return self._counters[name][key]
 
-    def get_gauge(
-        self,
-        name: str,
-        labels: Optional[Dict[str, str]] = None
-    ) -> float:
+    def get_gauge(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
         """获取仪表值
 
         Args:
@@ -181,39 +177,30 @@ class MetricsCollector:
         for name, label_dict in self._counters.items():
             for label_key, value in label_dict.items():
                 labels = self._parse_key(label_key)
-                metrics.append({
-                    "name": name,
-                    "type": "counter",
-                    "value": value,
-                    "labels": labels
-                })
+                metrics.append({"name": name, "type": "counter", "value": value, "labels": labels})
 
         # 仪表
         for name, label_dict in self._gauges.items():
             for label_key, value in label_dict.items():
                 labels = self._parse_key(label_key)
-                metrics.append({
-                    "name": name,
-                    "type": "gauge",
-                    "value": value,
-                    "labels": labels
-                })
+                metrics.append({"name": name, "type": "gauge", "value": value, "labels": labels})
 
         # 直方图
         for name, label_dict in self._histograms.items():
             for label_key, buckets in label_dict.items():
                 labels = self._parse_key(label_key)
-                metrics.append({
-                    "name": name,
-                    "type": "histogram",
-                    "buckets": [
-                        {"upper_bound": b.upper_bound, "count": b.count}
-                        for b in buckets
-                    ],
-                    "sum": self._histogram_sums[name][label_key],
-                    "count": self._histogram_counts[name][label_key],
-                    "labels": labels
-                })
+                metrics.append(
+                    {
+                        "name": name,
+                        "type": "histogram",
+                        "buckets": [
+                            {"upper_bound": b.upper_bound, "count": b.count} for b in buckets
+                        ],
+                        "sum": self._histogram_sums[name][label_key],
+                        "count": self._histogram_counts[name][label_key],
+                        "labels": labels,
+                    }
+                )
 
         return metrics
 
@@ -257,6 +244,7 @@ def track_metrics(metric_name: str, metric_type: MetricType = MetricType.COUNTER
         metric_name: 指标名称
         metric_type: 指标类型
     """
+
     def decorator(func: Callable):
         async def async_wrapper(*args, **kwargs):
             collector = get_metrics_collector()
@@ -296,6 +284,7 @@ def track_metrics(metric_name: str, metric_type: MetricType = MetricType.COUNTER
                 raise e
 
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
