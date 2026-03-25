@@ -6,7 +6,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from common import rows_to_list
+from backend.common import rows_to_list
 
 
 logger = logging.getLogger(__name__)
