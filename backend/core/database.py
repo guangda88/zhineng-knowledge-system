@@ -26,7 +26,11 @@ async def init_db_pool() -> asyncpg.Pool:
                 "Please set it before starting the application."
             )
         db_pool = await asyncpg.create_pool(
-            database_url, min_size=2, max_size=10, command_timeout=60
+            database_url,
+            min_size=10,
+            max_size=50,
+            command_timeout=30,
+            max_inactive_connection_lifetime=300
         )
         logger.info("Database pool initialized")
     return db_pool

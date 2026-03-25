@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from cache.decorators import cached_api_domain_stats
+from common.typing import JSONResponse
 from fastapi import APIRouter, HTTPException, Response
 from gateway import APIGateway, InMemoryRateLimiter
 from pydantic import BaseModel, Field
@@ -63,8 +64,8 @@ class DomainQueryRequest(BaseModel):
 # ========== 路由 ==========
 
 
-@router.post("/gateway/query", response_model=Dict[str, Any])
-async def gateway_query(request: GatewayQueryRequest) -> Dict[str, Any]:
+@router.post("/gateway/query", response_model=JSONResponse)
+async def gateway_query(request: GatewayQueryRequest) -> JSONResponse:
     """
     网关统一查询API
 
@@ -123,8 +124,8 @@ async def gateway_query(request: GatewayQueryRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/domains", response_model=Dict[str, Any])
-async def list_domains() -> Dict[str, Any]:
+@router.get("/domains", response_model=JSONResponse)
+async def list_domains() -> JSONResponse:
     """
     获取所有领域列表
 
@@ -141,9 +142,9 @@ async def list_domains() -> Dict[str, Any]:
     }
 
 
-@router.get("/domains/{domain_name}/stats", response_model=Dict[str, Any])
+@router.get("/domains/{domain_name}/stats", response_model=JSONResponse)
 @cached_api_domain_stats(ttl=600)  # 10分钟缓存
-async def get_domain_stats(domain_name: str) -> Dict[str, Any]:
+async def get_domain_stats(domain_name: str) -> JSONResponse:
     """
     获取领域统计信息（缓存10分钟）
 
@@ -177,8 +178,8 @@ async def get_domain_stats(domain_name: str) -> Dict[str, Any]:
     }
 
 
-@router.post("/domains/{domain_name}/query", response_model=Dict[str, Any])
-async def domain_query(domain_name: str, request: DomainQueryRequest) -> Dict[str, Any]:
+@router.post("/domains/{domain_name}/query", response_model=JSONResponse)
+async def domain_query(domain_name: str, request: DomainQueryRequest) -> JSONResponse:
     """
     直接向指定领域查询
 
@@ -202,8 +203,8 @@ async def domain_query(domain_name: str, request: DomainQueryRequest) -> Dict[st
     return result.to_dict()
 
 
-@router.get("/metrics", response_model=Dict[str, Any])
-async def get_metrics() -> Dict[str, Any]:
+@router.get("/metrics", response_model=JSONResponse)
+async def get_metrics() -> JSONResponse:
     """
     获取系统指标
 
@@ -242,8 +243,8 @@ async def get_prometheus_metrics() -> Response:
     )
 
 
-@router.get("/gateway/stats", response_model=Dict[str, Any])
-async def gateway_stats() -> Dict[str, Any]:
+@router.get("/gateway/stats", response_model=JSONResponse)
+async def gateway_stats() -> JSONResponse:
     """
     获取网关统计信息
 

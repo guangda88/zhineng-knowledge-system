@@ -17,10 +17,10 @@ try:
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
-    aioredis = None
-    RedisError = Exception
-    ConnectionError = Exception
-    TimeoutError = Exception
+    aioredis = None  # type: ignore
+    RedisError = Exception  # type: ignore
+    ConnectionError = Exception  # type: ignore
+    TimeoutError = Exception  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class RedisConnectionPool:
             raise ImportError("redis-py not installed. Install with: pip install redis")
 
         self.config = config
-        self._pool: Optional[aioredis.ConnectionPool] = None
+        self._pool: Optional["aioredis.ConnectionPool"] = None  # type: ignore
         self._status = RedisStatus.DISCONNECTED
         self._lock = asyncio.Lock()
         self._last_health_check = 0.0
@@ -72,7 +72,7 @@ class RedisConnectionPool:
         """获取连接状态"""
         return self._status
 
-    async def _create_pool(self) -> aioredis.ConnectionPool:
+    async def _create_pool(self) -> "aioredis.ConnectionPool":  # type: ignore
         """创建连接池
 
         Returns:
@@ -98,7 +98,7 @@ class RedisConnectionPool:
 
         return pool
 
-    async def get_pool(self) -> aioredis.ConnectionPool:
+    async def get_pool(self) -> "aioredis.ConnectionPool":  # type: ignore
         """获取连接池
 
         Returns:
@@ -109,7 +109,7 @@ class RedisConnectionPool:
                 self._pool = await self._create_pool()
             return self._pool
 
-    async def get_client(self) -> aioredis.Redis:
+    async def get_client(self) -> "aioredis.Redis":  # type: ignore
         """获取Redis客户端
 
         Returns:
@@ -185,14 +185,14 @@ class RedisCache:
             self.config = RedisConfig(url=url or "redis://localhost:6379/0", key_prefix=key_prefix)
 
         self._pool_manager = RedisConnectionPool(self.config)
-        self._client: Optional[aioredis.Redis] = None
+        self._client: Optional["aioredis.Redis"] = None  # type: ignore
         self._circuit_breaker_open = False
         self._circuit_breaker_until = 0.0
         self._circuit_breaker_failures = 0
         self._circuit_breaker_threshold = 5
         self._circuit_breaker_timeout = 60  # 秒
 
-    async def _get_client(self) -> aioredis.Redis:
+    async def _get_client(self) -> "aioredis.Redis":  # type: ignore
         """获取Redis客户端
 
         Returns:

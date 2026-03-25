@@ -8,6 +8,11 @@
 """
 
 import logging
+import os
+import sys
+
+# 添加当前目录到 Python 路径以支持相对导入
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from api.v1 import api_router
 from cache import setup_cache
@@ -20,6 +25,8 @@ from core import (
 from core.lifespan import lifespan
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from middleware import RateLimitMiddleware
 
 # 配置日志
 logging.basicConfig(
@@ -52,6 +59,12 @@ def create_app() -> FastAPI:
 
     # 请求日志中间件
     app.middleware("http")(log_requests)
+
+    # GZip 压缩中间件 - 仅压缩大于1000字节的响应
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # API限流中间件
+    app.add_middleware(RateLimitMiddleware)
 
     # 注册API路由
     app.include_router(api_router)

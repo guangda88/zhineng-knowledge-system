@@ -6,7 +6,7 @@ services:
     container_name: zhineng-postgres
     environment:
       POSTGRES_USER: zhineng
-      POSTGRES_PASSWORD: zhineng123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zhineng123}
       POSTGRES_DB: zhineng_kb
       POSTGRES_INITDB_ARGS: "-E UTF8"
     ports:
@@ -26,13 +26,13 @@ services:
   redis:
     image: redis:7-alpine
     container_name: zhineng-redis
-    command: redis-server --appendonly yes --requirepass redis123
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     ports:
       - "6381:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,8 +46,8 @@ services:
       dockerfile: Dockerfile
     container_name: zhineng-api
     environment:
-      DATABASE_URL: postgresql://zhineng:zhineng123@postgres:5432/zhineng_kb
-      REDIS_URL: redis://:redis123@redis:6379/0
+      DATABASE_URL: postgresql://zhineng:${POSTGRES_PASSWORD:-zhineng123}@postgres:5432/zhineng_kb
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
       API_HOST: 0.0.0.0
       API_PORT: 8000
       LOG_LEVEL: INFO
@@ -109,7 +109,7 @@ services:
     container_name: zhineng-grafana
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
       GF_USERS_ALLOW_SIGN_UP: "false"
     ports:
       - "3000:3000"
@@ -129,7 +129,7 @@ services:
     container_name: zhineng-redis-exporter
     environment:
       REDIS_ADDR: redis://redis:6379
-      REDIS_PASSWORD: redis123
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
     ports:
       - "9121:9121"
     depends_on:
@@ -143,7 +143,7 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: zhineng-postgres-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://zhineng:zhineng123@postgres:5436/zhineng_kb?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://zhineng:${POSTGRES_PASSWORD:-zhineng123}@postgres:5436/zhineng_kb?sslmode=disable"
     ports:
       - "9187:9187"
     depends_on:

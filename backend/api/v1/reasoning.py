@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from api.v1.search import get_hybrid_retriever
+from common import rows_to_list
+from common.typing import JSONResponse
 from core.database import init_db_pool
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -110,8 +112,8 @@ async def retrieve_context(question: str, category: Optional[str] = None) -> Lis
 # ========== 路由 ==========
 
 
-@router.post("/reason", response_model=Dict[str, Any])
-async def reasoning_answer(request: ReasoningRequest) -> Dict[str, Any]:
+@router.post("/reason", response_model=JSONResponse)
+async def reasoning_answer(request: ReasoningRequest) -> JSONResponse:
     """
     推理问答API
 
@@ -162,8 +164,8 @@ async def reasoning_answer(request: ReasoningRequest) -> Dict[str, Any]:
     }
 
 
-@router.post("/graph/query", response_model=Dict[str, Any])
-async def graph_query(request: GraphQueryRequest) -> Dict[str, Any]:
+@router.post("/graph/query", response_model=JSONResponse)
+async def graph_query(request: GraphQueryRequest) -> JSONResponse:
     """
     知识图谱查询API
 
@@ -209,8 +211,8 @@ async def graph_query(request: GraphQueryRequest) -> Dict[str, Any]:
         }
 
 
-@router.get("/graph/data", response_model=Dict[str, Any])
-async def get_graph_data() -> Dict[str, Any]:
+@router.get("/graph/data", response_model=JSONResponse)
+async def get_graph_data() -> JSONResponse:
     """
     获取知识图谱数据
 
@@ -223,8 +225,8 @@ async def get_graph_data() -> Dict[str, Any]:
     return reasoner.get_graph_data()
 
 
-@router.post("/graph/build", response_model=Dict[str, Any])
-async def build_graph(category: Optional[str] = None) -> Dict[str, Any]:
+@router.post("/graph/build", response_model=JSONResponse)
+async def build_graph(category: Optional[str] = None) -> JSONResponse:
     """
     从现有文档构建知识图谱
 
@@ -246,7 +248,7 @@ async def build_graph(category: Optional[str] = None) -> Dict[str, Any]:
         rows = await pool.fetch("SELECT id, title, content FROM documents LIMIT 100")
 
     # 转换为上下文格式
-    contexts = [{"id": row["id"], "title": row["title"], "content": row["content"]} for row in rows]
+    contexts = rows_to_list(rows)
 
     # 构建图谱
     await reasoner._build_kg_from_context(contexts)
@@ -263,8 +265,8 @@ async def build_graph(category: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
-@router.get("/reasoning/status", response_model=Dict[str, Any])
-async def reasoning_status() -> Dict[str, Any]:
+@router.get("/reasoning/status", response_model=JSONResponse)
+async def reasoning_status() -> JSONResponse:
     """
     获取推理服务状态
 

@@ -2,9 +2,16 @@
 pytest 配置文件
 遵循开发规则测试规范
 """
+import os
 import pytest
 import asyncio
 from typing import AsyncGenerator, Generator
+
+# 设置测试环境变量
+os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test")
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+os.environ.setdefault("ENVIRONMENT", "test")
+os.environ.setdefault("DEEPSEEK_API_KEY", "test_api_key_for_testing")
 
 # 测试数据库配置
 TEST_DATABASE_URL = "postgresql://zhineng:zhineng123@localhost:5436/zhineng_test"
