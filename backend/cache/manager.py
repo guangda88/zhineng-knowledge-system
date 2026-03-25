@@ -266,7 +266,8 @@ class CacheManager:
         if not self.config.stats_enabled:
             return
 
-        # 采样
+        # 采样 - 仅用于统计性能数据，非安全用途
+        # nosec: B311 - random仅用于非安全用途的统计采样
         import random
 
         if random.random() > self.config.stats_sample_rate:
