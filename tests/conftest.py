@@ -12,6 +12,7 @@ os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/tes
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("DEEPSEEK_API_KEY", "test_api_key_for_testing")
+os.environ["ALLOWED_ORIGINS"] = '["http://localhost:3000","http://localhost:8008","http://localhost:8000"]'
 
 # 测试数据库配置
 TEST_DATABASE_URL = "postgresql://zhineng:zhineng123@localhost:5436/zhineng_test"

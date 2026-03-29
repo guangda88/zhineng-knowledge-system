@@ -1,0 +1,15 @@
+{
+  "apply_jump_url": "",
+  "code": 0,
+  "daily_left_count": 0,
+  "default_tips": "请输入你的任务描述",
+  "is_beat": false,
+  "msg": "ok",
+  "recommend_task_category": [],
+  "recommend_task_examples": [],
+  "recommend_task_examples_end": false,
+  "recommend_task_examples_next_cursor": "",
+  "tips": "",
+  "tool_bar_items": [],
+  "trial_status": 0
+}

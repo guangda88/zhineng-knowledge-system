@@ -1,0 +1,46 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /usr/bin/python
+cachedir: .pytest_cache
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/ai/zhineng-knowledge-system
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: benchmark-5.2.3, xdist-3.8.0, cov-7.1.0, asyncio-1.3.0, anyio-4.12.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 34 items
+
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_extract_simple_chapters PASSED [  2%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_extract_from_toc_area PASSED [  5%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_extract_complex_hierarchy PASSED [  8%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_extract_real_textbook_sample PASSED [ 11%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_build_hierarchy PASSED [ 14%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_empty_content PASSED [ 17%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_no_toc_lines PASSED [ 20%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_duplicate_chapters PASSED [ 23%]
+test_autonomous_processor.py::TestAutonomousTocExtractor::test_line_numbers PASSED [ 26%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_segment_simple_text PASSED [ 29%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_segment_with_toc_items PASSED [ 32%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_max_block_size PASSED [ 35%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_empty_blocks PASSED [ 38%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_paragraph_preservation PASSED [ 41%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_chinese_sentence_splitting PASSED [ 44%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_block_toc_association PASSED [ 47%]
+test_autonomous_processor.py::TestSmartTextSegmenter::test_line_number_accuracy PASSED [ 50%]
+test_autonomous_processor.py::TestAutonomousTextbookProcessor::test_process_simple_textbook PASSED [ 52%]
+test_autonomous_processor.py::TestAutonomousTextbookProcessor::test_process_real_sample PASSED [ 55%]
+test_autonomous_processor.py::TestAutonomousTextbookProcessor::test_nonexistent_file PASSED [ 58%]
+test_autonomous_processor.py::TestAutonomousTextbookProcessor::test_empty_file PASSED [ 61%]
+test_autonomous_processor.py::TestAutonomousTextbookProcessor::test_result_serialization PASSED [ 64%]
+test_autonomous_processor.py::TestAutonomousTextbookProcessor::test_statistics_accuracy PASSED [ 67%]
+test_autonomous_processor.py::TestDataStructures::test_toc_item_dict_conversion PASSED [ 70%]
+test_autonomous_processor.py::TestDataStructures::test_text_block_dict_conversion PASSED [ 73%]
+test_autonomous_processor.py::TestDataStructures::test_text_block_char_count_auto PASSED [ 76%]
+test_autonomous_processor.py::TestDataStructures::test_processing_result_dict_conversion PASSED [ 79%]
+test_autonomous_processor.py::TestEdgeCasesAndExceptions::test_very_long_line PASSED [ 82%]
+test_autonomous_processor.py::TestEdgeCasesAndExceptions::test_unicode_content PASSED [ 85%]
+test_autonomous_processor.py::TestEdgeCasesAndExceptions::test_mixed_encoding_like PASSED [ 88%]
+test_autonomous_processor.py::TestEdgeCasesAndExceptions::test_very_short_content PASSED [ 91%]
+test_autonomous_processor.py::TestEdgeCasesAndExceptions::test_malformed_chapter_numbers PASSED [ 94%]
+test_autonomous_processor.py::TestPerformance::test_large_file_performance PASSED [ 97%]
+test_autonomous_processor.py::TestPerformance::test_memory_usage PASSED  [100%]
+
+============================== 34 passed in 0.36s ==============================
