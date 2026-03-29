@@ -96,15 +96,7 @@ class SecurityConfig(BaseSettings):
         description="是否启用安全头"
     )
 
-    @field_validator('ALLOWED_ORIGINS', mode='before')
-    @classmethod
-    def validate_origins(cls, v):
-        """验证CORS来源"""
-        if isinstance(v, str):
-            v = [origin.strip() for origin in v.split(',') if origin.strip()]
-        if not v or "*" in v:
-            logger.warning("CORS configured to allow all origins - not recommended for production")
-        return v
+    # NOTE: ALLOWED_ORIGINS env must be JSON array format, e.g. ["http://localhost:3000"]
 
     @field_validator('SECRET_KEY')
     @classmethod
