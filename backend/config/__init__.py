@@ -58,7 +58,7 @@ class Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, LingZhiCon
 
     def get_redis_url(self) -> str:
         """获取Redis连接URL"""
-        return self.REDIS_URL or self.get_redis_url()
+        return self.REDIS_URL
 
     def is_development(self) -> bool:
         """是否为开发环境"""
