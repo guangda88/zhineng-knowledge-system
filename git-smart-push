@@ -1,0 +1,7 @@
+#!/bin/bash
+# Git Smart Push - 项目根目录包装脚本
+# 用法: ./git-smart-push [remote] [branch...]
+#       或: git smart-push [remote] [branch...]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/.git/hooks/smart-push" "$@"
