@@ -1,0 +1,145 @@
+{
+  "workflow": "LingFlow 教材处理工作流",
+  "generated_at": "2026-03-27T10:04:48.999552",
+  "summary": {
+    "total_steps": 1,
+    "completed": 1,
+    "failed": 0,
+    "success_rate": "100.0%"
+  },
+  "steps": [
+    {
+      "step_name": "parse_toc",
+      "status": "completed",
+      "message": "解析了 0/9 本教材目录",
+      "data": {
+        "parsed": 0,
+        "total": 9,
+        "toc_data": {}
+      },
+      "error": null,
+      "started_at": "2026-03-27T10:04:48.993437",
+      "completed_at": "2026-03-27T10:04:48.999546",
+      "duration_seconds": 0.006109
+    }
+  ],
+  "textbooks": [
+    {
+      "number": 1,
+      "title": "智能气功科学概论",
+      "short_name": "概论",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/01-概论",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 2,
+      "title": "智能气功科学精义",
+      "short_name": "精义",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/02-精义",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 3,
+      "title": "智能气功科学混元整体理论",
+      "short_name": "混元整体理论",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/03-混元整体理论",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 4,
+      "title": "智能气功科学功法学",
+      "short_name": "功法学",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/04-功法学",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 5,
+      "title": "智能气功科学超常智能",
+      "short_name": "超常智能",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/05-超常智能",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 6,
+      "title": "智能气功科学传统气功知识综述",
+      "short_name": "传统气功知识综述",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/06-传统气功知识综述",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 7,
+      "title": "智能气功科学气功与人类文化",
+      "short_name": "气功与人类文化",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/07-气功与人类文化",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 8,
+      "title": "中国气功发展简史",
+      "short_name": "中国气功发展简史",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/08-中国气功发展简史",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    },
+    {
+      "number": 9,
+      "title": "智能气功科学的现代科学研究",
+      "short_name": "气功的现代科学研究",
+      "pdf_path": null,
+      "txt_path": null,
+      "docx_path": null,
+      "processed_dir": "/home/ai/zhineng-knowledge-system/backend/lingflow/data/processed/textbooks_v2/09-气功的现代科学研究",
+      "source_dir": null,
+      "quality_score": 0.0,
+      "char_count": 0,
+      "chinese_count": 0
+    }
+  ]
+}

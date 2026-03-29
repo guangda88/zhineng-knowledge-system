@@ -1,0 +1,339 @@
+[
+  {
+    "url": "https://ima.qq.com/wikis",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Upgrade-Insecure-Requests": "1",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "text/html"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/polyfills-2Pac3Yv_.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/injected-script.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/index-DvqlJcTL.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/vendor-BRmyPyFj.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/antd-D_Jnhd8C.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/index-CSXTAHNI.css",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "text/css"
+  },
+  {
+    "url": "https://oth.str.beacon.qq.com/trpc.beacon.configserver.BeaconConfigService/QueryConfig",
+    "method": "POST",
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Content-Type": "application/json;charset=utf-8",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/json"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/rainbow.common-DuFKFltA.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/assets/index-CU3F6FtO.js",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Origin": "https://ima.qq.com",
+      "Referer": "https://static.ima.qq.com/ima/assets/wikis/assets/index-DvqlJcTL.js",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "application/javascript"
+  },
+  {
+    "url": "https://static.ima.qq.com/ima/assets/wikis/favicon.ico",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "image/vnd.microsoft.icon"
+  },
+  {
+    "url": "https://qbtool.static.qq.com/ima/assets/wikis/light-favicon.svg",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://ima.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "image/svg+xml"
+  },
+  {
+    "url": "https://ima.qq.com/cgi-bin/task_assistant_nl/get_podcast_config",
+    "method": "POST",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://ima.qq.com/wikis",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "extension_version": "999.999.999",
+      "from_browser_ima": "1",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "traceparent": "00-affd1f5e21dc251e6b1fe68cc6a14cba-25549c3b45692188-01",
+      "x-ima-cookie": "PLATFORM=H5; CLIENT-TYPE=256053; WEB-VERSION=999.999.999; IMA-GUID=guid-211543f1ba58c3c6cf9cf1e10200000d81a31c; IMA-Q36=211543f1ba58c3c6cf9cf1e10200000d81a31c; IMA-IUA=Mozilla/5.0 (Windows NT 10.0, Win64, x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    },
+    "status": 200,
+    "type": "application/json"
+  },
+  {
+    "url": "https://ima.qq.com/cgi-bin/task_assistant_nl/get_homepage",
+    "method": "POST",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://ima.qq.com/wikis",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "extension_version": "999.999.999",
+      "from_browser_ima": "1",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "traceparent": "00-4392bcc180a7fe3affc8fc5083df9e42-93f5a1ea1ffe72a6-01",
+      "x-ima-cookie": "PLATFORM=H5; CLIENT-TYPE=256053; WEB-VERSION=999.999.999; IMA-GUID=guid-211543f1ba58c3c6cf9cf1e10200000d81a31c; IMA-Q36=211543f1ba58c3c6cf9cf1e10200000d81a31c; IMA-IUA=Mozilla/5.0 (Windows NT 10.0, Win64, x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    },
+    "status": 200,
+    "type": "application/json"
+  },
+  {
+    "url": "https://ima.qq.com/cgi-bin/intelligent_assistant_http_nl/get_models",
+    "method": "POST",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://ima.qq.com/wikis",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "extension_version": "999.999.999",
+      "from_browser_ima": "1",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\"",
+      "traceparent": "00-83e28c2385b8da7a5e6c8ebb5c2bdd88-3dd4b50ddf29bc5a-01",
+      "x-ima-cookie": "PLATFORM=H5; CLIENT-TYPE=256053; WEB-VERSION=999.999.999; IMA-GUID=guid-211543f1ba58c3c6cf9cf1e10200000d81a31c; IMA-Q36=211543f1ba58c3c6cf9cf1e10200000d81a31c; IMA-IUA=Mozilla/5.0 (Windows NT 10.0, Win64, x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    },
+    "status": 200,
+    "type": "application/json"
+  },
+  {
+    "url": "https://open.weixin.qq.com/connect/qrconnect?appid=wx0d63f5de059f1d52&scope=snsapi_login&redirect_uri=https%3A%2F%2Fima.qq.com%2Flogin%2F%23%2Fqr-code-scanned%2F&state=&login_type=jssdk&self_redirect=true&styletype=&sizetype=&bgcolor=&rst=&ts=1774634796525&style=dark&stylelite=1",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://ima.qq.com/",
+      "Upgrade-Insecure-Requests": "1",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    },
+    "status": 200,
+    "type": "text/html"
+  },
+  {
+    "url": "https://localhost.weixin.qq.com:14013/api/check-login",
+    "method": "OPTIONS",
+    "headers": {
+      "Accept": "*/*",
+      "Access-Control-Request-Headers": "content-type",
+      "Access-Control-Request-Method": "POST",
+      "Origin": "https://open.weixin.qq.com",
+      "Sec-Fetch-Mode": "cors",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "url": "https://localhost.weixin.qq.com:14014/api/check-login",
+    "method": "OPTIONS",
+    "headers": {
+      "Accept": "*/*",
+      "Access-Control-Request-Headers": "content-type",
+      "Access-Control-Request-Method": "POST",
+      "Origin": "https://open.weixin.qq.com",
+      "Sec-Fetch-Mode": "cors",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "url": "https://localhost.weixin.qq.com:14015/api/check-login",
+    "method": "OPTIONS",
+    "headers": {
+      "Accept": "*/*",
+      "Access-Control-Request-Headers": "content-type",
+      "Access-Control-Request-Method": "POST",
+      "Origin": "https://open.weixin.qq.com",
+      "Sec-Fetch-Mode": "cors",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "url": "https://localhost.weixin.qq.com:13013/api/check-login",
+    "method": "OPTIONS",
+    "headers": {
+      "Accept": "*/*",
+      "Access-Control-Request-Headers": "content-type",
+      "Access-Control-Request-Method": "POST",
+      "Origin": "https://open.weixin.qq.com",
+      "Sec-Fetch-Mode": "cors",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "url": "https://localhost.weixin.qq.com:13014/api/check-login",
+    "method": "OPTIONS",
+    "headers": {
+      "Accept": "*/*",
+      "Access-Control-Request-Headers": "content-type",
+      "Access-Control-Request-Method": "POST",
+      "Origin": "https://open.weixin.qq.com",
+      "Sec-Fetch-Mode": "cors",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "url": "https://localhost.weixin.qq.com:13015/api/check-login",
+    "method": "OPTIONS",
+    "headers": {
+      "Accept": "*/*",
+      "Access-Control-Request-Headers": "content-type",
+      "Access-Control-Request-Method": "POST",
+      "Origin": "https://open.weixin.qq.com",
+      "Sec-Fetch-Mode": "cors",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  {
+    "url": "https://support.weixin.qq.com/cgi-bin/mmsupportmeshnodelogicsvr-bin/cube?biz=3512&label=connect.qrconnect&action=connect_qrconnect_checkLogin_fail&msg=wx0d63f5de059f1d52&idx1=snsapi_login&idx2=https%253A%252F%252Fima.qq.com%252Flogin%252F%2523%252Fqr-code-scanned%252F",
+    "method": "GET",
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://open.weixin.qq.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+      "sec-ch-ua": "\"Chromium\";v=\"147\", \"Not.A/Brand\";v=\"8\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Windows\""
+    }
+  }
+]
