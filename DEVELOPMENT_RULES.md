@@ -1,7 +1,7 @@
 # 智能知识系统 - 项目总体开发规则
 
-**版本**: 1.0.0
-**日期**: 2026-03-25
+**版本**: 1.2.0
+**日期**: 2026-03-25 → 2026-03-29
 **适用**: 全体开发阶段
 **强制执行**: 是
 
@@ -239,6 +239,50 @@ pytest tests/ -v
 mypy backend/
 ```
 
+### 4.4 规则修改流程
+
+**原则**：
+- [ ] 修改规则和规划之前，必须进行充分的讨论
+- [ ] 修改规则和规划必须基于真实数据
+- [ ] 修改规则和规划必须得到共识
+
+**流程（人工层）**：
+1. 数据收集阶段
+   - [ ] 收集完整的数据
+   - [ ] 验证数据的准确性
+   - [ ] 确保数据是基于真实的测量
+
+2. 讨论阶段
+   - [ ] 组织充分的讨论
+   - [ ] 收集各方的意见
+   - [ ] 识别讨论的共识和分歧
+   - [ ] 解决讨论的分歧
+
+3. 决策和执行阶段
+   - [ ] 基于充分讨论做出决策
+   - [ ] 确保决策是基于真实数据的
+   - [ ] 获得各方对决策的认可
+   - [ ] 按照决策执行修改
+   - [ ] 验证修改的效果
+
+**强制执行（技术层 - 详见 `HOOKS_IMPLEMENTATION_GUIDE.md`）**：
+
+**触发条件**：
+当 AI 或开发者尝试修改 `DEVELOPMENT_RULES.md` 或 `PHASED_IMPLEMENTATION_PLAN.md` 时触发。
+
+**执行机制**：
+`RulesChecker` Hook 将自动检查规则修改操作。
+
+**检查项**：
+- [ ] 是否已讨论（规则 4.4.1）
+- [ ] 基于真实数据（规则 4.4.2）
+- [ ] 是否达成共识（规则 4.4.3）
+
+**注意**：
+- 这是通过 `RulesChecker` Hook 自动强制执行的
+- AI 无法绕过这个检查
+- 详见 `docs/COMPREHENSIVE_HOOKS_IMPLEMENTATION_PLAN.md`
+
 ---
 
 ## 5. 测试规范
@@ -459,6 +503,25 @@ SELECT id, title, content FROM documents  # 而非 SELECT *
 
 ## 12. 代码审查规范
 
+### 12.1 数据验证（带强制执行）
+
+**数据验证要求**：
+- [ ] 确保数据是真实的（基于静态分析或运行测试）
+- [ ] 确保数据是准确的（经过二次验证）
+- [ ] 确保数据是完整的（覆盖所有范围）
+
+**强制执行机制（`DataVerificationGate` Hook）**：
+在生成报告或进行决策前，必须通过 `DataVerificationGate`。
+
+**执行机制**：
+- 检查报告是否包含数据来源声明
+- 禁止基于假设的数据（data_source: "assumption"）
+- 验证静态分析/测试是否真实运行过
+
+**注意**：
+- 这是通过 `DataVerificationGate` Hook 自动强制执行的
+- 详见 `docs/COMPREHENSIVE_HOOKS_IMPLEMENTATION_PLAN.md`
+
 ### 审查检查点
 
 - [ ] 代码符合 PEP 8
@@ -486,6 +549,38 @@ SELECT id, title, content FROM documents  # 而非 SELECT *
 3. ❌ 提交敏感数据
 4. ❌ 跳过测试直接合并
 5. ❌ 在 main 分支直接开发
+6. ❌ **忽视紧急问题**（技术强制执行）
+
+### 13.3 紧急问题说明（带强制执行逻辑）
+
+**紧急问题判定（技术标准）**：
+```yaml
+urgency_checks:
+  - name: "system_health"
+    check: "GET /health"
+    condition: "status != 200"
+  - name: "api_container"
+    check: "docker ps --filter name=zhineng-api"
+    condition: "status contains 'unhealthy'"
+  - name: "import_errors"
+    check: "python -m flake8 backend --select=F821"
+    condition: "result.count > 0"
+```
+
+**强制执行机制（`UrgencyGuard` Hook）**：
+当系统处于"紧急状态"时，`UrgencyGuard` Hook 将拦截所有非紧急操作。
+
+**执行逻辑**：
+1. **检查系统状态**：每次行动前，运行 `urgency_checks`
+2. **判定状态**：如果任一检查失败，系统进入"紧急模式"
+3. **拦截操作**：
+   - ✅ **允许**：`fix_urgent_issue`、`debug_system`、`restart_service`
+   - ❌ **拒绝**：`add_tests`、`refactor_code`、`modify_documentation`、`improve_coverage`
+
+**注意**：
+- 这是通过 `UrgencyGuard` Hook 自动强制执行的
+- AI 无法绕过这个检查
+- 详见 `docs/COMPREHENSIVE_HOOKS_IMPLEMENTATION_PLAN.md`
 
 ### 不推荐
 

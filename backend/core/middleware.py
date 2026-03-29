@@ -1,13 +1,16 @@
-"""中间件配置模块"""
+"""中间件配置模块
+
+提供安全相关的中间件配置，包括CORS、安全头、请求日志等。
+"""
 
 import logging
-import os
 import time
 from typing import Dict
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from backend.config import get_config
 from .request_stats import increment_error_count, increment_request_count
 
 logger = logging.getLogger(__name__)
@@ -25,21 +28,36 @@ def get_allowed_origins() -> list[str]:
     - 生产环境必须通过环境变量指定
     - 开发环境可使用默认本地地址
     """
+    config = get_config()
+
+    # 如果配置了允许的来源，使用配置
+    if config.ALLOWED_ORIGINS and "*" not in config.ALLOWED_ORIGINS:
+        return config.ALLOWED_ORIGINS
+
+    # 检查环境变量（向后兼容）
+    import os
     origins_str = os.getenv("ALLOWED_ORIGINS", "").strip()
 
     if not origins_str:
-        environment = os.getenv("ENVIRONMENT", "development").lower()
+        environment = config.ENVIRONMENT.lower()
 
         if environment in ("production", "prod"):
-            logger.error("ALLOWED_ORIGINS 环境变量在生产环境必须设置")
+            logger.error("ALLOWED_ORIGINS 在生产环境必须设置")
             raise ConfigError(
-                "安全错误: ALLOWED_ORIGINS 环境变量在生产环境必须设置。"
+                "安全错误: ALLOWED_ORIGINS 在生产环境必须设置。"
                 "请设置为允许的域名列表，如: 'https://example.com,https://api.example.com'"
             )
 
         # 开发环境默认值
         logger.warning("ALLOWED_ORIGINS 未设置，使用开发环境默认值")
-        return ["http://localhost:3000", "http://localhost:8008", "http://localhost:8000"]
+        return [
+            "http://localhost:3000",
+            "http://localhost:8000",
+            "http://localhost:8001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:8000",
+            "http://127.0.0.1:8001"
+        ]
 
     # 清理并验证每个来源
     origins = []
@@ -64,6 +82,7 @@ async def add_security_headers(request: Request, call_next):
 
     参考: OWASP 安全最佳实践
     """
+    config = get_config()
     response = await call_next(request)
 
     # 防止 MIME 类型嗅探
@@ -76,7 +95,7 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
 
     # 内容安全策略
-    environment = os.getenv("ENVIRONMENT", "development").lower()
+    environment = config.ENVIRONMENT.lower()
     if environment in ("production", "prod"):
         # 生产环境: 仅允许同源资源
         response.headers["Content-Security-Policy"] = "default-src 'self'"
