@@ -74,7 +74,7 @@ class ChatResponse(BaseModel):
 
 @router.get("")
 @cached_api_search(ttl=300)  # 5分钟缓存
-async def search_documents(
+async def search_endpoint(
     q: str = Query(..., min_length=1, max_length=200),
     category: Optional[str] = None,
     limit: int = Query(10, ge=1, le=100),
