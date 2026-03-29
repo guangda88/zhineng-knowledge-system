@@ -133,9 +133,9 @@ async def search_documents(
         fields = ["title", "content"]
 
     search_pattern = f"%{search_term}%"
-    field_conditions = " OR ".join([f"{field} ILIKE $2" for field in fields])
 
     if category:
+        field_conditions = " OR ".join([f"{field} ILIKE $2" for field in fields])
         query = f"""
             SELECT id, title, content, category
             FROM documents
@@ -144,6 +144,7 @@ async def search_documents(
         """
         rows = await pool.fetch(query, category, search_pattern, limit)
     else:
+        field_conditions = " OR ".join([f"{field} ILIKE $1" for field in fields])
         query = f"""
             SELECT id, title, content, category
             FROM documents
