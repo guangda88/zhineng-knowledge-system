@@ -185,15 +185,48 @@
 
 ---
 
-## [1.3.0] - 计划中
+## [1.2.2] - 2026-03-31
 
-### 计划新增 (Planned)
+### 技术债务全面清理 (25/30项完成)
 
-- [ ] 向量检索 API 对接 BGE 嵌入服务
-- [ ] 批量文档向量生成
-- [ ] 检索结果缓存优化
-- [ ] API 响应格式统一
-- [ ] 测试覆盖率提升到 70%+
+所有 P0/P1/P2 级技术债务已清理或缓解。
+
+#### P0 关键债务 (6/6)
+- ✅ 向量嵌入伪实现替换为 NotImplementedError (TD-P0-1)
+- ✅ CoT/ReAct 推理静默降级改为显式 RuntimeError (TD-P0-2)
+- ✅ 异步上下文中的同步阻塞替换为 asyncio (TD-P0-3)
+- ✅ 新增 49 个单测，281 passed / 0 failed，覆盖率 27% (TD-P0-4)
+- ✅ 占位 API 标注 "not_implemented" 状态 (TD-P0-5)
+- ✅ 安全审计器标注 PLACEHOLDER 状态 (TD-P0-6)
+
+#### P1 高优先级债务 (8/8)
+- ✅ 数据库访问三种模式文档化，建议统一为 db_helpers (TD-P1-1)
+- ✅ 10 处裸 except 替换为具体异常类型 (TD-P1-2)
+- ✅ requirements.txt 依赖拆分清理，移除冗余包 (TD-P1-3)
+- ✅ 循环导入方向规则文档化 (TD-P1-4)
+- ✅ 删除废弃文件 main_optimized.py (TD-P1-5)
+- ✅ Pydantic V2 迁移：所有 class Config → model_config (TD-P1-6)
+- ✅ aioredis 替换为 redis.asyncio (TD-P1-7)
+- ✅ sk-dummy 硬编码哨兵替换为 RuntimeError (TD-P1-8)
+
+#### P2 中优先级债务 (10/10)
+- ✅ 拆分 7 个超长函数，新增 14 个辅助方法 (TD-P2-1)
+- ✅ 删除未使用函数/类 (TD-P2-2)
+- ✅ 删除 domains/qigong.py 死代码方法 (TD-P2-3)
+- ✅ 混合导入风格统一 (TD-P2-4)
+- ✅ TODO 注释录入债务表 (TD-P2-5)
+- ✅ 删除 models.py 空壳文件 (TD-P2-6)
+- ✅ 删除废弃 inject_config/inject_db 函数 (TD-P2-8)
+- ✅ 修复 singleton 哨兵模式快速路径 bug (TD-P2-9)
+- ✅ 补充 cryptography/PyJWT 依赖声明 (TD-P2-10)
+
+#### 新增测试文件
+- `tests/test_singleton.py` — async_singleton 8 项测试
+- `tests/test_config.py` — Pydantic V2 model_config 11 项测试
+- `tests/test_domains.py` — 域死代码移除验证 8 项测试
+- `tests/test_db_helpers.py` — db_helpers 10 项测试
+- `tests/test_rate_limiter.py` — DistributedRateLimiter 6 项测试
+- `tests/test_monitoring_health.py` — HealthChecker 4 项测试
 
 ---
 
