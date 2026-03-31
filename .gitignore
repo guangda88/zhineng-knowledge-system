@@ -81,3 +81,15 @@ package-lock.json
 # 系统文件
 Thumbs.db
 .DS_Store
+
+# 大型二进制文件（不应入库）
+*.pdf
+*.doc
+*.docx
+*.exe
+*.deb
+*.rpm
+lingzhi_ubuntu/
+data/ima_export/
+data/textbooks/pdf格式/
+data/textbooks/docx格式/
