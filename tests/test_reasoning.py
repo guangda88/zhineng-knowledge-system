@@ -266,37 +266,30 @@ class TestCoTReasoner:
 
         assert 0 <= confidence <= 1.0
 
-    def test_mock_response(self, reasoner):
-        """测试模拟响应"""
-        response = reasoner._mock_response("测试提示")
+    def test_fallback_response(self, reasoner):
+        """测试降级响应生成"""
+        response = reasoner._build_fallback_response()
 
         assert "思考过程：" in response
         assert "答案：" in response
-        assert "模拟的回答结果" in response
+        assert "DEEPSEEK_API_KEY" in response
 
     @pytest.mark.asyncio
     async def test_reason_no_api_key(self, reasoner):
-        """测试无API密钥时的推理"""
-        result = await reasoner.reason("什么是气功？")
-
-        assert isinstance(result, ReasoningResult)
-        assert result.answer
-        assert len(result.steps) > 0
-        assert result.model_used == "deepseek-chat"
-        assert result.reasoning_time > 0
+        """测试无API密钥时的推理应抛出RuntimeError"""
+        with pytest.raises(RuntimeError, match="LLM API"):
+            await reasoner.reason("什么是气功？")
 
     @pytest.mark.asyncio
-    async def test_reason_with_context(self, reasoner):
-        """测试带上下文的推理"""
+    async def test_reason_with_context_no_api(self, reasoner):
+        """测试带上下文但无API密钥的推理应抛出RuntimeError"""
         context = [
             {"title": "气功介绍", "content": "气功是一种传统的养生方法..."},
             {"title": "八段锦", "content": "八段锦是气功的一种..."},
         ]
 
-        result = await reasoner.reason("气功和八段锦有什么关系？", context=context)
-
-        assert result.sources == context
-        assert len(result.steps) > 0
+        with pytest.raises(RuntimeError):
+            await reasoner.reason("气功和八段锦有什么关系？", context=context)
 
     @pytest.mark.asyncio
     async def test_context_manager(self, reasoner):
@@ -415,9 +408,9 @@ class TestReActReasoner:
         assert action == "finish"
         assert "八段锦是" in action_input
 
-    def test_mock_response(self, reasoner):
-        """测试模拟响应"""
-        response = reasoner._mock_response()
+    def test_fallback_response(self, reasoner):
+        """测试降级响应生成"""
+        response = reasoner._build_fallback_response()
 
         assert "思考：" in response or "思考:" in response
         assert "行动：" in response or "行动:" in response
@@ -517,33 +510,27 @@ class TestReActReasoner:
 
     @pytest.mark.asyncio
     async def test_reason_no_api_key(self, reasoner):
-        """测试无API密钥时的推理"""
-        result = await reasoner.reason("什么是气功？")
-
-        assert isinstance(result, ReasoningResult)
-        assert result.answer
-        assert len(result.steps) > 0
-        assert result.model_used == "deepseek-chat"
+        """测试无API密钥时的推理应抛出RuntimeError"""
+        with pytest.raises(RuntimeError, match="LLM API"):
+            await reasoner.reason("什么是气功？")
 
     @pytest.mark.asyncio
-    async def test_reason_with_context(self, reasoner, sample_context):
-        """测试带上下文的推理"""
-        result = await reasoner.reason("八段锦和太极拳有什么区别？", context=sample_context)
-
-        assert result.sources == sample_context
+    async def test_reason_with_context_no_api(self, reasoner, sample_context):
+        """测试带上下文但无API密钥的推理应抛出RuntimeError"""
+        with pytest.raises(RuntimeError):
+            await reasoner.reason("八段锦和太极拳有什么区别？", context=sample_context)
 
     @pytest.mark.asyncio
-    async def test_reason_with_custom_tools(self, reasoner):
-        """测试使用自定义工具"""
+    async def test_reason_with_custom_tools_no_api(self, reasoner):
+        """测试使用自定义工具但无API密钥应抛出RuntimeError"""
 
         async def custom_tool(query: str) -> str:
             return f"自定义工具结果: {query}"
 
         tools = {"custom": {"description": "自定义工具", "function": custom_tool}}
 
-        result = await reasoner.reason("测试问题", context=None, tools=tools, max_iterations=2)
-
-        assert isinstance(result, ReasoningResult)
+        with pytest.raises(RuntimeError):
+            await reasoner.reason("测试问题", context=None, tools=tools, max_iterations=2)
 
 
 # ============================================================================

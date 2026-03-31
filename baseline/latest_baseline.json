@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-03-30 07:39:16",
+  "memory": {
+    "total_mb": 31992,
+    "used_mb": 5323,
+    "usage_percent": 17
+  },
+  "processes": {
+    "total": 598,
+    "zombies": 1
+  },
+  "network": {
+    "established": 28,
+    "listening": 170
+  },
+  "containers": {
+    "running": 22,
+    "total": 23
+  }
+}

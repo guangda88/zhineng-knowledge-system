@@ -118,10 +118,7 @@ class DatabaseConfig(BaseSettings):
         else:
             raise ValueError(f"Unknown database type: {db_type}")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
     def __repr__(self) -> str:
         """配置字符串表示"""

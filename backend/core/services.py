@@ -6,6 +6,7 @@
 
 import asyncio
 import logging
+import re
 from typing import Optional, Dict, Any
 import asyncpg
 
@@ -13,6 +14,11 @@ from backend.core.service_manager import Service, ServiceStatus, ServiceHealth
 from backend.core.database import init_db_pool
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_url(url: str) -> str:
+    """Remove password from URL for safe logging."""
+    return re.sub(r'(:\/\/[^:]+:)([^@]+)(@)', r'\1***\3', url)
 
 
 class DatabaseService(Service):
@@ -130,9 +136,10 @@ class CacheService(Service):
             from backend.config import get_config
 
             config = get_config()
-            redis_url = getattr(config, 'redis_url', 'redis://localhost:6379')
+            redis_url = config.get_redis_url()
 
-            logger.info(f"Connecting to Redis: {redis_url}")
+            sanitized = _sanitize_url(redis_url)
+            logger.info(f"Connecting to Redis: {sanitized}")
             self._redis_client = Redis.from_url(redis_url, decode_responses=True)
 
             # 测试连接
@@ -145,7 +152,7 @@ class CacheService(Service):
                 status=ServiceStatus.RUNNING,
                 healthy=True,
                 message="Cache service running",
-                metadata={"redis_url": redis_url}
+                metadata={"redis_url": sanitized}
             )
 
         except Exception as e:

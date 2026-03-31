@@ -2,6 +2,18 @@
 
 <div align="center">
 
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
+<div align="center">
+
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org/)

@@ -1,5 +1,17 @@
 # 智能知识系统 - 代码规范符合性审查报告 V2
 
+<div align="center">
+
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
 **审查日期**: 2026-03-25
 **审查版本**: 开发规则 v1.0.0
 **审查范围**: `/home/ai/zhineng-knowledge-system`

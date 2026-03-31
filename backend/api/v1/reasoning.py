@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from api.v1.search import get_hybrid_retriever
 from common import rows_to_list
 from common.typing import JSONResponse
+from config import get_config
 from core.database import init_db_pool
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -51,12 +52,13 @@ async def get_cot_reasoner() -> CoTReasoner:
     """获取CoT推理器实例"""
     global _cot_reasoner
     if _cot_reasoner is None:
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        _cfg = get_config()
+        api_key = _cfg.DEEPSEEK_API_KEY
         if not api_key:
             raise ValueError(
-                "DEEPSEEK_API_KEY environment variable is required for reasoning service"
+                "DEEPSEEK_API_KEY is required for reasoning service"
             )
-        _cot_reasoner = CoTReasoner(api_key=api_key, api_url=os.getenv("DEEPSEEK_API_URL", ""))
+        _cot_reasoner = CoTReasoner(api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or "")
     return _cot_reasoner
 
 
@@ -64,12 +66,13 @@ async def get_react_reasoner() -> ReActReasoner:
     """获取ReAct推理器实例"""
     global _react_reasoner
     if _react_reasoner is None:
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        _cfg = get_config()
+        api_key = _cfg.DEEPSEEK_API_KEY
         if not api_key:
             raise ValueError(
-                "DEEPSEEK_API_KEY environment variable is required for reasoning service"
+                "DEEPSEEK_API_KEY is required for reasoning service"
             )
-        _react_reasoner = ReActReasoner(api_key=api_key, api_url=os.getenv("DEEPSEEK_API_URL", ""))
+        _react_reasoner = ReActReasoner(api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or "")
     return _react_reasoner
 
 
@@ -77,13 +80,14 @@ async def get_graph_rag_reasoner() -> GraphRAGReasoner:
     """获取GraphRAG推理器实例"""
     global _graph_rag_reasoner
     if _graph_rag_reasoner is None:
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        _cfg = get_config()
+        api_key = _cfg.DEEPSEEK_API_KEY
         if not api_key:
             raise ValueError(
-                "DEEPSEEK_API_KEY environment variable is required for reasoning service"
+                "DEEPSEEK_API_KEY is required for reasoning service"
             )
         _graph_rag_reasoner = GraphRAGReasoner(
-            api_key=api_key, api_url=os.getenv("DEEPSEEK_API_URL", "")
+            api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or ""
         )
     return _graph_rag_reasoner
 

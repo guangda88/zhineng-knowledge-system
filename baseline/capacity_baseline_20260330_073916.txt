@@ -1,0 +1,113 @@
+========================================
+系统容量基线报告
+时间: 2026-03-30 07:39:16
+========================================
+
+【1. 系统总体资源】
+────────────────────────────────────────
+               total        used        free      shared  buff/cache   available
+内存：          31Gi       5.2Gi        24Gi        92Mi       2.5Gi        26Gi
+交换：         4.0Gi       3.2Gi       865Mi
+
+【2. CPU信息】
+────────────────────────────────────────
+CPU核心数: 8
+CPU负载:
+ 07:39:16 up 8 days, 11:28,  9 users,  load average: 0.98, 1.29, 31.55
+
+【3. 本项目容器资源使用】
+────────────────────────────────────────
+zhineng-nginx                  0.00%     6.418MiB / 128MiB     5.01%
+zhineng-api                    12.10%    227.2MiB / 1GiB       22.18%
+zhineng-postgres-exporter      0.00%     15.25MiB / 64MiB      23.83%
+zhineng-redis-exporter         0.00%     9.887MiB / 64MiB      15.45%
+zhineng-postgres               5.67%     87.4MiB / 512MiB      17.07%
+zhineng-redis                  1.08%     8.332MiB / 256MiB     3.25%
+
+【4. 其他项目容器资源使用】
+────────────────────────────────────────
+NAME                           CPU %     MEM USAGE / LIMIT     MEM %
+github-recommender-web         0.00%     0B / 0B               0.00%
+github-recommender-scheduler   0.00%     30.49MiB / 31.24GiB   0.10%
+fojin-frontend                 0.00%     1.473MiB / 128MiB     1.15%
+fojin-postgres                 0.00%     29.04MiB / 1GiB       2.84%
+fojin-redis                    0.98%     1.918MiB / 256MiB     0.75%
+fojin-es                       3.53%     436.9MiB / 1.5GiB     28.45%
+owjdxb                         5.44%     50.39MiB / 31.24GiB   0.16%
+tcm-elasticsearch              0.43%     1.338GiB / 31.24GiB   4.28%
+safeline-luigi                 0.71%     38.86MiB / 31.24GiB   0.12%
+safeline-mgt                   0.00%     42.73MiB / 31.24GiB   0.13%
+safeline-chaos                 0.07%     23.03MiB / 31.24GiB   0.07%
+safeline-tengine               0.00%     0B / 0B               0.00%
+safeline-detector              0.55%     73.08MiB / 31.24GiB   0.23%
+safeline-pg                    0.10%     69.04MiB / 31.24GiB   0.22%
+safeline-fvm                   0.00%     50.71MiB / 31.24GiB   0.16%
+
+【5. 磁盘使用情况】
+────────────────────────────────────────
+文件系统                           大小  已用  可用 已用% 挂载点
+tmpfs                              3.2G  6.5M  3.2G    1% /run
+efivarfs                           192K   34K  154K   18% /sys/firmware/efi/efivars
+/dev/mapper/ubuntu--vg-ubuntu--lv  197G  137G   51G   73% /
+tmpfs                               16G     0   16G    0% /dev/shm
+tmpfs                              5.0M   12K  5.0M    1% /run/lock
+/dev/nvme0n1p2                     2.0G  214M  1.6G   12% /boot
+/dev/sda1                          916G   37G  833G    5% /data
+/dev/nvme0n1p1                     1.1G  6.2M  1.1G    1% /boot/efi
+tmpfs                              3.2G  140K  3.2G    1% /run/user/130
+tmpfs                              3.2G  140K  3.2G    1% /run/user/1000
+
+【6. Docker资源使用】
+────────────────────────────────────────
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          40        20        10.67GB   6.861GB (64%)
+Containers      22        21        270.2MB   0B (0%)
+Local Volumes   28        7         2.93GB    221.1MB (7%)
+Build Cache     83        0         2.372GB   3.959MB
+
+【7. 进程统计】
+────────────────────────────────────────
+总进程数: 598
+僵尸进程数: 1
+
+【8. 网络连接统计】
+────────────────────────────────────────
+活跃连接数: 28
+监听端口数: 170
+
+【9. 容器资源限制配置】
+────────────────────────────────────────
+/zhineng-nginx: Memory=134217728, CPU=300000000
+/zhineng-api: Memory=1073741824, CPU=1000000000
+/zhineng-postgres-exporter: Memory=67108864, CPU=200000000
+/zhineng-redis-exporter: Memory=67108864, CPU=200000000
+/zhineng-postgres: Memory=536870912, CPU=500000000
+/zhineng-redis: Memory=268435456, CPU=300000000
+/github-recommender-web: Memory=0, CPU=0
+/github-recommender-scheduler: Memory=0, CPU=0
+/fojin-frontend: Memory=134217728, CPU=250000000
+/fojin-postgres: Memory=1073741824, CPU=1000000000
+/fojin-redis: Memory=268435456, CPU=500000000
+/fojin-es: Memory=1610612736, CPU=1500000000
+/owjdxb: Memory=0, CPU=0
+/tcm-elasticsearch: Memory=0, CPU=0
+/safeline-luigi: Memory=0, CPU=0
+/safeline-mgt: Memory=0, CPU=0
+/safeline-chaos: Memory=0, CPU=0
+/safeline-tengine: Memory=0, CPU=0
+/safeline-detector: Memory=0, CPU=0
+/safeline-pg: Memory=0, CPU=0
+
+【10. 容量规划建议】
+────────────────────────────────────────
+
+当前资源分配:
+  系统总内存: 31992MB
+  已使用内存: 5323MB (17%)
+  推荐预留: 6398MB (20%)
+  可用于容器: 25594MB
+
+========================================
+✅ 容量基线已保存到: baseline/capacity_baseline_20260330_073916.txt
+✅ 历史数据已保存到: baseline/capacity_history.csv
+========================================

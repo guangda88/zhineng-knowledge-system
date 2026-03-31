@@ -22,6 +22,14 @@ services:
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   redis:
     image: redis:7-alpine
@@ -39,12 +47,55 @@ services:
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # BGE-M3 嵌入服务
+  embedding:
+    build:
+      context: ./backend/services/embeddings
+      dockerfile: Dockerfile
+    container_name: zhineng-embedding
+    environment:
+      EMBEDDING_MODEL: BAAI/bge-m3
+      EMBEDDING_SERVICE_PORT: 8001
+      HF_HOME: /cache
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "8001:8001"
+    volumes:
+      - embedding_cache:/cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s  # 给模型加载足够的时间
+    restart: unless-stopped
+    networks:
+      - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 2G
 
   api:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: zhineng-api
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    ports:
+      - "8000:8000"
     environment:
       PYTHONPATH: /app
       DATABASE_URL: postgresql://zhineng:${POSTGRES_PASSWORD:-zhineng123}@postgres:5432/zhineng_kb
@@ -52,9 +103,8 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: 8000
       LOG_LEVEL: INFO
-      PYTHONPATH: /app
-    ports:
-      - "8001:8000"
+      ENVIRONMENT: production
+      EMBEDDING_SERVICE_URL: http://embedding:8001
     volumes:
       - ./backend:/app/backend
     depends_on:
@@ -62,14 +112,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      embedding:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   nginx:
     image: nginx:alpine
@@ -84,6 +139,13 @@ services:
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+        reservations:
+          memory: 64M
 
   # ========== 阶段5: 监控服务 ==========
 
@@ -101,10 +163,17 @@ services:
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    command: ['--config.file=/etc/prometheus/prometheus.yml']
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   grafana:
     image: grafana/grafana:latest
@@ -124,6 +193,13 @@ services:
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          memory: 128M
 
   # Redis Exporter for monitoring Redis
   redis-exporter:
@@ -139,13 +215,20 @@ services:
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 64M
+        reservations:
+          memory: 32M
 
   # Postgres Exporter for monitoring PostgreSQL
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: zhineng-postgres-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://zhineng:${POSTGRES_PASSWORD:-zhineng123}@postgres:5436/zhineng_kb?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://zhineng:${POSTGRES_PASSWORD:-zhineng123}@postgres:5432/zhineng_kb?sslmode=disable"
     ports:
       - "9187:9187"
     depends_on:
@@ -153,6 +236,13 @@ services:
     restart: unless-stopped
     networks:
       - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 64M
+        reservations:
+          memory: 32M
 
 volumes:
   postgres_data:
@@ -162,6 +252,8 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  embedding_cache:
     driver: local
 
 networks:

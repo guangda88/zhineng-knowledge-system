@@ -209,7 +209,7 @@ class CoTReasoner(BaseReasoner):
         temperature: float = 0.7,
         max_tokens: int = 2000
     ) -> str:
-        """调用大语言模型
+        """调用大语言模型（使用速率限制器）
 
         Args:
             prompt: 提示词
@@ -219,8 +219,47 @@ class CoTReasoner(BaseReasoner):
         Returns:
             模型响应文本
         """
+        # 优先使用LLM API包装器（带速率限制）
+        if self.llm_client:
+            try:
+                from backend.common.llm_api_wrapper import GLMRateLimitException
+
+                response = await self.llm_client.call_api(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。"
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                return response["choices"][0]["message"]["content"]
+
+            except GLMRateLimitException as e:
+                logger.error(f"Rate limit exceeded: {e}")
+                raise RuntimeError(
+                    "LLM API rate limit exceeded. "
+                    "Please retry later or configure DEEPSEEK_API_KEY."
+                ) from e
+
+            except Exception as e:
+                logger.error(f"LLM API call failed: {e}")
+                raise RuntimeError(
+                    f"LLM API call failed: {e}. "
+                    "Please check DEEPSEEK_API_KEY configuration."
+                ) from e
+
+        # 降级到原始HTTP客户端
         if not self.api_key:
-            return self._mock_response(prompt)
+            raise RuntimeError(
+                "No API key configured. "
+                "Set DEEPSEEK_API_KEY environment variable to enable LLM reasoning."
+            )
 
         try:
             client = await self._get_client()
@@ -250,13 +289,16 @@ class CoTReasoner(BaseReasoner):
             data = response.json()
             return data["choices"][0]["message"]["content"]
 
-        except Exception as e:
-            logger.error(f"LLM API call failed: {e}")
-            return self._mock_response(prompt)
+        except httpx.HTTPStatusError as e:
+            logger.error(f"LLM API returned HTTP {e.response.status_code}: {e}")
+            raise RuntimeError(f"LLM API HTTP error {e.response.status_code}") from e
+        except httpx.RequestError as e:
+            logger.error(f"LLM API request failed: {e}")
+            raise RuntimeError(f"LLM API request failed: {e}") from e
 
-    def _mock_response(self, prompt: str) -> str:
-        """模拟响应（当没有API密钥时使用）"""
-        return f"""思考过程：
+    def _build_fallback_response(self) -> str:
+        """构建降级响应模板（仅用于已知 API 不可用时的开发调试）"""
+        return """思考过程：
 1. 首先分析问题的关键点
    - 问题涉及的知识领域
    - 需要关注的核心概念
@@ -270,7 +312,7 @@ class CoTReasoner(BaseReasoner):
    - 给出明确答案
 
 答案：
-这是一个模拟的回答结果。实际使用需要配置DEEPSEEK_API_KEY环境变量。
+[LLM 服务不可用，请配置 DEEPSEEK_API_KEY 环境变量]
 """
 
     def _parse_cot_response(self, response: str) -> tuple:

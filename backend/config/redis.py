@@ -79,10 +79,7 @@ class RedisConfig(BaseSettings):
         description="Redis连接超时（秒）"
     )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
     def get_redis_url(self) -> str:
         """获取Redis连接URL"""

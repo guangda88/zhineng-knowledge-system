@@ -77,15 +77,11 @@ class BaseConfig(BaseSettings):
         description="BGE嵌入API地址"
     )
     EMBEDDING_DIM: int = Field(
-        default=1024,
-        description="嵌入向量维度"
+        default=512,
+        description="嵌入向量维度（bge-small-zh-v1.5=512, bge-large-zh-v1.5=1024）"
     )
 
     # DeepSeek配置
-    DEEPSEEK_API_KEY: Optional[str] = Field(
-        default=None,
-        description="DeepSeek API密钥"
-    )
     DEEPSEEK_API_URL: Optional[str] = Field(
         default=None,
         description="DeepSeek API地址"
@@ -101,10 +97,7 @@ class BaseConfig(BaseSettings):
         description="有效的分类列表"
     )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
     def __repr__(self) -> str:
         """配置字符串表示"""

@@ -1,5 +1,17 @@
 # 代码审查报告 - LingFlow 清理与灵知系统分析
 
+<div align="center">
+
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
 **日期**: 2026-03-30 01:19
 **审查范围**: LingFlow 清理验证 + 灵知系统集成审查
 **审查者**: AI Assistant

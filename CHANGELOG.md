@@ -6,6 +6,37 @@
 
 ---
 
+## [1.3.0] - 2026-03-31
+
+### 深度安全审计修复
+
+#### 安全修复 (Security)
+- ✅ 修复三重数据库连接池并存 (C1) — 统一委托 database.py
+- ✅ 修复三重 Redis 客户端并存 (C2) — 统一委托 CacheService
+- ✅ 修复 reload_config 异步锁错误 (C3) — threading.Lock 同步使用
+- ✅ 修复 async_singleton 初始化失败永久挂起 (C4) — 超时+异常传播
+- ✅ 移除硬编码登录凭据 demo/demo123 (C5) — 环境变量+503
+- ✅ Admin API 未配置时默认拒绝 (C6) — 生产401/开发warn
+
+#### 二次审计修复 (Re-audit)
+- ✅ 修复 books.py 缺少 select 导入导致 NameError (R1)
+- ✅ 消除 v1/v2 books.py 代码重复 (R2) — v2 复用 v1 router
+- ✅ 修复 Redis URL 密码明文写入日志 (R3) — _sanitize_url()
+- ✅ 修复密码/API Key 时序攻击 (R4) — hmac.compare_digest()
+- ✅ 修复 JWT refresh token 查询参数泄露 (R5) — Pydantic body
+- ✅ 修复 init_db_pool 竞态条件 (R6) — threading.Lock 双重检查
+
+#### 稳定性改进
+- ✅ 232 测试通过验证所有修复
+- ✅ 容器资源限制应用 (内存 96%→15%)
+- ✅ 监控自动化脚本部署
+
+#### 文档对齐
+- ✅ DEVELOPMENT_RULES.md v2.0.0 — 更新项目结构至当前架构
+- ✅ ENGINEERING_ALIGNMENT.md — 统一工程流程/原则/规划文档
+
+---
+
 ## [1.2.0] - 2026-03-29
 
 ### Hooks系统实施 - 让规则真正落地

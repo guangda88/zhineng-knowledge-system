@@ -14,6 +14,9 @@ T = TypeVar("T")
 _init_locks: dict[str, threading.Lock] = {}
 _lock_for_locks = threading.Lock()
 
+# 存储所有使用 async_singleton 装饰的函数所在模块和变量名
+_singleton_registrations: list[tuple[str, str]] = []
+
 
 def _get_lock(key: str) -> threading.Lock:
     """获取指定key的锁，线程安全"""
@@ -22,6 +25,10 @@ def _get_lock(key: str) -> threading.Lock:
             if key not in _init_locks:
                 _init_locks[key] = threading.Lock()
     return _init_locks[key]
+
+
+# 初始化失败标记
+_INIT_FAILED_SENTINEL = object()
 
 
 def async_singleton(
@@ -49,21 +56,27 @@ def async_singleton(
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        import sys
+
+        module = sys.modules.get(func.__module__)
+        var_name = instance_var_name or f"_{func.__name__}"
+        lock_key = f"{func.__module__}.{var_name}"
+
+        _singleton_registrations.append((func.__module__, var_name))
+
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> T:
-            # 获取函数所在模块的全局变量
-            import sys
-
-            module = sys.modules[func.__module__]
-            var_name = instance_var_name or f"_{func.__name__}"
-
             # 检查是否已初始化
             instance = getattr(module, var_name, None)
-            if instance is not None:
+            if instance is not None and instance is not _INIT_FAILED_SENTINEL:
                 return instance
+            if instance is _INIT_FAILED_SENTINEL:
+                raise RuntimeError(
+                    f"Singleton {var_name} previously failed to initialize"
+                )
 
             # 使用锁确保线程安全的初始化
-            lock = _get_lock(f"{func.__module__}.{var_name}")
+            lock = _get_lock(lock_key)
 
             # 双重检查锁定模式
             if lock.acquire(blocking=False):
@@ -71,70 +84,43 @@ def async_singleton(
                     # 再次检查，可能在等待锁时已被其他线程初始化
                     instance = getattr(module, var_name, None)
                     if instance is None:
-                        if init_func is not None:
-                            instance = await init_func(*args, **kwargs)
-                        else:
-                            instance = await func(*args, **kwargs)
+                        try:
+                            if init_func is not None:
+                                instance = await init_func(*args, **kwargs)
+                            else:
+                                instance = await func(*args, **kwargs)
+                        except Exception:
+                            setattr(module, var_name, _INIT_FAILED_SENTINEL)
+                            raise
                         setattr(module, var_name, instance)
+                    elif instance is _INIT_FAILED_SENTINEL:
+                        raise RuntimeError(
+                            f"Singleton {var_name} previously failed to initialize"
+                        )
                     return instance
                 finally:
                     lock.release()
             else:
-                # 锁已被占用，等待后重新检查
-                while True:
-                    await asyncio.sleep(0.001)
+                # 锁已被占用，等待初始化完成
+                for _ in range(300):  # 最多等待30秒
+                    await asyncio.sleep(0.1)
                     instance = getattr(module, var_name, None)
                     if instance is not None:
+                        if instance is _INIT_FAILED_SENTINEL:
+                            raise RuntimeError(
+                                f"Singleton {var_name} previously failed to initialize"
+                            )
                         return instance
+                raise TimeoutError(
+                    f"Timeout waiting for singleton {var_name} initialization"
+                )
 
         return wrapper
 
     return decorator
 
 
-class SingletonFactory:
-    """单例工厂类
-
-    提供更灵活的单例管理方式。
-
-    Example:
-        factory = SingletonFactory(lambda: MyService())
-        service = await factory.get_instance()
-    """
-
-    def __init__(self, factory_func: Callable[[], T], name: Optional[str] = None) -> None:
-        """初始化单例工厂
-
-        Args:
-            factory_func: 工厂函数，用于创建实例
-            name: 实例名称，用于锁管理
-        """
-        self._factory_func = factory_func
-        self._instance: Optional[T] = None
-        self._lock = _get_lock(name or f"SingletonFactory.{id(self)}")
-        self._is_async = asyncio.iscoroutinefunction(factory_func)
-
-    async def get_instance(self) -> T:
-        """获取单例实例"""
-        if self._instance is not None:
-            return self._instance
-
-        with self._lock:
-            if self._instance is None:
-                if self._is_async:
-                    self._instance = await self._factory_func()
-                else:
-                    self._instance = self._factory_func()
-        return self._instance
-
-    def reset(self) -> None:
-        """重置单例（主要用于测试）"""
-        with self._lock:
-            self._instance = None
+# 初始化失败标记
+_INIT_FAILED_SENTINEL = object()
 
 
-def reset_all_singletons() -> None:
-    """重置所有单例实例（主要用于测试）"""
-    global _init_locks
-    # 不清空锁本身，只清空引用
-    pass

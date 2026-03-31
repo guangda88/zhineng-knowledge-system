@@ -473,8 +473,37 @@ class GraphRAGReasoner(BaseReasoner):
 请给出详细的答案：
 """
 
-        # 调用LLM生成答案
-        if self.api_key:
+        # 调用LLM生成答案（使用速率限制器）
+        if self.llm_client:
+            try:
+                from backend.common.llm_api_wrapper import GLMRateLimitException
+
+                response = await self.llm_client.call_api(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "你是一个基于知识图谱的推理助手。"
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    temperature=0.7,
+                    max_tokens=1500
+                )
+                return response["choices"][0]["message"]["content"]
+
+            except GLMRateLimitException as e:
+                logger.error(f"Rate limit exceeded: {e}")
+                # 继续到模拟答案
+
+            except Exception as e:
+                logger.error(f"LLM API call failed: {e}")
+                # 继续到模拟答案
+
+        # 降级到原始HTTP客户端
+        elif self.api_key:
             try:
                 client = await self._get_client()
                 response = await client.post(

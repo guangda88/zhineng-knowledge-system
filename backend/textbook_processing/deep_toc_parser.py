@@ -481,24 +481,6 @@ class DeepTocParser:
         return round(min(score, 1.0), 2)
 
 
-def parse_textbook_toc(text_file: Path) -> TocParseResult:
-    """解析单本教材目录"""
-    parser = DeepTocParser()
-
-    # 检测编码
-    encoding = parser.detect_encoding(text_file)
-    logger.info(f"  使用编码: {encoding}")
-
-    # 读取内容
-    with open(text_file, 'r', encoding=encoding, errors='ignore') as f:
-        content = f.read()
-
-    # 解析
-    result = parser.parse(content, ParseMethod.HEURISTIC)
-
-    return result
-
-
 if __name__ == "__main__":
     import sys
     from pathlib import Path

@@ -268,9 +268,11 @@ class TextbookImporter:
                 content = row['content']
 
                 # TODO: 使用BGE模型生成真实嵌入
-                # 这里使用随机向量占位
-                import random
-                embedding = [random.uniform(-1, 1) for _ in range(1536)]
+                # 当前使用 VectorRetriever 代替
+                raise NotImplementedError(
+                    "Random embeddings produce incorrect search results. "
+                    "Use VectorRetriever.embed_text() or connect the embedding service."
+                )
 
                 await conn.execute(
                     """

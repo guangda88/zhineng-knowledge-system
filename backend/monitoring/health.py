@@ -259,8 +259,8 @@ async def database_health_check(db_pool) -> HealthCheckResult:
 async def redis_health_check(redis_url: str) -> HealthCheckResult:
     """Redis健康检查"""
     try:
-        import aioredis
-        redis = await aioredis.from_url(redis_url)
+        from redis.asyncio import from_url as async_from_url
+        redis = await async_from_url(redis_url)
         await redis.ping()
         await redis.close()
         return HealthCheckResult(
@@ -268,7 +268,7 @@ async def redis_health_check(redis_url: str) -> HealthCheckResult:
             status=HealthStatus.HEALTHY,
             message="Redis连接正常"
         )
-    except Exception as e:
+    except (ImportError, OSError, RuntimeError, ConnectionError) as e:
         return HealthCheckResult(
             name="redis",
             status=HealthStatus.DEGRADED,

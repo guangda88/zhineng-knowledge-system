@@ -1,5 +1,17 @@
 # 分析报告对比说明
 
+<div align="center">
+
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
 ## 生成的三个报告
 
 ### 1. COMPREHENSIVE_TECH_COMPARISON_REPORT_20260330.md

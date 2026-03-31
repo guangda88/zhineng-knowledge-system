@@ -507,9 +507,8 @@ class TocExpander:
         max_count: int
     ) -> List[str]:
         """使用AI生成子标题，带重试机制"""
-        if not self.api_key or self.api_key == "sk-dummy":
-            # 模拟生成（用于测试）
-            return [f"子项 {i+1}" for i in range(min(3, max_count))]
+        if not self.api_key:
+            raise RuntimeError("No API key configured for subsection generation")
 
         prompt = f"""你是一位专业的教科书内容分析师。请为以下章节内容生成{max_count}个小节标题。
 
@@ -690,6 +689,23 @@ class SmartTextSegmenter:
 
         return (start_line, end_line)
 
+    def _flush_block(self, current_block, blocks, toc_item, start_index):
+        if current_block:
+            blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
+        return [], 0
+
+    def _add_to_current(self, current_block, current_length, text, blocks, toc_item, start_index):
+        separator_len = 2 if current_block else 0
+        new_length = current_length + separator_len + len(text)
+        if new_length > self.max_chars:
+            current_block, current_length = self._flush_block(current_block, blocks, toc_item, start_index)
+            current_block = [text]
+            current_length = len(text)
+        else:
+            current_block.append(text)
+            current_length = new_length
+        return current_block, current_length
+
     def _split_large_text(
         self,
         text: str,
@@ -708,60 +724,23 @@ class SmartTextSegmenter:
             if not para:
                 continue
 
-            # 如果段落本身超过最大限制，进一步分割
             if len(para) > self.max_chars:
-                # 先保存当前块（如果有）
-                if current_block:
-                    blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
-                    current_block = []
-                    current_length = 0
-
-                # 分割长段落
-                sentences = self._split_paragraph(para)
-                for sentence in sentences:
+                current_block, current_length = self._flush_block(current_block, blocks, toc_item, start_index)
+                for sentence in self._split_paragraph(para):
                     if len(sentence) > self.max_chars:
-                        # 如果句子仍然太长，强制分割
-                        chunks = [sentence[i:i+self.max_chars]
-                                  for i in range(0, len(sentence), self.max_chars)]
-                        for chunk in chunks:
-                            block = TextBlock(
+                        for chunk in [sentence[i:i+self.max_chars] for i in range(0, len(sentence), self.max_chars)]:
+                            blocks.append(TextBlock(
                                 id=f"block_{len(blocks) + start_index:04d}",
-                                toc_id=toc_item.id,
-                                content=chunk,
-                                start_line=toc_item.line_number,
-                                end_line=toc_item.line_number
-                            )
-                            blocks.append(block)
+                                toc_id=toc_item.id, content=chunk,
+                                start_line=toc_item.line_number, end_line=toc_item.line_number
+                            ))
                     else:
-                        # 检查添加这个句子是否会超出限制（考虑分隔符）
-                        separator_len = 2 if current_block else 0  # \n\n between items
-                        new_length = current_length + separator_len + len(sentence)
-                        if new_length > self.max_chars:
-                            # 超出限制，保存当前块并开始新块
-                            if current_block:
-                                blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
-                            current_block = [sentence]
-                            current_length = len(sentence)
-                        else:
-                            # 未超出限制，添加到当前块
-                            current_block.append(sentence)
-                            current_length = new_length
+                        current_block, current_length = self._add_to_current(
+                            current_block, current_length, sentence, blocks, toc_item, start_index)
             else:
-                # 检查添加这个段落是否会超出限制（考虑分隔符）
-                separator_len = 2 if current_block else 0  # \n\n between items
-                new_length = current_length + separator_len + len(para)
-                if new_length > self.max_chars:
-                    # 超出限制，保存当前块并开始新块
-                    if current_block:
-                        blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
-                    current_block = [para]
-                    current_length = len(para)
-                else:
-                    # 未超出限制，添加到当前块
-                    current_block.append(para)
-                    current_length = new_length
+                current_block, current_length = self._add_to_current(
+                    current_block, current_length, para, blocks, toc_item, start_index)
 
-        # 添加最后的块
         if current_block:
             blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
 
@@ -820,6 +799,33 @@ class AutonomousTextbookProcessor:
         self.toc_expander = TocExpander(api_key)
         self.text_segmenter = SmartTextSegmenter(max_block_chars)
 
+    def _read_textbook(self, textbook_path: str) -> str:
+        path = Path(textbook_path)
+        if not path.exists():
+            raise FileNotFoundError(f"教科书文件不存在: {textbook_path}")
+
+        encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
+        for encoding in encodings:
+            try:
+                with open(path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                logger.info(f"使用编码 {encoding} 读取文件: {textbook_path}")
+                return content
+            except UnicodeDecodeError:
+                continue
+        raise ValueError(f"无法解码文件: {textbook_path}")
+
+    def _compute_block_stats(self, text_blocks: list) -> dict:
+        if not text_blocks:
+            return {"avg_block_size": 0, "max_block_size": 0, "min_block_size": 0, "blocks_over_limit": 0}
+        sizes = [b.char_count for b in text_blocks]
+        return {
+            "avg_block_size": sum(sizes) / len(sizes),
+            "max_block_size": max(sizes),
+            "min_block_size": min(sizes),
+            "blocks_over_limit": sum(1 for s in sizes if s > self.max_block_chars),
+        }
+
     async def process(
         self,
         textbook_path: str,
@@ -834,33 +840,12 @@ class AutonomousTextbookProcessor:
         Returns:
             处理结果
         """
-        # 读取文件
         path = Path(textbook_path)
-        if not path.exists():
-            raise FileNotFoundError(f"教科书文件不存在: {textbook_path}")
-
-        # 尝试多种编码
-        encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
-        content = None
-        used_encoding = None
-
-        for encoding in encodings:
-            try:
-                with open(path, 'r', encoding=encoding) as f:
-                    content = f.read()
-                used_encoding = encoding
-                logger.info(f"使用编码 {encoding} 读取文件: {textbook_path}")
-                break
-            except UnicodeDecodeError:
-                continue
-
-        if content is None:
-            raise ValueError(f"无法解码文件: {textbook_path}，尝试的编码: {', '.join(encodings)}")
+        content = self._read_textbook(textbook_path)
 
         if not textbook_title:
             textbook_title = path.stem
 
-        # 创建结果对象
         result = ProcessingResult(
             textbook_id=path.stem,
             textbook_title=textbook_title,
@@ -879,32 +864,22 @@ class AutonomousTextbookProcessor:
         if result.statistics["toc_max_level"] < self.target_toc_depth:
             result.stage = ProcessingStage.TOC_EXPANSION
             result.toc_items = await self.toc_expander.expand_toc(
-                result.toc_items,
-                content,
-                self.target_toc_depth
+                result.toc_items, content, self.target_toc_depth
             )
             result.statistics["toc_items_expanded"] = len(result.toc_items)
             result.statistics["toc_max_level"] = max((item.level for item in result.toc_items), default=0)
-
-            logger.info(f"扩展后: {len(result.toc_items)} 个TOC条目，深度 {result.statistics['toc_max_level']}")
+            logger.info(f"扩展后: {len(result.toc_items)} 个TOC条目")
 
         # 阶段3: 文本分割
         result.stage = ProcessingStage.TEXT_SEGMENTATION
         result.text_blocks = self.text_segmenter.segment(content, result.toc_items)
         result.statistics["text_blocks_created"] = len(result.text_blocks)
+        result.statistics.update(self._compute_block_stats(result.text_blocks))
 
-        # 统计文本块大小
-        block_sizes = [block.char_count for block in result.text_blocks]
-        result.statistics["avg_block_size"] = sum(block_sizes) / len(block_sizes) if block_sizes else 0
-        result.statistics["max_block_size"] = max(block_sizes) if block_sizes else 0
-        result.statistics["min_block_size"] = min(block_sizes) if block_sizes else 0
-        result.statistics["blocks_over_limit"] = sum(1 for size in block_sizes if size > self.max_block_chars)
-
-        logger.info(f"分割完成: {len(result.text_blocks)} 个块，平均大小 {result.statistics['avg_block_size']:.1f}")
+        logger.info(f"分割完成: {len(result.text_blocks)} 个块")
 
         # 阶段4: 完成
         result.stage = ProcessingStage.COMPLETED
-
         return result
 
 
@@ -952,7 +927,7 @@ if __name__ == "__main__":
         print("="*60)
 
         # 保存结果
-        output_path = Path("backend/lingflow/data/processed/textbooks_v2") / f"{Path(textbook_path).stem}_processed.json"
+        output_path = Path("backend/textbook_processing/data/processed/textbooks_v2") / f"{Path(textbook_path).stem}_processed.json"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(result.to_dict(), f, ensure_ascii=False, indent=2)

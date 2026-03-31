@@ -655,3 +655,347 @@ footer a {
 .hidden {
     display: none !important;
 }
+
+/* ========== 书籍搜索样式 ========== */
+
+.search-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.toggle-btn {
+    padding: 10px 24px;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.toggle-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* 书籍卡片 */
+.book-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s;
+    border-left: 4px solid var(--primary-color);
+}
+
+.book-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.book-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 12px;
+}
+
+.book-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+.book-author {
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+.book-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.book-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--text-color);
+}
+
+.book-tag.category {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.book-tag.category.气功 {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.book-tag.category.中医 {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.book-tag.category.儒家 {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.book-description {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    margin: 12px 0;
+    line-height: 1.5;
+}
+
+.book-stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.book-action {
+    margin-top: 12px;
+}
+
+.book-action button {
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s;
+}
+
+.book-action button:hover {
+    background: var(--primary-dark);
+}
+
+/* 章节卡片 */
+.chapter-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid var(--success-color);
+}
+
+.chapter-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.chapter-book {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.chapter-snippet {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    max-width: 700px;
+    max-height: 80vh;
+    width: 100%;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0 8px;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: var(--error-color);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-section {
+    margin-bottom: 20px;
+}
+
+.modal-section h4 {
+    color: var(--text-color);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.chapters-list {
+    list-style: none;
+    padding: 0;
+}
+
+.chapter-item {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: var(--bg-color);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chapter-item:hover {
+    background: #f0f0f0;
+}
+
+.chapter-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.meta-tag {
+    padding: 3px 10px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+}
+
+/* 相关书籍 */
+.related-books {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.related-book-card {
+    background: var(--bg-color);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+}
+
+.related-book-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.related-book-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.related-book-author {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.similarity-score {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}

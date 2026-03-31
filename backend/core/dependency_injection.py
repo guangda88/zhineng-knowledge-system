@@ -3,10 +3,10 @@
 提供依赖注入容器，管理应用中的依赖关系。
 """
 
+import hmac
 from functools import lru_cache
 from typing import TypeVar, Type, Optional, Callable, Dict, Any
-import asyncpg
-from fastapi import Depends
+from fastapi import Depends, Request, HTTPException
 import logging
 
 from backend.config import get_config, Config
@@ -93,7 +93,6 @@ class Container:
 
     def clear(self):
         """清空所有注册的服务"""
-        self._services.clear()
         self._factories.clear()
         self._singletons.clear()
         self.logger.debug("Container cleared")
@@ -130,6 +129,49 @@ def _initialize_container(container: Container):
 
 # ============== FastAPI 依赖函数 ==============
 
+async def require_admin_api_key(request: Request) -> bool:
+    """验证管理端点API密钥
+
+    从 X-Admin-API-Key 头或 admin_api_key 查询参数读取密钥。
+    生产环境：未配置 ADMIN_API_KEYS 时默认拒绝访问。
+    开发环境：未配置时记录警告并允许访问（向后兼容）。
+
+    Raises:
+        HTTPException 401: 密钥缺失或未配置
+        HTTPException 403: 密钥无效
+    """
+    from backend.config import get_config
+
+    config = get_config()
+    raw_keys = config.ADMIN_API_KEYS
+    valid_keys = [k.strip() for k in raw_keys.split(",") if k.strip()] if raw_keys else []
+
+    if not valid_keys:
+        if config.is_production():
+            raise HTTPException(
+                status_code=401,
+                detail="Admin API not configured. Set ADMIN_API_KEYS environment variable."
+            )
+        logger.warning("ADMIN_API_KEYS not configured - admin endpoints are unprotected")
+        return True
+
+    provided = request.headers.get("X-Admin-API-Key") or request.query_params.get("admin_api_key")
+
+    if not provided:
+        raise HTTPException(
+            status_code=401,
+            detail="Admin API key required. Provide X-Admin-API-Key header."
+        )
+
+    if not any(hmac.compare_digest(provided, k) for k in valid_keys):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid admin API key"
+        )
+
+    return True
+
+
 @lru_cache()
 def get_config_dependency() -> Config:
     """获取配置实例（FastAPI依赖）
@@ -140,139 +182,55 @@ def get_config_dependency() -> Config:
     return get_config()
 
 
-# 数据库连接池（全局缓存）
-_db_pool: Optional[asyncpg.Pool] = None
-
-
-async def get_db_pool() -> asyncpg.Pool:
-    """获取数据库连接池（FastAPI依赖）
+def get_db_pool():
+    """获取数据库连接池（委托给 backend.core.database）
 
     Returns:
-        asyncpg.Pool: 数据库连接池
+        asyncpg.Pool 或 None: 数据库连接池
     """
-    global _db_pool
-
-    if _db_pool is None:
-        config = get_config()
-
-        try:
-            _db_pool = await asyncpg.create_pool(
-                config.DATABASE_URL,
-                min_size=2,
-                max_size=config.DB_POOL_SIZE,
-                command_timeout=config.DB_POOL_TIMEOUT,
-                max_inactive_connection_lifetime=config.DB_POOL_RECYCLE
-            )
-            logger.info("Database connection pool created")
-        except Exception as e:
-            logger.error(f"Failed to create database pool: {e}")
-            raise
-
-    return _db_pool
+    from backend.core.database import get_db_pool as _get_db_pool
+    return _get_db_pool()
 
 
-async def close_db_pool():
-    """关闭数据库连接池"""
-    global _db_pool
-
-    if _db_pool:
-        await _db_pool.close()
-        _db_pool = None
-        logger.info("Database connection pool closed")
-
-
-def get_db():
+async def get_db():
     """获取数据库连接（FastAPI依赖）
 
-    这是一个依赖函数，用于在API路由中获取数据库连接。
+    Yields:
+        asyncpg.Connection: 数据库连接
+    """
+    pool = get_db_pool()
+    if pool is None:
+        from backend.core.database import init_db_pool
+        pool = await init_db_pool()
+    async with pool.acquire() as connection:
+        yield connection
+
+
+def get_redis_client():
+    """获取Redis客户端（委托给 CacheService）
 
     Returns:
-        数据库连接获取函数
+        Redis客户端或None
     """
-    async def _get_db():
-        pool = await get_db_pool()
-        async with pool.acquire() as connection:
-            yield connection
-
-    return _get_db
-
-
-# ============== Redis 依赖 ==============
-
-_redis_client = None
-
-
-async def get_redis_client():
-    """获取Redis客户端（FastAPI依赖）
-
-    Returns:
-        Redis客户端
-    """
-    global _redis_client
-
-    if _redis_client is None:
-        config = get_config()
-
-        try:
-            import redis.asyncio as redis
-            _redis_client = await redis.from_url(
-                config.get_redis_url(),
-                encoding="utf-8",
-                decode_responses=True,
-                max_connections=config.REDIS_POOL_SIZE
-            )
-            logger.info("Redis client created")
-        except Exception as e:
-            logger.error(f"Failed to create Redis client: {e}")
-            raise
-
-    return _redis_client
-
-
-async def close_redis_client():
-    """关闭Redis客户端"""
-    global _redis_client
-
-    if _redis_client:
-        await _redis_client.close()
-        _redis_client = None
-        logger.info("Redis client closed")
+    try:
+        from backend.core.service_manager import get_service_manager
+        sm = get_service_manager()
+        cache_service = sm.get_service("cache")
+        if cache_service and hasattr(cache_service, 'client'):
+            return cache_service.client
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+    return None
 
 
 # ============== 便捷依赖函数 ==============
-
-def inject_config():
-    """注入配置依赖（FastAPI使用）
-
-    Example:
-        @router.get("/test")
-        async def test(config: Config = Depends(inject_config)):
-            return {"environment": config.ENVIRONMENT}
-    """
-    return Depends(get_config_dependency)
-
-
-def inject_db():
-    """注入数据库连接依赖（FastAPI使用）
-
-    Example:
-        @router.get("/users")
-        async def get_users(db = Depends(inject_db())):
-            result = await db.fetch("SELECT * FROM users")
-            return result
-    """
-    return Depends(get_db())
-
 
 __all__ = [
     "Container",
     "get_container",
     "get_config_dependency",
     "get_db_pool",
-    "close_db_pool",
     "get_db",
     "get_redis_client",
-    "close_redis_client",
-    "inject_config",
-    "inject_db",
+    "require_admin_api_key",
 ]

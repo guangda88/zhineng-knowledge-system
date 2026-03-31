@@ -1,9 +1,142 @@
-# 智能知识系统 - 项目总体开发规则
+# 灵知系统 - 项目总体开发规则
 
-**版本**: 1.2.0
-**日期**: 2026-03-25 → 2026-03-29
+**文档版本**: doc-v2.0.0
+**项目版本**: v1.3.0-dev
+**日期**: 2026-03-25 → 2026-03-31
 **适用**: 全体开发阶段
 **强制执行**: 是
+
+---
+
+## 0. 核心原则（最高准则）
+
+> **"注重实践，避免空谈，一切围绕用户生命状态的提升提供服务"**
+
+这是系统的最高准则，所有代码、功能、设计都必须服务于这个目标。
+
+**📘 完整的核心原则请参考**: [ENGINEERING_ALIGNMENT.md - 第三章：核心原则](../ENGINEERING_ALIGNMENT.md#三核心原则)
+
+本文档保留以下快速参考：
+
+### 0.1 快速参考
+
+**项目定位**: 集科学研究、理论探索、实践指导于一体的智能生命状态提升系统
+
+**核心价值观**:
+1. 知行合一 - 理论 + 实践
+2. 用户中心 - 尊重意愿，个性化
+3. 技术服务生命 - 技术是手段，生命是目的
+4. 完整知识体系 - 科学 + 理论 + 实践
+
+**核心原则三问**:
+1. 这个功能如何帮助用户实践？
+2. 如何验证它真的改善了用户生命状态？
+3. 成功指标是什么？（技术+生命）
+
+### 0.2 生命指标测量框架
+
+为了回答"如何验证它真的改善了用户生命状态"，需要建立可操作的测量指标。
+
+#### 直接指标（Direct Metrics）
+
+| 指标 | 测量方式 | 数据来源 | 频率 |
+|------|---------|---------|------|
+| **连续练习天数** | 用户累计练习天数 | practice_records表 | 实时 |
+| **用户等级迁移** | 入门→进阶→高级的次数 | user_level表 | 实时 |
+| **生命状态自评** | 用户自评（1-10分） | life_state_tracking表 | 每周 |
+| **练习完成率** | 计划vs实际完成比例 | practice_plan表 | 每周 |
+
+#### 代理指标（Proxy Metrics）
+
+| 指标 | 测量方式 | 代理目标 | 频率 |
+|------|---------|---------|------|
+| **实践转化率** | 知道理论后开始实践的比例 | 用户实际开始练习 | 每月 |
+| **21天坚持率** | 持续练习21天的用户比例 | 形成习惯的能力 | 每月 |
+| **生命状态改善率** | 自评有改善的用户比例 | 实际效果验证 | 每月 |
+| **推荐意愿** | 愿意推荐给朋友的用户比例 | 满意度 | 每月 |
+
+#### 测量流程
+
+```
+功能上线
+    ↓
+设定目标（如：21天坚持率>40%）
+    ↓
+数据收集（自动追踪+用户自评）
+    ↓
+数据分析（对比基线）
+    ↓
+效果验证（是否达到目标）
+    ↓
+决策（继续/调整/停止）
+```
+
+#### 数据表结构
+
+```sql
+-- 用户等级表
+CREATE TABLE user_levels (
+    user_id VARCHAR(100) PRIMARY KEY,
+    current_level VARCHAR(50),  -- 入门、初级、中级、高级、资深
+    level_history JSONB,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 生命状态追踪表
+CREATE TABLE life_state_tracking (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(100),
+    tracked_date DATE,
+    physical_health INT CHECK (physical_health BETWEEN 1 AND 10),
+    mental_peace INT CHECK (mental_peace BETWEEN 1 AND 10),
+    energy_level INT CHECK (energy_level BETWEEN 1 AND 10),
+    sleep_quality INT CHECK (sleep_quality BETWEEN 1 AND 10),
+    emotional_stability INT CHECK (emotional_stability BETWEEN 1 AND 10),
+    subjective_notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 练习记录表
+CREATE TABLE practice_records (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(100),
+    concept VARCHAR(200),
+    practice_date TIMESTAMP,
+    duration_minutes INT,
+    before_state JSONB,
+    after_state JSONB,
+    subjective_feeling TEXT,
+    insights TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 0.3 代码审查标准
+
+**所有代码审查必须检查**：
+
+- ✅ 是否为生命状态提升服务？
+- ✅ 是否尊重用户意愿？
+- ✅ 是否有科学依据？
+- ✅ 是否可验证效果？
+
+### 0.4 完整知识体系
+
+每个回答都应包含：理论理解、科学依据、实践方法、个性化建议
+
+### 0.5 个性化服务
+
+从2天体验到5年规划，完全个性化。每一步都尊重用户意愿。
+
+### 0.6 技术与生命服务
+
+技术指标服务于生命指标（参考 ENGINEERING_ALIGNMENT.md）
+
+### 0.7 标注系统
+
+提升识别精度 → 用户获得准确内容 → 练习正确 → 生命状态提升
+
+详细说明参考: [docs/ANNOTATION_SYSTEM_CLARIFICATION.md](docs/ANNOTATION_SYSTEM_CLARIFICATION.md)
 
 ---
 
@@ -13,45 +146,50 @@
 
 ```
 zhineng-knowledge-system/
-├── backend/                 # 后端代码
-│   ├── main.py             # 主入口 (必须单文件优先)
-│   ├── config.py           # 配置管理
-│   ├── models.py           # 数据模型
-│   ├── api/                # API 子模块 (需要时创建)
-│   │   ├── __init__.py
-│   │   ├── documents.py
-│   │   └── chat.py
-│   ├── services/           # 业务服务
-│   │   ├── __init__.py
-│   │   ├── retrieval.py    # 检索服务
-│   │   └── rag.py          # RAG 服务
-│   ├── utils/              # 工具函数
-│   │   ├── __init__.py
-│   │   ├── cache.py
-│   │   └── logging.py
-│   └── requirements.txt    # Python 依赖
-├── frontend/              # 前端代码
-│   └── dist/               # 构建输出
-│       ├── index.html
-│       ├── app.js
-│       └── style.css
-├── nginx/                 # Nginx 配置
-│   └── nginx.conf
-├── tests/                 # 测试代码
-│   ├── test_api.py        # API 测试
-│   ├── test_retrieval.py  # 检索测试
-│   ├── conftest.py        # pytest 配置
-│   └── pytest.ini         # pytest 设置
-├── scripts/               # 脚本工具
-│   ├── ima_migrator.py   # 数据迁移
-│   └── init_db.py         # 数据库初始化
-├── data/                  # 数据文件
-│   └── import.json
-├── docker-compose.yml     # 容器编排
-├── init.sql               # 数据库初始化
-├── requirements.txt       # 根依赖 (可选)
-├── DEVELOPMENT_RULES.md   # 本文件
-└── PHASED_IMPLEMENTATION_PLAN.md  # 开发规划
+├── backend/                    # 后端代码（Python 3.12）
+│   ├── main.py                # FastAPI 入口（create_app 工厂函数）
+│   ├── config/                # 配置包（Pydantic Settings 多继承）
+│   │   ├── __init__.py        # Config 单例、get_config()、reload_config()
+│   │   ├── base.py            # BaseConfig（环境、API、BGE、DeepSeek）
+│   │   ├── database.py        # DatabaseConfig
+│   │   ├── redis.py           # RedisConfig
+│   │   ├── security.py        # SecurityConfig（JWT、CORS、API Key）
+│   │   └── lingzhi.py         # LingZhiConfig（遗留 DB 路径）
+│   ├── api/                   # API 路由
+│   │   ├── v1/                # v1 端点（documents, search, reasoning, books...）
+│   │   └── v2/                # v2 端点（复用 v1 router，authenticated）
+│   ├── services/              # 业务服务
+│   │   ├── retrieval/         # 向量检索、BM25、混合检索
+│   │   ├── reasoning/         # CoT、ReAct、GraphRAG 推理
+│   │   ├── rag/               # RAG 编排
+│   │   └── knowledge_base/    # 知识库处理
+│   ├── domains/               # 领域驱动（气功、中医、儒家、通用）
+│   ├── auth/                  # JWT 认证（RS256）+ RBAC
+│   ├── gateway/               # API 网关（限流、熔断、路由）
+│   ├── cache/                 # 多级缓存（L1 内存 + L2 Redis）
+│   ├── core/                  # 应用基础设施
+│   │   ├── lifespan.py        # FastAPI 生命周期（启动/关闭）
+│   │   ├── database.py        # DB 连接池（asyncpg + SQLAlchemy）
+│   │   ├── dependency_injection.py  # DI 容器 + FastAPI Depends
+│   │   ├── service_manager.py # 服务生命周期管理
+│   │   └── services.py        # DatabaseService、CacheService...
+│   ├── common/                # 共享工具（db_helpers、singleton、typing）
+│   ├── middleware/             # HTTP 中间件（限流、安全头）
+│   ├── monitoring/            # 可观测性（指标、健康检查、Prometheus）
+│   ├── models.py              # Pydantic 请求/响应模型
+│   └── textbook_processing/   # 教材处理（TOC 解析、自动处理器）
+├── frontend/                  # 前端（HTML/CSS/JS，Nginx 托管）
+├── tests/                     # 测试（pytest + pytest-asyncio）
+├── scripts/                   # 运维脚本（部署、健康检查、格式化）
+├── nginx/                     # Nginx 反向代理配置
+├── monitoring/                # Prometheus + Grafana 配置
+├── docs/                      # 文档
+├── data/                      # 运行时数据
+├── docker-compose.yml         # 容器编排（9 个服务）
+├── init.sql                   # 数据库 Schema（documents, chat_history, qigong_knowledge）
+├── DEVELOPMENT_RULES.md       # 本文件（权威开发规范）
+├── AGENTS.md                  # AI Agent 快速上手指南
+└── ENGINEERING_ALIGNMENT.md   # 工程流程/原则/规划对齐文档
 ```
 
 ### 文件命名规范
@@ -63,6 +201,9 @@ zhineng-knowledge-system/
 | 函数名 | 小写+下划线 | `search_documents` |
 | 常量 | 大写+下划线 | `MAX_RESULTS` |
 | 私有方法 | 前缀下划线 | `_internal_func` |
+| SQL 表名 | 小写+下划线复数 | `documents`, `chat_history` |
+| SQL 字段 | 小写+下划线 | `created_at`, `user_id` |
+| SQL 索引 | `idx_表名_字段` | `idx_documents_category` |
 
 ---
 
@@ -590,7 +731,261 @@ urgency_checks:
 
 ---
 
-## 14. 检查清单
+## 14. 系统资源管理规范
+
+### 14.1 资源监控要求
+
+**强制执行的监控标准**：
+- [ ] 内存使用率必须 < 80%（警告阈值）
+- [ ] 内存使用率必须 < 90%（紧急阈值）
+- [ ] 磁盘使用率必须 < 85%（根分区）
+- [ ] 容器必须有资源限制（mem_limit, cpus）
+- [ ] 僵尸进程数量必须 < 10个
+
+**自动监控机制**：
+```bash
+# 已配置的自动监控任务（crontab）
+*/10 * * * * ./scripts/emergency_memory_recovery.sh  # 每10分钟检查
+0 * * * * ./scripts/monitor_disk.sh                   # 每小时检查
+*/30 * * * * ./scripts/monitor_docker.sh               # 每30分钟检查
+0 * * * * ./scripts/cleanup_zombies.sh                 # 每小时清理
+```
+
+---
+
+### 14.2 高等级响应事件定义
+
+**响应事件等级**：
+
+| 等级 | 触发条件 | 响应时间 | 处理优先级 |
+|------|---------|---------|-----------|
+| 🔴 P0 - 紧急 | 内存使用率 > 90% | 立即（<5分钟） | 最高 |
+| 🟠 P1 - 严重 | 内存使用率 > 80% | 30分钟内 | 高 |
+| 🟡 P2 - 警告 | 磁盘使用率 > 85% | 2小时内 | 中 |
+| 🟢 P3 - 一般 | 单个容器异常 | 1天内 | 正常 |
+
+**P0 紧急事件（技术强制执行）**：
+
+当系统满足以下任一条件时，进入 **P0 紧急状态**：
+
+```yaml
+p0_triggers:
+  memory_critical:
+    condition: "内存使用率 > 90%"
+    action: "立即执行应急恢复"
+    auto_response: true
+
+  container_oom:
+    condition: "容器因OOM被杀死"
+    action: "增加内存限制或优化应用"
+    auto_response: true
+
+  disk_full:
+    condition: "根分区可用 < 10%"
+    action: "紧急清理磁盘空间"
+    auto_response: true
+
+  service_down:
+    condition: "核心服务停止运行"
+    action: "立即重启服务"
+    auto_response: true
+```
+
+**P0 状态的强制执行**：
+
+1. **拦截非紧急操作**（技术层强制）
+   - ❌ 禁止：新增功能、重构代码、优化测试、更新文档
+   - ✅ 允许：修复资源问题、重启服务、清理缓存、扩容
+
+2. **自动触发应急响应**
+   ```bash
+   # 自动执行（每10分钟检查）
+   ./scripts/emergency_memory_recovery.sh
+   ```
+
+3. **立即通知机制**
+   - 每日健康检查报告中高亮显示
+   - Prometheus 告警规则触发
+   - 系统日志记录 CRITICAL 级别
+
+---
+
+### 14.3 容器资源配置强制要求
+
+**Docker Compose 配置要求**：
+
+所有容器 **必须** 配置资源限制：
+
+```yaml
+services:
+  your-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'        # CPU上限
+          memory: 1G         # 内存上限（必需）
+        reservations:
+          cpus: '0.5'        # CPU预留（可选）
+          memory: 512M       # 内存预留（建议）
+```
+
+**资源限制标准**：
+
+| 服务类型 | 内存限制 | CPU限制 | 说明 |
+|---------|---------|---------|------|
+| 核心API | 1GB | 1.0 | 主要业务服务 |
+| 数据库 | 512MB | 0.5 | PostgreSQL/Redis |
+| Web服务器 | 128MB | 0.3 | Nginx |
+| 监控服务 | 256MB | 0.5 | Prometheus/Grafana |
+| 辅助工具 | 64MB | 0.2 | Exporter等 |
+
+**强制检查（`ResourceGuard` Hook）**：
+
+在部署容器时，自动检查：
+- [ ] 是否设置了 `mem_limit`
+- [ ] 是否设置了 `cpus` 限制
+- [ ] 限制值是否合理（参考标准）
+
+**未配置资源限制的后果**：
+- ⚠️ 容器可能无限制占用系统资源
+- ⚠️ 单个容器异常可能导致系统崩溃
+- ⚠️ 无法进行容量规划
+- 🔴 **违反开发规范，禁止部署**
+
+---
+
+### 14.4 资源问题响应流程
+
+**标准响应流程**：
+
+1. **检测阶段**（自动）
+   ```bash
+   # 每10分钟自动检查
+   ./scripts/emergency_memory_recovery.sh
+   ```
+
+2. **评估阶段**（自动 + 人工）
+   - 确认资源占用情况
+   - 识别占用高的进程/容器
+   - 评估影响范围
+
+3. **响应阶段**（自动优先）
+   - P0级别：自动执行应急恢复
+   - P1级别：自动告警，人工介入
+   - P2/P3级别：记录日志，定期处理
+
+4. **恢复阶段**（验证）
+   - 确认资源使用率下降
+   - 验证服务正常运行
+   - 记录问题和解决方案
+
+**P0 事件响应示例**：
+
+```bash
+# 检测到内存使用率 96%
+# → 自动触发应急恢复脚本
+# → 停止非核心容器
+# → 清理系统缓存
+# → 清理僵尸进程
+# → 生成应急报告
+# → 通知管理员
+
+# 结果：内存使用率降至 80% 以下
+```
+
+---
+
+### 14.5 容量规划与扩展
+
+**容量基线管理**：
+
+```bash
+# 定期创建容量基线（每周）
+./scripts/create_capacity_baseline.sh
+
+# 生成容量评估报告（每周）
+./scripts/weekly_capacity_review.sh
+```
+
+**扩容决策标准**：
+
+| 指标 | 正常 | 警告 | 需要扩容 |
+|------|------|------|---------|
+| 内存使用率 | < 60% | 60-80% | > 80% |
+| CPU使用率 | < 50% | 50-70% | > 70% |
+| 磁盘使用率 | < 70% | 70-85% | > 85% |
+
+**扩容流程**：
+1. 评估当前资源使用趋势
+2. 分析未来3-6个月容量需求
+3. 制定扩容方案（硬件/架构优化）
+4. 测试扩容方案
+5. 执行扩容（低峰时段）
+6. 验证扩容效果
+7. 更新容量基线
+
+---
+
+### 14.6 资源问题预防措施
+
+**日常预防**：
+
+1. **每日健康检查**（每天早上9点）
+   ```bash
+   ./scripts/daily_health_check.sh
+   ```
+
+2. **每周容量评估**（每周日下午）
+   ```bash
+   ./scripts/weekly_capacity_review.sh
+   ```
+
+3. **容器资源限制审查**（每次部署前）
+   - 检查新添加的服务是否配置了资源限制
+   - 评估现有限制是否合理
+   - 更新资源分配基线
+
+**开发阶段预防**：
+
+1. **代码审查检查点**：
+   - [ ] 新服务是否配置了资源限制
+   - [ ] 是否有内存泄漏风险
+   - [ ] 是否有资源密集型操作
+
+2. **测试阶段检查**：
+   - [ ] 性能测试是否通过
+   - [ ] 内存使用是否在预期范围
+   - [ ] 是否有资源未释放的bug
+
+3. **部署前检查**：
+   - [ ] 容器资源限制已配置
+   - [ ] 容量规划已更新
+   - [ ] 监控告警已配置
+
+---
+
+### 14.7 违规处理
+
+**资源管理违规**：
+
+| 违规行为 | 后果 |
+|---------|------|
+| 部署无资源限制的容器 | 禁止部署，要求整改 |
+| 忽视P0资源问题 | 强制切换到紧急模式 |
+| 未经批准的高资源占用服务 | 强制停止容器 |
+| 删除或禁用监控脚本 | 恢复脚本并警告 |
+
+**资源管理规范修订**：
+
+本规范的修订需要：
+1. 基于真实的生产环境数据
+2. 团队讨论并达成共识
+3. 更新文档并通知所有成员
+4. 更新相关的自动化检查脚本
+
+---
+
+## 15. 检查清单
 
 ### 开发前
 
@@ -614,7 +1009,7 @@ urgency_checks:
 
 ---
 
-## 15. 违规处理
+## 16. 违规处理
 
 ### 规范执行
 
@@ -635,7 +1030,7 @@ urgency_checks:
 
 ---
 
-## 16. 附录
+## 17. 附录
 
 ### 工具配置
 
@@ -670,6 +1065,9 @@ insert_final_newline = true
 | 版本 | 日期 | 变更内容 | 作者 |
 |------|------|----------|------|
 | 1.0.0 | 2026-03-25 | 初始版本 | LingFlow |
+| 1.1.0 | 2026-03-30 | 新增第14章：系统资源管理规范 | Claude Code |
+| 2.0.0 | 2026-03-31 | 更新项目结构至当前架构；补充 SQL 命名规范 | Claude Code |
+| 2.0.0 | 2026-03-31 | 更新项目结构至当前架构；补充 SQL 命名规范；对齐 ENGINEERING_ALIGNMENT.md | Claude Code |
 
 ---
 

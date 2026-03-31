@@ -7,9 +7,30 @@ import math
 import logging
 from typing import List, Dict, Any, Optional, Set
 from collections import Counter, defaultdict
+from pathlib import Path
 import asyncpg
 
 logger = logging.getLogger(__name__)
+
+_CUSTOM_DICT_LOADED = False
+_CUSTOM_DICT_PATH = Path(__file__).parent / "custom_dict.txt"
+
+try:
+    import jieba
+    _JIEBA_AVAILABLE = True
+except ImportError:
+    _JIEBA_AVAILABLE = False
+    logger.warning("jieba 未安装，BM25 将使用基础分词。请安装: pip install jieba")
+
+
+def _ensure_custom_dict() -> None:
+    global _CUSTOM_DICT_LOADED
+    if _CUSTOM_DICT_LOADED:
+        return
+    if _JIEBA_AVAILABLE and _CUSTOM_DICT_PATH.exists():
+        jieba.load_userdict(str(_CUSTOM_DICT_PATH))
+        logger.info(f"已加载自定义词典: {_CUSTOM_DICT_PATH}")
+    _CUSTOM_DICT_LOADED = True
 
 
 class BM25Retriever:
@@ -44,12 +65,10 @@ class BM25Retriever:
     async def initialize(self) -> None:
         """初始化索引统计"""
         async with self.db_pool.acquire() as conn:
-            # 获取文档数量
             self.doc_count = await conn.fetchval(
                 "SELECT COUNT(*) FROM documents"
             )
             
-            # 获取文档长度
             rows = await conn.fetch(
                 "SELECT id, title, content FROM documents"
             )
@@ -64,7 +83,6 @@ class BM25Retriever:
             
             self.avg_doc_length = total_length / self.doc_count if self.doc_count > 0 else 0
             
-            # 计算文档频率
             word_docs: Dict[str, Set[int]] = defaultdict(set)
             for row in rows:
                 text = f"{row['title']} {row['content']}"
@@ -76,20 +94,32 @@ class BM25Retriever:
                 word: len(doc_ids) for word, doc_ids in word_docs.items()
             }
         
-        logger.info(f"BM25索引初始化完成: {self.doc_count}个文档, 平均长度={self.avg_doc_length:.1f}")
+        tokenizer = "jieba" if _JIEBA_AVAILABLE else "basic"
+        logger.info(f"BM25索引初始化完成: {self.doc_count}个文档, 平均长度={self.avg_doc_length:.1f}, 分词器={tokenizer}")
     
     def _tokenize(self, text: str) -> List[str]:
         """
-        中文分词（简单实现）
-        
+        中文分词
+
+        优先使用 jieba 进行专业中文分词，
+        支持自定义词典（气功、中医、儒家术语）。
+        jieba 不可用时回退到基础分词。
+
         Args:
             text: 输入文本
-        
+
         Returns:
             分词列表
         """
-        # 简单按空格和标点分词
-        # 生产环境建议使用 jieba 等专业分词工具
+        if _JIEBA_AVAILABLE:
+            _ensure_custom_dict()
+            words = jieba.lcut(text)
+            return [
+                w.strip().lower()
+                for w in words
+                if w.strip() and len(w.strip()) > 1
+            ]
+        
         text = re.sub(r'[^\w\s\u4e00-\u9fff]', ' ', text)
         words = text.lower().split()
         return [w for w in words if len(w) > 1]
@@ -138,7 +168,6 @@ class BM25Retriever:
             tf = word_counts[word]
             idf = self._idf(word)
             
-            # BM25公式
             numerator = tf * (self.k1 + 1)
             denominator = tf + self.k1 * (
                 1 - self.b + self.b * (doc_length / self.avg_doc_length)
@@ -167,12 +196,10 @@ class BM25Retriever:
         if self.doc_count == 0:
             await self.initialize()
         
-        # 分词
         query_words = self._tokenize(query)
         if not query_words:
             return []
         
-        # 获取候选文档
         async with self.db_pool.acquire() as conn:
             if category:
                 rows = await conn.fetch(
@@ -187,13 +214,11 @@ class BM25Retriever:
                        FROM documents"""
                 )
         
-        # 计算得分
         scores = []
         for row in rows:
             text = f"{row['title']} {row['content']}"
             score = self._score(query_words, row['id'], text)
             
-            # 只保留有匹配的结果
             if score > 0:
                 scores.append({
                     'id': row['id'],
@@ -204,7 +229,6 @@ class BM25Retriever:
                     'method': 'bm25'
                 })
         
-        # 排序并返回top_k
         scores.sort(key=lambda x: x['score'], reverse=True)
         results = scores[:top_k]
         

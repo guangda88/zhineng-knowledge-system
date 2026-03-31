@@ -6,6 +6,7 @@
 
 import asyncio
 import logging
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -313,18 +314,21 @@ class ServiceManager:
 
 # 全局服务管理器实例
 _global_service_manager: Optional[ServiceManager] = None
+_service_manager_lock = threading.Lock()
 
 
 def get_service_manager() -> ServiceManager:
     """
-    获取全局服务管理器实例
+    获取全局服务管理器实例（线程安全）
 
     Returns:
         全局服务管理器
     """
     global _global_service_manager
     if _global_service_manager is None:
-        _global_service_manager = ServiceManager()
+        with _service_manager_lock:
+            if _global_service_manager is None:
+                _global_service_manager = ServiceManager()
     return _global_service_manager
 
 

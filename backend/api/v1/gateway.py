@@ -121,7 +121,7 @@ async def gateway_query(request: GatewayQueryRequest) -> JSONResponse:
     except Exception as e:
         metrics.increment_counter("gateway_query_error")
         logger.error(f"网关查询失败: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/domains", response_model=JSONResponse)

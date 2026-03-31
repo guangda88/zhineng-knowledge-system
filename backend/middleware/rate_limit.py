@@ -38,19 +38,28 @@ def get_rate_limiter() -> InMemoryRateLimiter:
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """API限流中间件
 
-    基于IP地址的请求速率限制
+    基于IP地址的请求速率限制。
+    仅在请求来自可信代理时才读取 X-Forwarded-For / X-Real-IP 头，
+    防止攻击者伪造头绕过限流。
     """
+
+    _trusted_proxies: set = set()
+
+    def __init__(self, app, **kwargs):
+        super().__init__(app, **kwargs)
+        trusted = os.getenv("TRUSTED_PROXIES", "")
+        if trusted:
+            self._trusted_proxies = {
+                ip.strip() for ip in trusted.split(",") if ip.strip()
+            }
 
     async def dispatch(self, request: Request, call_next) -> Response:
         """处理请求并应用限流"""
-        # 获取客户端IP（考虑代理情况）
         client_ip = self._get_client_ip(request)
 
-        # 跳过健康检查端点
         if request.url.path in ["/health", "/health/", "/metrics"]:
             return await call_next(request)
 
-        # 检查限流
         limiter = get_rate_limiter()
         allowed, info = await limiter.check(client_ip)
 
@@ -70,10 +79,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 }
             )
 
-        # 处理请求
         response = await call_next(request)
 
-        # 添加限流响应头
         response.headers["X-RateLimit-Limit"] = str(info.get("limit", {}).get("requests", 60))
         response.headers["X-RateLimit-Remaining"] = str(info.get("remaining", 0))
 
@@ -82,19 +89,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _get_client_ip(self, request: Request) -> str:
         """获取客户端真实IP地址
 
-        支持代理/X-Forwarded-For
+        仅在直接连接 IP 属于可信代理时才读取转发头。
         """
-        # 检查代理头
-        forwarded_for = request.headers.get("X-Forwarded-For")
-        if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
+        direct_ip = request.client.host if request.client else None
 
-        real_ip = request.headers.get("X-Real-IP")
-        if real_ip:
-            return real_ip
+        if direct_ip and direct_ip in self._trusted_proxies:
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                return forwarded_for.split(",")[0].strip()
 
-        # 默认使用直接连接的IP
-        if request.client:
-            return request.client.host
+            real_ip = request.headers.get("X-Real-IP")
+            if real_ip:
+                return real_ip
+
+        if direct_ip:
+            return direct_ip
 
         return "unknown"
