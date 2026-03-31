@@ -10,12 +10,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from backend.config import get_config
-from backend.core.dependency_injection import (
-    get_db_pool,
-    close_db_pool,
-    get_redis_client,
-    close_redis_client
-)
 from backend.core.service_manager import get_service_manager
 from backend.core.services import DatabaseService, CacheService, VectorService, MonitoringService
 
@@ -114,24 +108,33 @@ async def lifespan(app: FastAPI):
             logger.error(f"Error during service cleanup: {cleanup_error}")
         raise
 
-    # 初始化缓存系统
+    # 初始化缓存系统（使用 CacheService 的 Redis 连接）
     try:
-        from backend.cache import setup_cache
+        from backend.cache import get_cache_manager
 
-        await setup_cache(
-            redis_url=config.REDIS_URL,
-            config=None
-        )
+        cache_manager = get_cache_manager(redis_url=config.REDIS_URL)
+        if cache_service and cache_service.client:
+            from backend.cache.redis_cache import RedisCache
+            cache_manager._l2_cache = RedisCache(url=config.REDIS_URL)
         logger.info("Cache system initialized")
     except Exception as e:
         logger.warning(f"Cache initialization failed (continuing without cache): {e}")
 
+    # 初始化 SQLAlchemy ORM
+    try:
+        from backend.core.database import init_async_engine
+        await init_async_engine()
+        logger.info("SQLAlchemy ORM initialized")
+    except Exception as e:
+        logger.warning(f"SQLAlchemy initialization failed: {e}")
+
     # 初始化领域系统（如果存在）
     try:
         from domains import setup_domains
-        db_pool = await get_db_pool()
-        await setup_domains(db_pool)
-        logger.info("Domains initialized")
+        db_pool = db_service.pool
+        if db_pool:
+            await setup_domains(db_pool)
+            logger.info("Domains initialized")
     except ImportError:
         logger.debug("Domains module not available")
     except Exception as e:
@@ -142,20 +145,31 @@ async def lifespan(app: FastAPI):
         from monitoring import get_health_checker
 
         health_checker = get_health_checker()
-        db_pool = await get_db_pool()
+        db_pool = db_service.pool
+        if db_pool:
 
-        async def check_database():
-            """数据库健康检查"""
-            try:
-                async with db_pool.acquire() as conn:
-                    await conn.fetchval("SELECT 1")
-                return True
-            except Exception:
-                return False
+            async def check_database():
+                """数据库健康检查"""
+                from monitoring.health import HealthCheckResult, HealthStatus
+                try:
+                    async with db_pool.acquire() as conn:
+                        await conn.fetchval("SELECT 1")
+                    return HealthCheckResult(
+                        name="database",
+                        status=HealthStatus.HEALTHY,
+                        message="数据库连接正常"
+                    )
+                except Exception as e:
+                    logger.error("数据库连接失败", exc_info=True)
+                    return HealthCheckResult(
+                        name="database",
+                        status=HealthStatus.UNHEALTHY,
+                        message="数据库连接失败"
+                    )
 
-        health_checker.register("database", check_database, interval=30)
-        await health_checker.start_background_checks()
-        logger.info("Health checks started")
+            health_checker.register("database", check_database, interval=30)
+            await health_checker.start_background_checks()
+            logger.info("Health checks started")
     except ImportError:
         logger.debug("Monitoring module not available")
     except Exception as e:
@@ -172,6 +186,24 @@ async def lifespan(app: FastAPI):
         logger.debug("Monitoring module not available")
     except Exception as e:
         logger.warning(f"Metrics initialization failed: {e}")
+
+    # 初始化自学习调度器（如果启用）
+    try:
+        from backend.services.learning.scheduler import get_learning_scheduler
+        from backend.config import get_config
+
+        config = get_config()
+        if getattr(config, 'ENABLE_AUTO_LEARNING', False):
+            learning_scheduler = get_learning_scheduler()
+            await learning_scheduler.start()
+            app.state.learning_scheduler = learning_scheduler
+            logger.info("Learning scheduler started")
+        else:
+            logger.info("Auto-learning is disabled")
+    except ImportError:
+        logger.debug("Learning scheduler not available")
+    except Exception as e:
+        logger.warning(f"Learning scheduler initialization failed: {e}")
 
     logger.info("Application started successfully")
 
@@ -213,11 +245,27 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error stopping configuration watcher: {e}")
 
+    # 停止自学习调度器（如果存在）
+    try:
+        if hasattr(app.state, 'learning_scheduler') and app.state.learning_scheduler:
+            await app.state.learning_scheduler.stop()
+            logger.info("Learning scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping learning scheduler: {e}")
+
     # 通过服务管理器停止所有服务
     try:
         await service_manager.stop_all()
         logger.info("All services stopped successfully")
     except Exception as e:
         logger.error(f"Error stopping services: {e}")
+
+    # 关闭 SQLAlchemy ORM
+    try:
+        from backend.core.database import close_async_engine
+        await close_async_engine()
+        logger.info("SQLAlchemy ORM closed")
+    except Exception as e:
+        logger.error(f"Error closing SQLAlchemy: {e}")
 
     logger.info("Application shutdown complete")

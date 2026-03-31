@@ -22,7 +22,9 @@ class SecurityConfig(BaseSettings):
         default=[
             "http://localhost:3000",
             "http://localhost:8000",
-            "http://localhost:8001"
+            "http://localhost:8001",
+            "http://100.66.1.8:8008",
+            "http://100.66.1.8:8008/#"
         ],
         description="允许的CORS来源"
     )
@@ -96,7 +98,11 @@ class SecurityConfig(BaseSettings):
         description="是否启用安全头"
     )
 
-    # NOTE: ALLOWED_ORIGINS env must be JSON array format, e.g. ["http://localhost:3000"]
+    # 管理API密钥（逗号分隔字符串）
+    ADMIN_API_KEYS: str = Field(
+        default="",
+        description="管理端点API密钥，逗号分隔"
+    )
 
     @field_validator('SECRET_KEY')
     @classmethod
@@ -106,10 +112,7 @@ class SecurityConfig(BaseSettings):
             raise ValueError("SECRET_KEY is required in production")
         return v
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
     def __repr__(self) -> str:
         """配置字符串表示"""

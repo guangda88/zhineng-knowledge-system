@@ -160,47 +160,4 @@ class QigongDomain(BaseDomain):
             logger.error(f"获取功法详情失败: {e}")
             return None
 
-    async def get_practice_tips(self, exercise_name: str) -> List[str]:
-        """获取练习技巧
 
-        Args:
-            exercise_name: 功法名称
-
-        Returns:
-            技巧列表
-        """
-        doc = await self.get_exercise_by_name(exercise_name)
-        if not doc:
-            return []
-
-        # 简单提取技巧（实际应用中可以用NLP）
-        content = doc.get("content", "")
-        tips = []
-
-        # 查找包含"注意""要领""技巧"等关键词的句子
-        import re
-        pattern = r'([^。！？]*[注意要领技巧][^。！？]*[。！？])'
-        matches = re.findall(pattern, content)
-        tips.extend(matches[:5])
-
-        return tips
-
-    async def get_related_exercises(self, exercise_name: str) -> List[str]:
-        """获取相关功法
-
-        Args:
-            exercise_name: 功法名称
-
-        Returns:
-            相关功法名称列表
-        """
-        # 定义关联关系
-        relations = {
-            "八段锦": ["五禽戏", "六字诀", "太极拳"],
-            "五禽戏": ["八段锦", "易筋经"],
-            "太极拳": ["八段锦", "形意拳", "八卦掌"],
-            "六字诀": ["八段锦", "吐纳"],
-            "易筋经": ["五禽戏", "形意拳"]
-        }
-
-        return relations.get(exercise_name, [])

@@ -1,4 +1,4 @@
-# 智能知识系统 (Zhineng Knowledge System)
+# 灵知系统 (Lingzhi System)
 
 <div align="center">
 
@@ -6,11 +6,13 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v1.1.0-orange.svg)](https://github.com/guangda88/zhineng-knowledge-system/releases/tag/v1.1.0)
+[![Version](https://img.shields.io/badge/version-v1.3.0--dev-orange.svg)](https://github.com/guangda88/zhineng-knowledge-system)
 
-**基于 RAG 的气功、中医、儒家智能知识问答系统**
+**集科学研究、理论探索、实践指导于一体的智能生命状态提升系统**
 
-语义搜索 • 智能问答 • 领域驱动 • 安全合规
+通过先进技术，帮助每个人将传统智慧转化为日常实践，真正提升生命状态
+
+核心理念：知行合一，生命改变
 
 [快速开始](#快速开始) • [文档](docs/) • [API 文档](docs/API.md) • [更新日志](CHANGELOG.md)
 
@@ -20,18 +22,21 @@
 
 ## 项目简介
 
-智能知识系统是一个基于检索增强生成（RAG）技术的专业知识问答系统，专注于**气功、中医、儒家**等中华传统文化领域。
+灵知系统是一个集**科学研究、理论探索、实践指导**于一体的智能知识系统，专注于帮助用户将传统智慧转化为日常实践，真正提升生命状态。
+
+系统以**智能气功**为核心，融合**儒、释、道、医、武、哲、科、气**八大类别，采用先进的RAG（检索增强生成）技术，提供完整的知识服务。
 
 ### 核心特性
 
-| 特性 | 说明 |
-|------|------|
-| **向量检索** | 基于 pgvector 的语义搜索 |
-| **混合检索** | 向量 + BM25 双路召回 |
-| **智能问答** | CoT/ReAct/GraphRAG 多种推理模式 |
-| **领域驱动** | 气功/中医/儒家/通用 四大领域 |
-| **认证授权** | JWT + RBAC 权限控制 |
-| **API 网关** | 限流、熔断、服务发现 |
+| 特性 | 说明 | 为生命服务 |
+|------|------|-----------|
+| **向量检索** | 基于 pgvector 的语义搜索 | 用户3秒找到需要的知识 |
+| **混合检索** | 向量 + BM25 双路召回 | 全面找到理论与实践 |
+| **完整回答** | 理论 + 科学 + 实践 | 用户获得完整的指导 |
+| **个性化计划** | 从2天体验到5年规划 | 尊重用户意愿，灵活适配 |
+| **领域驱动** | 儒释道医武哲科气八大类别 | 完整的知识体系 |
+| **认证授权** | JWT + RBAC 权限控制 | 保护用户隐私数据 |
+| **标注系统** | OCR/语音转写精度提升 | 确保用户获得准确内容 |
 
 ---
 
@@ -209,21 +214,46 @@ LOG_LEVEL=INFO
 
 ```
 zhineng-knowledge-system/
-├── backend/               # 后端服务
-│   ├── main.py           # FastAPI 主入口
-│   ├── config.py         # 配置管理
-│   ├── models.py         # 数据模型
-│   ├── api/              # API 路由
-│   ├── services/         # 业务服务
-│   ├── auth/             # 认证授权
-│   ├── cache/            # 缓存管理
-│   └── monitoring/       # 监控指标
-├── frontend/             # 前端文件
-├── tests/                # 测试代码
-├── docs/                 # 文档
-├── scripts/              # 脚本工具
-├── docker-compose.yml    # 容器编排
-└── DEVELOPMENT_RULES.md  # 开发规范
+├── backend/                    # 后端服务
+│   ├── main.py                # FastAPI 主入口 (App Factory)
+│   ├── config/                # Pydantic Settings 配置包
+│   │   ├── __init__.py        # Config 单例 (BaseConfig+DB+Redis+Security+LingZhi)
+│   │   ├── base.py            # 基础配置 (环境、API、BGE、DeepSeek)
+│   │   ├── database.py        # 数据库配置
+│   │   ├── redis.py           # Redis 配置
+│   │   ├── security.py        # 安全配置
+│   │   └── lingzhi.py         # 灵知遗留配置
+│   ├── models.py              # Pydantic 请求/响应模型
+│   ├── api/v1/                # v1 API 路由
+│   ├── api/v2/                # v2 API 路由 (复用 v1 router)
+│   ├── core/                  # 应用基础设施
+│   │   ├── lifespan.py        # FastAPI 生命周期管理
+│   │   ├── database.py        # DB 连接池管理
+│   │   ├── services.py        # DatabaseService, CacheService 等
+│   │   ├── service_manager.py # 服务注册/编排
+│   │   └── dependency_injection.py
+│   ├── services/              # 业务服务
+│   │   ├── retrieval/         # Vector/BM25/Hybrid 检索
+│   │   ├── reasoning/         # CoT/ReAct/GraphRAG 推理
+│   │   ├── rag/               # RAG 编排
+│   │   └── knowledge_base/    # 知识库处理
+│   ├── domains/               # 领域处理器 (气功/中医/儒家/通用)
+│   ├── auth/                  # JWT RS256 认证 + RBAC
+│   ├── gateway/               # API 网关 (限流/熔断/路由)
+│   ├── cache/                 # L1 内存 + L2 Redis 两级缓存
+│   ├── monitoring/            # Prometheus/Grafana 监控
+│   ├── common/                # 共享工具 (db_helpers, singleton)
+│   └── middleware/             # HTTP 中间件
+├── frontend/                  # 静态前端 (HTML/CSS/JS, Nginx 托管)
+├── tests/                     # 测试套件 (pytest, 232 用例)
+├── docs/                      # 项目文档
+├── scripts/                   # 运维脚本
+├── nginx/                     # Nginx 反向代理配置
+├── monitoring/                # Prometheus + Grafana 配置
+├── docker-compose.yml         # 9 个服务编排
+├── init.sql                   # 数据库 Schema
+├── DEVELOPMENT_RULES.md       # 开发规范 v2.0.0
+└── ENGINEERING_ALIGNMENT.md   # 工程对齐文档
 ```
 
 ### 分支策略
@@ -398,6 +428,19 @@ docker logs -f zhineng-postgres
 
 ## 更新日志
 
+### v1.3.0 (2026-03-31)
+
+- ✅ 深度安全审计修复 (C1-C6 + R1-R6)
+- ✅ 232 测试通过验证
+- ✅ 容器资源限制优化
+- ✅ 文档对齐 (DEVELOPMENT_RULES v2.0.0 + ENGINEERING_ALIGNMENT)
+
+### v1.2.0 (2026-03-29)
+
+- ✅ Hooks 系统实施（双层 Hooks 架构）
+- ✅ AI 操作包装器与规则检查器
+- ✅ 监控自动化脚本
+
 ### v1.1.0 (2026-03-25)
 
 - ✅ 首个正式版本发布
@@ -415,7 +458,9 @@ docker logs -f zhineng-postgres
 
 - [API 文档](docs/API.md)
 - [部署指南](docs/DEPLOYMENT.md)
-- [开发规则](DEVELOPMENT_RULES.md)
+- [开发规则 v2.0.0](DEVELOPMENT_RULES.md)
+- [工程对齐文档](ENGINEERING_ALIGNMENT.md)
+- [更新日志](CHANGELOG.md)
 - [运维手册](docs/OPERATIONS.md)
 - [用户手册](docs/USER_MANUAL.md)
 
@@ -434,4 +479,4 @@ MIT License
 
 ---
 
-**智能知识系统 v1.1.0** | © 2026 Guangda
+**智能知识系统 v1.3.0-dev** | © 2026 Guangda

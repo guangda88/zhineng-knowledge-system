@@ -3,11 +3,14 @@
 定义推理器的基类和结果数据结构
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class QueryType(Enum):
@@ -80,6 +83,23 @@ class BaseReasoner(ABC):
         self.api_key = api_key
         self.api_url = api_url
         self.model_name = "base"
+
+        # 初始化LLM客户端（带速率限制）
+        self.llm_client = None
+        try:
+            from backend.common.llm_api_wrapper import get_llm_client
+            self.llm_client = get_llm_client(
+                api_key=api_key or self._get_default_api_key(),
+                api_url=api_url
+            )
+            logger.info("LLM client initialized with rate limiting")
+        except Exception as e:
+            logger.warning(f"Failed to initialize LLM client: {e}")
+
+    def _get_default_api_key(self) -> str:
+        """获取默认API密钥"""
+        import os
+        return os.getenv("DEEPSEEK_API_KEY", "")
 
     @abstractmethod
     async def reason(

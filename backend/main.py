@@ -1,8 +1,8 @@
-"""智能知识系统 - FastAPI 主入口
+"""智能知识系统 - FastAPI 主入口（安全加固版）
 
 重构后版本 - 简洁入口文件
 - FastAPI应用初始化
-- 中间件配置
+- 中间件配置（包含安全加固）
 - 路由注册
 - 生命周期管理
 """
@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from api.v1 import api_router
+from api.v2 import api_router_v2
 from cache import setup_cache
 from config import Config
 from core import (
@@ -27,6 +28,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from middleware import RateLimitMiddleware
+from middleware.security_headers import SecurityHeadersMiddleware
 
 # 配置日志
 logging.basicConfig(
@@ -44,7 +46,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS 中间件配置
+    # 设置应用状态
+    app.state.ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+    # CORS 中间件配置（安全加固版）
     allowed_origins = get_allowed_origins()
     app.add_middleware(
         CORSMiddleware,
@@ -54,8 +59,8 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
     )
 
-    # 安全头部中间件
-    app.middleware("http")(add_security_headers)
+    # 安全响应头中间件（新增）
+    app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=True)
 
     # 请求日志中间件
     app.middleware("http")(log_requests)
@@ -63,11 +68,15 @@ def create_app() -> FastAPI:
     # GZip 压缩中间件 - 仅压缩大于1000字节的响应
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-    # API限流中间件
+    # API限流中间件（已配置）
     app.add_middleware(RateLimitMiddleware)
 
     # 注册API路由
     app.include_router(api_router)
+    app.include_router(api_router_v2)  # 添加v2路由（书籍搜索）
+
+    logger.info("FastAPI application initialized with security enhancements")
+    logger.info(f"CORS allowed origins: {allowed_origins}")
 
     return app
 

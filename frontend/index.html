@@ -16,6 +16,7 @@
         <nav class="tabs">
             <button class="tab active" data-tab="search">搜索</button>
             <button class="tab" data-tab="documents">文档</button>
+            <button class="tab" data-tab="books">📚 书籍</button>
             <button class="tab" data-tab="ask">问答</button>
             <button class="tab" data-tab="reasoning">推理</button>
         </nav>
@@ -48,6 +49,40 @@
                     <button id="refresh-docs">刷新</button>
                 </div>
                 <div id="documents-list"></div>
+            </section>
+
+            <!-- 书籍搜索页面 -->
+            <section id="books-section" class="tab-content">
+                <div class="search-box">
+                    <input type="text" id="book-search-input" placeholder="搜索书名、作者..." />
+                    <button id="book-search-btn">🔍 搜索</button>
+                    <select id="book-category-filter">
+                        <option value="">全部分类</option>
+                        <option value="气功">气功</option>
+                        <option value="中医">中医</option>
+                        <option value="儒家">儒家</option>
+                    </select>
+                    <select id="book-dynasty-filter">
+                        <option value="">全部朝代</option>
+                        <option value="先秦">先秦</option>
+                        <option value="春秋">春秋</option>
+                        <option value="战国">战国</option>
+                        <option value="秦汉">秦汉</option>
+                        <option value="魏晋">魏晋</option>
+                        <option value="唐">唐</option>
+                        <option value="宋">宋</option>
+                        <option value="元">元</option>
+                        <option value="明">明</option>
+                        <option value="清">清</option>
+                    </select>
+                </div>
+
+                <div class="search-toggle">
+                    <button class="toggle-btn active" data-type="metadata">📖 书籍搜索</button>
+                    <button class="toggle-btn" data-type="content">📄 全文搜索</button>
+                </div>
+
+                <div id="book-search-results"></div>
             </section>
 
             <!-- 问答页面 -->

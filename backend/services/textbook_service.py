@@ -244,7 +244,26 @@ class LingFlowAgentsService:
         return list(self.tasks.values())
 
     def _read_text_file(self, file_path: Path) -> str:
-        """读取文本文件，自动检测编码"""
+        """读取文本文件，自动检测编码
+
+        Args:
+            file_path: 已验证的安全路径
+
+        Raises:
+            ValueError: 路径不合法时抛出
+        """
+        from backend.utils.path_validation import validate_file_path, get_project_root
+
+        if file_path.is_absolute():
+            try:
+                project_root = get_project_root()
+                file_path.relative_to(project_root)
+            except ValueError:
+                raise ValueError(f"绝对路径不在项目目录内: {file_path}")
+        else:
+            safe_path, _ = validate_file_path(str(file_path))
+            file_path = safe_path
+
         encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
 
         for encoding in encodings:
@@ -254,7 +273,6 @@ class LingFlowAgentsService:
             except (UnicodeDecodeError, UnicodeError):
                 continue
 
-        # 如果所有编码都失败，使用错误处理
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             return f.read()
 

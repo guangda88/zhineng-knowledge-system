@@ -248,9 +248,48 @@ class ReActReasoner(BaseReasoner):
         temperature: float = 0.7,
         max_tokens: int = 1000
     ) -> str:
-        """调用大语言模型"""
+        """调用大语言模型（使用速率限制器）"""
+        # 优先使用LLM API包装器（带速率限制）
+        if self.llm_client:
+            try:
+                from backend.common.llm_api_wrapper import GLMRateLimitException
+
+                response = await self.llm_client.call_api(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "你是一个使用ReAct模式的推理助手。"
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                return response["choices"][0]["message"]["content"]
+
+            except GLMRateLimitException as e:
+                logger.error(f"Rate limit exceeded: {e}")
+                raise RuntimeError(
+                    "LLM API rate limit exceeded. "
+                    "Please retry later or configure DEEPSEEK_API_KEY."
+                ) from e
+
+            except Exception as e:
+                logger.error(f"LLM API call failed: {e}")
+                raise RuntimeError(
+                    f"LLM API call failed: {e}. "
+                    "Please check DEEPSEEK_API_KEY configuration."
+                ) from e
+
+        # 降级到原始HTTP客户端
         if not self.api_key:
-            return self._mock_response()
+            raise RuntimeError(
+                "No API key configured. "
+                "Set DEEPSEEK_API_KEY environment variable to enable LLM reasoning."
+            )
 
         try:
             client = await self._get_client()
@@ -280,15 +319,18 @@ class ReActReasoner(BaseReasoner):
             data = response.json()
             return data["choices"][0]["message"]["content"]
 
-        except Exception as e:
-            logger.error(f"LLM API call failed: {e}")
-            return self._mock_response()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"LLM API returned HTTP {e.response.status_code}: {e}")
+            raise RuntimeError(f"LLM API HTTP error {e.response.status_code}") from e
+        except httpx.RequestError as e:
+            logger.error(f"LLM API request failed: {e}")
+            raise RuntimeError(f"LLM API request failed: {e}") from e
 
-    def _mock_response(self) -> str:
-        """模拟响应"""
-        return """思考：这是一个复杂的问题，我需要搜索相关信息
+    def _build_fallback_response(self) -> str:
+        """构建降级响应模板（仅用于已知 API 不可用时的开发调试）"""
+        return """思考：LLM 服务不可用
 行动：finish
-行动输入：这是一个模拟的回答结果。实际使用需要配置DEEPSEEK_API_KEY环境变量。"""
+行动输入：LLM 服务不可用，请配置 DEEPSEEK_API_KEY 环境变量。"""
 
     def _parse_react_response(self, response: str) -> tuple:
         """解析ReAct响应

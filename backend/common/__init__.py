@@ -13,7 +13,7 @@ from .db_helpers import (
     rows_to_list,
     search_documents,
 )
-from .singleton import SingletonFactory, async_singleton, reset_all_singletons
+from .singleton import async_singleton
 
 __all__ = [
     # Database helpers
@@ -27,6 +27,4 @@ __all__ = [
     "check_database_health",
     # Singleton utilities
     "async_singleton",
-    "SingletonFactory",
-    "reset_all_singletons",
 ]

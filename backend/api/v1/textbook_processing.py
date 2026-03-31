@@ -8,7 +8,7 @@ LingFlow Agents API - AI agents 工作流接口
 - 导出处理结果
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -20,13 +20,14 @@ from backend.services.textbook_service import (
     AgentTaskConfig,
     AgentTaskResult
 )
+from backend.utils.path_validation import validate_file_path
+from backend.core.dependency_injection import require_admin_api_key
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/textbook-processing", tags=["Textbook Processing"])
 
 
-# 请求模型
 class TextbookProcessRequest(BaseModel):
     """教材处理请求"""
     path: str = Field(..., description="教材文件路径")
@@ -50,7 +51,6 @@ class BatchProcessRequest(BaseModel):
     enable_quality_assessment: bool = Field(True, description="是否启用质量评估")
 
 
-# 响应模型
 class ProcessResponse(BaseModel):
     """处理响应"""
     task_id: str
@@ -83,10 +83,6 @@ class HealthResponse(BaseModel):
     api_key_configured: bool
 
 
-# ============================================
-# 端点
-# ============================================
-
 @router.get("/health", response_model=HealthResponse)
 async def check_health():
     """检查LingFlow agents服务健康状态"""
@@ -107,26 +103,29 @@ async def check_health():
 
 
 @router.post("/process", response_model=ProcessResponse)
-async def process_textbook(request: TextbookProcessRequest, background_tasks: BackgroundTasks):
-    """处理单个教材
-
-    使用LingFlow agents自主处理教材，包括TOC提取、文本分割和质量评估。
-    """
+async def process_textbook(
+    request: TextbookProcessRequest,
+    background_tasks: BackgroundTasks,
+    admin: bool = Depends(require_admin_api_key),
+):
+    """处理单个教材"""
     if not LINGFLOW_AGENTS_AVAILABLE:
         raise HTTPException(
             status_code=503,
             detail="LingFlow agents service is not available"
         )
 
-    # 验证文件路径
-    textbook_path = Path(request.path)
-    if not textbook_path.exists():
+    try:
+        safe_path, _ = validate_file_path(request.path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not safe_path.exists():
         raise HTTPException(
             status_code=404,
-            detail=f"Textbook file not found: {request.path}"
+            detail="Requested file not found"
         )
 
-    # 创建配置
     config = AgentTaskConfig(
         target_toc_depth=request.target_toc_depth,
         max_block_chars=request.max_block_chars,
@@ -134,10 +133,8 @@ async def process_textbook(request: TextbookProcessRequest, background_tasks: Ba
         enable_quality_assessment=request.enable_quality_assessment
     )
 
-    # 获取服务并处理
     service = get_agents_service()
 
-    # 在后台执行处理
     async def run_processing():
         try:
             await service.process_textbook(
@@ -151,9 +148,9 @@ async def process_textbook(request: TextbookProcessRequest, background_tasks: Ba
 
     background_tasks.add_task(run_processing)
 
-    # 生成预任务ID（实际任务ID在处理开始时生成）
     from datetime import datetime
-    task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    import uuid
+    task_id = f"task_{uuid.uuid4().hex[:12]}"
 
     return ProcessResponse(
         task_id=task_id,
@@ -168,32 +165,36 @@ async def process_textbook(request: TextbookProcessRequest, background_tasks: Ba
 
 
 @router.post("/process/batch", response_model=ProcessResponse)
-async def batch_process_textbooks(request: BatchProcessRequest, background_tasks: BackgroundTasks):
-    """批量处理教材
-
-    使用LingFlow agents批量处理多个教材。
-    """
+async def batch_process_textbooks(
+    request: BatchProcessRequest,
+    background_tasks: BackgroundTasks,
+    admin: bool = Depends(require_admin_api_key),
+):
+    """批量处理教材"""
     if not LINGFLOW_AGENTS_AVAILABLE:
         raise HTTPException(
             status_code=503,
             detail="LingFlow agents service is not available"
         )
 
-    # 验证教材文件
+    safe_paths = []
     for textbook in request.textbooks:
         if "path" not in textbook:
             raise HTTPException(
                 status_code=400,
                 detail="Each textbook must have a 'path' field"
             )
-        textbook_path = Path(textbook["path"])
-        if not textbook_path.exists():
+        try:
+            safe_path, _ = validate_file_path(textbook["path"])
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        if not safe_path.exists():
             raise HTTPException(
                 status_code=404,
                 detail=f"Textbook file not found: {textbook['path']}"
             )
+        safe_paths.append(safe_path)
 
-    # 创建配置
     config = AgentTaskConfig(
         target_toc_depth=request.target_toc_depth,
         max_block_chars=request.max_block_chars,
@@ -201,10 +202,8 @@ async def batch_process_textbooks(request: BatchProcessRequest, background_tasks
         enable_quality_assessment=request.enable_quality_assessment
     )
 
-    # 获取服务
     service = get_agents_service()
 
-    # 在后台执行批量处理
     async def run_batch_processing():
         try:
             await service.batch_process_textbooks(
@@ -216,8 +215,8 @@ async def batch_process_textbooks(request: BatchProcessRequest, background_tasks
 
     background_tasks.add_task(run_batch_processing)
 
-    from datetime import datetime
-    task_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    import uuid
+    task_id = f"batch_{uuid.uuid4().hex[:12]}"
 
     return ProcessResponse(
         task_id=task_id,
@@ -232,10 +231,7 @@ async def batch_process_textbooks(request: BatchProcessRequest, background_tasks
 
 @router.get("/tasks/{task_id}", response_model=TaskStatusResponse)
 async def get_task_status(task_id: str):
-    """查询任务状态
-
-    根据任务ID查询处理任务的当前状态和结果。
-    """
+    """查询任务状态"""
     if not LINGFLOW_AGENTS_AVAILABLE:
         raise HTTPException(
             status_code=503,
@@ -270,10 +266,7 @@ async def get_task_status(task_id: str):
 
 @router.get("/tasks", response_model=List[TaskStatusResponse])
 async def list_all_tasks():
-    """列出所有任务
-
-    获取所有已执行或正在执行的任务列表。
-    """
+    """列出所有任务"""
     if not LINGFLOW_AGENTS_AVAILABLE:
         raise HTTPException(
             status_code=503,

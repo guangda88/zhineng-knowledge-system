@@ -5,7 +5,9 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from core.database import init_db_pool
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Response, Depends
+
+from backend.core.dependency_injection import require_admin_api_key
 
 from domains import get_registry
 from monitoring import get_health_checker
@@ -42,8 +44,9 @@ async def health_check() -> Dict[str, Any]:
         pool = await init_db_pool()
         async with pool.acquire() as conn:
             await conn.fetchval("SELECT 1")
-    except Exception as e:
-        db_status = f"error: {str(e)}"
+    except (OSError, ValueError, RuntimeError) as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "error"
 
     return {
         "status": "ok" if db_status == "ok" else "degraded",
@@ -111,7 +114,7 @@ async def cache_stats() -> Dict[str, Any]:
     try:
         cache_manager = get_cache_manager()
         return cache_manager.get_stats()
-    except Exception as e:
+    except (ImportError, AttributeError, RuntimeError, ConnectionError) as e:
         logger.error(f"获取缓存统计失败: {e}")
         return {"error": str(e), "enabled": False}
 
@@ -129,7 +132,7 @@ async def cache_metrics() -> Dict[str, Any]:
 
         collector = get_cache_metrics_collector()
         return collector.get_stats()
-    except Exception as e:
+    except (ImportError, AttributeError, RuntimeError) as e:
         logger.error(f"获取缓存指标失败: {e}")
         return {"error": str(e), "enabled": False}
 
@@ -152,7 +155,7 @@ async def cache_prometheus_metrics() -> Response:
             content=prometheus_text,
             media_type="text/plain",
         )
-    except Exception as e:
+    except (ImportError, AttributeError, RuntimeError) as e:
         logger.error(f"导出缓存指标失败: {e}")
         return Response(
             content=f"# Error: {str(e)}",
@@ -161,7 +164,7 @@ async def cache_prometheus_metrics() -> Response:
 
 
 @router.post("/api/v1/cache/reset")
-async def reset_cache_stats() -> Dict[str, Any]:
+async def reset_cache_stats(admin: bool = Depends(require_admin_api_key)) -> Dict[str, Any]:
     """
     重置缓存统计信息
 
@@ -180,17 +183,17 @@ async def reset_cache_stats() -> Dict[str, Any]:
 
             collector = get_cache_metrics_collector()
             collector.reset()
-        except Exception:  # nosec: B110 - 指标收集器可能不可用
+        except (ImportError, AttributeError):  # 指标收集器可能不可用
             pass  # 指标收集器是可选的，失败时忽略
 
         return {"status": "success", "message": "缓存统计已重置"}
-    except Exception as e:
+    except (ImportError, AttributeError, RuntimeError, ConnectionError) as e:
         logger.error(f"重置缓存统计失败: {e}")
         return {"status": "error", "message": str(e)}
 
 
 @router.post("/api/v1/cache/clear")
-async def clear_cache() -> Dict[str, Any]:
+async def clear_cache(admin: bool = Depends(require_admin_api_key)) -> Dict[str, Any]:
     """
     清空所有缓存
 
@@ -204,6 +207,6 @@ async def clear_cache() -> Dict[str, Any]:
         await cache_manager.clear()
 
         return {"status": "success", "message": "所有缓存已清空"}
-    except Exception as e:
+    except (ImportError, AttributeError, RuntimeError, ConnectionError) as e:
         logger.error(f"清空缓存失败: {e}")
         return {"status": "error", "message": str(e)}

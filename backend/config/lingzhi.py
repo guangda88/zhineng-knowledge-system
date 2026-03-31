@@ -82,10 +82,7 @@ class LingZhiConfig(BaseSettings):
         description="已验证书籍数"
     )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
     def get_database_url(self, db_type: str = "guoxue") -> str:
         """获取数据库URL

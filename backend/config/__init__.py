@@ -1,11 +1,18 @@
 """统一配置管理模块
 
 提供统一的配置管理入口，整合所有配置模块。
+
+Import direction: config is a LEAF module. It must NOT import from:
+  - backend.core.* (especially core.database, core.service_manager, core.dependency_injection)
+  - backend.services.*
+  - backend.api.*
+Other modules may freely import from config.
 """
 
 from typing import Optional
 import asyncio
 import logging
+import threading
 import warnings
 
 from .base import BaseConfig
@@ -86,18 +93,20 @@ class Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, LingZhiCon
 
 # 全局配置实例
 _config: Optional[Config] = None
-_config_lock = asyncio.Lock()
+_config_lock = threading.Lock()
 
 
 def get_config() -> Config:
-    """获取配置实例（单例模式）
+    """获取配置实例（单例模式，线程安全）
 
     Returns:
         Config: 配置实例
     """
     global _config
     if _config is None:
-        _config = Config()
+        with _config_lock:
+            if _config is None:
+                _config = Config()
     return _config
 
 
@@ -111,7 +120,7 @@ async def reload_config() -> Config:
         Config: 新的配置实例
     """
     global _config
-    async with _config_lock:
+    with _config_lock:
         logger.info("Reloading configuration...")
 
         # 清除旧配置

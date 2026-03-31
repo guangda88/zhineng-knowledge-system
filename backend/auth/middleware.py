@@ -400,88 +400,53 @@ class RefreshTokenMiddleware(BaseHTTPMiddleware):
         self.auth = auth or get_auth()
         self.refresh_cookie_name = refresh_cookie_name
 
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
-        """处理请求
-
-        Args:
-            request: FastAPI请求对象
-            call_next: 下一个处理器
-
-        Returns:
-            HTTP响应
-        """
-        # 只处理刷新端点
-        if request.url.path != "/auth/refresh":
-            return await call_next(request)
-
-        # 从Cookie获取刷新令牌
-        refresh_token = request.cookies.get(self.refresh_cookie_name)
-
-        if not refresh_token:
-            # 尝试从请求体获取
-            try:
-                body = await request.json()
-                refresh_token = body.get("refresh_token")
-            except Exception:
-                pass
-
-        if not refresh_token:
-            return Response(
-                content='{"error": "missing_refresh_token"}',
-                status_code=status.HTTP_400_BAD_REQUEST,
-                media_type="application/json",
-            )
-
-        # 验证并刷新令牌
-        token_pair = await self.auth.refresh_access_token(refresh_token)
-
-        if not token_pair:
-            return Response(
-                content='{"error": "invalid_refresh_token"}',
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                media_type="application/json",
-            )
-
-        # 构造响应
-        import json
-
+    def _build_token_response(self, token_pair) -> Response:
         response_data = {
             "access_token": token_pair.access_token,
             "refresh_token": token_pair.refresh_token,
             "expires_in": token_pair.expires_in,
             "token_type": "Bearer",
         }
-
         response = Response(
             content=json.dumps(response_data),
             status_code=status.HTTP_200_OK,
             media_type="application/json",
         )
-
-        # 设置Cookie
-        response.set_cookie(
-            key="access_token",
-            value=token_pair.access_token,
-            max_age=token_pair.expires_in,
-            httponly=True,
-            secure=True,
-            samesite="lax",
-        )
-
-        response.set_cookie(
-            key=self.refresh_cookie_name,
-            value=token_pair.refresh_token,
-            max_age=60 * 60 * 24 * 7,  # 7天
-            httponly=True,
-            secure=True,
-            samesite="lax",
-        )
-
+        response.set_cookie(key="access_token", value=token_pair.access_token,
+                            max_age=token_pair.expires_in, httponly=True, secure=True, samesite="lax")
+        response.set_cookie(key=self.refresh_cookie_name, value=token_pair.refresh_token,
+                            max_age=60 * 60 * 24 * 7, httponly=True, secure=True, samesite="lax")
         return response
+
+    async def _extract_refresh_token(self, request: Request) -> Optional[str]:
+        token = request.cookies.get(self.refresh_cookie_name)
+        if not token:
+            try:
+                body = await request.json()
+                token = body.get("refresh_token")
+            except (json.JSONDecodeError, TypeError, ValueError):
+                pass
+        return token
+
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        if request.url.path != "/auth/refresh":
+            return await call_next(request)
+
+        refresh_token = await self._extract_refresh_token(request)
+        if not refresh_token:
+            return Response(content='{"error": "missing_refresh_token"}',
+                            status_code=status.HTTP_400_BAD_REQUEST, media_type="application/json")
+
+        token_pair = await self.auth.refresh_access_token(refresh_token)
+        if not token_pair:
+            return Response(content='{"error": "invalid_refresh_token"}',
+                            status_code=status.HTTP_401_UNAUTHORIZED, media_type="application/json")
+
+        return self._build_token_response(token_pair)
 
 
 class LogoutMiddleware(BaseHTTPMiddleware):

@@ -1,5 +1,17 @@
 # 项目进展对齐分析报告
 
+<div align="center">
+
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
 **分析日期**: 2026-03-25
 **对比对象**:
 - 实际进展 vs PHASED_IMPLEMENTATION_PLAN_V2.md

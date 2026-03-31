@@ -284,43 +284,23 @@ class VectorEmbedder(Processor):
         Returns:
             包含向量嵌入的数据
         """
-        # 注意：向量嵌入需要使用实际的嵌入服务
-        # 这里只是一个占位符实现
-
         results = []
         for item in data:
             try:
-                # 如果已有嵌入，则跳过
                 if "embedding" in item:
                     results.append(item)
                     continue
 
-                # 为内容生成嵌入
                 content = item.get("content", "")
 
-                # TODO: 调用实际的嵌入服务
-                # 目前使用确定性哈希方法（比随机向量更稳定）
-                # 生产环境应集成 BGE 嵌入服务
-                import hashlib
+                raise NotImplementedError(
+                    "Embedding generation requires VectorRetriever. "
+                    "Use backend.services.retrieval.vector.VectorRetriever.embed_text() "
+                    "or call the embedding API directly."
+                )
 
-                hash_obj = hashlib.sha256(content.encode('utf-8'))
-                hash_bytes = hash_obj.digest()
-
-                # 扩展到1024维
-                embedding = []
-                for i in range(1024):
-                    byte_idx = i % len(hash_bytes)
-                    val = (hash_bytes[byte_idx] / 255.0 - 0.5) * 2
-                    embedding.append(val)
-
-                # 归一化
-                norm = sum(v * v for v in embedding) ** 0.5
-                embedding = [v / norm for v in embedding]
-
-                processed_item = item.copy()
-                processed_item["embedding"] = embedding
-                results.append(processed_item)
-
+            except NotImplementedError:
+                raise
             except Exception as e:
                 logger.error(f"Failed to generate embedding for {item.get('name', 'unknown')}: {e}")
                 results.append(item)

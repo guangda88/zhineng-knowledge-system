@@ -353,12 +353,12 @@ class LingFlowWorkflow:
         script_path = self.project_root / "scripts" / "extract_textbooks_python.py"
         if script_path.exists():
             try:
-                result = subprocess.run(
-                    ["python3", str(script_path), str(pdf_path), str(output_path)],
-                    capture_output=True,
-                    text=True,
-                    timeout=300
+                result = await asyncio.create_subprocess_exec(
+                    "python3", str(script_path), str(pdf_path), str(output_path),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
+                await asyncio.wait_for(result.wait(), timeout=300)
                 if output_path.exists() and output_path.stat().st_size > 1000:
                     return True
             except Exception as e:
@@ -420,8 +420,6 @@ class LingFlowWorkflow:
             logger.info("开始步骤3: 解析目录结构")
 
             # 导入目录解析器
-            import sys
-            sys.path.insert(0, str(self.project_root / "backend" / "lingflow"))
             from deep_toc_parser import DeepTocParser, ParseMethod
 
             parsed_count = 0
@@ -488,6 +486,30 @@ class LingFlowWorkflow:
     # Step 4: 导入教材数据到v2数据库
     # ============================================
 
+    def _prepare_textbook_data(self) -> list:
+        textbooks_data = []
+        for textbook in self.textbooks:
+            if textbook.processed_dir is None:
+                dir_name = f"0{textbook.number}-{textbook.short_name}" if textbook.number < 10 else f"{textbook.number}-{textbook.short_name}"
+                textbook.processed_dir = self.output_dir / dir_name
+
+            quality_file = textbook.processed_dir / "quality_report.json"
+            quality_info = {}
+            if quality_file.exists():
+                with open(quality_file, 'r', encoding='utf-8') as f:
+                    quality_info = json.load(f)
+
+            textbooks_data.append({
+                "number": textbook.number,
+                "short_name": textbook.short_name,
+                "title": textbook.title,
+                "char_count": quality_info.get('char_count', textbook.char_count),
+                "chinese_count": quality_info.get('chinese_count', textbook.chinese_count),
+                "quality_score": quality_info.get('quality_score', textbook.quality_score),
+                "processed_dir": textbook.processed_dir
+            })
+        return textbooks_data
+
     def step4_import_to_db(self) -> StepResult:
         """步骤4: 导入教材数据到v2数据库"""
         step = "import_to_db"
@@ -496,7 +518,6 @@ class LingFlowWorkflow:
         try:
             logger.info("开始步骤4: 导入数据库")
 
-            # 使用实际存在的数据库路径
             db_path = self.project_root / "data" / "textbooks.db"
             if not db_path.exists():
                 result.data = {"db_exists": False, "db_path": str(db_path)}
@@ -506,41 +527,13 @@ class LingFlowWorkflow:
                 self.steps_results.append(result)
                 return result
 
-            # 导入导入器模块
             import sys
-            sys.path.insert(0, str(self.project_root / "backend" / "lingflow"))
+            sys.path.insert(0, str(self.project_root / "backend" / "textbook_processing"))
             from db_importer import batch_import_textbooks
 
-            # 准备教材信息
-            textbooks_data = []
-            for textbook in self.textbooks:
-                # 确保processed_dir是Path对象
-                if textbook.processed_dir is None:
-                    dir_name = f"0{textbook.number}-{textbook.short_name}" if textbook.number < 10 else f"{textbook.number}-{textbook.short_name}"
-                    textbook.processed_dir = self.output_dir / dir_name
-
-                # 读取质量报告
-                quality_file = textbook.processed_dir / "quality_report.json"
-                quality_info = {}
-                if quality_file.exists():
-                    with open(quality_file, 'r', encoding='utf-8') as f:
-                        quality_info = json.load(f)
-
-                textbooks_data.append({
-                    "number": textbook.number,
-                    "short_name": textbook.short_name,
-                    "title": textbook.title,
-                    "char_count": quality_info.get('char_count', textbook.char_count),
-                    "chinese_count": quality_info.get('chinese_count', textbook.chinese_count),
-                    "quality_score": quality_info.get('quality_score', textbook.quality_score),
-                    "processed_dir": textbook.processed_dir  # 传递Path对象
-                })
-
-            # 批量导入
+            textbooks_data = self._prepare_textbook_data()
             import_result = batch_import_textbooks(
-                db_path=db_path,
-                output_dir=self.output_dir,
-                textbooks=textbooks_data
+                db_path=db_path, output_dir=self.output_dir, textbooks=textbooks_data
             )
 
             result.data = {
@@ -566,6 +559,61 @@ class LingFlowWorkflow:
     # Step 5: 分割章节验证质量
     # ============================================
 
+    def _compute_quality_score(self, char_count: int, chinese_ratio: float, content: str) -> float:
+        score = 0.0
+        if chinese_ratio > 0.7:
+            score += 30
+        if char_count > 50000:
+            score += 20
+        if char_count > 100000:
+            score += 20
+        if '目录' in content or '第' in content:
+            score += 15
+        if '章' in content or '节' in content:
+            score += 15
+        return score
+
+    def _validate_textbook(self, textbook) -> Optional[dict]:
+        if textbook.processed_dir is None:
+            dir_name = f"0{textbook.number}-{textbook.short_name}" if textbook.number < 10 else f"{textbook.number}-{textbook.short_name}"
+            textbook.processed_dir = self.output_dir / dir_name
+
+        text_file = textbook.processed_dir / "full_text.txt"
+        if not text_file.exists():
+            return None
+
+        logger.info(f"  {textbook.number}. {textbook.short_name}: 验证质量")
+
+        content = self._read_text_with_encoding(text_file)
+        char_count = len(content)
+        chinese_count = sum(1 for c in content if '\u4e00' <= c <= '\u9fff')
+        chinese_ratio = chinese_count / char_count if char_count > 0 else 0
+        content_hash = hashlib.md5(content.encode('utf-8')).hexdigest()
+        quality_score = self._compute_quality_score(char_count, chinese_ratio, content)
+
+        textbook.char_count = char_count
+        textbook.chinese_count = chinese_count
+        textbook.quality_score = quality_score
+
+        report = {
+            "textbook_number": textbook.number,
+            "title": textbook.title,
+            "char_count": char_count,
+            "chinese_count": chinese_count,
+            "chinese_ratio": round(chinese_ratio, 4),
+            "quality_score": quality_score,
+            "content_hash": content_hash,
+            "has_toc": (textbook.processed_dir / "toc.json").exists(),
+            "validated_at": datetime.now().isoformat()
+        }
+
+        report_file = textbook.processed_dir / "quality_report.json"
+        with open(report_file, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+
+        logger.info(f"    质量: {quality_score:.1f}/100, 字符: {char_count:,}")
+        return report
+
     def step5_split_and_validate(self) -> StepResult:
         """步骤5: 分割章节验证质量"""
         step = "split_and_validate"
@@ -574,79 +622,15 @@ class LingFlowWorkflow:
         try:
             logger.info("开始步骤5: 分割章节验证质量")
 
-            # 导入质量验证模块
-            import sys
-            sys.path.insert(0, str(self.project_root / "scripts"))
-            # 这里假设有validate_textbook_quality.py
-
             validated_count = 0
             quality_reports = {}
 
             for textbook in self.textbooks:
-                # 确保processed_dir已初始化
-                if textbook.processed_dir is None:
-                    dir_name = f"0{textbook.number}-{textbook.short_name}" if textbook.number < 10 else f"{textbook.number}-{textbook.short_name}"
-                    textbook.processed_dir = self.output_dir / dir_name
-
-                text_file = textbook.processed_dir / "full_text.txt"
-                toc_file = textbook.processed_dir / "toc.json"
-
-                if not text_file.exists():
-                    continue
-
-                logger.info(f"  {textbook.number}. {textbook.short_name}: 验证质量")
-
                 try:
-                    # 自动检测编码
-                    content = self._read_text_with_encoding(text_file)
-
-                    # 简单质量指标
-                    char_count = len(content)
-                    chinese_count = sum(1 for c in content if '\u4e00' <= c <= '\u9fff')
-                    chinese_ratio = chinese_count / char_count if char_count > 0 else 0
-
-                    # 计算内容哈希
-                    content_hash = hashlib.md5(content.encode('utf-8')).hexdigest()
-
-                    # 质量分数 (简单算法)
-                    quality_score = 0.0
-                    if chinese_ratio > 0.7:
-                        quality_score += 30
-                    if char_count > 50000:
-                        quality_score += 20
-                    if char_count > 100000:
-                        quality_score += 20
-                    if '目录' in content or '第' in content:
-                        quality_score += 15
-                    if '章' in content or '节' in content:
-                        quality_score += 15
-
-                    textbook.char_count = char_count
-                    textbook.chinese_count = chinese_count
-                    textbook.quality_score = quality_score
-
-                    # 保存质量报告
-                    report = {
-                        "textbook_number": textbook.number,
-                        "title": textbook.title,
-                        "char_count": char_count,
-                        "chinese_count": chinese_count,
-                        "chinese_ratio": round(chinese_ratio, 4),
-                        "quality_score": quality_score,
-                        "content_hash": content_hash,
-                        "has_toc": (textbook.processed_dir / "toc.json").exists(),
-                        "validated_at": datetime.now().isoformat()
-                    }
-
-                    report_file = textbook.processed_dir / "quality_report.json"
-                    with open(report_file, 'w', encoding='utf-8') as f:
-                        json.dump(report, f, ensure_ascii=False, indent=2)
-
-                    quality_reports[str(textbook.number)] = report
-                    validated_count += 1
-
-                    logger.info(f"    质量: {quality_score:.1f}/100, 字符: {char_count:,}")
-
+                    report = self._validate_textbook(textbook)
+                    if report:
+                        quality_reports[str(textbook.number)] = report
+                        validated_count += 1
                 except Exception as e:
                     logger.error(f"    验证失败: {e}")
                     quality_reports[str(textbook.number)] = {"error": str(e)}

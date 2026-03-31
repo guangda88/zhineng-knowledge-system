@@ -27,7 +27,7 @@ class TestVectorRetriever:
         vector = await retriever.embed_text("测试文本")
 
         assert isinstance(vector, list)
-        assert len(vector) == 1024  # 默认向量维度
+        assert len(vector) == 512  # BGE-small-zh-v1.5 向量维度
         assert all(isinstance(v, float) for v in vector)
 
     @pytest.mark.asyncio

@@ -1,4 +1,16 @@
 # LingFlow 进化方向分析报告
+<div align="center">
+
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
 ## 向 Crush 学习上下文管理，向 Harness 学习工程流管理
 
 **日期**: 2026-03-30

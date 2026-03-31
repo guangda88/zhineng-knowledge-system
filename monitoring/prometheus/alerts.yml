@@ -1,0 +1,206 @@
+groups:
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # 系统内存告警
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: memory
+        annotations:
+          summary: "系统内存使用率过高"
+          description: "内存使用率超过 80% (当前: {{ $value | humanizePercentage }})"
+
+      - alert: CriticalMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          category: memory
+        annotations:
+          summary: "系统内存严重不足"
+          description: "内存使用率超过 90% (当前: {{ $value | humanizePercentage }})，需立即处理！"
+
+      # 系统CPU告警
+      - alert: HighCPUUsage
+        expr: (100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 10m
+        labels:
+          severity: warning
+          category: cpu
+        annotations:
+          summary: "系统CPU使用率过高"
+          description: "CPU使用率超过 80% (当前: {{ $value }}%)"
+
+      # 磁盘空间告警
+      - alert: HighDiskUsage
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          category: disk
+        annotations:
+          summary: "根分区磁盘空间不足"
+          description: "根分区可用空间少于 20% (当前: {{ $value | humanizePercentage }})"
+
+      - alert: CriticalDiskUsage
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 2m
+        labels:
+          severity: critical
+          category: disk
+        annotations:
+          summary: "根分区磁盘严重不足"
+          description: "根分区可用空间少于 10% (当前: {{ $value | humanizePercentage }})，需立即处理！"
+
+  - name: container_alerts
+    interval: 30s
+    rules:
+      # 容器内存告警
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: container
+        annotations:
+          summary: "容器内存使用率过高"
+          description: "容器 {{ $labels.name }} 内存使用率超过 80% (当前: {{ $value | humanizePercentage }})"
+
+      - alert: ContainerNearLimit
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          category: container
+        annotations:
+          summary: "容器接近内存限制"
+          description: "容器 {{ $labels.name }} 内存使用率超过 90% (当前: {{ $value | humanizePercentage }})，可能被OOM杀死"
+
+      # 容器OOM告警
+      - alert: ContainerOOMKilled
+        expr: increase(container_oom_events_total[5m]) > 0
+        labels:
+          severity: critical
+          category: container
+        annotations:
+          summary: "容器因内存不足被杀死"
+          description: "容器 {{ $labels.name }} 发生了OOM事件，需要检查内存配置"
+
+      # 容器状态告警
+      - alert: ContainerNotRunning
+        expr: time() - container_start_time_seconds > 300 and container_state_running == 0
+        for: 5m
+        labels:
+          severity: warning
+          category: container
+        annotations:
+          summary: "容器未运行"
+          description: "容器 {{ $labels.name }} 已停止运行超过5分钟"
+
+      # 容器重启频繁告警
+      - alert: ContainerRestartingTooOften
+        expr: increase(container_restart_count[1h]) > 5
+        labels:
+          severity: warning
+          category: container
+        annotations:
+          summary: "容器重启频繁"
+          description: "容器 {{ $labels.name }} 在过去1小时内重启了 {{ $value }} 次"
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      # API响应时间告警
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          category: application
+        annotations:
+          summary: "API响应时间过长"
+          description: "P95响应时间超过1秒 (当前: {{ $value }}s)"
+
+      # API错误率告警
+      - alert: HighAPIErrorRate
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          category: application
+        annotations:
+          summary: "API错误率过高"
+          description: "5xx错误率超过5% (当前: {{ $value | humanizePercentage }})"
+
+      # 数据库连接告警
+      - alert: DatabaseConnectionHigh
+        expr: pg_stat_database_numbackends{datname="zhineng_kb"} > pg_settings_max_connections * 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "数据库连接数过高"
+          description: "数据库连接数超过最大值的80% (当前: {{ $value }})"
+
+  - name: docker_alerts
+    interval: 1m
+    rules:
+      # Docker磁盘空间告警
+      - alert: DockerDiskSpaceHigh
+        expr: (node_filesystem_avail_bytes{mountpoint=~"/var/lib/docker"} / node_filesystem_size_bytes{mountpoint=~"/var/lib/docker"}) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          category: docker
+        annotations:
+          summary: "Docker磁盘空间不足"
+          description: "Docker数据目录可用空间少于20% (当前: {{ $value | humanizePercentage }})，建议清理未使用的镜像和容器"
+
+      # Docker守护进程告警
+      - alert: DockerDaemonDown
+        expr: up{job="docker"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: docker
+        annotations:
+          summary: "Docker守护进程未运行"
+          description: "Docker守护进程停止运行，需要立即重启"
+
+  - name: zhineng_specific_alerts
+    interval: 30s
+    rules:
+      # 智能知识系统特定告警
+      - alert: ZhinengAPIDown
+        expr: up{job="zhineng-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: application
+        annotations:
+          summary: "智能知识系统API服务停止"
+          description: "zhineng-api服务已停止运行超过2分钟"
+
+      - alert: ZhinengDatabaseDown
+        expr: up{job="zhineng-postgres"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "智能知识系统数据库停止"
+          description: "zhineng-postgres服务已停止运行超过2分钟"
+
+      - alert: ZhinengRedisDown
+        expr: up{job="zhineng-redis"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "智能知识系统Redis停止"
+          description: "zhineng-redis服务已停止运行超过2分钟"

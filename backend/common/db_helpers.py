@@ -4,11 +4,29 @@
 """
 
 import asyncio
+import logging
+import re
+import threading
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import asyncpg
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
+
+# 允许在分页查询中使用的SQL关键字白名单
+_ALLOWED_QUERY_KEYWORDS: Set[str] = {
+    "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "IN", "LIKE",
+    "ILIKE", "IS", "NULL", "AS", "ON", "JOIN", "LEFT", "RIGHT",
+    "INNER", "OUTER", "CROSS", "GROUP", "BY", "HAVING", "ORDER",
+    "ASC", "DESC", "DISTINCT", "BETWEEN", "EXISTS", "CASE", "WHEN",
+    "THEN", "ELSE", "END", "WITH", "UNION", "ALL", "ANY",
+    "TRUE", "FALSE",
+}
+
+# 允许在字段名中使用的字符模式
+_SAFE_FIELD_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
 
 async def require_pool(
@@ -75,6 +93,26 @@ async def fetch_one_or_404(
     return dict(row)
 
 
+def _validate_paginated_query(query: str) -> None:
+    """验证分页查询的安全性，防止SQL注入
+
+    Args:
+        query: SQL查询语句
+
+    Raises:
+        ValueError: 查询包含不安全内容
+    """
+    query_upper = query.upper().strip()
+    if not query_upper.startswith("SELECT"):
+        raise ValueError("分页查询必须以SELECT开头")
+    dangerous = {"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE",
+                 "TRUNCATE", "EXECUTE", "GRANT", "REVOKE"}
+    tokens = re.findall(r'[a-zA-Z_]+', query_upper)
+    for token in tokens:
+        if token in dangerous:
+            raise ValueError(f"分页查询不允许包含 {token} 操作")
+
+
 async def fetch_paginated(
     pool: asyncpg.Pool,
     query: str,
@@ -86,14 +124,19 @@ async def fetch_paginated(
 
     Args:
         pool: 数据库连接池
-        query: SQL查询语句（不含LIMIT/OFFSET）
+        query: SQL查询语句（不含LIMIT/OFFSET，必须为SELECT查询）
         *args: 查询参数
         limit: 每页数量
         offset: 偏移量
 
     Returns:
         包含total和results的字典
+
+    Raises:
+        ValueError: 查询未通过安全验证
     """
+    _validate_paginated_query(query)
+
     # 首先获取总数
     count_query = f"SELECT COUNT(*) FROM ({query}) AS subq"
     total = await pool.fetchval(count_query, *args)
@@ -132,7 +175,12 @@ async def search_documents(
     if fields is None:
         fields = ["title", "content"]
 
-    search_pattern = f"%{search_term}%"
+    for field in fields:
+        if not _SAFE_FIELD_PATTERN.match(field):
+            raise ValueError(f"非法字段名: {field}")
+
+    search_term_escaped = search_term.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    search_pattern = f"%{search_term_escaped}%"
 
     if category:
         field_conditions = " OR ".join([f"{field} ILIKE $2" for field in fields])
@@ -199,8 +247,9 @@ async def check_database_health(pool: asyncpg.Pool) -> Dict[str, Any]:
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
+        logger.error("数据库健康检查失败", exc_info=True)
         return {
             "status": "degraded",
-            "database": f"error: {str(e)}",
+            "database": "unavailable",
             "timestamp": datetime.now().isoformat(),
         }

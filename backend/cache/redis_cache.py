@@ -6,10 +6,16 @@
 import asyncio
 import json
 import logging
+import re
 import time
 from dataclasses import dataclass
 from typing import Any, Optional, Dict, List, Callable
 from enum import Enum
+
+
+def _sanitize_url(url: str) -> str:
+    """Remove password from URL for safe logging."""
+    return re.sub(r'(:\/\/[^:]+:)([^@]+)(@)', r'\1***\3', url)
 
 try:
     import redis.asyncio as aioredis
@@ -90,11 +96,9 @@ class RedisConnectionPool:
             encoding=self.config.encoding,
         )
 
-        # 初始化连接池
-        await pool
-
         self._status = RedisStatus.CONNECTED
-        logger.info(f"Redis连接池创建成功: {self.config.url}")
+        sanitized = _sanitize_url(self.config.url)
+        logger.info(f"Redis连接池创建成功: {sanitized}")
 
         return pool
 

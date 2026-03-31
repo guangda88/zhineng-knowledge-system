@@ -1,5 +1,17 @@
 # 智能知识系统 - 开发计划深度验证报告
 
+<div align="center">
+
+⚠️ **归档文档 — 数据已过时**
+
+本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+
+👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+</div>
+
+---
+
 **报告日期**: 2026-03-25
 **验证依据**: PHASED_IMPLEMENTATION_PLAN_V2.md
 **验证方法**: 代码审查、服务状态检查、测试执行
