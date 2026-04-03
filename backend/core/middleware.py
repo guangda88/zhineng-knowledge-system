@@ -5,12 +5,11 @@
 
 import logging
 import time
-from typing import Dict
 
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request
 
 from backend.config import get_config
+
 from .request_stats import increment_error_count, increment_request_count
 
 logger = logging.getLogger(__name__)
@@ -36,6 +35,7 @@ def get_allowed_origins() -> list[str]:
 
     # 检查环境变量（向后兼容）
     import os
+
     origins_str = os.getenv("ALLOWED_ORIGINS", "").strip()
 
     if not origins_str:
@@ -56,7 +56,7 @@ def get_allowed_origins() -> list[str]:
             "http://localhost:8001",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:8000",
-            "http://127.0.0.1:8001"
+            "http://127.0.0.1:8001",
         ]
 
     # 清理并验证每个来源

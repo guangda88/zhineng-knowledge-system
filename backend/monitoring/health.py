@@ -4,11 +4,11 @@
 """
 
 import asyncio
+import logging
 import time
-from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class HealthCheckResult:
             "message": self.message,
             "details": self.details,
             "timestamp": self.timestamp,
-            "duration": self.duration
+            "duration": self.duration,
         }
 
 
@@ -58,12 +58,7 @@ class HealthChecker:
         self._running = False
         self._task: Optional[asyncio.Task] = None
 
-    def register(
-        self,
-        name: str,
-        check_func: Callable,
-        interval: float = 30.0
-    ) -> None:
+    def register(self, name: str, check_func: Callable, interval: float = 30.0) -> None:
         """注册健康检查
 
         Args:
@@ -97,9 +92,7 @@ class HealthChecker:
         """
         if name not in self._checks:
             return HealthCheckResult(
-                name=name,
-                status=HealthStatus.UNKNOWN,
-                message=f"检查 {name} 不存在"
+                name=name, status=HealthStatus.UNKNOWN, message=f"检查 {name} 不存在"
             )
 
         check_func = self._checks[name]
@@ -116,7 +109,7 @@ class HealthChecker:
                 name=name,
                 status=HealthStatus.UNHEALTHY,
                 message=f"检查执行失败: {str(e)}",
-                duration=time.time() - start_time
+                duration=time.time() - start_time,
             )
             self._last_results[name] = result
             return result
@@ -138,9 +131,7 @@ class HealthChecker:
             for name, result in zip(self._checks.keys(), check_results):
                 if isinstance(result, Exception):
                     results[name] = HealthCheckResult(
-                        name=name,
-                        status=HealthStatus.UNHEALTHY,
-                        message=str(result)
+                        name=name, status=HealthStatus.UNHEALTHY, message=str(result)
                     )
                 else:
                     results[name] = result
@@ -178,10 +169,7 @@ class HealthChecker:
         return {
             "status": overall.value,
             "timestamp": time.time(),
-            "checks": {
-                name: result.to_dict()
-                for name, result in self._last_results.items()
-            }
+            "checks": {name: result.to_dict() for name, result in self._last_results.items()},
         }
 
     async def start_background_checks(self) -> None:
@@ -244,15 +232,11 @@ async def database_health_check(db_pool) -> HealthCheckResult:
         async with db_pool.acquire() as conn:
             await conn.fetchval("SELECT 1")
         return HealthCheckResult(
-            name="database",
-            status=HealthStatus.HEALTHY,
-            message="数据库连接正常"
+            name="database", status=HealthStatus.HEALTHY, message="数据库连接正常"
         )
     except Exception as e:
         return HealthCheckResult(
-            name="database",
-            status=HealthStatus.UNHEALTHY,
-            message=f"数据库连接失败: {str(e)}"
+            name="database", status=HealthStatus.UNHEALTHY, message=f"数据库连接失败: {str(e)}"
         )
 
 
@@ -260,25 +244,21 @@ async def redis_health_check(redis_url: str) -> HealthCheckResult:
     """Redis健康检查"""
     try:
         from redis.asyncio import from_url as async_from_url
+
         redis = await async_from_url(redis_url)
         await redis.ping()
         await redis.close()
-        return HealthCheckResult(
-            name="redis",
-            status=HealthStatus.HEALTHY,
-            message="Redis连接正常"
-        )
+        return HealthCheckResult(name="redis", status=HealthStatus.HEALTHY, message="Redis连接正常")
     except (ImportError, OSError, RuntimeError, ConnectionError) as e:
         return HealthCheckResult(
-            name="redis",
-            status=HealthStatus.DEGRADED,
-            message=f"Redis连接失败: {str(e)}"
+            name="redis", status=HealthStatus.DEGRADED, message=f"Redis连接失败: {str(e)}"
         )
 
 
 def memory_health_check(threshold_mb: int = 1000) -> HealthCheckResult:
     """内存健康检查"""
     import psutil
+
     process = psutil.Process()
     memory_mb = process.memory_info().rss / 1024 / 1024
 
@@ -287,12 +267,12 @@ def memory_health_check(threshold_mb: int = 1000) -> HealthCheckResult:
             name="memory",
             status=HealthStatus.DEGRADED,
             message=f"内存使用较高: {memory_mb:.1f}MB",
-            details={"memory_mb": memory_mb, "threshold_mb": threshold_mb}
+            details={"memory_mb": memory_mb, "threshold_mb": threshold_mb},
         )
 
     return HealthCheckResult(
         name="memory",
         status=HealthStatus.HEALTHY,
         message=f"内存使用正常: {memory_mb:.1f}MB",
-        details={"memory_mb": memory_mb}
+        details={"memory_mb": memory_mb},
     )

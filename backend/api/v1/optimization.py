@@ -1,30 +1,35 @@
 """自优化API路由
 
 LingMinOpt自优化框架的API接口
-"""
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from typing import List, Optional
-from pydantic import BaseModel
-from datetime import datetime
 
-from services.optimization import (
-    LingMinOptOptimizer,
-    FeedbackCollector,
+⚠️ 实验性功能 - 未完成，不建议生产使用
+"""
+
+import logging
+from typing import Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel
+
+from backend.services.optimization import (
     ErrorAnalyzer,
-    SystemAuditor
+    FeedbackCollector,
+    LingMinOptOptimizer,
+    SystemAuditor,
 )
-from services.optimization.lingminopt import (
-    OptimizationOpportunity,
-    OptimizationPriority
-)
+from backend.services.optimization.lingminopt import OptimizationPriority
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/optimization", tags=["自优化系统"])
 
 
 # ==================== 请求/响应模型 ====================
 
+
 class FeedbackSubmissionRequest(BaseModel):
     """用户反馈提交"""
+
     user_id: str
     feedback_type: str  # bug, feature, improvement, complaint
     content: str
@@ -34,6 +39,7 @@ class FeedbackSubmissionRequest(BaseModel):
 
 class ErrorLogRequest(BaseModel):
     """错误日志提交"""
+
     error_type: str
     error_message: str
     stack_trace: str
@@ -43,17 +49,17 @@ class ErrorLogRequest(BaseModel):
 
 class OptimizationExecuteRequest(BaseModel):
     """优化执行请求"""
+
     opportunity_id: str
     auto_approve: bool = False
 
 
 # ==================== API端点 ====================
 
+
 @router.get("/opportunities")
 async def list_optimization_opportunities(
-    status: Optional[str] = None,
-    priority: Optional[str] = None,
-    limit: int = 20
+    status: Optional[str] = None, priority: Optional[str] = None, limit: int = 20
 ) -> dict:
     """
     列出优化机会
@@ -91,10 +97,10 @@ async def list_optimization_opportunities(
                     "status": o.status.value,
                     "impact_estimate": o.impact_estimate,
                     "effort_estimate": o.effort_estimate,
-                    "created_at": o.created_at.isoformat()
+                    "created_at": o.created_at.isoformat(),
                 }
                 for o in opportunities[:limit]
-            ]
+            ],
         }
 
     except Exception as e:
@@ -102,9 +108,7 @@ async def list_optimization_opportunities(
 
 
 @router.post("/opportunities/{opportunity_id}/analyze")
-async def analyze_opportunity(
-    opportunity_id: str
-) -> dict:
+async def analyze_opportunity(opportunity_id: str) -> dict:
     """
     分析优化机会
 
@@ -137,9 +141,9 @@ async def analyze_opportunity(
                 "status": analyzed.status.value,
                 "solution": analyzed.solution,
                 "impact_estimate": analyzed.impact_estimate,
-                "effort_estimate": analyzed.effort_estimate
+                "effort_estimate": analyzed.effort_estimate,
             },
-            "plan": plan
+            "plan": plan,
         }
 
     except HTTPException:
@@ -150,9 +154,7 @@ async def analyze_opportunity(
 
 @router.post("/opportunities/{opportunity_id}/execute")
 async def execute_optimization(
-    opportunity_id: str,
-    request: OptimizationExecuteRequest,
-    background_tasks: BackgroundTasks
+    opportunity_id: str, request: OptimizationExecuteRequest, background_tasks: BackgroundTasks
 ) -> dict:
     """
     执行优化
@@ -178,17 +180,12 @@ async def execute_optimization(
 
         # 检查是否需要人工确认
         if not request.auto_approve and opportunity.priority == OptimizationPriority.CRITICAL:
-            return {
-                "success": False,
-                "message": "关键优化需要人工确认",
-                "requires_approval": True
-            }
+            return {"success": False, "message": "关键优化需要人工确认", "requires_approval": True}
 
         # 在后台执行优化
         async def run_optimization():
             return await optimizer.execute_optimization(
-                opportunity,
-                auto_approve=request.auto_approve
+                opportunity, auto_approve=request.auto_approve
             )
 
         background_tasks.add_task(run_optimization)
@@ -196,7 +193,7 @@ async def execute_optimization(
         return {
             "success": True,
             "message": f"优化任务已启动: {opportunity.title}",
-            "opportunity_id": opportunity_id
+            "opportunity_id": opportunity_id,
         }
 
     except HTTPException:
@@ -206,9 +203,7 @@ async def execute_optimization(
 
 
 @router.post("/feedback")
-async def submit_feedback(
-    request: FeedbackSubmissionRequest
-) -> dict:
+async def submit_feedback(request: FeedbackSubmissionRequest) -> dict:
     """
     提交用户反馈
 
@@ -227,13 +222,13 @@ async def submit_feedback(
             feedback_type=request.feedback_type,
             content=request.content,
             rating=request.rating,
-            metadata=request.metadata
+            metadata=request.metadata,
         )
 
         return {
             "success": True,
             "feedback_id": feedback_id,
-            "message": "反馈已提交，感谢您的反馈！"
+            "message": "反馈已提交，感谢您的反馈！",
         }
 
     except Exception as e:
@@ -252,19 +247,14 @@ async def get_feedback_analysis() -> dict:
 
         analysis = await collector.analyze_feedback()
 
-        return {
-            "success": True,
-            "analysis": analysis
-        }
+        return {"success": True, "analysis": analysis}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/errors/log")
-async def log_system_error(
-    request: ErrorLogRequest
-) -> dict:
+async def log_system_error(request: ErrorLogRequest) -> dict:
     """
     记录系统错误
 
@@ -283,14 +273,10 @@ async def log_system_error(
             error_message=request.error_message,
             stack_trace=request.stack_trace,
             context=request.context,
-            severity=request.severity
+            severity=request.severity,
         )
 
-        return {
-            "success": True,
-            "error_id": error_id,
-            "message": "错误已记录"
-        }
+        return {"success": True, "error_id": error_id, "message": "错误已记录"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -308,10 +294,7 @@ async def get_error_analysis() -> dict:
 
         analysis = await analyzer.analyze_errors()
 
-        return {
-            "success": True,
-            "analysis": analysis
-        }
+        return {"success": True, "analysis": analysis}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -320,7 +303,7 @@ async def get_error_analysis() -> dict:
 @router.post("/audit/perform")
 async def perform_audit(
     audit_type: str = "comprehensive",
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks = None,
 ) -> dict:
     """
     执行系统审计
@@ -340,7 +323,7 @@ async def perform_audit(
         return {
             "success": True,
             "message": f"审计任务已启动: {audit_type}",
-            "audit_type": audit_type
+            "audit_type": audit_type,
         }
 
     except Exception as e:
@@ -348,9 +331,7 @@ async def perform_audit(
 
 
 @router.get("/audit/history")
-async def get_audit_history(
-    limit: int = 10
-) -> dict:
+async def get_audit_history(limit: int = 10) -> dict:
     """
     获取审计历史
 
@@ -361,11 +342,7 @@ async def get_audit_history(
 
         history = auditor.audit_history[-limit:]
 
-        return {
-            "success": True,
-            "total": len(history),
-            "audits": history
-        }
+        return {"success": True, "total": len(history), "audits": history}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -386,9 +363,9 @@ async def get_optimization_stats() -> dict:
 
         # 并行收集统计
         import asyncio
+
         feedback_analysis, error_analysis = await asyncio.gather(
-            collector.analyze_feedback(),
-            analyzer.analyze_errors()
+            collector.analyze_feedback(), analyzer.analyze_errors()
         )
 
         return {
@@ -398,8 +375,8 @@ async def get_optimization_stats() -> dict:
                 "completed_optimizations": len(optimizer.optimization_history),
                 "feedback": feedback_analysis,
                 "errors": error_analysis,
-                "audits": len(auditor.audit_history)
-            }
+                "audits": len(auditor.audit_history),
+            },
         }
 
     except Exception as e:
@@ -444,8 +421,8 @@ async def get_optimization_dashboard() -> dict:
                 "by_category": by_category,
                 "by_status": by_status,
                 "recent_optimizations": optimizer.optimization_history[-5:],
-                "active_optimizations": len(optimizer.active_optimizations)
-            }
+                "active_optimizations": len(optimizer.active_optimizations),
+            },
         }
 
     except Exception as e:

@@ -2,13 +2,13 @@
 
 统一管理OCR和语音转写标注任务
 """
+
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
-from .base import AnnotationTask, AnnotationStatus, AnnotationType
+from .base import AnnotationStatus, AnnotationTask, AnnotationType
 from .ocr_annotator import OCRAnnotator
 from .transcription_annotator import TranscriptionAnnotator
 
@@ -28,7 +28,7 @@ class AnnotationManager:
         annotation_type: AnnotationType,
         source_content: str,
         source_path: str,
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
     ) -> AnnotationTask:
         """
         创建标注任务
@@ -46,15 +46,11 @@ class AnnotationManager:
         """
         if annotation_type == AnnotationType.OCR:
             return await self.ocr_annotator.create_task(
-                source_content=source_content,
-                source_path=source_path,
-                metadata=metadata
+                source_content=source_content, source_path=source_path, metadata=metadata
             )
         elif annotation_type == AnnotationType.TRANSCRIPTION:
             return await self.transcription_annotator.create_task(
-                source_content=source_content,
-                source_path=source_path,
-                metadata=metadata
+                source_content=source_content, source_path=source_path, metadata=metadata
             )
         else:
             raise ValueError(f"不支持的标注类型: {annotation_type}")
@@ -73,24 +69,17 @@ class AnnotationManager:
 
         return None
 
-    async def list_all_pending_tasks(
-        self,
-        limit: int = 20
-    ) -> Dict[str, List[AnnotationTask]]:
+    async def list_all_pending_tasks(self, limit: int = 20) -> Dict[str, List[AnnotationTask]]:
         """列出所有待标注任务"""
         ocr_tasks = await self.ocr_annotator.list_pending_tasks(limit)
         transcription_tasks = await self.transcription_annotator.list_pending_tasks(limit)
 
-        return {
-            "ocr": ocr_tasks,
-            "transcription": transcription_tasks
-        }
+        return {"ocr": ocr_tasks, "transcription": transcription_tasks}
 
     async def get_overall_statistics(self) -> Dict[str, Any]:
         """获取整体统计信息"""
         ocr_stats, transcription_stats = await asyncio.gather(
-            self.ocr_annotator.get_statistics(),
-            self.transcription_annotator.get_statistics()
+            self.ocr_annotator.get_statistics(), self.transcription_annotator.get_statistics()
         )
 
         total_tasks = ocr_stats["total_tasks"] + transcription_stats["total_tasks"]
@@ -116,27 +105,20 @@ class AnnotationManager:
             "completion_rate": (total_completed / total_tasks * 100) if total_tasks > 0 else 0,
             "average_improvement_percentage": avg_improvement,
             "ocr": ocr_stats,
-            "transcription": transcription_stats
+            "transcription": transcription_stats,
         }
 
-    async def get_productivity_metrics(
-        self,
-        days: int = 7
-    ) -> Dict[str, Any]:
+    async def get_productivity_metrics(self, days: int = 7) -> Dict[str, Any]:
         """获取生产力指标"""
         # 统计过去N天的标注情况
-        cutoff_date = datetime.now() - timedelta(days=days)
+        _cutoff_date = datetime.now() - timedelta(days=days)  # noqa: F841
 
         raise NotImplementedError(
             "Productivity metrics require database integration. "
             "This method returns no data until the annotation pipeline is connected."
         )
 
-    async def export_training_data(
-        self,
-        annotation_type: AnnotationType,
-        output_path: str
-    ) -> str:
+    async def export_training_data(self, annotation_type: AnnotationType, output_path: str) -> str:
         """
         导出训练数据
 
@@ -158,46 +140,47 @@ class AnnotationManager:
 
         if annotation_type == AnnotationType.OCR:
             tasks = [
-                t for t in self.ocr_annotator.tasks.values()
+                t
+                for t in self.ocr_annotator.tasks.values()
                 if t.status == AnnotationStatus.COMPLETED
             ]
         else:
             tasks = [
-                t for t in self.transcription_annotator.tasks.values()
+                t
+                for t in self.transcription_annotator.tasks.values()
                 if t.status == AnnotationStatus.COMPLETED
             ]
 
         # 转换为训练数据格式
         training_data = []
         for task in tasks:
-            training_data.append({
-                "source": task.original_source,
-                "original": task.original_text,
-                "corrected": task.corrected_text,
-                "corrections": [
-                    {
-                        "position": c.position,
-                        "original": c.original,
-                        "corrected": c.corrected,
-                        "type": c.correction_type
-                    }
-                    for c in task.corrections
-                ]
-            })
+            training_data.append(
+                {
+                    "source": task.original_source,
+                    "original": task.original_text,
+                    "corrected": task.corrected_text,
+                    "corrections": [
+                        {
+                            "position": c.position,
+                            "original": c.original,
+                            "corrected": c.corrected,
+                            "type": c.correction_type,
+                        }
+                        for c in task.corrections
+                    ],
+                }
+            )
 
         # 保存为JSONL
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             for item in training_data:
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
         self.logger.info(f"导出了{len(training_data)}条训练数据到{output_path}")
 
         return output_path
 
-    async def trigger_model_retraining(
-        self,
-        annotation_type: AnnotationType
-    ) -> Dict[str, Any]:
+    async def trigger_model_retraining(self, annotation_type: AnnotationType) -> Dict[str, Any]:
         """
         触发模型重训练
 
@@ -220,8 +203,7 @@ class AnnotationManager:
         training_data_path = f"data/annotations/training/{annotation_type.value}_{timestamp}.jsonl"
 
         await self.export_training_data(
-            annotation_type=annotation_type,
-            output_path=training_data_path
+            annotation_type=annotation_type, output_path=training_data_path
         )
 
         return {
@@ -229,13 +211,11 @@ class AnnotationManager:
             "annotation_type": annotation_type.value,
             "training_data_path": training_data_path,
             "message": "模型重训练任务已启动",
-            "estimated_time_minutes": 30
+            "estimated_time_minutes": 30,
         }
 
     async def cleanup_old_tasks(
-        self,
-        older_than_days: int = 30,
-        status: AnnotationStatus = AnnotationStatus.COMPLETED
+        self, older_than_days: int = 30, status: AnnotationStatus = AnnotationStatus.COMPLETED
     ) -> int:
         """
         清理旧任务
@@ -249,7 +229,7 @@ class AnnotationManager:
         Returns:
             int: 删除的任务数量
         """
-        cutoff_date = datetime.now() - timedelta(days=older_than_days)
+        _cutoff_date = datetime.now() - timedelta(days=older_than_days)  # noqa: F841
 
         # TODO: 实现实际的清理逻辑
         # 1. 查询符合条件的任务
@@ -264,25 +244,25 @@ class AnnotationManager:
     async def get_quality_metrics(self) -> Dict[str, Any]:
         """获取质量指标"""
         ocr_stats, transcription_stats = await asyncio.gather(
-            self.ocr_annotator.get_statistics(),
-            self.transcription_annotator.get_statistics()
+            self.ocr_annotator.get_statistics(), self.transcription_annotator.get_statistics()
         )
 
         return {
             "ocr": {
                 "average_improvement": ocr_stats.get("average_improvement_percentage", 0),
                 "total_corrections": ocr_stats.get("total_characters_corrected", 0),
-                "completed_tasks": ocr_stats["completed_tasks"]
+                "completed_tasks": ocr_stats["completed_tasks"],
             },
             "transcription": {
                 "average_improvement": transcription_stats.get("average_improvement_percentage", 0),
                 "total_corrections": transcription_stats.get("total_words_corrected", 0),
-                "completed_tasks": transcription_stats["completed_tasks"]
+                "completed_tasks": transcription_stats["completed_tasks"],
             },
             "overall_quality_score": (
-                ocr_stats.get("average_improvement_percentage", 0) +
-                transcription_stats.get("average_improvement_percentage", 0)
-            ) / 2
+                ocr_stats.get("average_improvement_percentage", 0)
+                + transcription_stats.get("average_improvement_percentage", 0)
+            )
+            / 2,
         }
 
 

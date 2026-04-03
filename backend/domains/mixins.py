@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional
 
 from backend.common import rows_to_list
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -132,7 +131,9 @@ class QueryFormatterMixin:
                 content += f"   {source.get('content', '')[:150]}...\n\n"
             confidence = 0.8
         else:
-            content = f'{no_result_prefix}，在{domain_label}知识库中没有找到关于"{question}"的相关内容。'
+            content = (
+                f'{no_result_prefix}，在{domain_label}知识库中没有找到关于"{question}"的相关内容。'
+            )
             confidence = 0.2
 
         return QueryResult(

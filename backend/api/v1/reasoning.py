@@ -5,14 +5,15 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from api.v1.search import get_hybrid_retriever
-from common import rows_to_list
-from common.typing import JSONResponse
-from config import get_config
-from core.database import init_db_pool
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from services.reasoning import CoTReasoner, GraphRAGReasoner, ReActReasoner
+
+from backend.api.v1.search import get_hybrid_retriever
+from backend.common import rows_to_list
+from backend.common.typing import JSONResponse
+from backend.config import get_config
+from backend.core.database import init_db_pool
+from backend.services.reasoning import CoTReasoner, GraphRAGReasoner, ReActReasoner
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,11 @@ class ReasoningRequest(BaseModel):
 
     question: str = Field(..., min_length=1, max_length=500, description="用户问题")
     mode: str = Field("cot", pattern="^(cot|react|graph_rag|auto)$", description="推理模式")
-    category: Optional[str] = Field(None, pattern="^(气功|中医|儒家)$", description="指定分类")
+    category: Optional[str] = Field(
+        None,
+        pattern="^(气功|中医|儒家|佛家|道家|武术|哲学|科学|心理学)$",
+        description="指定分类",
+    )
     session_id: Optional[str] = Field(None, description="会话ID")
     use_rag: bool = Field(True, description="是否使用RAG检索上下文")
 
@@ -55,9 +60,7 @@ async def get_cot_reasoner() -> CoTReasoner:
         _cfg = get_config()
         api_key = _cfg.DEEPSEEK_API_KEY
         if not api_key:
-            raise ValueError(
-                "DEEPSEEK_API_KEY is required for reasoning service"
-            )
+            raise ValueError("DEEPSEEK_API_KEY is required for reasoning service")
         _cot_reasoner = CoTReasoner(api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or "")
     return _cot_reasoner
 
@@ -69,9 +72,7 @@ async def get_react_reasoner() -> ReActReasoner:
         _cfg = get_config()
         api_key = _cfg.DEEPSEEK_API_KEY
         if not api_key:
-            raise ValueError(
-                "DEEPSEEK_API_KEY is required for reasoning service"
-            )
+            raise ValueError("DEEPSEEK_API_KEY is required for reasoning service")
         _react_reasoner = ReActReasoner(api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or "")
     return _react_reasoner
 
@@ -83,12 +84,8 @@ async def get_graph_rag_reasoner() -> GraphRAGReasoner:
         _cfg = get_config()
         api_key = _cfg.DEEPSEEK_API_KEY
         if not api_key:
-            raise ValueError(
-                "DEEPSEEK_API_KEY is required for reasoning service"
-            )
-        _graph_rag_reasoner = GraphRAGReasoner(
-            api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or ""
-        )
+            raise ValueError("DEEPSEEK_API_KEY is required for reasoning service")
+        _graph_rag_reasoner = GraphRAGReasoner(api_key=api_key, api_url=_cfg.DEEPSEEK_API_URL or "")
     return _graph_rag_reasoner
 
 
@@ -262,7 +259,7 @@ async def build_graph(category: Optional[str] = None) -> JSONResponse:
 
     return {
         "status": "success",
-        "message": f"知识图谱构建完成",
+        "message": "知识图谱构建完成",
         "entity_count": entity_count,
         "relation_count": relation_count,
         "document_count": len(contexts),

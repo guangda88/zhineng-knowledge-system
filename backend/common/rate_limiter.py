@@ -3,12 +3,12 @@
 
 使用Redis实现跨进程的全局速率限制，防止API调用过于频繁
 """
+
 import asyncio
-import time
-import threading
-from typing import Optional, Callable
-from functools import wraps
 import logging
+import time
+from functools import wraps
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +16,14 @@ logger = logging.getLogger(__name__)
 def _get_async_redis(redis_url: str, decode_responses: bool = True):
     """获取异步 Redis 客户端（使用 redis.asyncio）"""
     import redis.asyncio as aioredis
+
     return aioredis.from_url(redis_url, decode_responses=decode_responses)
 
 
 def _get_sync_redis(redis_url: str, decode_responses: bool = True):
     """获取同步 Redis 客户端（仅用于同步上下文）"""
     import redis as sync_redis
+
     return sync_redis.from_url(redis_url, decode_responses=decode_responses)
 
 
@@ -33,7 +35,7 @@ class DistributedRateLimiter:
         redis_url: str = "redis://localhost:6379/0",
         max_calls: int = 60,  # 时间窗口内最大调用次数
         period: int = 60,  # 时间窗口（秒）
-        burst: int = 10  # 突发容量
+        burst: int = 10,  # 突发容量
     ):
         """
         初始化分布式速率限制器
@@ -68,6 +70,7 @@ class DistributedRateLimiter:
             是否成功获取许可
         """
         import warnings
+
         warnings.warn(
             "DistributedRateLimiter.acquire() is synchronous and blocks the thread. "
             "Use acquire_async() in async contexts.",
@@ -126,15 +129,12 @@ class DistributedRateLimiter:
             "current_calls": int(current_calls) if current_calls else 0,
             "max_calls": self.max_calls,
             "remaining_time": ttl,
-            "usage_percent": (int(current_calls) / self.max_calls * 100) if current_calls else 0
+            "usage_percent": (int(current_calls) / self.max_calls * 100) if current_calls else 0,
         }
 
 
 def rate_limit(
-    key: str = "default",
-    max_calls: int = 60,
-    period: int = 60,
-    timeout: Optional[float] = None
+    key: str = "default", max_calls: int = 60, period: int = 60, timeout: Optional[float] = None
 ):
     """
     速率限制装饰器
@@ -159,6 +159,7 @@ def rate_limit(
             if not limiter.acquire(key, timeout=timeout):
                 raise Exception(f"Rate limit exceeded for {key}")
             return func(*args, **kwargs)
+
         return wrapper
 
     return decorator
@@ -168,11 +169,7 @@ def rate_limit(
 
 if __name__ == "__main__":
     # 示例1: 基本使用
-    limiter = DistributedRateLimiter(
-        max_calls=100,  # 每分钟最多100次调用
-        period=60,
-        burst=10
-    )
+    limiter = DistributedRateLimiter(max_calls=100, period=60, burst=10)  # 每分钟最多100次调用
 
     # 示例2: 装饰器使用
     @rate_limit(key="glm_api", max_calls=60, period=60)
@@ -181,10 +178,10 @@ if __name__ == "__main__":
         pass
 
     # 示例3: 令牌桶（更适合高并发）
-    token_limiter = TokenBucketRateLimiter(
-        rate=10.0,  # 每秒10个令牌
-        capacity=100  # 桶容量100
-    )
+    # token_limiter = TokenBucketRateLimiter(
+    #     rate=10.0,  # 每秒10个令牌
+    #     capacity=100  # 桶容量100
+    # )
 
     # 示例4: 多进程安全
     # 每个进程使用相同的Redis配置

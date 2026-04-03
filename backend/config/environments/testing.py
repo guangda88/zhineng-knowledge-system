@@ -16,10 +16,7 @@ class TestingConfig(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig):
     LOG_LEVEL: str = "WARNING"
 
     # 测试环境允许本地来源
-    ALLOWED_ORIGINS: list = [
-        "http://localhost:3000",
-        "http://localhost:8000"
-    ]
+    ALLOWED_ORIGINS: list = ["http://localhost:3000", "http://localhost:8000"]
 
     # 测试环境禁用速率限制
     RATE_LIMIT_ENABLED: bool = False

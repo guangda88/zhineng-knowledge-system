@@ -1,0 +1,173 @@
+{
+  "workflows": [
+    {
+      "id": "text-processing",
+      "name": "文字处理工程流",
+      "description": "完整的文本处理和RAG问答系统",
+      "team": "A",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "A-1",
+          "name": "文本解析和分块",
+          "source_hint": "backend/services/text_processor.py",
+          "status": "completed",
+          "lines": 600,
+          "tests": "tests/test_text_processor.py"
+        },
+        {
+          "id": "A-2",
+          "name": "向量嵌入生成",
+          "source_hint": "backend/services/enhanced_vector_service.py",
+          "status": "completed",
+          "lines": 550
+        },
+        {
+          "id": "A-3",
+          "name": "语义检索实现",
+          "source_hint": "backend/services/hybrid_retrieval.py",
+          "status": "completed",
+          "lines": 650
+        },
+        {
+          "id": "A-4",
+          "name": "RAG问答管道",
+          "source_hint": "backend/services/rag_pipeline.py",
+          "status": "completed",
+          "lines": 550
+        },
+        {
+          "id": "A-5",
+          "name": "文本标注系统",
+          "source_hint": "backend/services/text_annotation_service.py",
+          "status": "completed"
+        },
+        {
+          "id": "A-6",
+          "name": "测试和文档",
+          "source_hint": "tests/test_text_processor.py",
+          "status": "completed"
+        }
+      ],
+      "total_lines": 3100,
+      "completed_at": "2026-04-01"
+    },
+    {
+      "id": "audio-processing",
+      "name": "音频处理工程流",
+      "description": "音频转录、处理和知识提取",
+      "team": "B",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "B-1",
+          "name": "音频文件导入和API",
+          "source_hint": "backend/api/v1/audio.py",
+          "status": "completed",
+          "lines": 300,
+          "tests": "tests/test_audio.py"
+        },
+        {
+          "id": "B-2",
+          "name": "音频服务核心",
+          "source_hint": "backend/services/audio/audio_service.py",
+          "status": "completed",
+          "lines": 786
+        },
+        {
+          "id": "B-3",
+          "name": "ASR路由和多引擎支持",
+          "source_hint": "backend/services/audio/asr_router.py",
+          "status": "completed",
+          "lines": 106
+        },
+        {
+          "id": "B-4",
+          "name": "Whisper转录器",
+          "source_hint": "backend/services/audio/whisper_transcriber.py",
+          "status": "completed",
+          "lines": 188
+        },
+        {
+          "id": "B-5",
+          "name": "Cohere转录器",
+          "source_hint": "backend/services/audio/cohere_transcriber.py",
+          "status": "completed",
+          "lines": 281
+        },
+        {
+          "id": "B-6",
+          "name": "听悟客户端",
+          "source_hint": "backend/services/audio/tingwu_client.py",
+          "status": "completed",
+          "lines": 327
+        },
+        {
+          "id": "B-7",
+          "name": "音频向量化和检索",
+          "source_hint": "backend/services/audio/audio_service.py:vectorize_segments",
+          "status": "completed"
+        },
+        {
+          "id": "B-8",
+          "name": "测试和文档",
+          "source_hint": "tests/test_audio.py",
+          "status": "completed"
+        }
+      ],
+      "total_lines": 1703,
+      "completed_at": "2026-04-01"
+    },
+    {
+      "id": "security-fixes",
+      "name": "P0安全问题修复",
+      "description": "关键安全漏洞修复",
+      "team": "Security",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "P0-1",
+          "name": "SQL注入修复",
+          "source_hint": "backend/api/v1/books.py",
+          "status": "completed",
+          "cve": "SQL-Injection-2025-001"
+        },
+        {
+          "id": "P0-2",
+          "name": "JWT认证实现",
+          "source_hint": "backend/core/security.py",
+          "status": "completed",
+          "lines": 350
+        },
+        {
+          "id": "P0-3",
+          "name": "统一错误处理",
+          "source_hint": "backend/core/error_handlers.py",
+          "status": "completed",
+          "lines": 450
+        },
+        {
+          "id": "P0-4",
+          "name": "日志安全加固",
+          "source_hint": "backend/core/secure_logging.py",
+          "status": "completed",
+          "lines": 350
+        },
+        {
+          "id": "P0-5",
+          "name": "输入验证加强",
+          "source_hint": "backend/core/validators.py",
+          "status": "completed",
+          "lines": 450
+        }
+      ],
+      "completed_at": "2026-04-01"
+    }
+  ],
+  "metadata": {
+    "version": "1.0.1",
+    "last_updated": "2026-04-01",
+    "total_workflows": 3,
+    "completed_workflows": 3
+  }
+}

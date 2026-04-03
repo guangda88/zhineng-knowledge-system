@@ -9,12 +9,11 @@
 - 数据分析
 """
 
-from .report_generator import ReportGenerator
-from .ppt_generator import PPTGenerator
-from .audio_generator import AudioGenerator
-from .video_generator import VideoGenerator
 from .course_generator import CourseGenerator
 from .data_analyzer import DataAnalyzer
+from .generators import AudioGenerator, VideoGenerator
+from .ppt_generator import PPTGenerator
+from .report_generator import ReportGenerator
 
 __all__ = [
     "ReportGenerator",

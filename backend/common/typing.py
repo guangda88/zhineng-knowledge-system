@@ -3,7 +3,7 @@
 定义项目通用的类型别名，提高代码可读性和复用性。
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # ========== 通用类型别名 ==========
 
@@ -40,11 +40,10 @@ Stats = Dict[str, Any]
 
 # ========== 常用类型组合 ==========
 
+
 class OptionalDict:
     """可选字典类型的便捷标记"""
-    pass
 
 
 class TypedResponse:
     """带类型的响应"""
-    pass

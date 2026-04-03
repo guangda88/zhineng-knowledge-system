@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "autoMemoryEnabled": true,
+  "permissions": {
+    "deny": [
+      "Bash(*:*(openlist|100.66.1.8:2455|115|guoxue_content|guji_download)* --transfers [5-9]*",
+      "Bash(*:*(openlist|100.66.1.8:2455|115|guoxue_content|guji_download)* -P [5-9]*)",
+      "Bash(*:*(openlist|100.66.1.8:2455|115|guoxue_content|guji_download)* -j [5-9]*)"
+    ],
+    "ask": [
+      "Bash(*:*(openlist|100.66.1.8:2455|115|guoxue_content|guji_download)*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "检查此命令是否涉及openlist/115网盘访问。如果是，必须确认：1) 单线程操作 2) 有适当延迟(>=1秒) 3) 不批量并发。命令: $ARGUMENTS",
+            "timeout": 10,
+            "statusMessage": "检查openlist访问合规性..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$TOOL_INPUT\" | jq -r '.file_path // .filePath' | xargs -I {} python3 /home/ai/zhineng-knowledge-system/scripts/hooks/check_115_rate_limit.py {} 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "检查代码速率限制合规性..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"⚠️  严禁高速高频多线程访问openlist/115网盘！\" && echo \"   - 单线程操作\" && echo \"   - 请求间隔>=1秒\" && echo \"   - 禁止批量并发\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "OPENLIST_RATE_LIMIT": "1",
+    "OPENLIST_MAX_CONCURRENT": "1",
+    "OPENLIST_MIN_DELAY": "1"
+  }
+}

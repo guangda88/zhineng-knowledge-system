@@ -3,14 +3,14 @@
 实现链式推理，让模型逐步思考问题
 """
 
-import time
 import asyncio
-from typing import List, Dict, Any, Optional
 import logging
+import time
+from typing import Any, Dict, List, Optional
 
 import httpx
 
-from .base import BaseReasoner, ReasoningResult, ReasoningStep, QueryType
+from .base import BaseReasoner, QueryType, ReasoningResult, ReasoningStep
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class CoTReasoner(BaseReasoner):
                 if self._http_client is None:
                     self._http_client = httpx.AsyncClient(
                         timeout=60.0,
-                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
                     )
         return self._http_client
 
@@ -51,10 +51,7 @@ class CoTReasoner(BaseReasoner):
         await self.close()
 
     async def reason(
-        self,
-        question: str,
-        context: Optional[List[Dict[str, Any]]] = None,
-        **kwargs
+        self, question: str, context: Optional[List[Dict[str, Any]]] = None, **kwargs
     ) -> ReasoningResult:
         """执行CoT推理
 
@@ -78,7 +75,7 @@ class CoTReasoner(BaseReasoner):
         response_text = await self._call_llm(
             prompt,
             temperature=kwargs.get("temperature", 0.7),
-            max_tokens=kwargs.get("max_tokens", 2000)
+            max_tokens=kwargs.get("max_tokens", 2000),
         )
 
         # 解析推理过程
@@ -93,14 +90,11 @@ class CoTReasoner(BaseReasoner):
             sources=context or [],
             confidence=self._calculate_confidence(steps, answer),
             reasoning_time=reasoning_time,
-            model_used=self.model_name
+            model_used=self.model_name,
         )
 
     def _build_cot_prompt(
-        self,
-        question: str,
-        context: Optional[List[Dict[str, Any]]],
-        query_type: QueryType
+        self, question: str, context: Optional[List[Dict[str, Any]]], query_type: QueryType
     ) -> str:
         """构建CoT提示词
 
@@ -197,18 +191,13 @@ class CoTReasoner(BaseReasoner):
 
 答案：
 [你的最终答案]
-"""
+""",
         }
 
         template = templates.get(query_type, templates[QueryType.REASONING])
         return template.format(context=context_str, question=question)
 
-    async def _call_llm(
-        self,
-        prompt: str,
-        temperature: float = 0.7,
-        max_tokens: int = 2000
-    ) -> str:
+    async def _call_llm(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2000) -> str:
         """调用大语言模型（使用速率限制器）
 
         Args:
@@ -228,15 +217,12 @@ class CoTReasoner(BaseReasoner):
                     messages=[
                         {
                             "role": "system",
-                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。"
+                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。",
                         },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=temperature,
-                    max_tokens=max_tokens
+                    max_tokens=max_tokens,
                 )
                 return response["choices"][0]["message"]["content"]
 
@@ -250,8 +236,7 @@ class CoTReasoner(BaseReasoner):
             except Exception as e:
                 logger.error(f"LLM API call failed: {e}")
                 raise RuntimeError(
-                    f"LLM API call failed: {e}. "
-                    "Please check DEEPSEEK_API_KEY configuration."
+                    f"LLM API call failed: {e}. " "Please check DEEPSEEK_API_KEY configuration."
                 ) from e
 
         # 降级到原始HTTP客户端
@@ -267,23 +252,20 @@ class CoTReasoner(BaseReasoner):
                 self.api_url or "https://api.deepseek.com/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 json={
                     "model": self.model_name,
                     "messages": [
                         {
                             "role": "system",
-                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。"
+                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。",
                         },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
+                        {"role": "user", "content": prompt},
                     ],
                     "temperature": temperature,
-                    "max_tokens": max_tokens
-                }
+                    "max_tokens": max_tokens,
+                },
             )
             response.raise_for_status()
             data = response.json()
@@ -329,9 +311,11 @@ class CoTReasoner(BaseReasoner):
 
         # 尝试分离思考过程和答案
         if "思考过程：" in response or "思考过程:" in response:
-            parts = response.split("答案：", 1) if "答案：" in response else \
-                    response.split("答案:", 1) if "答案:" in response else \
-                    [response, ""]
+            parts = (
+                response.split("答案：", 1)
+                if "答案：" in response
+                else response.split("答案:", 1) if "答案:" in response else [response, ""]
+            )
 
             if len(parts) == 2:
                 thought_section, answer_section = parts
@@ -345,35 +329,28 @@ class CoTReasoner(BaseReasoner):
                 for line in thought_lines:
                     if line.strip().startswith(f"{step_num + 1}."):
                         if current_step:
-                            steps.append(ReasoningStep(
-                                step_number=step_num,
-                                content="\n".join(current_step).strip()
-                            ))
+                            steps.append(
+                                ReasoningStep(
+                                    step_number=step_num, content="\n".join(current_step).strip()
+                                )
+                            )
                         step_num += 1
                         current_step = [line]
                     elif current_step:
                         current_step.append(line)
 
                 if current_step:
-                    steps.append(ReasoningStep(
-                        step_number=step_num,
-                        content="\n".join(current_step).strip()
-                    ))
+                    steps.append(
+                        ReasoningStep(step_number=step_num, content="\n".join(current_step).strip())
+                    )
 
         # 如果没有解析出步骤，创建一个默认步骤
         if not steps:
-            steps.append(ReasoningStep(
-                step_number=1,
-                content=response[:500]
-            ))
+            steps.append(ReasoningStep(step_number=1, content=response[:500]))
 
         return steps, answer
 
-    def _calculate_confidence(
-        self,
-        steps: List[ReasoningStep],
-        answer: str
-    ) -> float:
+    def _calculate_confidence(self, steps: List[ReasoningStep], answer: str) -> float:
         """计算置信度
 
         Args:

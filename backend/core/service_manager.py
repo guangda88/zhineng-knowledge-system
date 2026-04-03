@@ -11,18 +11,16 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any, Callable, Type, TypeVar
-import functools
-
-from backend.config import get_config
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T', bound='Service')
+T = TypeVar("T", bound="Service")
 
 
 class ServiceStatus(str, Enum):
     """服务状态"""
+
     STARTING = "starting"
     RUNNING = "running"
     STOPPING = "stopping"
@@ -33,6 +31,7 @@ class ServiceStatus(str, Enum):
 @dataclass
 class ServiceHealth:
     """服务健康状态"""
+
     service_name: str
     status: ServiceStatus
     healthy: bool
@@ -63,18 +62,16 @@ class Service(ABC):
             service_name=name,
             status=ServiceStatus.STOPPED,
             healthy=False,
-            message="Service initialized"
+            message="Service initialized",
         )
 
     @abstractmethod
     async def start(self) -> None:
         """启动服务"""
-        pass
 
     @abstractmethod
     async def stop(self) -> None:
         """停止服务"""
-        pass
 
     async def health_check(self) -> ServiceHealth:
         """
@@ -119,16 +116,21 @@ class ServiceManager:
             service: 服务实例
         """
         if service.name in self._services:
-            raise ValueError(f"Service {service.name} already registered")
+            existing = self._services[service.name]
+            if existing.status == ServiceStatus.RUNNING:
+                logger.debug(f"Service {service.name} already registered and running, skipping")
+                return
+            logger.warning(
+                f"Service {service.name} already registered with status {existing.status}, replacing"
+            )
+            self._services[service.name] = service
+            return
 
         self._services[service.name] = service
         logger.info(f"Registered service: {service.name}")
 
     def register_service_class(
-        self,
-        service_class: Type[T],
-        name: Optional[str] = None,
-        **kwargs: Any
+        self, service_class: Type[T], name: Optional[str] = None, **kwargs: Any
     ) -> T:
         """
         注册服务类并自动实例化
@@ -284,7 +286,7 @@ class ServiceManager:
                     service_name=service_name,
                     status=service.status,
                     healthy=False,
-                    message=f"Health check failed: {e}"
+                    message=f"Health check failed: {e}",
                 )
         return results
 
@@ -296,10 +298,7 @@ class ServiceManager:
             不健康服务的名称列表
         """
         health_results = await self.health_check_all()
-        return [
-            name for name, health in health_results.items()
-            if not health.healthy
-        ]
+        return [name for name, health in health_results.items() if not health.healthy]
 
     @property
     def is_running(self) -> bool:

@@ -5,17 +5,18 @@
 """
 
 import asyncio
+import hashlib
 import logging
 import os
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
-import hashlib
-import json
+from typing import Any, Callable, Dict, List, Optional
 
+from watchdog.events import FileCreatedEvent, FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, FileModifiedEvent, FileCreatedEvent
 
 from backend.config import get_config
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class ConfigChangeType(str, Enum):
     """配置变更类型"""
+
     MODIFIED = "modified"
     CREATED = "created"
     DELETED = "deleted"
@@ -33,6 +35,7 @@ class ConfigChangeType(str, Enum):
 @dataclass
 class ConfigChangeEvent:
     """配置变更事件"""
+
     change_type: ConfigChangeType
     file_path: str
     timestamp: datetime
@@ -60,7 +63,6 @@ class ConfigChangeHandler(ABC):
         Args:
             event: 配置变更事件
         """
-        pass
 
     @abstractmethod
     def can_handle(self, file_path: str) -> bool:
@@ -73,7 +75,6 @@ class ConfigChangeHandler(ABC):
         Returns:
             是否可以处理
         """
-        pass
 
 
 class ConfigWatcher:
@@ -87,7 +88,7 @@ class ConfigWatcher:
         self,
         watch_directories: Optional[List[str]] = None,
         watch_files: Optional[List[str]] = None,
-        enabled: bool = True
+        enabled: bool = True,
     ):
         """
         初始化配置监视器
@@ -138,7 +139,7 @@ class ConfigWatcher:
             文件内容的哈希值
         """
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 return hashlib.md5(f.read()).hexdigest()
         except Exception as e:
             logger.error(f"Failed to calculate hash for {file_path}: {e}")
@@ -175,7 +176,7 @@ class ConfigWatcher:
                 file_path=file_path,
                 timestamp=datetime.now(),
                 old_hash=old_hash,
-                new_hash=new_hash
+                new_hash=new_hash,
             )
 
             logger.info(f"Config file {change_type.value}: {file_path}")
@@ -187,7 +188,9 @@ class ConfigWatcher:
                         await handler.handle_config_change(event)
                         logger.debug(f"Handler {handler.__class__.__name__} processed {file_path}")
                 except Exception as e:
-                    logger.error(f"Handler {handler.__class__.__name__} failed to process {file_path}: {e}")
+                    logger.error(
+                        f"Handler {handler.__class__.__name__} failed to process {file_path}: {e}"
+                    )
 
     def _on_file_changed(self, event) -> None:
         """
@@ -236,9 +239,7 @@ class ConfigWatcher:
                 for watch_dir in self.watch_directories:
                     if os.path.exists(watch_dir):
                         self._observer.schedule(
-                            EventHandler(self._on_file_changed),
-                            path=watch_dir,
-                            recursive=False
+                            EventHandler(self._on_file_changed), path=watch_dir, recursive=False
                         )
                         logger.info(f"Watching directory: {watch_dir}")
 
@@ -316,12 +317,7 @@ class ConfigReloadHandler(ConfigChangeHandler):
         Args:
             config_files: 要处理的配置文件列表
         """
-        self.config_files = config_files or [
-            ".env",
-            ".env.local",
-            "config.py",
-            "config.json"
-        ]
+        self.config_files = config_files or [".env", ".env.local", "config.py", "config.json"]
         self._reload_callbacks: List[Callable] = []
 
     def can_handle(self, file_path: str) -> bool:
@@ -349,6 +345,7 @@ class ConfigReloadHandler(ConfigChangeHandler):
         try:
             # 重新加载配置
             from backend.config import reload_config
+
             await reload_config()
 
             # 调用所有注册的回调函数
@@ -415,7 +412,7 @@ def get_config_watcher() -> ConfigWatcher:
         _global_config_watcher = ConfigWatcher(
             watch_directories=watch_directories,
             watch_files=config_files,
-            enabled=getattr(config, 'CONFIG_HOT_RELOAD', True)
+            enabled=getattr(config, "CONFIG_HOT_RELOAD", True),
         )
 
     return _global_config_watcher
@@ -427,8 +424,3 @@ def reset_config_watcher() -> None:
     if _global_config_watcher:
         asyncio.create_task(_global_config_watcher.stop())
     _global_config_watcher = None
-
-
-# 导入dataclass
-from dataclasses import dataclass
-from abc import ABC, abstractmethod

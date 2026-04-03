@@ -9,26 +9,20 @@
 
 import logging
 import os
-import sys
 
-# 添加当前目录到 Python 路径以支持相对导入
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from api.v1 import api_router
-from api.v2 import api_router_v2
-from cache import setup_cache
-from config import Config
-from core import (
-    add_security_headers,
-    get_allowed_origins,
-    log_requests,
-)
-from core.lifespan import lifespan
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from middleware import RateLimitMiddleware
-from middleware.security_headers import SecurityHeadersMiddleware
+
+from backend.api.v1 import api_router
+from backend.api.v2 import api_router_v2
+from backend.core import (
+    get_allowed_origins,
+    log_requests,
+)
+from backend.core.lifespan import lifespan
+from backend.middleware import RateLimitMiddleware
+from backend.middleware.security_headers import SecurityHeadersMiddleware
 
 # 配置日志
 logging.basicConfig(
@@ -41,7 +35,7 @@ def create_app() -> FastAPI:
     """创建并配置FastAPI应用"""
     app = FastAPI(
         title="智能知识系统 API",
-        description="基于 RAG 的气功、中医、儒家知识问答系统",
+        description="基于 RAG 的儒释道医武哲科气心理九大领域知识问答系统",
         version="1.0.0",
         lifespan=lifespan,
     )

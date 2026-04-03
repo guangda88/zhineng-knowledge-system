@@ -10,15 +10,17 @@
     <div class="container">
         <header>
             <h1>📚 智能知识系统</h1>
-            <p class="subtitle">气功 · 中医 · 儒家</p>
+            <p class="subtitle">气功 · 中医 · 儒家 · 国学经典 · 书目检索</p>
         </header>
 
         <nav class="tabs">
-            <button class="tab active" data-tab="search">搜索</button>
-            <button class="tab" data-tab="documents">文档</button>
+            <button class="tab active" data-tab="search">🔍 搜索</button>
+            <button class="tab" data-tab="documents">📄 文档</button>
             <button class="tab" data-tab="books">📚 书籍</button>
-            <button class="tab" data-tab="ask">问答</button>
-            <button class="tab" data-tab="reasoning">推理</button>
+            <button class="tab" data-tab="guoxue">📜 国学经典</button>
+            <button class="tab" data-tab="sysbooks">📖 书目检索</button>
+            <button class="tab" data-tab="ask">💬 问答</button>
+            <button class="tab" data-tab="reasoning">🧠 推理</button>
         </nav>
 
         <main>
@@ -76,13 +78,50 @@
                         <option value="清">清</option>
                     </select>
                 </div>
-
                 <div class="search-toggle">
                     <button class="toggle-btn active" data-type="metadata">📖 书籍搜索</button>
                     <button class="toggle-btn" data-type="content">📄 全文搜索</button>
                 </div>
-
                 <div id="book-search-results"></div>
+            </section>
+
+            <!-- 国学经典页面 -->
+            <section id="guoxue-section" class="tab-content">
+                <div class="guoxue-header">
+                    <div class="guoxue-stats" id="guoxue-stats"></div>
+                    <div class="search-box">
+                        <input type="text" id="guoxue-search-input" placeholder="搜索国学经典内容（如：论语、道德经、史记）..." />
+                        <button id="guoxue-search-btn">🔍 搜索</button>
+                    </div>
+                </div>
+                <div class="guoxue-content-area">
+                    <div class="guoxue-sidebar">
+                        <h3>典籍列表</h3>
+                        <input type="text" id="guoxue-book-filter" placeholder="筛选典籍..." class="filter-input" />
+                        <div id="guoxue-book-list" class="book-list"></div>
+                    </div>
+                    <div class="guoxue-main">
+                        <div id="guoxue-results"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 书目检索页面 -->
+            <section id="sysbooks-section" class="tab-content">
+                <div class="sysbooks-header">
+                    <div class="sysbooks-stats" id="sysbooks-stats"></div>
+                    <div class="search-box">
+                        <input type="text" id="sysbooks-search-input" placeholder="搜索书名、路径..." />
+                        <button id="sysbooks-search-btn">🔍 搜索</button>
+                        <select id="sysbooks-domain-filter">
+                            <option value="">全部领域</option>
+                        </select>
+                        <select id="sysbooks-extension-filter">
+                            <option value="">全部格式</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="sysbooks-results"></div>
             </section>
 
             <!-- 问答页面 -->
@@ -139,8 +178,6 @@
                         <div id="reasoning-sources" class="reasoning-sources"></div>
                     </div>
                 </div>
-
-                <!-- 知识图谱可视化 -->
                 <div class="graph-container">
                     <div class="graph-header">
                         <h3>知识图谱</h3>
@@ -155,8 +192,13 @@
         </main>
 
         <footer>
-            <p>智能知识系统 v1.0.0 | <a href="/docs">API 文档</a></p>
+            <p>智能知识系统 v1.3.0 | <a href="/docs">API 文档</a> | 数据：263K 国学内容 · 3M 书目 · 109 部典籍</p>
         </footer>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content" id="modal-content"></div>
     </div>
 
     <script src="app.js"></script>

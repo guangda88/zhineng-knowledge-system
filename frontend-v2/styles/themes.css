@@ -1,0 +1,129 @@
+/* 灵知系统 - 主题样式 */
+
+/* ========== 亮色主题 ========== */
+:root {
+    /* 分类标签颜色 */
+    --tag-气功: #4CAF50;
+    --tag-中医: #FF9800;
+    --tag-儒家: #2196F3;
+    --tag-国学: #9C27B0;
+    --tag-其他: #999;
+
+    /* 状态颜色 */
+    --status-online: #52c41a;
+    --status-busy: #faad14;
+    --status-offline: #d9d9d9;
+}
+
+/* ========== 分类标签样式 ========== */
+.tag-气功 { background: var(--tag-气功); color: white; }
+.tag-中医 { background: var(--tag-中医); color: white; }
+.tag-儒家 { background: var(--tag-儒家); color: white; }
+.tag-国学 { background: var(--tag-国学); color: white; }
+
+/* ========== 状态标签 ========== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.status-badge.success {
+    background: rgba(82, 196, 26, 0.1);
+    color: var(--success);
+}
+
+.status-badge.warning {
+    background: rgba(250, 173, 20, 0.1);
+    color: var(--warning);
+}
+
+.status-badge.error {
+    background: rgba(245, 34, 45, 0.1);
+    color: var(--danger);
+}
+
+/* ========== 统计徽章 ========== */
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    font-size: 13px;
+}
+
+.stat-badge.error {
+    background: rgba(245, 34, 45, 0.1);
+    color: var(--danger);
+}
+
+/* ========== 滚动条样式 ========== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+/* ========== 暗色主题 ========== */
+[data-theme="dark"] {
+    --tag-气功: #66BB6A;
+    --tag-中医: #FFB74D;
+    --tag-儒家: #64B5F6;
+    --tag-国学: #BA68C8;
+}
+
+/* ========== 强调色变体 ========== */
+.accent-blue {
+    color: var(--info);
+}
+
+.accent-green {
+    color: var(--success);
+}
+
+.accent-orange {
+    color: var(--warning);
+}
+
+.accent-red {
+    color: var(--danger);
+}
+
+/* ========== 背景变体 ========== */
+.bg-muted {
+    background: var(--bg-tertiary);
+}
+
+.bg-overlay {
+    background: var(--bg-overlay);
+}
+
+/* ========== 文本变体 ========== */
+.text-muted {
+    color: var(--text-secondary);
+}
+
+.text-small {
+    font-size: 12px;
+}
+
+.text-large {
+    font-size: 18px;
+}

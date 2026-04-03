@@ -3,13 +3,14 @@
 提供基于 JWT 的 API 认证功能。
 """
 
-import os
-import jwt
 import logging
+import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict
+from typing import Dict
+
+import jwt
 from fastapi import HTTPException, Security, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +51,7 @@ class JWTManager:
             )
 
     def create_token(
-        self,
-        user_id: str,
-        username: str,
-        permissions: list = None,
-        additional_claims: dict = None
+        self, user_id: str, username: str, permissions: list = None, additional_claims: dict = None
     ) -> str:
         """创建 JWT 令牌
 
@@ -82,11 +79,7 @@ class JWTManager:
             payload.update(additional_claims)
 
         try:
-            token = jwt.encode(
-                payload,
-                self._private_key,
-                algorithm=JWT_ALGORITHM
-            )
+            token = jwt.encode(payload, self._private_key, algorithm=JWT_ALGORITHM)
             logger.info(f"Token created for user: {username}")
             return token
         except Exception as e:
@@ -106,11 +99,7 @@ class JWTManager:
             HTTPException: 令牌无效或过期
         """
         try:
-            payload = jwt.decode(
-                token,
-                self._public_key,
-                algorithms=[JWT_ALGORITHM]
-            )
+            payload = jwt.decode(token, self._public_key, algorithms=[JWT_ALGORITHM])
             logger.info(f"Token verified for user: {payload.get('username')}")
             return payload
         except jwt.ExpiredSignatureError:
@@ -140,17 +129,14 @@ class JWTManager:
         try:
             # 验证旧令牌（忽略过期）
             payload = jwt.decode(
-                token,
-                self._public_key,
-                algorithms=[JWT_ALGORITHM],
-                options={"verify_exp": False}
+                token, self._public_key, algorithms=[JWT_ALGORITHM], options={"verify_exp": False}
             )
 
             # 创建新令牌
             new_token = self.create_token(
                 user_id=payload["user_id"],
                 username=payload["username"],
-                permissions=payload.get("permissions", [])
+                permissions=payload.get("permissions", []),
             )
 
             logger.info(f"Token refreshed for user: {payload.get('username')}")
@@ -159,8 +145,7 @@ class JWTManager:
         except Exception as e:
             logger.error(f"Failed to refresh token: {e}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Failed to refresh token"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Failed to refresh token"
             )
 
 
@@ -168,9 +153,7 @@ class JWTManager:
 jwt_manager = JWTManager()
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Security(security)
-) -> Dict:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> Dict:
     """获取当前用户（依赖注入）
 
     Args:
@@ -202,34 +185,37 @@ async def get_current_user(
 # 装饰器：要求认证
 def require_auth(func):
     """要求认证的装饰器"""
+
     async def wrapper(*args, current_user: Dict = None, **kwargs):
         if current_user is None:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
             )
         return await func(*args, current_user=current_user, **kwargs)
+
     return wrapper
 
 
 # 装饰器：要求特定权限
 def require_permission(permission: str):
     """要求特定权限的装饰器"""
+
     def decorator(func):
         async def wrapper(*args, current_user: Dict = None, **kwargs):
             if current_user is None:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
                 )
 
             user_permissions = current_user.get("permissions", [])
             if permission not in user_permissions:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Permission required: {permission}"
+                    detail=f"Permission required: {permission}",
                 )
 
             return await func(*args, current_user=current_user, **kwargs)
+
         return wrapper
+
     return decorator

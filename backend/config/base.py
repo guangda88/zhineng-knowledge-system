@@ -3,10 +3,11 @@
 提供基础配置类和通用配置项。
 """
 
+import logging
+from typing import Optional
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,82 +20,58 @@ class BaseConfig(BaseSettings):
 
     # 环境配置
     ENVIRONMENT: str = Field(
-        default="development",
-        description="运行环境：development, testing, production"
+        default="development", description="运行环境：development, testing, production"
     )
-    DEBUG: bool = Field(
-        default=False,
-        description="调试模式"
-    )
+    DEBUG: bool = Field(default=False, description="调试模式")
 
     # API配置
-    API_HOST: str = Field(
-        default="0.0.0.0",
-        description="API服务监听地址"
-    )
-    API_PORT: int = Field(
-        default=8000,
-        description="API服务端口"
-    )
+    API_HOST: str = Field(default="0.0.0.0", description="API服务监听地址")
+    API_PORT: int = Field(default=8000, description="API服务端口")
 
     # 日志配置
     LOG_LEVEL: str = Field(
-        default="INFO",
-        description="日志级别：DEBUG, INFO, WARNING, ERROR, CRITICAL"
+        default="INFO", description="日志级别：DEBUG, INFO, WARNING, ERROR, CRITICAL"
     )
     LOG_FORMAT: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        description="日志格式"
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", description="日志格式"
     )
 
     # 应用信息
-    APP_NAME: str = Field(
-        default="智能知识系统",
-        description="应用名称"
-    )
-    APP_VERSION: str = Field(
-        default="1.0.0",
-        description="应用版本"
-    )
+    APP_NAME: str = Field(default="智能知识系统", description="应用名称")
+    APP_VERSION: str = Field(default="1.0.0", description="应用版本")
 
     # 检索配置
-    MAX_RESULTS: int = Field(
-        default=10,
-        ge=1,
-        le=100,
-        description="最大搜索结果数"
-    )
-    SIMILARITY_THRESHOLD: float = Field(
-        default=0.7,
-        ge=0.0,
-        le=1.0,
-        description="相似度阈值"
-    )
+    MAX_RESULTS: int = Field(default=10, ge=1, le=100, description="最大搜索结果数")
+    SIMILARITY_THRESHOLD: float = Field(default=0.7, ge=0.0, le=1.0, description="相似度阈值")
 
     # BGE嵌入配置
-    BGE_API_URL: Optional[str] = Field(
-        default=None,
-        description="BGE嵌入API地址"
-    )
+    BGE_API_URL: Optional[str] = Field(default=None, description="BGE嵌入API地址")
     EMBEDDING_DIM: int = Field(
-        default=512,
-        description="嵌入向量维度（bge-small-zh-v1.5=512, bge-large-zh-v1.5=1024）"
+        default=512, description="嵌入向量维度（bge-small-zh-v1.5=512, bge-large-zh-v1.5=1024）"
     )
 
     # DeepSeek配置
-    DEEPSEEK_API_URL: Optional[str] = Field(
-        default=None,
-        description="DeepSeek API地址"
+    DEEPSEEK_API_URL: Optional[str] = Field(default=None, description="DeepSeek API地址")
+    DEEPSEEK_MODEL: str = Field(default="deepseek-chat", description="DeepSeek模型名称")
+
+    # 阿里云/通义听悟配置
+    ALIYUN_ACCESS_KEY_ID: Optional[str] = Field(
+        default=None, description="阿里云AccessKey ID (RAM用户)"
     )
-    DEEPSEEK_MODEL: str = Field(
-        default="deepseek-chat",
-        description="DeepSeek模型名称"
+    ALIYUN_ACCESS_KEY_SECRET: Optional[str] = Field(
+        default=None, description="阿里云AccessKey Secret"
+    )
+    TINGWU_ENABLED: bool = Field(default=False, description="是否启用听悟转写")
+    AUDIO_STORAGE_PATH: str = Field(default="/data/audio", description="音频文件存储路径")
+    AUDIO_MAX_SIZE_MB: int = Field(default=500, description="音频文件最大大小(MB)")
+    AUDIO_ALLOWED_FORMATS: list = Field(
+        default=["mp3", "wav", "m4a", "flac", "ogg", "wma", "aac"], description="允许的音频格式"
     )
 
     # 分类配置
     VALID_CATEGORIES: list = Field(
-        default=["气功", "中医", "儒家"],
-        description="有效的分类列表"
+        default=["气功", "中医", "儒家", "佛家", "道家", "武术", "哲学", "科学", "心理学"],
+        description="有效的分类列表",
     )
 
     model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}

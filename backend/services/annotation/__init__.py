@@ -7,9 +7,9 @@
 - 模型精调
 """
 
+from .annotation_manager import AnnotationManager
 from .ocr_annotator import OCRAnnotator
 from .transcription_annotator import TranscriptionAnnotator
-from .annotation_manager import AnnotationManager
 
 __all__ = [
     "OCRAnnotator",

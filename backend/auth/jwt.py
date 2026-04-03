@@ -17,13 +17,14 @@ import base64
 import json
 import logging
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 import jwt
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -31,7 +32,6 @@ from cryptography.hazmat.primitives.serialization import (
     PrivateFormat,
     PublicFormat,
 )
-from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -195,8 +195,7 @@ class AuthConfig:
                 )
 
             logger.warning(
-                "未提供RSA密钥对，生成临时密钥对（仅限开发环境）。"
-                "重启后所有令牌将失效。"
+                "未提供RSA密钥对，生成临时密钥对（仅限开发环境）。" "重启后所有令牌将失效。"
             )
             private_key, public_key = self._generate_rsa_key_pair()
             self.private_key_pem = private_key
@@ -247,9 +246,7 @@ class AuthConfig:
             private_key_pem=os.getenv("JWT_PRIVATE_KEY"),
             public_key_pem=os.getenv("JWT_PUBLIC_KEY"),
             issuer=os.getenv("JWT_ISSUER", "zhineng-kb"),
-            access_token_expire_minutes=int(
-                os.getenv("JWT_ACCESS_EXPIRE_MINUTES", "30")
-            ),
+            access_token_expire_minutes=int(os.getenv("JWT_ACCESS_EXPIRE_MINUTES", "30")),
             refresh_token_expire_days=int(os.getenv("JWT_REFRESH_EXPIRE_DAYS", "7")),
         )
 
@@ -327,9 +324,7 @@ class TokenBlacklist:
         if now - self._last_cleanup < self._cleanup_interval:
             return
 
-        expired_jtis = [
-            jti for jti, exp in self._blacklisted.items() if now > exp
-        ]
+        expired_jtis = [jti for jti, exp in self._blacklisted.items() if now > exp]
         for jti in expired_jtis:
             del self._blacklisted[jti]
 
@@ -556,10 +551,7 @@ class JWTAuth:
         access_token = self._encode(access_payload)
         refresh_token = self._encode(refresh_payload)
 
-        logger.info(
-            f"为用户 {username}({user_id}) 创建令牌对, "
-            f"JTI: {access_payload.jti}"
-        )
+        logger.info(f"为用户 {username}({user_id}) 创建令牌对, " f"JTI: {access_payload.jti}")
 
         return TokenPair(
             access_token=access_token,
@@ -585,9 +577,7 @@ class JWTAuth:
         Returns:
             访问令牌字符串
         """
-        payload = self._create_payload(
-            user_id, username, role, TokenType.ACCESS, permissions
-        )
+        payload = self._create_payload(user_id, username, role, TokenType.ACCESS, permissions)
         return self._encode(payload)
 
     def create_refresh_token(
@@ -608,9 +598,7 @@ class JWTAuth:
         Returns:
             刷新令牌字符串
         """
-        payload = self._create_payload(
-            user_id, username, role, TokenType.REFRESH, permissions
-        )
+        payload = self._create_payload(user_id, username, role, TokenType.REFRESH, permissions)
         return self._encode(payload)
 
     async def verify_access_token(
@@ -675,9 +663,7 @@ class JWTAuth:
 
         return payload
 
-    async def refresh_access_token(
-        self, refresh_token: str
-    ) -> Optional[TokenPair]:
+    async def refresh_access_token(self, refresh_token: str) -> Optional[TokenPair]:
         """使用刷新令牌获取新的访问令牌对
 
         Args:

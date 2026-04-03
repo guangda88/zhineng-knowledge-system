@@ -3,12 +3,12 @@
 实现API请求速率限制
 """
 
-import time
 import asyncio
-from typing import Dict, Optional
-from dataclasses import dataclass
-from collections import defaultdict
 import logging
+import time
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -29,18 +29,14 @@ class RateLimit:
         return {
             "requests": self.requests,
             "window": self.window,
-            "rate": f"{self.requests}/{self.window}s"
+            "rate": f"{self.requests}/{self.window}s",
         }
 
 
 class RateLimiter:
     """速率限制器基类"""
 
-    def __init__(
-        self,
-        default_limit: Optional[RateLimit] = None,
-        whitelist: Optional[list] = None
-    ):
+    def __init__(self, default_limit: Optional[RateLimit] = None, whitelist: Optional[list] = None):
         """初始化速率限制器
 
         Args:
@@ -48,8 +44,7 @@ class RateLimiter:
             whitelist: 白名单IP列表
         """
         self.default_limit = default_limit or RateLimit(
-            requests=DEFAULT_REQUEST_LIMIT,
-            window=DEFAULT_WINDOW_SECONDS
+            requests=DEFAULT_REQUEST_LIMIT, window=DEFAULT_WINDOW_SECONDS
         )
         self.whitelist = whitelist or []
         self._limits: Dict[str, RateLimit] = {}
@@ -100,11 +95,7 @@ class InMemoryRateLimiter(RateLimiter):
     使用滑动窗口算法实现
     """
 
-    def __init__(
-        self,
-        default_limit: Optional[RateLimit] = None,
-        whitelist: Optional[list] = None
-    ):
+    def __init__(self, default_limit: Optional[RateLimit] = None, whitelist: Optional[list] = None):
         super().__init__(default_limit, whitelist)
         # {key: [(timestamp, count), ...]}
         self._requests: Dict[str, list] = defaultdict(list)
@@ -121,11 +112,7 @@ class InMemoryRateLimiter(RateLimiter):
         """
         # 白名单检查
         if self.is_whitelisted(key):
-            return True, {
-                "allowed": True,
-                "whitelisted": True,
-                "limit": None
-            }
+            return True, {"allowed": True, "whitelisted": True, "limit": None}
 
         limit = self._limits.get(key, self.default_limit)
         current_time = time.time()
@@ -136,10 +123,7 @@ class InMemoryRateLimiter(RateLimiter):
 
             # 移除时间窗口外的记录
             window_start = current_time - limit.window
-            self._requests[key] = [
-                (ts, count) for ts, count in requests
-                if ts > window_start
-            ]
+            self._requests[key] = [(ts, count) for ts, count in requests if ts > window_start]
 
             # 计算当前窗口内的请求数
             total_requests = sum(count for _, count in self._requests[key])
@@ -154,7 +138,7 @@ class InMemoryRateLimiter(RateLimiter):
                     "limit": limit.to_dict(),
                     "current": total_requests,
                     "reset_at": reset_time,
-                    "retry_after": int(reset_time - current_time)
+                    "retry_after": int(reset_time - current_time),
                 }
 
             # 记录本次请求
@@ -164,7 +148,7 @@ class InMemoryRateLimiter(RateLimiter):
                 "allowed": True,
                 "limit": limit.to_dict(),
                 "current": total_requests + 1,
-                "remaining": limit.requests - total_requests - 1
+                "remaining": limit.requests - total_requests - 1,
             }
 
     async def reset(self, key: str) -> None:
@@ -182,7 +166,7 @@ class InMemoryRateLimiter(RateLimiter):
         return {
             "total_keys": len(self._requests),
             "whitelisted_keys": len(self.whitelist),
-            "custom_limits": len(self._limits)
+            "custom_limits": len(self._limits),
         }
 
 
@@ -196,7 +180,7 @@ class TokenBucketRateLimiter(RateLimiter):
         self,
         default_limit: Optional[RateLimit] = None,
         whitelist: Optional[list] = None,
-        burst_multiplier: float = DEFAULT_BURST_MULTIPLIER
+        burst_multiplier: float = DEFAULT_BURST_MULTIPLIER,
     ):
         super().__init__(default_limit, whitelist)
         self.burst_multiplier = burst_multiplier
@@ -233,10 +217,7 @@ class TokenBucketRateLimiter(RateLimiter):
             # 计算补充的令牌
             refill_rate = self._refill_rate(limit)
             elapsed = current_time - last_update
-            tokens = min(
-                tokens + elapsed * refill_rate,
-                limit.requests * self.burst_multiplier
-            )
+            tokens = min(tokens + elapsed * refill_rate, limit.requests * self.burst_multiplier)
 
             if tokens < 1:
                 # 令牌不足
@@ -245,18 +226,14 @@ class TokenBucketRateLimiter(RateLimiter):
                     "allowed": False,
                     "limit": limit.to_dict(),
                     "current": int(tokens),
-                    "refill_in": refill_time
+                    "refill_in": refill_time,
                 }
 
             # 消耗一个令牌
             tokens -= 1
             self._buckets[key] = (tokens, current_time)
 
-            return True, {
-                "allowed": True,
-                "limit": limit.to_dict(),
-                "current": int(tokens)
-            }
+            return True, {"allowed": True, "limit": limit.to_dict(), "current": int(tokens)}
 
     async def reset(self, key: str) -> None:
         """重置令牌桶"""

@@ -3,12 +3,12 @@
 实现服务熔断，防止级联故障
 """
 
-import time
 import asyncio
-from typing import Optional, Callable
+import logging
+import time
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +47,9 @@ class CircuitBreakerStats:
             "total_calls": self.total_calls,
             "successful_calls": self.successful_calls,
             "failed_calls": self.failed_calls,
-            "failure_rate": (
-                self.failed_calls / self.total_calls
-                if self.total_calls > 0 else 0
-            ),
+            "failure_rate": (self.failed_calls / self.total_calls if self.total_calls > 0 else 0),
             "last_failure_time": self.last_failure_time,
-            "last_success_time": self.last_success_time
+            "last_success_time": self.last_success_time,
         }
 
 
@@ -62,11 +59,7 @@ class CircuitBreaker:
     防止服务故障级联传播
     """
 
-    def __init__(
-        self,
-        name: str,
-        config: Optional[CircuitBreakerConfig] = None
-    ):
+    def __init__(self, name: str, config: Optional[CircuitBreakerConfig] = None):
         """初始化熔断器
 
         Args:
@@ -113,12 +106,15 @@ class CircuitBreaker:
                 logger.info(f"熔断器 {self.name} 进入半开状态")
             else:
                 raise CircuitBreakerOpenError(
-                    f"熔断器 {self.name} 处于开启状态",
-                    open_until=self.open_until
+                    f"熔断器 {self.name} 处于开启状态", open_until=self.open_until
                 )
 
         try:
-            result = await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
+            result = (
+                await func(*args, **kwargs)
+                if asyncio.iscoroutinefunction(func)
+                else func(*args, **kwargs)
+            )
             self._on_success()
             return result
         except Exception as e:
@@ -155,10 +151,7 @@ class CircuitBreaker:
             recent_failures = self._count_recent_failures()
             if recent_failures >= self.config.failure_threshold:
                 self._transition_to(CircuitState.OPEN)
-                logger.warning(
-                    f"熔断器 {self.name} 打开，"
-                    f"最近失败次数: {recent_failures}"
-                )
+                logger.warning(f"熔断器 {self.name} 打开，" f"最近失败次数: {recent_failures}")
 
     def _count_recent_failures(self) -> int:
         """计算最近的失败次数"""
@@ -175,11 +168,9 @@ class CircuitBreaker:
         self._state = new_state
         self._last_state_change = time.time()
 
-        self._stats.state_transitions.append({
-            "from": old_state.value,
-            "to": new_state.value,
-            "at": time.time()
-        })
+        self._stats.state_transitions.append(
+            {"from": old_state.value, "to": new_state.value, "at": time.time()}
+        )
 
     def get_stats(self) -> dict:
         """获取熔断器统计"""
@@ -188,10 +179,10 @@ class CircuitBreaker:
             "state": self._state.value,
             "config": {
                 "failure_threshold": self.config.failure_threshold,
-                "timeout": self.config.timeout
+                "timeout": self.config.timeout,
             },
             "stats": self._stats.to_dict(),
-            "open_until": self.open_until
+            "open_until": self.open_until,
         }
 
     def reset(self) -> None:
@@ -215,7 +206,7 @@ class CircuitBreakerOpenError(Exception):
             "error": "circuit_breaker_open",
             "message": str(self),
             "open_until": self.open_until,
-            "retry_after": int(self.open_until - time.time()) if self.open_until else None
+            "retry_after": int(self.open_until - time.time()) if self.open_until else None,
         }
 
 
@@ -227,9 +218,7 @@ class CircuitBreakerRegistry:
         self._breakers: dict[str, CircuitBreaker] = {}
 
     def get_or_create(
-        self,
-        name: str,
-        config: Optional[CircuitBreakerConfig] = None
+        self, name: str, config: Optional[CircuitBreakerConfig] = None
     ) -> CircuitBreaker:
         """获取或创建熔断器
 

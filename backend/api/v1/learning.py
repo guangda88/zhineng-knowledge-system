@@ -2,23 +2,29 @@
 
 提供自学习、自主搜索、创新管理等功能
 """
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+
+from typing import List
+
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
-from core.database import get_async_session
-from services.learning.github_monitor import GitHubMonitorService
-from services.learning.innovation_manager import InnovationManager, InnovationProposal
-from services.learning.autonomous_search import AutonomousSearchService
+from backend.services.learning.autonomous_search import AutonomousSearchService
+from backend.services.learning.github_monitor import GitHubMonitorService
+from backend.services.learning.innovation_manager import InnovationManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/learning", tags=["学习与进化"])
 
 
 # ==================== 请求/响应模型 ====================
 
+
 class TechUpdateSuggestion(BaseModel):
     """技术更新建议"""
+
     id: str
     title: str
     description: str
@@ -33,6 +39,7 @@ class TechUpdateSuggestion(BaseModel):
 
 class SearchRequest(BaseModel):
     """自主搜索请求"""
+
     question: str
     max_rounds: int = 3
     confidence_threshold: float = 0.7
@@ -40,6 +47,7 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     """自主搜索响应"""
+
     question: str
     answer: str
     confidence: float
@@ -50,79 +58,75 @@ class SearchResponse(BaseModel):
 
 class ExperimentBranchRequest(BaseModel):
     """创建实验分支请求"""
+
     proposal_id: str
 
 
 class MVPTestRequest(BaseModel):
     """MVP测试请求"""
+
     proposal_id: str
     test_commands: List[str]
 
 
 class MergeToMainRequest(BaseModel):
     """合并到主分支请求"""
+
     proposal_id: str
 
 
 class RejectProposalRequest(BaseModel):
     """拒绝提案请求"""
+
     proposal_id: str
     reason: str
 
 
 # ==================== API端点 ====================
 
+
 @router.get("/updates/check")
-async def check_tech_updates(
-    days_back: int = 7
-) -> List[TechUpdateSuggestion]:
-    """
-    检查技术更新
+async def check_tech_updates(days_back: int = 7) -> List[TechUpdateSuggestion]:
+    """检查技术更新"""
+    try:
+        monitor = GitHubMonitorService()
+        suggestions = await monitor.check_and_suggest()
 
-    监控GitHub上的相关项目，发现新技术和新思想
-
-    - **days_back**: 查询最近多少天的更新（默认7天）
-
-    返回技术更新建议列表
-    """
-    monitor = GitHubMonitorService()
-    suggestions = await monitor.check_and_suggest()
-
-    return [
-        TechUpdateSuggestion(
-            id=s['id'],
-            title=s['title'],
-            description=s['description'],
-            url=s['url'],
-            type=s['type'],
-            tags=s['tags'],
-            relevance=s['relevance'],
-            potential_benefit=s['potential_benefit'],
-            implementation_difficulty=s['implementation_difficulty'],
-            suggested_approach=s['suggested_approach']
-        )
-        for s in suggestions
-    ]
+        return [
+            TechUpdateSuggestion(
+                id=s["id"],
+                title=s["title"],
+                description=s["description"],
+                url=s["url"],
+                type=s["type"],
+                tags=s["tags"],
+                relevance=s["relevance"],
+                potential_benefit=s["potential_benefit"],
+                implementation_difficulty=s["implementation_difficulty"],
+                suggested_approach=s["suggested_approach"],
+            )
+            for s in suggestions
+        ]
+    except Exception as e:
+        logger.error(f"检查技术更新失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"检查技术更新失败: {e}")
 
 
 @router.get("/updates/proposals")
 async def get_innovation_proposals() -> dict:
-    """
-    获取创新提案列表
+    """获取创新提案列表"""
+    try:
+        manager = InnovationManager()
+        summary = manager.get_proposal_summary()
 
-    返回所有创新提案及其状态
-    """
-    manager = InnovationManager()
-    summary = manager.get_proposal_summary()
-
-    return summary
+        return summary
+    except Exception as e:
+        logger.error(f"获取创新提案失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取创新提案失败: {e}")
 
 
 @router.post("/updates/{proposal_id}/branch")
-async def create_experiment_branch(
-    proposal_id: str,
-    request: ExperimentBranchRequest
-) -> dict:
+async def create_experiment_branch(proposal_id: str, request: ExperimentBranchRequest) -> dict:
     """
     创建实验分支
 
@@ -136,17 +140,15 @@ async def create_experiment_branch(
     manager = InnovationManager()
     result = await manager.create_experiment_branch(proposal_id)
 
-    if result['status'] == 'error':
-        raise HTTPException(status_code=400, detail=result['error'])
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["error"])
 
     return result
 
 
 @router.post("/updates/{proposal_id}/test")
 async def run_mvp_test(
-    proposal_id: str,
-    request: MVPTestRequest,
-    background_tasks: BackgroundTasks
+    proposal_id: str, request: MVPTestRequest, background_tasks: BackgroundTasks
 ) -> dict:
     """
     运行MVP测试
@@ -170,17 +172,14 @@ async def run_mvp_test(
     background_tasks.add_task(run_test)
 
     return {
-        'status': 'started',
-        'message': f'MVP测试已启动，提案ID: {proposal_id}',
-        'test_commands_count': len(request.test_commands)
+        "status": "started",
+        "message": f"MVP测试已启动，提案ID: {proposal_id}",
+        "test_commands_count": len(request.test_commands),
     }
 
 
 @router.post("/updates/{proposal_id}/merge")
-async def merge_to_main(
-    proposal_id: str,
-    request: MergeToMainRequest
-) -> dict:
+async def merge_to_main(proposal_id: str, request: MergeToMainRequest) -> dict:
     """
     合并到主分支
 
@@ -193,17 +192,14 @@ async def merge_to_main(
     manager = InnovationManager()
     result = await manager.merge_to_main(proposal_id)
 
-    if result['status'] == 'error':
-        raise HTTPException(status_code=400, detail=result['message'])
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
 
     return result
 
 
 @router.post("/updates/{proposal_id}/reject")
-async def reject_proposal(
-    proposal_id: str,
-    request: RejectProposalRequest
-) -> dict:
+async def reject_proposal(proposal_id: str, request: RejectProposalRequest) -> dict:
     """
     拒绝创新提案
 
@@ -217,76 +213,60 @@ async def reject_proposal(
     manager = InnovationManager()
     result = await manager.reject_proposal(proposal_id, request.reason)
 
-    if result['status'] == 'error':
-        raise HTTPException(status_code=400, detail=result['message'])
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
 
     return result
 
 
 @router.post("/search/autonomous", response_model=SearchResponse)
-async def autonomous_search(
-    request: SearchRequest
-) -> SearchResponse:
-    """
-    自主网络搜索
+async def autonomous_search(request: SearchRequest) -> SearchResponse:
+    """自主网络搜索"""
+    try:
+        search_service = AutonomousSearchService()
+        result = await search_service.search_until_satisfied(
+            question=request.question,
+            max_rounds=request.max_rounds,
+            confidence_threshold=request.confidence_threshold,
+        )
 
-    当系统无法回答问题时，自动上网搜索答案
-
-    - **question**: 用户问题
-    - **max_rounds**: 最大搜索轮次（默认3）
-    - **confidence_threshold**: 置信度阈值（默认0.7）
-
-    系统会：
-    1. 第一轮：使用搜索引擎（Google、Bing、DuckDuckGo）
-    2. 第二轮：搜索知识库（维基百科、arXiv）
-    3. 第三轮：基于前两轮结果构建深度查询
-
-    直到找到满意答案或达到最大轮次
-    """
-    search_service = AutonomousSearchService()
-    result = await search_service.search_until_satisfied(
-        question=request.question,
-        max_rounds=request.max_rounds,
-        confidence_threshold=request.confidence_threshold
-    )
-
-    return SearchResponse(
-        question=result['question'],
-        answer=result['answer'],
-        confidence=result['confidence'],
-        sources=result['sources'],
-        rounds=result['rounds'],
-        total_results=result['total_results']
-    )
+        return SearchResponse(
+            question=result["question"],
+            answer=result["answer"],
+            confidence=result["confidence"],
+            sources=result["sources"],
+            rounds=result["rounds"],
+            total_results=result["total_results"],
+        )
+    except Exception as e:
+        logger.error(f"自主搜索失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"自主搜索失败: {e}")
 
 
 @router.get("/learning/status")
 async def get_learning_status() -> dict:
-    """
-    获取系统学习状态
+    """获取系统学习状态"""
+    try:
+        manager = InnovationManager()
+        monitor = GitHubMonitorService()
 
-    返回系统的自学习、自进化状态摘要
-    """
-    manager = InnovationManager()
-    monitor = GitHubMonitorService()
+        recent_updates = await monitor.check_updates(days_back=1)
+        proposal_summary = manager.get_proposal_summary()
 
-    # 获取最近的更新
-    recent_updates = await monitor.check_updates(days_back=1)
-
-    # 获取提案摘要
-    proposal_summary = manager.get_proposal_summary()
-
-    return {
-        'last_update_check': '刚刚',
-        'recent_tech_updates': len(recent_updates),
-        'total_proposals': proposal_summary['total'],
-        'pending_proposals': len(manager.get_pending_proposals()),
-        'high_priority_proposals': len(proposal_summary['high_priority']),
-        'system_status': 'active',
-        'learning_capabilities': {
-            'github_monitoring': True,
-            'autonomous_search': True,
-            'experimental_testing': True,
-            'auto_merge': False  # 需要人工确认
+        return {
+            "last_update_check": "刚刚",
+            "recent_tech_updates": len(recent_updates),
+            "total_proposals": proposal_summary["total"],
+            "pending_proposals": len(manager.get_pending_proposals()),
+            "high_priority_proposals": len(proposal_summary["high_priority"]),
+            "system_status": "active",
+            "learning_capabilities": {
+                "github_monitoring": True,
+                "autonomous_search": True,
+                "experimental_testing": True,
+                "auto_merge": False,
+            },
         }
-    }
+    except Exception as e:
+        logger.error(f"获取学习状态失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取学习状态失败: {e}")

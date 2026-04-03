@@ -71,9 +71,7 @@ def async_singleton(
             if instance is not None and instance is not _INIT_FAILED_SENTINEL:
                 return instance
             if instance is _INIT_FAILED_SENTINEL:
-                raise RuntimeError(
-                    f"Singleton {var_name} previously failed to initialize"
-                )
+                raise RuntimeError(f"Singleton {var_name} previously failed to initialize")
 
             # 使用锁确保线程安全的初始化
             lock = _get_lock(lock_key)
@@ -94,9 +92,7 @@ def async_singleton(
                             raise
                         setattr(module, var_name, instance)
                     elif instance is _INIT_FAILED_SENTINEL:
-                        raise RuntimeError(
-                            f"Singleton {var_name} previously failed to initialize"
-                        )
+                        raise RuntimeError(f"Singleton {var_name} previously failed to initialize")
                     return instance
                 finally:
                     lock.release()
@@ -111,9 +107,7 @@ def async_singleton(
                                 f"Singleton {var_name} previously failed to initialize"
                             )
                         return instance
-                raise TimeoutError(
-                    f"Timeout waiting for singleton {var_name} initialization"
-                )
+                raise TimeoutError(f"Timeout waiting for singleton {var_name} initialization")
 
         return wrapper
 
@@ -122,5 +116,3 @@ def async_singleton(
 
 # 初始化失败标记
 _INIT_FAILED_SENTINEL = object()
-
-

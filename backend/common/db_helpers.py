@@ -6,7 +6,6 @@
 import asyncio
 import logging
 import re
-import threading
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Set
 
@@ -17,16 +16,49 @@ logger = logging.getLogger(__name__)
 
 # 允许在分页查询中使用的SQL关键字白名单
 _ALLOWED_QUERY_KEYWORDS: Set[str] = {
-    "SELECT", "FROM", "WHERE", "AND", "OR", "NOT", "IN", "LIKE",
-    "ILIKE", "IS", "NULL", "AS", "ON", "JOIN", "LEFT", "RIGHT",
-    "INNER", "OUTER", "CROSS", "GROUP", "BY", "HAVING", "ORDER",
-    "ASC", "DESC", "DISTINCT", "BETWEEN", "EXISTS", "CASE", "WHEN",
-    "THEN", "ELSE", "END", "WITH", "UNION", "ALL", "ANY",
-    "TRUE", "FALSE",
+    "SELECT",
+    "FROM",
+    "WHERE",
+    "AND",
+    "OR",
+    "NOT",
+    "IN",
+    "LIKE",
+    "ILIKE",
+    "IS",
+    "NULL",
+    "AS",
+    "ON",
+    "JOIN",
+    "LEFT",
+    "RIGHT",
+    "INNER",
+    "OUTER",
+    "CROSS",
+    "GROUP",
+    "BY",
+    "HAVING",
+    "ORDER",
+    "ASC",
+    "DESC",
+    "DISTINCT",
+    "BETWEEN",
+    "EXISTS",
+    "CASE",
+    "WHEN",
+    "THEN",
+    "ELSE",
+    "END",
+    "WITH",
+    "UNION",
+    "ALL",
+    "ANY",
+    "TRUE",
+    "FALSE",
 }
 
 # 允许在字段名中使用的字符模式
-_SAFE_FIELD_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+_SAFE_FIELD_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 async def require_pool(
@@ -105,9 +137,19 @@ def _validate_paginated_query(query: str) -> None:
     query_upper = query.upper().strip()
     if not query_upper.startswith("SELECT"):
         raise ValueError("分页查询必须以SELECT开头")
-    dangerous = {"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE",
-                 "TRUNCATE", "EXECUTE", "GRANT", "REVOKE"}
-    tokens = re.findall(r'[a-zA-Z_]+', query_upper)
+    dangerous = {
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "DROP",
+        "ALTER",
+        "CREATE",
+        "TRUNCATE",
+        "EXECUTE",
+        "GRANT",
+        "REVOKE",
+    }
+    tokens = re.findall(r"[a-zA-Z_]+", query_upper)
     for token in tokens:
         if token in dangerous:
             raise ValueError(f"分页查询不允许包含 {token} 操作")
@@ -179,7 +221,7 @@ async def search_documents(
         if not _SAFE_FIELD_PATTERN.match(field):
             raise ValueError(f"非法字段名: {field}")
 
-    search_term_escaped = search_term.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    search_term_escaped = search_term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     search_pattern = f"%{search_term_escaped}%"
 
     if category:
@@ -217,10 +259,8 @@ async def get_document_stats(
     """
     doc_count, category_stats = await asyncio.gather(
         pool.fetchval("SELECT COUNT(*) FROM documents"),
-        pool.fetch(
-            """SELECT category, COUNT(*) as count
-               FROM documents GROUP BY category"""
-        ),
+        pool.fetch("""SELECT category, COUNT(*) as count
+               FROM documents GROUP BY category"""),
     )
 
     return {
@@ -246,7 +286,7 @@ async def check_database_health(pool: asyncpg.Pool) -> Dict[str, Any]:
             "database": "ok",
             "timestamp": datetime.now().isoformat(),
         }
-    except Exception as e:
+    except Exception:
         logger.error("数据库健康检查失败", exc_info=True)
         return {
             "status": "degraded",

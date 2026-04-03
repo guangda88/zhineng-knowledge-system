@@ -7,12 +7,12 @@
 import logging
 import time
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
-from fastapi import Request, Response
+from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
@@ -21,30 +21,32 @@ logger = logging.getLogger(__name__)
 
 class MiddlewareOrder(str, Enum):
     """中间件执行顺序"""
-    FIRST = "first"          # 最先执行
-    EARLY = "early"          # 早期执行
-    NORMAL = "normal"        # 正常执行
-    LATE = "late"            # 晚期执行
-    LAST = "last"            # 最后执行
+
+    FIRST = "first"  # 最先执行
+    EARLY = "early"  # 早期执行
+    NORMAL = "normal"  # 正常执行
+    LATE = "late"  # 晚期执行
+    LAST = "last"  # 最后执行
 
 
 @dataclass
 class MiddlewareConfig:
     """中间件配置"""
+
     name: str
     enabled: bool = True
     order: MiddlewareOrder = MiddlewareOrder.NORMAL
-    priority: int = 0        # 同级中的优先级，数字越小越优先
+    priority: int = 0  # 同级中的优先级，数字越小越优先
     options: Dict[str, Any] = field(default_factory=dict)
 
-    def __lt__(self, other: 'MiddlewareConfig') -> bool:
+    def __lt__(self, other: "MiddlewareConfig") -> bool:
         """用于排序"""
         order_priority = {
             MiddlewareOrder.FIRST: 0,
             MiddlewareOrder.EARLY: 1,
             MiddlewareOrder.NORMAL: 2,
             MiddlewareOrder.LATE: 3,
-            MiddlewareOrder.LAST: 4
+            MiddlewareOrder.LAST: 4,
         }
         if order_priority[self.order] != order_priority[other.order]:
             return order_priority[self.order] < order_priority[other.order]
@@ -163,8 +165,8 @@ class ErrorHandlingMiddleware(ManagedMiddleware):
                     content={
                         "error": e.detail,
                         "status": "error",
-                        "timestamp": datetime.now().isoformat()
-                    }
+                        "timestamp": datetime.now().isoformat(),
+                    },
                 )
             else:
                 # 对于未知异常，返回通用错误响应
@@ -172,10 +174,12 @@ class ErrorHandlingMiddleware(ManagedMiddleware):
                     status_code=500,
                     content={
                         "error": "Internal server error",
-                        "detail": str(e) if self.options.get("debug", False) else "An error occurred",
+                        "detail": (
+                            str(e) if self.options.get("debug", False) else "An error occurred"
+                        ),
                         "status": "error",
-                        "timestamp": datetime.now().isoformat()
-                    }
+                        "timestamp": datetime.now().isoformat(),
+                    },
                 )
 
 
@@ -213,13 +217,13 @@ class RateLimitMiddleware(ManagedMiddleware):
                     "error": "Too many requests",
                     "detail": f"Rate limit exceeded. Max {self.max_requests} requests per {self.window_seconds} seconds.",
                     "status": "error",
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 },
                 headers={
                     "X-RateLimit-Limit": str(self.max_requests),
                     "X-RateLimit-Remaining": "0",
-                    "X-RateLimit-Reset": str(int(current_time + self.window_seconds))
-                }
+                    "X-RateLimit-Reset": str(int(current_time + self.window_seconds)),
+                },
             )
 
         # 记录本次请求
@@ -260,8 +264,7 @@ class RateLimitMiddleware(ManagedMiddleware):
         for ip in list(self.request_counts.keys()):
             # 保留在时间窗口内的请求
             self.request_counts[ip] = [
-                req_time for req_time in self.request_counts[ip]
-                if req_time > cutoff_time
+                req_time for req_time in self.request_counts[ip] if req_time > cutoff_time
             ]
 
             # 如果没有请求记录，删除该IP
@@ -304,7 +307,7 @@ class SecurityHeadersMiddleware(ManagedMiddleware):
             "X-XSS-Protection": "1; mode=block",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Content-Security-Policy": "default-src 'self'",
-            "Referrer-Policy": "strict-origin-when-cross-origin"
+            "Referrer-Policy": "strict-origin-when-cross-origin",
         }
 
         # 可以通过配置覆盖默认安全头
@@ -330,7 +333,9 @@ class CORSMiddleware(ManagedMiddleware):
 
         # 获取CORS配置
         allowed_origins = self.options.get("allowed_origins", ["*"])
-        allowed_methods = self.options.get("allowed_methods", ["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+        allowed_methods = self.options.get(
+            "allowed_methods", ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        )
         allowed_headers = self.options.get("allowed_headers", ["*"])
         allow_credentials = self.options.get("allow_credentials", True)
         max_age = self.options.get("max_age", 3600)
@@ -362,10 +367,7 @@ class MiddlewareManager:
         self._initialized = False
 
     def register_middleware(
-        self,
-        name: str,
-        factory: Callable,
-        config: Optional[MiddlewareConfig] = None
+        self, name: str, factory: Callable, config: Optional[MiddlewareConfig] = None
     ) -> None:
         """
         注册中间件
@@ -411,13 +413,10 @@ class MiddlewareManager:
 
     def get_sorted_configs(self) -> List[MiddlewareConfig]:
         """获取排序后的中间件配置"""
-        enabled_configs = [
-            config for config in self.middleware_configs.values()
-            if config.enabled
-        ]
+        enabled_configs = [config for config in self.middleware_configs.values() if config.enabled]
         return sorted(enabled_configs)
 
-    async def apply_to_app(self, app: 'FastAPI') -> None:
+    async def apply_to_app(self, app: "FastAPI") -> None:
         """
         将所有中间件应用到FastAPI应用
 
@@ -480,11 +479,8 @@ def create_default_middlewares() -> None:
         name="request_logging",
         factory=lambda app, config: RequestLoggingMiddleware(app, config),
         config=MiddlewareConfig(
-            name="request_logging",
-            enabled=True,
-            order=MiddlewareOrder.FIRST,
-            priority=1
-        )
+            name="request_logging", enabled=True, order=MiddlewareOrder.FIRST, priority=1
+        ),
     )
 
     # 错误处理中间件
@@ -496,8 +492,8 @@ def create_default_middlewares() -> None:
             enabled=True,
             order=MiddlewareOrder.EARLY,
             priority=1,
-            options={"debug": False}
-        )
+            options={"debug": False},
+        ),
     )
 
     # 限流中间件
@@ -509,11 +505,8 @@ def create_default_middlewares() -> None:
             enabled=True,
             order=MiddlewareOrder.NORMAL,
             priority=1,
-            options={
-                "max_requests": 100,
-                "window_seconds": 60
-            }
-        )
+            options={"max_requests": 100, "window_seconds": 60},
+        ),
     )
 
     # 安全头中间件
@@ -521,11 +514,8 @@ def create_default_middlewares() -> None:
         name="security_headers",
         factory=lambda app, config: SecurityHeadersMiddleware(app, config),
         config=MiddlewareConfig(
-            name="security_headers",
-            enabled=True,
-            order=MiddlewareOrder.LATE,
-            priority=1
-        )
+            name="security_headers", enabled=True, order=MiddlewareOrder.LATE, priority=1
+        ),
     )
 
     # CORS中间件
@@ -540,7 +530,7 @@ def create_default_middlewares() -> None:
             options={
                 "allowed_origins": ["*"],
                 "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_credentials": True
-            }
-        )
+                "allow_credentials": True,
+            },
+        ),
     )

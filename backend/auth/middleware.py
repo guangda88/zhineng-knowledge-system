@@ -13,15 +13,16 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
-from typing import Awaitable, Callable, List, Optional, Set, Tuple
+from typing import Awaitable, Callable, Optional, Set
 
-from fastapi import Request, Response, status, HTTPException
+from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from .jwt import JWTAuth, TokenPayload, TokenType, get_auth
+from .jwt import JWTAuth, get_auth
 from .rbac import RBACManager, User, get_rbac
 
 logger = logging.getLogger(__name__)
@@ -51,23 +52,29 @@ class AuthConfig:
     enable_cookie_auth: bool = True
     enable_header_auth: bool = True
     auto_refresh: bool = True
-    public_paths: Set[str] = frozenset({
-        "/",
-        "/health",
-        "/docs",
-        "/redoc",
-        "/openapi.json",
-        "/auth/login",
-        "/auth/register",
-        "/auth/refresh",
-    })
-    public_path_prefixes: Set[str] = frozenset({
-        "/static",
-        "/favicon",
-    })
-    protected_path_prefixes: Set[str] = frozenset({
-        "/api",
-    })
+    public_paths: Set[str] = frozenset(
+        {
+            "/",
+            "/health",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/auth/login",
+            "/auth/register",
+            "/auth/refresh",
+        }
+    )
+    public_path_prefixes: Set[str] = frozenset(
+        {
+            "/static",
+            "/favicon",
+        }
+    )
+    protected_path_prefixes: Set[str] = frozenset(
+        {
+            "/api",
+        }
+    )
     log_denied: bool = True
     require_auth_for_api: bool = True
 
@@ -112,7 +119,7 @@ def extract_token_from_header(request: Request, config: AuthConfig) -> Optional[
         logger.warning(f"无效的令牌格式: {authorization[:20]}...")
         return None
 
-    return authorization[len(config.token_prefix):]
+    return authorization[len(config.token_prefix) :]
 
 
 def extract_token_from_cookie(request: Request, config: AuthConfig) -> Optional[str]:
@@ -163,8 +170,7 @@ async def load_user_from_token(
     # 验证角色是否匹配
     if user.role != payload.role:
         logger.warning(
-            f"用户角色不匹配: {user.username}, "
-            f"令牌: {payload.role}, 实际: {user.role}"
+            f"用户角色不匹配: {user.username}, " f"令牌: {payload.role}, 实际: {user.role}"
         )
         return None
 
@@ -412,10 +418,22 @@ class RefreshTokenMiddleware(BaseHTTPMiddleware):
             status_code=status.HTTP_200_OK,
             media_type="application/json",
         )
-        response.set_cookie(key="access_token", value=token_pair.access_token,
-                            max_age=token_pair.expires_in, httponly=True, secure=True, samesite="lax")
-        response.set_cookie(key=self.refresh_cookie_name, value=token_pair.refresh_token,
-                            max_age=60 * 60 * 24 * 7, httponly=True, secure=True, samesite="lax")
+        response.set_cookie(
+            key="access_token",
+            value=token_pair.access_token,
+            max_age=token_pair.expires_in,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+        )
+        response.set_cookie(
+            key=self.refresh_cookie_name,
+            value=token_pair.refresh_token,
+            max_age=60 * 60 * 24 * 7,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+        )
         return response
 
     async def _extract_refresh_token(self, request: Request) -> Optional[str]:
@@ -424,8 +442,8 @@ class RefreshTokenMiddleware(BaseHTTPMiddleware):
             try:
                 body = await request.json()
                 token = body.get("refresh_token")
-            except (json.JSONDecodeError, TypeError, ValueError):
-                pass
+            except (json.JSONDecodeError, TypeError, ValueError) as e:
+                logger.debug(f"No refresh_token in request body: {e}")
         return token
 
     async def dispatch(
@@ -438,13 +456,19 @@ class RefreshTokenMiddleware(BaseHTTPMiddleware):
 
         refresh_token = await self._extract_refresh_token(request)
         if not refresh_token:
-            return Response(content='{"error": "missing_refresh_token"}',
-                            status_code=status.HTTP_400_BAD_REQUEST, media_type="application/json")
+            return Response(
+                content='{"error": "missing_refresh_token"}',
+                status_code=status.HTTP_400_BAD_REQUEST,
+                media_type="application/json",
+            )
 
         token_pair = await self.auth.refresh_access_token(refresh_token)
         if not token_pair:
-            return Response(content='{"error": "invalid_refresh_token"}',
-                            status_code=status.HTTP_401_UNAUTHORIZED, media_type="application/json")
+            return Response(
+                content='{"error": "invalid_refresh_token"}',
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                media_type="application/json",
+            )
 
         return self._build_token_response(token_pair)
 
@@ -512,6 +536,7 @@ class LogoutMiddleware(BaseHTTPMiddleware):
 
 # ========== 便捷函数 ==========
 
+
 def get_current_user(request: Request) -> Optional[User]:
     """获取当前请求的认证用户
 
@@ -570,6 +595,7 @@ def get_current_token(request: Request) -> Optional[str]:
 
 
 # ========== FastAPI依赖 ==========
+
 
 async def get_current_user_dependency(request: Request) -> Optional[User]:
     """FastAPI依赖：获取当前用户

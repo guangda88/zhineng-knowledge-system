@@ -7,8 +7,9 @@
 CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
 
 -- 全文搜索索引
--- 使用GIN索引加速全文搜索
-CREATE INDEX IF NOT EXISTS idx_documents_content_gin ON documents USING gin(to_tsvector('english', content));
+-- 使用GIN索引加速中文全文搜索
+DROP INDEX IF EXISTS idx_documents_content_gin;
+CREATE INDEX idx_documents_content_gin ON documents USING gin(to_tsvector('chinese', content));
 
 -- 向量索引
 -- 使用IVFFlat索引加速向量相似度搜索

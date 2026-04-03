@@ -22,7 +22,7 @@ on:
 # 环境变量
 env:
   PYTHON_VERSION: '3.12'
-  COVERAGE_TARGET: 60
+  COVERAGE_TARGET: 40  # ADR-0004: phased target (Apr: 40, May: 50, Jun: 60)
 
 # 并发控制
 concurrency:

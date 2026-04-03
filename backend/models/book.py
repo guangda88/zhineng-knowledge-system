@@ -2,18 +2,22 @@
 
 书籍和章节的数据模型定义
 """
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, JSON
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSONB
-from pgvector.sqlalchemy import Vector
+
 from datetime import datetime
 
-from core.database import Base
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
+
+from backend.core.database import Base
 
 
 class Book(Base):
     """书籍模型"""
+
     __tablename__ = "books"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -31,10 +35,10 @@ class Book(Base):
     category = Column(String(50))  # 气功/中医/儒家
     dynasty = Column(String(50))
     year = Column(String(50))
-    language = Column(String(10), default='zh')
+    language = Column(String(10), default="zh")
 
     # 数据源关联
-    source_id = Column(Integer, ForeignKey('data_sources.id'))
+    source_id = Column(Integer, ForeignKey("data_sources.id"))
     source_uid = Column(String(200))
     source_url = Column(String(500))
 
@@ -65,15 +69,17 @@ class Book(Base):
 
 class BookChapter(Base):
     """书籍章节模型"""
+
     __tablename__ = "book_chapters"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
-    book_id = Column(Integer, ForeignKey('books.id', ondelete='CASCADE'))
+    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"))
 
     chapter_num = Column(Integer, nullable=False)
     title = Column(String(500))
     level = Column(Integer, default=1)  # 1=章, 2=节, 3=小节
-    parent_id = Column(Integer, ForeignKey('book_chapters.id'))
+    parent_id = Column(Integer, ForeignKey("book_chapters.id"))
 
     content = Column(Text)
     char_count = Column(Integer, default=0)

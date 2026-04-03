@@ -10,15 +10,13 @@
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 # 导入上下文压缩模块
 try:
-    from backend.services.compression import (
-        AdvancedContextCompressor,
-        CompressionStrategy
-    )
+    from backend.services.compression import AdvancedContextCompressor, CompressionStrategy
+
     COMPRESSION_AVAILABLE = True
 except ImportError:
     COMPRESSION_AVAILABLE = False
@@ -30,24 +28,52 @@ logger = logging.getLogger(__name__)
 # 默认保留关键词
 DEFAULT_KEYWORDS = [
     # 通用重要词
-    "must", "should", "require", "ensure",
-    "critical", "important", "essential",
-    "verify", "validate", "confirm",
+    "must",
+    "should",
+    "require",
+    "ensure",
+    "critical",
+    "important",
+    "essential",
+    "verify",
+    "validate",
+    "confirm",
     # 智能气功领域关键词
-    "智能气功", "形神庄", "捧气贯顶", "三心并站庄",
-    "混元", "整体观", "意元体", "组场",
-    "庞明", "脏真", "中脉", "周天",
+    "智能气功",
+    "形神庄",
+    "捧气贯顶",
+    "三心并站庄",
+    "混元",
+    "整体观",
+    "意元体",
+    "组场",
+    "庞明",
+    "脏真",
+    "中脉",
+    "周天",
     # 20维分类关键词
-    "20维", "20维度", "分类", "类别", "维度",
+    "20维",
+    "20维度",
+    "分类",
+    "类别",
+    "维度",
     # 文档结构
-    "定义", "原理", "方法", "步骤", "注意事项",
-    "禁忌", "功效", "作用", "要点"
+    "定义",
+    "原理",
+    "方法",
+    "步骤",
+    "注意事项",
+    "禁忌",
+    "功效",
+    "作用",
+    "要点",
 ]
 
 
 @dataclass
 class CompressionConfig:
     """压缩配置"""
+
     target_ratio: float = 0.5
     preserve_keywords: bool = True
     custom_keywords: List[str] = field(default_factory=list)
@@ -59,6 +85,7 @@ class CompressionConfig:
 @dataclass
 class CompressionStats:
     """压缩统计"""
+
     total_compressions: int = 0
     total_original_tokens: int = 0
     total_compressed_tokens: int = 0
@@ -91,7 +118,7 @@ class ContextCompressionSkill:
             strategy_map = {
                 "density": CompressionStrategy.DENSITY,
                 "semantic": CompressionStrategy.SEMANTIC,
-                "list": CompressionStrategy.LIST
+                "list": CompressionStrategy.LIST,
             }
             strategies = []
             for s in self.config.strategies:
@@ -102,7 +129,7 @@ class ContextCompressionSkill:
                 target_ratio=self.config.target_ratio,
                 preserve_keywords=self.config.preserve_keywords,
                 custom_keywords=all_keywords,
-                strategies=strategies if strategies else None
+                strategies=strategies if strategies else None,
             )
             logger.info(f"[{self.name}] 上下文压缩已启用")
         else:
@@ -125,16 +152,12 @@ class ContextCompressionSkill:
 
         self._update_stats(original_tokens, compressed_tokens)
 
-        logger.debug(
-            f"[{self.name}] 上下文压缩: {original_tokens} -> {compressed_tokens} tokens"
-        )
+        logger.debug(f"[{self.name}] 上下文压缩: {original_tokens} -> {compressed_tokens} tokens")
 
         return compressed
 
     def compress_messages(
-        self,
-        messages: List[Dict[str, str]],
-        max_messages: int = 20
+        self, messages: List[Dict[str, str]], max_messages: int = 20
     ) -> List[Dict[str, str]]:
         """压缩对话历史"""
         if not messages:
@@ -154,16 +177,12 @@ class ContextCompressionSkill:
         result.extend(important)
         result.extend(regular[-max_messages:])
 
-        logger.debug(
-            f"[{self.name}] 消息压缩: {len(messages)} -> {len(result)} 条"
-        )
+        logger.debug(f"[{self.name}] 消息压缩: {len(messages)} -> {len(result)} 条")
 
         return result
 
     def compress_search_results(
-        self,
-        results: List[Dict[str, Any]],
-        max_results: int = 10
+        self, results: List[Dict[str, Any]], max_results: int = 10
     ) -> List[Dict[str, Any]]:
         """压缩检索结果"""
         if not results:
@@ -175,9 +194,7 @@ class ContextCompressionSkill:
             if "content" in result:
                 content = result["content"]
                 if len(content) > self.config.max_field_length:
-                    result["content"] = (
-                        content[:self.config.max_field_length] + "... [compressed]"
-                    )
+                    result["content"] = content[: self.config.max_field_length] + "... [compressed]"
                     result["content_compressed"] = True
 
         return compressed
@@ -188,11 +205,9 @@ class ContextCompressionSkill:
 
         for key, value in document.items():
             if isinstance(value, str) and len(value) > self.config.max_field_length:
-                compressed[key] = (
-                    value[:self.config.max_field_length] + "... [compressed]"
-                )
+                compressed[key] = value[: self.config.max_field_length] + "... [compressed]"
             elif isinstance(value, list) and len(value) > self.config.max_list_items:
-                compressed[key] = value[:self.config.max_list_items]
+                compressed[key] = value[: self.config.max_list_items]
 
         return compressed
 
@@ -223,7 +238,7 @@ class ContextCompressionSkill:
             "total_compressed_tokens": self.stats.total_compressed_tokens,
             "tokens_saved": self.stats.tokens_saved,
             "reduction_ratio": round(self.stats.reduction_ratio * 100, 2),
-            "lingflow_available": COMPRESSION_AVAILABLE
+            "lingflow_available": COMPRESSION_AVAILABLE,
         }
 
     def reset_stats(self) -> None:
@@ -255,14 +270,12 @@ class ContextCompressionSkill:
         for key, value in context.items():
             if isinstance(value, str):
                 if len(value) > self.config.max_field_length:
-                    compressed[key] = (
-                        value[:self.config.max_field_length] + "... [compressed]"
-                    )
+                    compressed[key] = value[: self.config.max_field_length] + "... [compressed]"
                 else:
                     compressed[key] = value
             elif isinstance(value, list):
                 if len(value) > self.config.max_list_items:
-                    compressed[key] = value[:self.config.max_list_items]
+                    compressed[key] = value[: self.config.max_list_items]
                 else:
                     compressed[key] = value
             else:
@@ -280,9 +293,8 @@ class ContextCompressionSkill:
         self.stats.total_original_tokens += original
         self.stats.total_compressed_tokens += compressed
         self.stats.tokens_saved += original - compressed
-        self.stats.reduction_ratio = (
-            1.0 - (self.stats.total_compressed_tokens /
-                   max(self.stats.total_original_tokens, 1))
+        self.stats.reduction_ratio = 1.0 - (
+            self.stats.total_compressed_tokens / max(self.stats.total_original_tokens, 1)
         )
 
 
@@ -307,24 +319,12 @@ SKILL_METADATA = {
             "default": 0.5,
             "min": 0.1,
             "max": 0.9,
-            "description": "目标压缩比例"
+            "description": "目标压缩比例",
         },
-        "max_field_length": {
-            "type": "int",
-            "default": 2000,
-            "description": "单个字段最大长度"
-        },
-        "max_list_items": {
-            "type": "int",
-            "default": 10,
-            "description": "列表最大保留数量"
-        },
-        "custom_keywords": {
-            "type": "list",
-            "default": [],
-            "description": "自定义关键词"
-        }
-    }
+        "max_field_length": {"type": "int", "default": 2000, "description": "单个字段最大长度"},
+        "max_list_items": {"type": "int", "default": 10, "description": "列表最大保留数量"},
+        "custom_keywords": {"type": "list", "default": [], "description": "自定义关键词"},
+    },
 }
 
 
@@ -332,10 +332,7 @@ if __name__ == "__main__":
     # 测试技能
     skill = create_skill()
 
-    test_context = {
-        "requirements": "测试内容" * 100,
-        "description": "智能气功形神庄练习要求" * 50
-    }
+    test_context = {"requirements": "测试内容" * 100, "description": "智能气功形神庄练习要求" * 50}
 
     compressed = skill.compress_context(test_context)
     print(f"原始: {skill._estimate_tokens(test_context)} tokens")

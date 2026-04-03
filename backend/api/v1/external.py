@@ -2,42 +2,57 @@
 
 提供标准化的REST API供外部程序访问灵知系统知识库
 """
-from fastapi import APIRouter, Depends, HTTPException, Security
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
-from datetime import datetime
-import hashlib
-import secrets
 
-from core.database import get_async_session
-from services.retrieval.vector import VectorRetrievalService
+import json
+import logging
+import os
+import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import jieba
+import jieba.analyse
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import APIKeyHeader
+from pydantic import BaseModel, Field
+
+from backend.core.database import init_db_pool
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/external/v1", tags=["外部API"])
 
 
 # ==================== 认证系统 ====================
 
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
 class APIKey:
     """API密钥管理"""
 
     def __init__(self):
-        # 简化实现：预定义的API密钥
-        # 生产环境应该存储在数据库中
-        self.valid_keys = {
-            "lingzhi_dev_key_2026": {
-                "name": "开发测试",
-                "rate_limit": 1000,  # 每小时请求数
-                "permissions": ["search", "retrieve", "analyze"],
-                "active": True
-            },
-            "lingzhi_prod_key_2026": {
-                "name": "生产环境",
-                "rate_limit": 10000,
-                "permissions": ["search", "retrieve", "analyze", "generate"],
-                "active": True
+        self.valid_keys = self._load_keys()
+
+    def _load_keys(self) -> Dict[str, Dict]:
+        keys_json = os.getenv("EXTERNAL_API_KEYS", "")
+        if keys_json:
+            try:
+                return json.loads(keys_json)
+            except json.JSONDecodeError:
+                logger.error("EXTERNAL_API_KEYS 环境变量 JSON 格式错误")
+                return {}
+        if os.getenv("ENVIRONMENT") == "development":
+            logger.warning("开发模式使用默认 API 密钥，生产环境请设置 EXTERNAL_API_KEYS")
+            return {
+                "dev-key-for-testing-only": {
+                    "name": "开发测试",
+                    "rate_limit": 1000,
+                    "permissions": ["search", "retrieve", "analyze"],
+                    "active": True,
+                },
             }
-        }
+        return {}
 
     def validate(self, api_key: str) -> Optional[Dict]:
         """验证API密钥"""
@@ -46,59 +61,42 @@ class APIKey:
             return key_data
         return None
 
-    def generate_key(self, name: str, permissions: List[str]) -> str:
-        """生成新的API密钥"""
-        # 生成随机密钥
-        key = f"lingzhi_{secrets.token_urlsafe(16)}"
-        self.valid_keys[key] = {
-            "name": name,
-            "rate_limit": 1000,
-            "permissions": permissions,
-            "active": True,
-            "created_at": datetime.now().isoformat()
-        }
-        return key
-
 
 api_key_manager = APIKey()
 
 
-async def verify_api_key(api_key: str = Security(...)) -> Dict:
+async def verify_api_key(api_key: Optional[str] = Depends(api_key_header)) -> Dict:
     """验证API密钥依赖项"""
+    if not api_key:
+        raise HTTPException(status_code=401, detail="缺少 API 密钥 (X-API-Key)")
     key_data = api_key_manager.validate(api_key)
     if not key_data:
-        raise HTTPException(
-            status_code=403,
-            detail="无效的API密钥或密钥已过期"
-        )
+        raise HTTPException(status_code=403, detail="无效的API密钥或密钥已过期")
     return key_data
 
 
 # ==================== 请求/响应模型 ====================
 
+
 class SearchRequest(BaseModel):
-    """搜索请求"""
     query: str = Field(..., description="搜索查询", min_length=1, max_length=500)
-    category: Optional[str] = Field(None, description="知识分类（儒释道医武哲科气）")
+    category: Optional[str] = Field(None, description="知识分类")
     limit: int = Field(10, ge=1, le=100, description="返回结果数量")
     threshold: float = Field(0.5, ge=0.0, le=1.0, description="相似度阈值")
 
 
 class RetrieveRequest(BaseModel):
-    """检索请求"""
     query: str = Field(..., description="检索内容", min_length=1, max_length=500)
     top_k: int = Field(5, ge=1, le=50, description="返回最相关的K个结果")
     filters: Optional[Dict[str, Any]] = Field(None, description="过滤条件")
 
 
 class AnalyzeRequest(BaseModel):
-    """分析请求"""
     text: str = Field(..., description="待分析的文本")
     analysis_type: str = Field("sentiment", description="分析类型")
 
 
 class APIResponse(BaseModel):
-    """API响应基类"""
     success: bool
     message: Optional[str] = None
     data: Optional[Dict[str, Any]] = None
@@ -107,7 +105,6 @@ class APIResponse(BaseModel):
 
 
 class SearchResult(BaseModel):
-    """搜索结果项"""
     content: str
     source: str
     category: str
@@ -117,384 +114,325 @@ class SearchResult(BaseModel):
 
 # ==================== API端点 ====================
 
+
 @router.post("/search", response_model=APIResponse)
 async def search_knowledge(
     request: SearchRequest,
-    api_key_data: Dict = Depends(verify_api_key)
+    api_key_data: Dict = Depends(verify_api_key),
 ) -> APIResponse:
-    """
-    搜索知识库
-
-    在灵知系统知识库中进行语义搜索
-
-    权限要求: search
-
-    参数：
-    - **query**: 搜索查询（必填）
-    - **category**: 知识分类（可选：儒释道医武哲科气）
-    - **limit**: 返回结果数量（1-100，默认10）
-    - **threshold**: 相似度阈值（0.0-1.0，默认0.5）
-
-    返回：搜索结果列表，包含内容、来源、相关度评分
-    """
+    """搜索知识库"""
     try:
-        # 检查权限
         if "search" not in api_key_data["permissions"]:
             raise HTTPException(status_code=403, detail="权限不足")
 
-        # 执行搜索
-        retrieval_service = VectorRetrievalService()
+        pool = await init_db_pool()
 
-        results = await retrieval_service.search(
-            query=request.query,
-            limit=request.limit,
-            threshold=request.threshold,
-            category=request.category
+        category_filter = ""
+        params: list = [request.query]
+        if request.category:
+            category_filter = "AND category = $2"
+            params.append(request.category)
+
+        rows = await pool.fetch(
+            f"""
+            SELECT content, metadata, category,
+                   similarity as score
+            FROM (
+                SELECT content, metadata, category,
+                       1 - (embedding <=> (
+                           SELECT embedding FROM documents
+                           WHERE content ILIKE '%' || $1 || '%'
+                           LIMIT 1
+                       )) as similarity
+                FROM documents
+                WHERE 1=1 {category_filter}
+                ORDER BY similarity DESC
+                LIMIT ${len(params) + 1}
+            ) sub
+            """,
+            *params,
+            request.limit,
         )
 
-        # 格式化结果
-        formatted_results = [
-            SearchResult(
-                content=r.get("content", "")[:500],
-                source=r.get("metadata", {}).get("source", "未知"),
-                category=r.get("metadata", {}).get("category", "未分类"),
-                score=r.get("score", 0.0),
-                metadata=r.get("metadata", {})
-            )
-            for r in results
+        results = [
+            {
+                "content": r["content"][:500] if r["content"] else "",
+                "source": (r.get("metadata") or {}).get("source", "未知"),
+                "category": r.get("category", "未分类"),
+                "score": float(r.get("score", 0.0)),
+                "metadata": dict(r.get("metadata") or {}),
+            }
+            for r in rows
         ]
 
         return APIResponse(
             success=True,
             message=f"找到{len(results)}条结果",
-            data={
-                "query": request.query,
-                "total": len(results),
-                "results": [r.dict() for r in formatted_results]
-            }
+            data={"query": request.query, "total": len(results), "results": results},
         )
 
     except HTTPException:
         raise
-    except (ConnectionError, TimeoutError, RuntimeError) as e:
-        return APIResponse(
-            success=False,
-            error=str(e)
-        )
+    except Exception as e:
+        logger.error(f"Search failed: {e}", exc_info=True)
+        return APIResponse(success=False, error=str(e))
 
 
 @router.post("/retrieve", response_model=APIResponse)
 async def retrieve_knowledge(
     request: RetrieveRequest,
-    api_key_data: Dict = Depends(verify_api_key)
+    api_key_data: Dict = Depends(verify_api_key),
 ) -> APIResponse:
-    """
-    检索知识
-
-    执行向量相似度检索，返回最相关的知识片段
-
-    权限要求: retrieve
-
-    参数：
-    - **query**: 检索内容（必填）
-    - **top_k**: 返回最相关的K个结果（1-50，默认5）
-    - **filters**: 过滤条件（可选）
-
-    返回：按相似度排序的知识片段
-    """
+    """检索知识"""
     try:
-        # 检查权限
         if "retrieve" not in api_key_data["permissions"]:
             raise HTTPException(status_code=403, detail="权限不足")
 
-        # 执行检索
-        retrieval_service = VectorRetrievalService()
-
-        results = await retrieval_service.search(
-            query=request.query,
-            limit=request.top_k
+        pool = await init_db_pool()
+        rows = await pool.fetch(
+            """
+            SELECT id, content, category, metadata
+            FROM documents
+            WHERE content ILIKE '%' || $1 || '%'
+            ORDER BY created_at DESC
+            LIMIT $2
+            """,
+            request.query,
+            request.top_k,
         )
 
-        # 应用过滤器
+        results = [dict(r) for r in rows]
         if request.filters:
             results = _apply_filters(results, request.filters)
 
         return APIResponse(
             success=True,
             message=f"检索到{len(results)}条相关内容",
-            data={
-                "query": request.query,
-                "top_k": request.top_k,
-                "results": results
-            }
+            data={"query": request.query, "top_k": request.top_k, "results": results},
         )
 
     except HTTPException:
         raise
-    except (ConnectionError, TimeoutError, RuntimeError) as e:
-        return APIResponse(
-            success=False,
-            error=str(e)
-        )
+    except Exception as e:
+        logger.error(f"Retrieve failed: {e}", exc_info=True)
+        return APIResponse(success=False, error=str(e))
 
 
 @router.get("/categories", response_model=APIResponse)
 async def list_categories(
-    api_key_data: Dict = Depends(verify_api_key)
+    api_key_data: Dict = Depends(verify_api_key),
 ) -> APIResponse:
-    """
-    列出知识分类
-
-    返回系统中所有可用的知识分类及其统计信息
-
-    权限要求: search
-    """
+    """列出知识分类"""
     try:
-        categories = {
-            "儒": {
-                "name": "儒家",
-                "description": "儒家思想典籍",
-                "count": 520
-            },
-            "释": {
-                "name": "佛学",
-                "description": "佛学经典与智慧",
-                "count": 480
-            },
-            "道": {
-                "name": "道家",
-                "description": "道家文化与修行",
-                "count": 560
-            },
-            "医": {
-                "name": "中医",
-                "description": "中医理论与实践",
-                "count": 680
-            },
-            "武": {
-                "name": "武术",
-                "description": "武术与传统养生",
-                "count": 320
-            },
-            "哲": {
-                "name": "哲学",
-                "description": "哲学思辨与理论",
-                "count": 440
-            },
-            "科": {
-                "name": "科学",
-                "description": "科学与现代研究",
-                "count": 280
-            },
-            "气": {
-                "name": "气功",
-                "description": "智能气功理论与实践",
-                "count": 720
-            }
-        }
+        pool = await init_db_pool()
+        rows = await pool.fetch("""
+            SELECT category, COUNT(*) as count
+            FROM documents
+            GROUP BY category
+            ORDER BY count DESC
+            """)
+        categories = {r["category"]: {"count": r["count"]} for r in rows}
 
         return APIResponse(
             success=True,
-            data={
-                "categories": categories,
-                "total": 8
-            }
+            data={"categories": categories, "total": len(categories)},
         )
 
     except HTTPException:
         raise
-    except (ConnectionError, TimeoutError, RuntimeError) as e:
-        return APIResponse(
-            success=False,
-            error=str(e)
-        )
+    except Exception as e:
+        logger.error(f"Categories failed: {e}", exc_info=True)
+        return APIResponse(success=False, error=str(e))
 
 
 @router.get("/stats", response_model=APIResponse)
 async def get_statistics(
-    api_key_data: Dict = Depends(verify_api_key)
+    api_key_data: Dict = Depends(verify_api_key),
 ) -> APIResponse:
-    """
-    获取系统统计
-
-    返回知识库的统计信息
-
-    权限要求: analyze
-    """
+    """获取系统统计"""
     try:
-        # 检查权限
         if "analyze" not in api_key_data["permissions"]:
             raise HTTPException(status_code=403, detail="权限不足")
 
-        stats = {
-            "total_documents": 3420,
-            "total_categories": 8,
-            "last_updated": datetime.now().isoformat(),
-            "storage_size_mb": 1250.5,
-            "vector_dimension": 512,
-            "embedding_model": "bge-small-zh-v1.5"
-        }
+        pool = await init_db_pool()
+        total = await pool.fetchval("SELECT COUNT(*) FROM documents")
 
         return APIResponse(
             success=True,
-            data=stats
+            data={
+                "total_documents": total,
+                "last_updated": datetime.now().isoformat(),
+            },
         )
 
     except HTTPException:
         raise
-    except (ConnectionError, TimeoutError, RuntimeError) as e:
-        return APIResponse(
-            success=False,
-            error=str(e)
-        )
+    except Exception as e:
+        logger.error(f"Stats failed: {e}", exc_info=True)
+        return APIResponse(success=False, error=str(e))
 
 
 @router.post("/analyze", response_model=APIResponse)
 async def analyze_text(
     request: AnalyzeRequest,
-    api_key_data: Dict = Depends(verify_api_key)
+    api_key_data: Dict = Depends(verify_api_key),
 ) -> APIResponse:
-    """
-    分析文本
-
-    对文本进行智能分析
-
-    权限要求: analyze
-
-    支持的分析类型：
-    - **sentiment**: 情感分析
-    - **keywords**: 关键词提取
-    - **summary**: 摘要生成
-    - **category**: 分类预测
-    """
+    """分析文本"""
     try:
-        # 检查权限
         if "analyze" not in api_key_data["permissions"]:
             raise HTTPException(status_code=403, detail="权限不足")
 
+        result: Dict[str, Any] = {}
         if request.analysis_type == "sentiment":
-            result = {"sentiment": "neutral", "confidence": 0.85}
+            result = _analyze_sentiment(request.text)
         elif request.analysis_type == "keywords":
-            result = {"keywords": ["智能", "气功", "理论", "实践"]}
+            result = _analyze_keywords(request.text)
         elif request.analysis_type == "summary":
-            result = {"summary": request.text[:100]}
+            result = _analyze_summary(request.text)
         elif request.analysis_type == "category":
-            result = {"category": "气", "confidence": 0.92}
+            pool = await init_db_pool()
+            result = await _analyze_category(request.text, pool)
         else:
-            raise HTTPException(status_code=400, detail=f"不支持的分析类型: {request.analysis_type}")
+            raise HTTPException(
+                status_code=400, detail=f"不支持的分析类型: {request.analysis_type}"
+            )
 
-        return APIResponse(
-            success=True,
-            data=result
-        )
+        return APIResponse(success=True, data=result)
 
     except HTTPException:
         raise
-    except (ConnectionError, TimeoutError, RuntimeError) as e:
-        return APIResponse(
-            success=False,
-            error=str(e)
-        )
+    except Exception as e:
+        logger.error(f"Analyze failed: {e}", exc_info=True)
+        return APIResponse(success=False, error=str(e))
 
 
 @router.get("/health")
 async def health_check() -> Dict[str, Any]:
-    """
-    健康检查
-
-    无需认证的公开端点，用于检查API服务状态
-    """
+    """健康检查（无需认证）"""
     return {
         "status": "healthy",
         "service": "Lingzhi External API",
         "version": "1.0.0",
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@router.get("/docs")
-async def api_documentation() -> Dict[str, Any]:
-    """
-    API文档
-
-    返回API使用文档
-    """
-    return {
-        "title": "灵知系统外部API文档",
-        "version": "1.0.0",
-        "base_url": "/api/v1/external/v1",
-        "authentication": {
-            "type": "API Key",
-            "header": "X-API-Key",
-            "description": "在请求头中提供有效的API密钥"
-        },
-        "endpoints": [
-            {
-                "path": "/search",
-                "method": "POST",
-                "description": "搜索知识库",
-                "auth_required": True,
-                "permissions": ["search"]
-            },
-            {
-                "path": "/retrieve",
-                "method": "POST",
-                "description": "检索知识",
-                "auth_required": True,
-                "permissions": ["retrieve"]
-            },
-            {
-                "path": "/categories",
-                "method": "GET",
-                "description": "列出分类",
-                "auth_required": True,
-                "permissions": ["search"]
-            },
-            {
-                "path": "/stats",
-                "method": "GET",
-                "description": "获取统计",
-                "auth_required": True,
-                "permissions": ["analyze"]
-            },
-            {
-                "path": "/analyze",
-                "method": "POST",
-                "description": "分析文本",
-                "auth_required": True,
-                "permissions": ["analyze"]
-            },
-            {
-                "path": "/health",
-                "method": "GET",
-                "description": "健康检查",
-                "auth_required": False
-            }
-        ],
-        "rate_limits": {
-            "description": "根据API密钥配置",
-            "default": "1000 requests/hour"
-        },
-        "support": {
-            "email": "support@lingzhi.example.com",
-            "documentation": "https://docs.lingzhi.example.com"
-        }
+        "timestamp": datetime.now().isoformat(),
     }
 
 
 # ==================== 辅助函数 ====================
 
+
 def _apply_filters(results: List[Dict], filters: Dict) -> List[Dict]:
     """应用过滤条件"""
     filtered = results
-
     if "category" in filters:
-        filtered = [r for r in filtered if r.get("metadata", {}).get("category") == filters["category"]]
-
-    if "source" in filters:
-        filtered = [r for r in filtered if filters["source"] in r.get("metadata", {}).get("source", "")]
-
+        filtered = [r for r in filtered if r.get("category") == filters["category"]]
     if "min_score" in filters:
         filtered = [r for r in filtered if r.get("score", 0) >= filters["min_score"]]
-
     return filtered
+
+
+def _analyze_keywords(text: str) -> Dict[str, Any]:
+    """Extract keywords using jieba TF-IDF"""
+    keywords = jieba.analyse.extract_tags(text, topK=10, withWeight=True)
+    return {
+        "keywords": [kw for kw, _ in keywords],
+        "keyword_weights": {kw: round(w, 4) for kw, w in keywords},
+    }
+
+
+def _analyze_summary(text: str) -> Dict[str, Any]:
+    """Generate extractive summary from text"""
+    sentences = re.split(r"[。！？\n]", text)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
+    if not sentences:
+        return {"summary": text[:200], "method": "truncation"}
+    scored = []
+    for sent in sentences:
+        kw = jieba.analyse.extract_tags(sent, topK=5)
+        scored.append((len(kw), len(sent), sent))
+    scored.sort(key=lambda x: (-x[0], -x[1]))
+    top = [s for _, _, s in scored[:3]]
+    summary = "。".join(top) + "。"
+    if len(summary) > 500:
+        summary = text[:200]
+        method = "truncation"
+    else:
+        method = "extractive"
+    return {"summary": summary, "method": method}
+
+
+def _analyze_sentiment(text: str) -> Dict[str, Any]:
+    """Rule-based Chinese sentiment analysis"""
+    positive_words = [
+        "好",
+        "优秀",
+        "喜欢",
+        "棒",
+        "赞",
+        "健康",
+        "进步",
+        "和谐",
+        "舒适",
+        "愉悦",
+        "提升",
+        "改善",
+        "积极",
+        "正面",
+        "美好",
+        "成功",
+        "温暖",
+        "平静",
+        "舒适",
+    ]
+    negative_words = [
+        "差",
+        "坏",
+        "讨厌",
+        "痛",
+        "紧张",
+        "焦虑",
+        "困难",
+        "问题",
+        "负面",
+        "失败",
+        "不适",
+        "担心",
+        "烦躁",
+        "消极",
+        "痛苦",
+        "疲劳",
+        "困扰",
+        "障碍",
+    ]
+    pos_count = sum(1 for w in positive_words if w in text)
+    neg_count = sum(1 for w in negative_words if w in text)
+    total = pos_count + neg_count
+    if total == 0:
+        sentiment, confidence = "neutral", 0.5
+    elif pos_count > neg_count:
+        sentiment, confidence = "positive", pos_count / total
+    elif neg_count > pos_count:
+        sentiment, confidence = "negative", neg_count / total
+    else:
+        sentiment, confidence = "neutral", 0.5
+    return {
+        "sentiment": sentiment,
+        "confidence": round(confidence, 2),
+        "positive_signals": pos_count,
+        "negative_signals": neg_count,
+    }
+
+
+async def _analyze_category(text: str, pool) -> Dict[str, Any]:
+    """Classify text by matching against document categories in DB"""
+    categories = ["气功", "中医", "儒家"]
+    best_cat, best_score = "通用", 0.0
+    keywords = jieba.analyse.extract_tags(text, topK=20)
+    for cat in categories:
+        rows = await pool.fetch("SELECT title FROM documents WHERE category = $1 LIMIT 50", cat)
+        cat_text = " ".join(r["title"] or "" for r in rows)
+        cat_kws = set(jieba.analyse.extract_tags(cat_text, topK=50))
+        overlap = len(set(keywords) & cat_kws)
+        score = overlap / max(len(keywords), 1)
+        if score > best_score:
+            best_score, best_cat = score, cat
+    return {"category": best_cat, "confidence": round(best_score, 2)}

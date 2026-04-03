@@ -1,0 +1,168 @@
+# CLIProxyAPI Configuration for ZhiNeng Knowledge System
+# This config provides unified AI service with multi-model support
+
+# 服务配置
+ServerSettings:
+  # 服务端口
+  HttpPort: 8317
+  # 是否启用HTTPS（开发环境设为false）
+  EnableHttps: false
+  # 日志级别
+  LogLevel: "Information"
+  # 是否启用请求日志
+  EnableRequestLog: true
+  # 是否启用Swagger
+  EnableSwagger: true
+
+# OpenAI兼容接口配置
+OpenAISettings:
+  # 是否启用OpenAI兼容接口
+  Enabled: true
+  # 兼容接口路径
+  Path: "/v1"
+
+# DeepSeek配置（主要聊天模型 - 性价比高）
+OpenAIServiceSettings:
+  - Name: "deepseek"
+    # DeepSeek API endpoint
+    BaseUrl: "https://api.deepseek.com/v1"
+    # API key from environment variable
+    ApiKey: "${DEEPSEEK_API_KEY}"
+    # 支持的模型映射
+    Models:
+      - Name: "deepseek-chat"
+        # 别名（在灵知系统中使用）
+        Alias: "lingzhi-chat"
+        # 描述
+        Description: "默认聊天模型，性价比高"
+        # 是否默认
+        IsDefault: true
+      - Name: "deepseek-reasoner"
+        Alias: "lingzhi-reasoner"
+        Description: "推理模型，适合复杂问题"
+
+# Claude配置（高质量代码和推理）
+ClaudeApiSettings:
+  # Claude API key
+  ApiKey: "${CLAUDE_API_KEY}"
+  # 支持的模型
+  Models:
+    - Name: "claude-3-5-sonnet-20241022"
+      Alias: "claude-sonnet"
+      Description: "Sonnet 4.6 - 高质量代码和推理"
+      Priority: 1
+    - Name: "claude-3-5-haiku-20241022"
+      Alias: "claude-haiku"
+      Description: "Haiku 4.5 - 快速响应"
+      Priority: 2
+
+# Gemini配置（多模态和中文）
+OpenAIServiceSettings:
+  - Name: "gemini"
+    BaseUrl: "https://generativelanguage.googleapis.com/v1beta"
+    ApiKey: "${GEMINI_API_KEY}"
+    Models:
+      - Name: "gemini-2.0-flash-exp"
+        Alias: "gemini-flash"
+        Description: "多模态快速响应"
+      - Name: "gemini-1.5-pro"
+        Alias: "gemini-pro"
+        Description: "高质量多模态"
+
+# Qwen配置（中文优化）
+OpenAIServiceSettings:
+  - Name: "qwen"
+    BaseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    ApiKey: "${QWEN_API_KEY}"
+    Models:
+      - Name: "qwen-plus"
+        Alias: "qwen-chat"
+        Description: "中文优化模型"
+      - Name: "qwen-max"
+        Alias: "qwen-max"
+        Description: "Qwen最强模型"
+
+# 负载均衡配置
+LoadBalanceSettings:
+  # 策略：RoundRobin, Random, LeastConnection
+  Strategy: "RoundRobin"
+  # 是否启用健康检查
+  EnableHealthCheck: true
+  # 健康检查间隔（秒）
+  HealthCheckInterval: 30
+  # 失败重试次数
+  RetryCount: 2
+
+# 限流配置
+RateLimitSettings:
+  # 每分钟请求限制
+  RequestsPerMinute: 100
+  # 并发请求数限制
+  ConcurrentRequests: 10
+  # 是否启用限流
+  Enabled: true
+
+# 缓存配置
+CacheSettings:
+  # 是否启用缓存
+  Enabled: true
+  # 缓存过期时间（分钟）
+  ExpirationMinutes: 60
+  # 缓存相同请求的响应
+  CacheSameRequests: true
+
+# 认证配置
+AuthenticationSettings:
+  # 是否启用API key认证
+  EnableApiKeyAuth: true
+  # 灵知系统的API key
+  ApiKeys:
+    - "lingzhi-api-key-001"
+    - "lingzhi-api-key-dev"
+  # 是否启用JWT认证（可选）
+  EnableJwtAuth: false
+  # JWT密钥（如果启用JWT）
+  JwtSecret: "${JWT_SECRET:lingzhi-default-secret-change-in-production}"
+
+# OAuth配置（用于Claude Code, OpenAI Codex等）
+OAuthSettings:
+  # 是否启用OAuth
+  Enabled: true
+  # 支持的OAuth提供者
+  Providers:
+    - Name: "github"
+      DisplayName: "GitHub"
+      ClientId: "${GITHUB_CLIENT_ID}"
+      ClientSecret: "${GITHUB_CLIENT_SECRET}"
+    - Name: "google"
+      DisplayName: "Google"
+      ClientId: "${GOOGLE_CLIENT_ID}"
+      ClientSecret: "${GOOGLE_CLIENT_SECRET}"
+  # OAuth回调URL
+  CallbackUrl: "http://localhost:8317/oauth/callback"
+
+# 日志配置
+LoggingSettings:
+  # 日志级别
+  LogLevel: "Information"
+  # 是否输出到控制台
+  EnableConsole: true
+  # 是否输出到文件
+  EnableFile: true
+  # 日志文件路径
+  FilePath: "./logs/cliproxyapi.log"
+  # 日志文件大小限制（MB）
+  FileSizeLimitMB: 100
+  # 保留日志文件数量
+  RetainedFileCount: 10
+
+# 监控配置
+MonitoringSettings:
+  # 是否启用Prometheus指标
+  EnablePrometheus: true
+  # Prometheus端口
+  PrometheusPort: 9090
+  # 是否启用健康检查端点
+  EnableHealthCheck: true
+  # 健康检查端点路径
+  HealthCheckPath: "/health"

@@ -4,6 +4,7 @@
 """
 
 import logging
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -59,7 +60,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # 根据环境调整 CSP
         if getattr(request.app.state, "ENVIRONMENT", "production") == "development":
             # 开发环境：允许调试工具
-            csp_directives.append("script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*")
+            csp_directives.append(
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*"
+            )
             csp_directives.append("connect-src 'self' http://localhost:* ws://localhost:*")
 
         response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
@@ -70,11 +73,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # 便捷函数
 def add_security_headers(request: Request, call_next):
     """添加安全响应头的替代实现（作为中间件函数）"""
+
     async def middleware(request: Request, call_next) -> Response:
-        security_middleware = SecurityHeadersMiddleware(
-            request.app,
-            hsts_enabled=True
-        )
+        security_middleware = SecurityHeadersMiddleware(request.app, hsts_enabled=True)
         return await security_middleware.dispatch(request, call_next)
 
     return middleware(request, call_next)

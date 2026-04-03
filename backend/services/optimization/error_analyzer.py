@@ -2,13 +2,13 @@
 
 分析系统错误，识别优化机会
 """
-import asyncio
-import logging
-from typing import Dict, List, Any
-from datetime import datetime, timedelta
-from collections import Counter, defaultdict
 
-from .lingminopt import OptimizationOpportunity, OptimizationSource, OptimizationPriority
+import logging
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+from .lingminopt import OptimizationOpportunity, OptimizationPriority, OptimizationSource
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class ErrorAnalyzer:
         error_message: str,
         stack_trace: str,
         context: Dict = None,
-        severity: str = "error"
+        severity: str = "error",
     ) -> str:
         """
         记录系统错误
@@ -52,7 +52,7 @@ class ErrorAnalyzer:
             "context": context or {},
             "severity": severity,
             "timestamp": datetime.now().isoformat(),
-            "occurrences": 1
+            "occurrences": 1,
         }
 
         self.error_log.append(error_entry)
@@ -78,8 +78,7 @@ class ErrorAnalyzer:
         # 最近24小时的错误
         cutoff = datetime.now() - timedelta(hours=24)
         recent_errors = [
-            e for e in self.error_log
-            if datetime.fromisoformat(e["timestamp"]) > cutoff
+            e for e in self.error_log if datetime.fromisoformat(e["timestamp"]) > cutoff
         ]
 
         # 识别高频错误
@@ -94,7 +93,7 @@ class ErrorAnalyzer:
             "by_severity": dict(severity_counts),
             "last_24h_count": len(recent_errors),
             "high_frequency_errors": high_frequency_errors,
-            "error_trend": error_trend
+            "error_trend": error_trend,
         }
 
     async def identify_optportunities(self) -> List[OptimizationOpportunity]:
@@ -111,18 +110,23 @@ class ErrorAnalyzer:
                 title=f"修复高频错误: {error_info['type']}",
                 description=f"该错误在过去24小时内发生了{error_info['count']}次",
                 source=OptimizationSource.SYSTEM_ERROR,
-                priority=OptimizationPriority.CRITICAL if error_info['count'] > 20 else OptimizationPriority.HIGH,
+                priority=(
+                    OptimizationPriority.CRITICAL
+                    if error_info["count"] > 20
+                    else OptimizationPriority.HIGH
+                ),
                 category="functionality",
-                current_state={"error_count": error_info['count']},
+                current_state={"error_count": error_info["count"]},
                 desired_state={"error_count": 0},
                 impact_estimate="显著提升系统稳定性",
-                effort_estimate="medium"
+                effort_estimate="medium",
             )
             opportunities.append(opportunity)
 
         # 2. 性能错误
         performance_errors = [
-            e for e in self.error_log
+            e
+            for e in self.error_log
             if "timeout" in e["type"].lower() or "slow" in e["type"].lower()
         ]
         if len(performance_errors) >= 10:
@@ -136,14 +140,13 @@ class ErrorAnalyzer:
                 current_state={"performance_errors": len(performance_errors)},
                 desired_state={"performance_errors": 0},
                 impact_estimate="提升响应速度",
-                effort_estimate="high"
+                effort_estimate="high",
             )
             opportunities.append(opportunity)
 
         # 3. 内存泄漏
         memory_errors = [
-            e for e in self.error_log
-            if "memory" in e["type"].lower() or "oom" in e["type"].lower()
+            e for e in self.error_log if "memory" in e["type"].lower() or "oom" in e["type"].lower()
         ]
         if len(memory_errors) >= 3:
             opportunity = OptimizationOpportunity(
@@ -156,16 +159,13 @@ class ErrorAnalyzer:
                 current_state={"memory_errors": len(memory_errors)},
                 desired_state={"memory_errors": 0},
                 impact_estimate="防止系统崩溃",
-                effort_estimate="high"
+                effort_estimate="high",
             )
             opportunities.append(opportunity)
 
         return opportunities
 
-    def _identify_high_frequency_errors(
-        self,
-        threshold: int = 5
-    ) -> List[Dict[str, Any]]:
+    def _identify_high_frequency_errors(self, threshold: int = 5) -> List[Dict[str, Any]]:
         """识别高频错误"""
         # 按类型分组
         errors_by_type = defaultdict(list)
@@ -178,18 +178,17 @@ class ErrorAnalyzer:
 
         for error_type, errors in errors_by_type.items():
             # 统计最近24小时的发生次数
-            recent_count = sum(
-                1 for e in errors
-                if datetime.fromisoformat(e["timestamp"]) > cutoff
-            )
+            recent_count = sum(1 for e in errors if datetime.fromisoformat(e["timestamp"]) > cutoff)
 
             if recent_count >= threshold:
-                high_freq.append({
-                    "type": error_type,
-                    "count": recent_count,
-                    "total": len(errors),
-                    "last_occurrence": max(e["timestamp"] for e in errors)
-                })
+                high_freq.append(
+                    {
+                        "type": error_type,
+                        "count": recent_count,
+                        "total": len(errors),
+                        "last_occurrence": max(e["timestamp"] for e in errors),
+                    }
+                )
 
         # 按发生次数排序
         high_freq.sort(key=lambda x: x["count"], reverse=True)

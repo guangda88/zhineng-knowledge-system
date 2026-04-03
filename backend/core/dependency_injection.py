@@ -4,16 +4,17 @@
 """
 
 import hmac
-from functools import lru_cache
-from typing import TypeVar, Type, Optional, Callable, Dict, Any
-from fastapi import Depends, Request, HTTPException
 import logging
+from functools import lru_cache
+from typing import Any, Callable, Dict, Optional, Type, TypeVar
 
-from backend.config import get_config, Config
+from fastapi import HTTPException, Request
+
+from backend.config import Config, get_config
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Container:
@@ -129,6 +130,7 @@ def _initialize_container(container: Container):
 
 # ============== FastAPI 依赖函数 ==============
 
+
 async def require_admin_api_key(request: Request) -> bool:
     """验证管理端点API密钥
 
@@ -150,7 +152,7 @@ async def require_admin_api_key(request: Request) -> bool:
         if config.is_production():
             raise HTTPException(
                 status_code=401,
-                detail="Admin API not configured. Set ADMIN_API_KEYS environment variable."
+                detail="Admin API not configured. Set ADMIN_API_KEYS environment variable.",
             )
         logger.warning("ADMIN_API_KEYS not configured - admin endpoints are unprotected")
         return True
@@ -159,15 +161,11 @@ async def require_admin_api_key(request: Request) -> bool:
 
     if not provided:
         raise HTTPException(
-            status_code=401,
-            detail="Admin API key required. Provide X-Admin-API-Key header."
+            status_code=401, detail="Admin API key required. Provide X-Admin-API-Key header."
         )
 
     if not any(hmac.compare_digest(provided, k) for k in valid_keys):
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid admin API key"
-        )
+        raise HTTPException(status_code=403, detail="Invalid admin API key")
 
     return True
 
@@ -189,6 +187,7 @@ def get_db_pool():
         asyncpg.Pool 或 None: 数据库连接池
     """
     from backend.core.database import get_db_pool as _get_db_pool
+
     return _get_db_pool()
 
 
@@ -201,6 +200,7 @@ async def get_db():
     pool = get_db_pool()
     if pool is None:
         from backend.core.database import init_db_pool
+
         pool = await init_db_pool()
     async with pool.acquire() as connection:
         yield connection
@@ -214,12 +214,13 @@ def get_redis_client():
     """
     try:
         from backend.core.service_manager import get_service_manager
+
         sm = get_service_manager()
         cache_service = sm.get_service("cache")
-        if cache_service and hasattr(cache_service, 'client'):
+        if cache_service and hasattr(cache_service, "client"):
             return cache_service.client
-    except (ImportError, AttributeError, RuntimeError):
-        pass
+    except (ImportError, AttributeError, RuntimeError) as e:
+        logger.debug(f"Cache service not available: {e}")
     return None
 
 

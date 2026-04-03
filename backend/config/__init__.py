@@ -9,17 +9,16 @@ Import direction: config is a LEAF module. It must NOT import from:
 Other modules may freely import from config.
 """
 
-from typing import Optional
-import asyncio
 import logging
 import threading
 import warnings
+from typing import Optional
 
 from .base import BaseConfig
 from .database import DatabaseConfig
+from .lingzhi import LingZhiConfig
 from .redis import RedisConfig
 from .security import SecurityConfig
-from .lingzhi import LingZhiConfig
 
 logger = logging.getLogger(__name__)
 
@@ -43,17 +42,6 @@ class Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, LingZhiCon
                 raise ValueError("DATABASE_URL is required in production")
             if not self.SECRET_KEY:
                 logger.warning("SECRET_KEY not set in production")
-
-        # 验证数据库路径
-        import os
-        if self.ENVIRONMENT != "production":
-            # 开发环境检查文件是否存在
-            guoxue_path = self.GUOXUE_DB_PATH
-            kxzd_path = self.KXZD_DB_PATH
-            if not os.path.exists(guoxue_path):
-                logger.warning(f"Guoxue database not found: {guoxue_path}")
-            if not os.path.exists(kxzd_path):
-                logger.warning(f"KXZD database not found: {kxzd_path}")
 
         logger.info(f"Configuration loaded for environment: {self.ENVIRONMENT}")
 
@@ -154,7 +142,7 @@ def __getattr__(name: str):
             "Direct import of Config from backend.config is deprecated. "
             "Use get_config() or config instance instead.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         return Config
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
@@ -168,5 +156,5 @@ __all__ = [
     "DatabaseConfig",
     "RedisConfig",
     "SecurityConfig",
-    "LingZhiConfig"
+    "LingZhiConfig",
 ]

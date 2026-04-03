@@ -1,19 +1,18 @@
 """网关API路由"""
 
 import logging
-import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from cache.decorators import cached_api_domain_stats
-from common.typing import JSONResponse
 from fastapi import APIRouter, HTTPException, Response
-from gateway import APIGateway, InMemoryRateLimiter
 from pydantic import BaseModel, Field
 
-from domains import get_registry
-from monitoring import get_metrics_collector
-from monitoring.prometheus import PrometheusExporter
+from backend.cache.decorators import cached_api_domain_stats
+from backend.common.typing import JSONResponse
+from backend.domains import get_registry
+from backend.gateway import APIGateway, InMemoryRateLimiter
+from backend.monitoring import get_metrics_collector
+from backend.monitoring.prometheus import PrometheusExporter
 
 logger = logging.getLogger(__name__)
 
@@ -126,130 +125,120 @@ async def gateway_query(request: GatewayQueryRequest) -> JSONResponse:
 
 @router.get("/domains", response_model=JSONResponse)
 async def list_domains() -> JSONResponse:
-    """
-    获取所有领域列表
+    """获取所有领域列表"""
+    try:
+        registry = get_registry()
+        health_report = await registry.health_check()
 
-    Returns:
-        领域列表和状态
-    """
-    registry = get_registry()
-    health_report = await registry.health_check()
-
-    return {
-        "domains": health_report["domains"],
-        "total": health_report["total_domains"],
-        "enabled": health_report["enabled_domains"],
-    }
+        return {
+            "domains": health_report["domains"],
+            "total": health_report["total_domains"],
+            "enabled": health_report["enabled_domains"],
+        }
+    except Exception as e:
+        logger.error(f"获取领域列表失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取领域列表失败: {e}")
 
 
 @router.get("/domains/{domain_name}/stats", response_model=JSONResponse)
-@cached_api_domain_stats(ttl=600)  # 10分钟缓存
+@cached_api_domain_stats(ttl=600)
 async def get_domain_stats(domain_name: str) -> JSONResponse:
-    """
-    获取领域统计信息（缓存10分钟）
+    """获取领域统计信息（缓存10分钟）"""
+    try:
+        registry = get_registry()
+        domain = registry.get(domain_name)
 
-    Args:
-        domain_name: 领域名称
+        if not domain:
+            raise HTTPException(status_code=404, detail=f"领域 {domain_name} 不存在")
 
-    Returns:
-        领域统计信息
-    """
-    registry = get_registry()
-    domain = registry.get(domain_name)
+        stats = domain.get_stats()
+        health = await domain.health_check()
 
-    if not domain:
-        raise HTTPException(status_code=404, detail=f"领域 {domain_name} 不存在")
-
-    stats = domain.get_stats()
-    health = await domain.health_check()
-
-    return {
-        "name": domain_name,
-        "type": domain.domain_type.value,
-        "enabled": domain.enabled,
-        "priority": domain.priority,
-        "stats": {
-            "document_count": stats.document_count,
-            "query_count": stats.query_count,
-            "avg_response_time": stats.avg_response_time,
-            "cache_hit_rate": stats.cache_hit_rate,
-        },
-        "health": health,
-    }
+        return {
+            "name": domain_name,
+            "type": domain.domain_type.value,
+            "enabled": domain.enabled,
+            "priority": domain.priority,
+            "stats": {
+                "document_count": stats.document_count,
+                "query_count": stats.query_count,
+                "avg_response_time": stats.avg_response_time,
+                "cache_hit_rate": stats.cache_hit_rate,
+            },
+            "health": health,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取领域统计失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取领域统计失败: {e}")
 
 
 @router.post("/domains/{domain_name}/query", response_model=JSONResponse)
 async def domain_query(domain_name: str, request: DomainQueryRequest) -> JSONResponse:
-    """
-    直接向指定领域查询
+    """直接向指定领域查询"""
+    try:
+        registry = get_registry()
+        domain = registry.get(domain_name)
 
-    Args:
-        domain_name: 领域名称
-        request: 查询请求
+        if not domain:
+            raise HTTPException(status_code=404, detail=f"领域 {domain_name} 不存在")
 
-    Returns:
-        查询结果
-    """
-    registry = get_registry()
-    domain = registry.get(domain_name)
+        if not domain.enabled:
+            raise HTTPException(status_code=400, detail=f"领域 {domain_name} 未启用")
 
-    if not domain:
-        raise HTTPException(status_code=404, detail=f"领域 {domain_name} 不存在")
-
-    if not domain.enabled:
-        raise HTTPException(status_code=400, detail=f"领域 {domain_name} 未启用")
-
-    result = await domain.query(request.question)
-    return result.to_dict()
+        result = await domain.query(request.question)
+        return result.to_dict()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"领域查询失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"领域查询失败: {e}")
 
 
 @router.get("/metrics", response_model=JSONResponse)
 async def get_metrics() -> JSONResponse:
-    """
-    获取系统指标
+    """获取系统指标"""
+    try:
+        metrics = get_metrics_collector()
+        all_metrics = metrics.get_all_metrics()
 
-    Returns:
-        系统指标数据
-    """
-    metrics = get_metrics_collector()
-    all_metrics = metrics.get_all_metrics()
+        gateway = await get_domain_gateway()
+        gateway_metrics = gateway.get_metrics()
 
-    # 网关指标
-    gateway = await get_domain_gateway()
-    gateway_metrics = gateway.get_metrics()
-
-    return {
-        "metrics": all_metrics,
-        "gateway": gateway_metrics,
-        "timestamp": datetime.now().isoformat(),
-    }
+        return {
+            "metrics": all_metrics,
+            "gateway": gateway_metrics,
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"获取指标失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取指标失败: {e}")
 
 
 @router.get("/metrics/prometheus", response_class=Response)
 async def get_prometheus_metrics() -> Response:
-    """
-    获取Prometheus格式的指标
+    """获取Prometheus格式的指标"""
+    try:
+        exporter = PrometheusExporter()
+        prometheus_text = exporter.export()
 
-    Returns:
-        Prometheus文本格式指标
-    """
-    exporter = PrometheusExporter()
-    prometheus_text = exporter.export()
-
-    return Response(
-        content=prometheus_text,
-        media_type="text/plain",
-        headers={"Content-Disposition": "attachment; filename=metrics.txt"},
-    )
+        return Response(
+            content=prometheus_text,
+            media_type="text/plain",
+            headers={"Content-Disposition": "attachment; filename=metrics.txt"},
+        )
+    except Exception as e:
+        logger.error(f"获取Prometheus指标失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取Prometheus指标失败: {e}")
 
 
 @router.get("/gateway/stats", response_model=JSONResponse)
 async def gateway_stats() -> JSONResponse:
-    """
-    获取网关统计信息
-
-    Returns:
-        网关统计
-    """
-    gateway = await get_domain_gateway()
-    return gateway.get_metrics()
+    """获取网关统计信息"""
+    try:
+        gateway = await get_domain_gateway()
+        return gateway.get_metrics()
+    except Exception as e:
+        logger.error(f"获取网关统计失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取网关统计失败: {e}")

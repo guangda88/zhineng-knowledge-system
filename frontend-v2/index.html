@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵知系统 - 统一知识管理平台</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/themes.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- 侧边栏导航 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">☯</span>
+                    <span class="logo-text">灵知系统</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" title="收起侧边栏">
+                    <span class="icon">«</span>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- 主要功能 -->
+                <div class="nav-group">
+                    <div class="nav-group-title">核心功能</div>
+                    <a href="#/search" class="nav-item active" data-module="search">
+                        <span class="nav-icon">🔍</span>
+                        <span class="nav-text">智能搜索</span>
+                    </a>
+                    <a href="#/library" class="nav-item" data-module="library">
+                        <span class="nav-icon">📚</span>
+                        <span class="nav-text">知识库</span>
+                    </a>
+                    <a href="#/ai-assistant" class="nav-item" data-module="ai-assistant">
+                        <span class="nav-icon">🤖</span>
+                        <span class="nav-text">AI 助手</span>
+                    </a>
+                    <a href="#/reasoning" class="nav-item" data-module="reasoning">
+                        <span class="nav-icon">🧠</span>
+                        <span class="nav-text">深度推理</span>
+                    </a>
+                </div>
+
+                <!-- 国学经典 -->
+                <div class="nav-group">
+                    <div class="nav-group-title">国学经典</div>
+                    <a href="#/guoxue" class="nav-item" data-module="guoxue">
+                        <span class="nav-icon">📜</span>
+                        <span class="nav-text">经典浏览</span>
+                    </a>
+                    <a href="#/guji" class="nav-item" data-module="guji">
+                        <span class="nav-icon">📖</span>
+                        <span class="nav-text">古籍文档</span>
+                    </a>
+                    <a href="#/sysbooks" class="nav-item" data-module="sysbooks">
+                        <span class="nav-icon">📕</span>
+                        <span class="nav-text">书目检索</span>
+                    </a>
+                </div>
+
+                <!-- 数据管理 -->
+                <div class="nav-group">
+                    <div class="nav-group-title">数据管理</div>
+                    <a href="#/annotation" class="nav-item" data-module="annotation">
+                        <span class="nav-icon">🏷️</span>
+                        <span class="nav-text">标注系统</span>
+                    </a>
+                    <a href="#/audio" class="nav-item" data-module="audio">
+                        <span class="nav-icon">🎧</span>
+                        <span class="nav-text">音频处理</span>
+                    </a>
+                    <a href="#/import" class="nav-item" data-module="import">
+                        <span class="nav-icon">📥</span>
+                        <span class="nav-text">数据导入</span>
+                    </a>
+                </div>
+
+                <!-- 系统工具 -->
+                <div class="nav-group">
+                    <div class="nav-group-title">系统工具</div>
+                    <a href="#/analytics" class="nav-item" data-module="analytics">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">数据分析</span>
+                    </a>
+                    <a href="#/settings" class="nav-item" data-module="settings">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-text">系统设置</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- 侧边栏底部 -->
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">系统正常</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="切换主题">
+                    <span class="icon">🌙</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部栏 -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <span class="icon">☰</span>
+                    </button>
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item">首页</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-item">智能搜索</span>
+                    </div>
+                </div>
+                <div class="topbar-center">
+                    <div class="global-search" id="globalSearch">
+                        <input type="text" placeholder="全局搜索 (Ctrl+K)" id="globalSearchInput">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="notificationBtn" title="通知">
+                        <span class="icon">🔔</span>
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="topbar-btn" id="helpBtn" title="帮助">
+                        <span class="icon">❓</span>
+                    </button>
+                    <div class="user-menu" id="userMenu">
+                        <button class="user-btn">
+                            <span class="user-avatar">👤</span>
+                            <span class="user-name">访客</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-area" id="contentArea">
+                <!-- 搜索模块 -->
+                <section class="module active" id="module-search">
+                    <div class="module-header">
+                        <h2>智能搜索</h2>
+                        <div class="module-stats">
+                            <span class="stat-item">📄 263K 内容</span>
+                            <span class="stat-item">📚 3M 书目</span>
+                        </div>
+                    </div>
+
+                    <div class="search-container">
+                        <div class="search-box-large">
+                            <input type="text" id="mainSearchInput" placeholder="搜索气功、中医、儒家、国学经典..." autofocus>
+                            <button class="search-main-btn" id="mainSearchBtn">搜索</button>
+                        </div>
+
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label>分类</label>
+                                <select id="searchCategory" class="filter-select">
+                                    <option value="">全部分类</option>
+                                    <option value="气功">气功</option>
+                                    <option value="中医">中医</option>
+                                    <option value="儒家">儒家</option>
+                                    <option value="国学">国学</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>搜索模式</label>
+                                <div class="filter-toggle">
+                                    <button class="toggle-btn active" data-mode="semantic">语义搜索</button>
+                                    <button class="toggle-btn" data-mode="keyword">关键词</button>
+                                    <button class="toggle-btn" data-mode="hybrid">混合</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="search-results" id="searchResults">
+                        <div class="results-placeholder">
+                            <div class="placeholder-icon">🔍</div>
+                            <h3>开始探索知识</h3>
+                            <p>输入关键词，如：八段锦、黄帝内经、论语、道德经</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 知识库模块 -->
+                <section class="module" id="module-library">
+                    <div class="module-header">
+                        <h2>知识库</h2>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" id="addDocumentBtn">+ 添加文档</button>
+                            <button class="btn btn-secondary" id="refreshLibraryBtn">刷新</button>
+                        </div>
+                    </div>
+
+                    <div class="library-content">
+                        <div class="library-sidebar">
+                            <div class="library-tree" id="libraryTree">
+                                <div class="tree-item expanded" data-category="all">
+                                    <span class="tree-icon">📁</span>
+                                    <span class="tree-label">全部文档</span>
+                                    <span class="tree-count">263K</span>
+                                </div>
+                                <div class="tree-item" data-category="气功">
+                                    <span class="tree-icon">📁</span>
+                                    <span class="tree-label">气功</span>
+                                    <span class="tree-count">120K</span>
+                                </div>
+                                <div class="tree-item" data-category="中医">
+                                    <span class="tree-icon">📁</span>
+                                    <span class="tree-label">中医</span>
+                                    <span class="tree-count">85K</span>
+                                </div>
+                                <div class="tree-item" data-category="儒家">
+                                    <span class="tree-icon">📁</span>
+                                    <span class="tree-label">儒家</span>
+                                    <span class="tree-count">58K</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="library-main" id="libraryMain">
+                            <div class="document-list" id="documentList"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI助手模块 -->
+                <section class="module" id="module-ai-assistant">
+                    <div class="module-header">
+                        <h2>AI 助手</h2>
+                        <div class="module-stats">
+                            <span class="stat-item">💬 会话ID: <span id="chatSessionId">未开始</span></span>
+                        </div>
+                    </div>
+
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="welcome-message">
+                                <div class="welcome-avatar">🤖</div>
+                                <div class="welcome-content">
+                                    <h3>您好！我是灵知AI助手</h3>
+                                    <p>我可以帮您：</p>
+                                    <ul>
+                                        <li>🔍 搜索和检索知识</li>
+                                        <li>💡 解答气功、中医、儒学问题</li>
+                                        <li>📚 推荐相关经典文献</li>
+                                        <li>🧠 进行深度推理分析</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <div class="input-toolbar">
+                                <button class="toolbar-btn" title="上传图片">🖼️</button>
+                                <button class="toolbar-btn" title="上传文件">📎</button>
+                                <button class="toolbar-btn" title="语音输入">🎤</button>
+                            </div>
+                            <textarea id="chatInput" placeholder="输入您的问题..." rows="2"></textarea>
+                            <div class="input-actions">
+                                <span class="char-count">0 / 2000</span>
+                                <button id="sendBtn" class="send-btn">发送</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 推理模块 -->
+                <section class="module" id="module-reasoning">
+                    <div class="module-header">
+                        <h2>深度推理</h2>
+                    </div>
+
+                    <div class="reasoning-container">
+                        <div class="reasoning-config">
+                            <div class="config-item">
+                                <label>推理模式</label>
+                                <select id="reasoningMode" class="config-select">
+                                    <option value="auto">自动选择</option>
+                                    <option value="cot">链式推理 (CoT)</option>
+                                    <option value="react">ReAct 模式</option>
+                                    <option value="graph_rag">图谱推理</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label>知识领域</label>
+                                <select id="reasoningDomain" class="config-select">
+                                    <option value="">全部领域</option>
+                                    <option value="气功">气功</option>
+                                    <option value="中医">中医</option>
+                                    <option value="儒家">儒家</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label>
+                                    <input type="checkbox" id="useRag" checked>
+                                    使用知识检索 (RAG)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="reasoning-input-area">
+                            <textarea id="reasoningInput" placeholder="输入复杂问题，如：八段锦和太极拳在养生原理上有何异同？" rows="4"></textarea>
+                            <button id="reasoningBtn" class="btn btn-primary btn-large">🧠 开始推理</button>
+                        </div>
+
+                        <div class="reasoning-output" id="reasoningOutput"></div>
+
+                        <div class="graph-panel" id="graphPanel">
+                            <div class="graph-header">
+                                <h3>知识图谱</h3>
+                                <button class="btn btn-sm" id="buildGraphBtn">构建图谱</button>
+                            </div>
+                            <div class="graph-stats" id="graphStats">
+                                <span class="graph-stat">📊 实体: 0</span>
+                                <span class="graph-stat">🔗 关系: 0</span>
+                            </div>
+                            <div class="graph-visualization" id="graphVisualization">
+                                <canvas id="graphCanvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 国学经典模块 -->
+                <section class="module" id="module-guoxue">
+                    <div class="module-header">
+                        <h2>国学经典</h2>
+                        <div class="module-stats">
+                            <span class="stat-item">📚 109 部典籍</span>
+                            <span class="stat-item">📄 263K 内容</span>
+                        </div>
+                    </div>
+
+                    <div class="guoxue-container">
+                        <div class="guoxue-sidebar">
+                            <div class="guoxue-search-box">
+                                <input type="text" id="guoxueSearchInput" placeholder="搜索典籍...">
+                            </div>
+                            <div class="guoxue-book-list" id="guoxueBookList"></div>
+                        </div>
+                        <div class="guoxue-main" id="guoxueMain">
+                            <div class="guoxue-content" id="guoxueContent"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 古籍文档模块 -->
+                <section class="module" id="module-guji">
+                    <div class="module-header">
+                        <h2>古籍文档</h2>
+                        <div class="module-stats">
+                            <span class="stat-item">📖 687 种书</span>
+                            <span class="stat-item">📄 1,664 文件</span>
+                        </div>
+                    </div>
+
+                    <div class="guji-container">
+                        <div class="guji-toolbar">
+                            <input type="text" id="gujiSearchInput" placeholder="搜索扫描文档..." class="search-input">
+                            <select id="gujiCollectionFilter" class="filter-select">
+                                <option value="">全部集合</option>
+                                <option value="四部丛刊">四部丛刊</option>
+                                <option value="气功图书馆">气功图书馆</option>
+                            </select>
+                        </div>
+                        <div class="guji-results" id="gujiResults"></div>
+                    </div>
+                </section>
+
+                <!-- 书目检索模块 -->
+                <section class="module" id="module-sysbooks">
+                    <div class="module-header">
+                        <h2>书目检索</h2>
+                        <div class="module-stats">
+                            <span class="stat-item">📕 300万+ 书目</span>
+                        </div>
+                    </div>
+
+                    <div class="sysbooks-container">
+                        <div class="sysbooks-toolbar">
+                            <input type="text" id="sysbooksSearchInput" placeholder="搜索书名、路径..." class="search-input">
+                            <select id="sysbooksDomainFilter" class="filter-select"></select>
+                            <select id="sysbooksExtFilter" class="filter-select"></select>
+                        </div>
+                        <div class="sysbooks-results" id="sysbooksResults"></div>
+                    </div>
+                </section>
+
+                <!-- 标注系统模块 -->
+                <section class="module" id="module-annotation">
+                    <div class="module-header">
+                        <h2>标注系统</h2>
+                    </div>
+
+                    <div class="annotation-container">
+                        <div class="annotation-workspace">
+                            <div class="annotation-sidebar">
+                                <h3>待标注内容</h3>
+                                <div class="annotation-list" id="annotationList"></div>
+                            </div>
+                            <div class="annotation-main">
+                                <div class="annotation-editor" id="annotationEditor">
+                                    <div class="editor-placeholder">选择内容开始标注</div>
+                                </div>
+                                <div class="annotation-tools">
+                                    <div class="tool-group">
+                                        <span>标签类型：</span>
+                                        <button class="label-btn" data-label="功法">功法</button>
+                                        <button class="label-btn" data-label="穴位">穴位</button>
+                                        <button class="label-btn" data-label="概念">概念</button>
+                                        <button class="label-btn" data-label="动作">动作</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 音频处理模块 -->
+                <section class="module" id="module-audio">
+                    <div class="module-header">
+                        <h2>音频处理</h2>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" id="uploadAudioBtn">上传音频</button>
+                        </div>
+                    </div>
+
+                    <div class="audio-container">
+                        <div class="audio-list" id="audioList"></div>
+                        <div class="audio-editor" id="audioEditor"></div>
+                    </div>
+                </section>
+
+                <!-- 数据导入模块 -->
+                <section class="module" id="module-import">
+                    <div class="module-header">
+                        <h2>数据导入</h2>
+                    </div>
+
+                    <div class="import-container">
+                        <div class="import-sources">
+                            <div class="import-source-card" data-source="115">
+                                <h3>115网盘</h3>
+                                <p>从115网盘导入古籍数据</p>
+                                <button class="btn btn-secondary">配置导入</button>
+                            </div>
+                            <div class="import-source-card" data-source="local">
+                                <h3>本地文件</h3>
+                                <p>上传本地文本/音频文件</p>
+                                <button class="btn btn-secondary">选择文件</button>
+                            </div>
+                            <div class="import-source-card" data-source="tingwu">
+                                <h3>听悟API</h3>
+                                <p>从听悟平台导入转写结果</p>
+                                <button class="btn btn-secondary">同步数据</button>
+                            </div>
+                        </div>
+                        <div class="import-log" id="importLog"></div>
+                    </div>
+                </section>
+
+                <!-- 数据分析模块 -->
+                <section class="module" id="module-analytics">
+                    <div class="module-header">
+                        <h2>数据分析</h2>
+                    </div>
+
+                    <div class="analytics-container">
+                        <div class="analytics-dashboard">
+                            <div class="stat-cards">
+                                <div class="stat-card">
+                                    <span class="stat-value">263K</span>
+                                    <span class="stat-label">内容总数</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value">3M</span>
+                                    <span class="stat-label">书目数量</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value">109</span>
+                                    <span class="stat-label">典籍数量</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value">1,664</span>
+                                    <span class="stat-label">扫描文档</span>
+                                </div>
+                            </div>
+                            <div class="charts-area" id="chartsArea"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 系统设置模块 -->
+                <section class="module" id="module-settings">
+                    <div class="module-header">
+                        <h2>系统设置</h2>
+                    </div>
+
+                    <div class="settings-container">
+                        <div class="settings-section">
+                            <h3>API 配置</h3>
+                            <div class="setting-item">
+                                <label>API 基础路径</label>
+                                <input type="text" value="/api/v1" class="setting-input">
+                            </div>
+                            <div class="setting-item">
+                                <label>请求超时 (秒)</label>
+                                <input type="number" value="30" class="setting-input">
+                            </div>
+                        </div>
+                        <div class="settings-section">
+                            <h3>显示设置</h3>
+                            <div class="setting-item">
+                                <label>每页显示数量</label>
+                                <select class="setting-select">
+                                    <option value="20">20</option>
+                                    <option value="50" selected>50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模态框容器 -->
+    <div id="modalContainer" class="modal-overlay">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/modules/search.js"></script>
+    <script src="js/modules/library.js"></script>
+    <script src="js/modules/ai-assistant.js"></script>
+    <script src="js/modules/reasoning.js"></script>
+    <script src="js/modules/guoxue.js"></script>
+    <script src="js/modules/guji.js"></script>
+    <script src="js/modules/sysbooks.js"></script>
+    <script src="js/modules/annotation.js"></script>
+    <script src="js/modules/audio.js"></script>
+    <script src="js/modules/import.js"></script>
+    <script src="js/modules/analytics.js"></script>
+    <script src="js/modules/settings.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

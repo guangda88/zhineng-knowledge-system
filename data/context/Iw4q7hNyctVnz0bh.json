@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-04-03T08:12:29.571614",
+  "session_id": "Iw4q7hNyctVnz0bh",
+  "tasks_completed": [
+    "Fixed bug",
+    "Test completion"
+  ],
+  "tasks_pending": [
+    "Implement new feature",
+    "Test task"
+  ],
+  "key_decisions": [
+    "Use PostgreSQL for primary storage"
+  ],
+  "important_files": {},
+  "context_summary": "# 上下文摘要\n\n**会话 ID**: Iw4q7hNyctVnz0bh\n**时间**: 2026-04-03T08:12:29.567112\n**消息数**: 2\n**估计 Token**: 7\n\n## 已完成任务 (2)\n\n- ✅ Fixed bug\n- ✅ Test completion\n\n## 待完成任务 (2)\n\n- ◻ Implement new feature\n- ◻ Test task\n\n## 关键决策\n\n- Use PostgreSQL for primary storage\n",
+  "next_steps": []
+}

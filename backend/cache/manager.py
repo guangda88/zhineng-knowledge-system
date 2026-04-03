@@ -5,11 +5,9 @@
 
 import asyncio
 import hashlib
-import json
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
 
@@ -20,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 # 尝试导入缓存指标收集器
 try:
-    from monitoring.cache_metrics import (
-        CacheLevel,
+    from backend.monitoring.cache_metrics import (
         CacheMetricsCollector,
         CacheMetricsMiddleware,
         get_cache_metrics_collector,
@@ -31,6 +28,10 @@ try:
 except ImportError:
     CACHE_METRICS_AVAILABLE = False
     logger.warning("缓存指标收集器不可用，监控功能将受限")
+
+    CacheMetricsCollector = None  # type: ignore[misc,assignment]
+    CacheMetricsMiddleware = None  # type: ignore[misc,assignment]
+    get_cache_metrics_collector = None  # type: ignore[misc,assignment]
 
 T = TypeVar("T")
 
@@ -438,7 +439,7 @@ class CacheManager:
                 if self._l2_cache:
                     # 使用后台任务而不是create_task来避免未等待的协程警告
                     try:
-                        loop = asyncio.get_event_loop()
+                        loop = asyncio.get_running_loop()
                         if loop.is_running():
                             loop.call_soon(
                                 lambda: asyncio.create_task(

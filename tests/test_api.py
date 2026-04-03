@@ -11,10 +11,6 @@ from fastapi.testclient import TestClient
 class TestAPI:
     """API 测试套件"""
 
-
-class TestAPI:
-    """API 测试套件"""
-
     @pytest.fixture(autouse=True)
     def setup(self, test_client):
         """设置测试客户端"""
@@ -31,7 +27,7 @@ class TestAPI:
     def test_list_documents(self):
         """测试获取文档列表"""
         response = self.client.get("/api/v1/documents")
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "documents" in data
@@ -43,7 +39,7 @@ class TestAPI:
 
         query = quote("气功")
         response = self.client.get(f"/api/v1/search?q={query}")
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "results" in data
@@ -51,7 +47,7 @@ class TestAPI:
     def test_ask_question(self):
         """测试问答功能"""
         response = self.client.post("/api/v1/ask", json={"question": "什么是气功？"})
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "answer" in data
@@ -60,7 +56,7 @@ class TestAPI:
     def test_categories(self):
         """测试分类列表"""
         response = self.client.get("/api/v1/categories")
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "categories" in data
@@ -89,8 +85,8 @@ class TestAPI:
 
     def test_retrieval_status(self):
         """测试检索服务状态"""
-        response = self.client.get("/api/v1/retrieval/status")
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        response = self.client.get("/api/v1/search/retrieval/status")
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "vector_enabled" in data
@@ -101,7 +97,7 @@ class TestAPI:
             "/api/v1/search/hybrid",
             json={"query": "气功", "top_k": 5, "use_vector": True, "use_bm25": True},
         )
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "results" in data
@@ -109,7 +105,7 @@ class TestAPI:
     def test_stats(self):
         """测试系统统计"""
         response = self.client.get("/api/v1/stats")
-        assert response.status_code in [200, 500]  # 可能没有数据库
+        assert response.status_code == 200 or response.status_code == 422
         if response.status_code == 200:
             data = response.json()
             assert "document_count" in data

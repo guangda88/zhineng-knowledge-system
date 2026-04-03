@@ -3,53 +3,54 @@
 提供全面的输入验证和数据清理功能。
 """
 
-import re
 import logging
-from typing import Optional, List, Any
+import re
+from typing import Any, Optional
+
 from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
 # 可疑模式列表
 SUSPICIOUS_PATTERNS = {
-    'xss': [
-        r'<script[^>]*>.*?</script>',
-        r'javascript:',
-        r'on\w+\s*=',
-        r'<iframe',
-        r'<object',
-        r'<embed',
+    "xss": [
+        r"<script[^>]*>.*?</script>",
+        r"javascript:",
+        r"on\w+\s*=",
+        r"<iframe",
+        r"<object",
+        r"<embed",
     ],
-    'sql_injection': [
+    "sql_injection": [
         r"('\s*(OR|AND)\s*')",
-        r';\s*DROP\s+TABLE',
-        r';\s*DELETE\s+FROM',
-        r';\s*INSERT\s+INTO',
-        r';\s*UPDATE\s+\w+\s+SET',
-        r'UNION\s+SELECT',
-        r'--\s*$',
-        r'/\*.*\*/',
+        r";\s*DROP\s+TABLE",
+        r";\s*DELETE\s+FROM",
+        r";\s*INSERT\s+INTO",
+        r";\s*UPDATE\s+\w+\s+SET",
+        r"UNION\s+SELECT",
+        r"--\s*$",
+        r"/\*.*\*/",
     ],
-    'path_traversal': [
-        r'\.\./',
-        r'\.\*',
-        r'~/',
-        r'%2e%2e',
+    "path_traversal": [
+        r"\.\./",
+        r"\.\*",
+        r"~/",
+        r"%2e%2e",
     ],
-    'code_injection': [
-        r'eval\s*\(',
-        r'exec\s*\(',
-        r'system\s*\(',
-        r'passthru\s*\(',
-        r'popen\s*\(',
-        r'\${',
+    "code_injection": [
+        r"eval\s*\(",
+        r"exec\s*\(",
+        r"system\s*\(",
+        r"passthru\s*\(",
+        r"popen\s*\(",
+        r"\${",
     ],
-    'command_injection': [
-        r';\s*\w+',
-        r'\|\s*\w+',
-        r'&\s*\w+',
-        r'`[^`]*`',
-        r'\$[^$]*\$',
+    "command_injection": [
+        r";\s*\w+",
+        r"\|\s*\w+",
+        r"&\s*\w+",
+        r"`[^`]*`",
+        r"\$[^$]*\$",
     ],
 }
 
@@ -65,7 +66,7 @@ class InputValidator:
         input_str: str,
         max_length: int = 1000,
         field_name: str = "input",
-        allow_empty: bool = False
+        allow_empty: bool = False,
     ) -> str:
         """验证字符串输入
 
@@ -82,21 +83,14 @@ class InputValidator:
             HTTPException: 如果输入验证失败
         """
         if not isinstance(input_str, str):
-            raise HTTPException(
-                status_code=400,
-                detail=f"{field_name} must be a string"
-            )
+            raise HTTPException(status_code=400, detail=f"{field_name} must be a string")
 
         if not input_str and not allow_empty:
-            raise HTTPException(
-                status_code=400,
-                detail=f"{field_name} cannot be empty"
-            )
+            raise HTTPException(status_code=400, detail=f"{field_name} cannot be empty")
 
         if len(input_str) > max_length:
             raise HTTPException(
-                status_code=400,
-                detail=f"{field_name} exceeds maximum length of {max_length}"
+                status_code=400, detail=f"{field_name} exceeds maximum length of {max_length}"
             )
 
         # 检查可疑模式
@@ -108,8 +102,7 @@ class InputValidator:
                         f"category={category}, pattern={pattern[:50]}"
                     )
                     raise HTTPException(
-                        status_code=400,
-                        detail=f"{field_name} contains suspicious content"
+                        status_code=400, detail=f"{field_name} contains suspicious content"
                     )
 
         return input_str.strip()
@@ -128,11 +121,7 @@ class InputValidator:
 
         # 移除特殊字符（保留中文、字母、数字、常用标点）
         # 保留: 中文字符、字母、数字、空格、基本标点
-        sanitized = re.sub(
-            r'[^\w\s\u4e00-\u9fff.,?!:;()\-"\'+%]',
-            '',
-            query
-        )
+        sanitized = re.sub(r'[^\w\s\u4e00-\u9fff.,?!:;()\-"\'+%]', "", query)
 
         # 限制长度
         return sanitized[:500]
@@ -147,18 +136,12 @@ class InputValidator:
             清理后的邮箱地址
         """
         if not email:
-            raise HTTPException(
-                status_code=400,
-                detail="Email cannot be empty"
-            )
+            raise HTTPException(status_code=400, detail="Email cannot be empty")
 
         # 简单的邮箱格式验证
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_pattern, email):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid email format"
-            )
+            raise HTTPException(status_code=400, detail="Invalid email format")
 
         return email.strip().lower()
 
@@ -172,32 +155,20 @@ class InputValidator:
             清理后的 URL
         """
         if not url:
-            raise HTTPException(
-                status_code=400,
-                detail="URL cannot be empty"
-            )
+            raise HTTPException(status_code=400, detail="URL cannot be empty")
 
         # 检查协议
-        if not url.startswith(('http://', 'https://')):
-            raise HTTPException(
-                status_code=400,
-                detail="URL must start with http:// or https://"
-            )
+        if not url.startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
 
         # 限制长度
         if len(url) > 2048:
-            raise HTTPException(
-                status_code=400,
-                detail="URL exceeds maximum length"
-            )
+            raise HTTPException(status_code=400, detail="URL exceeds maximum length")
 
         return url.strip()
 
     def validate_positive_int(
-        self,
-        value: int,
-        field_name: str = "value",
-        max_value: Optional[int] = None
+        self, value: int, field_name: str = "value", max_value: Optional[int] = None
     ) -> int:
         """验证正整数
 
@@ -210,22 +181,13 @@ class InputValidator:
             验证后的整数值
         """
         if not isinstance(value, int):
-            raise HTTPException(
-                status_code=400,
-                detail=f"{field_name} must be an integer"
-            )
+            raise HTTPException(status_code=400, detail=f"{field_name} must be an integer")
 
         if value <= 0:
-            raise HTTPException(
-                status_code=400,
-                detail=f"{field_name} must be positive"
-            )
+            raise HTTPException(status_code=400, detail=f"{field_name} must be positive")
 
         if max_value and value > max_value:
-            raise HTTPException(
-                status_code=400,
-                detail=f"{field_name} must be <= {max_value}"
-            )
+            raise HTTPException(status_code=400, detail=f"{field_name} must be <= {max_value}")
 
         return value
 
@@ -246,10 +208,7 @@ class InputValidator:
         try:
             return json.loads(json_str)
         except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid JSON: {str(e)}"
-            )
+            raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
 
     def check_sql_keywords(self, value: str) -> bool:
         """检查是否包含 SQL 关键字
@@ -261,8 +220,17 @@ class InputValidator:
             True 如果包含 SQL 关键字，否则 False
         """
         sql_keywords = [
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP',
-            'CREATE', 'ALTER', 'TRUNCATE', 'UNION', 'OR', 'AND'
+            "SELECT",
+            "INSERT",
+            "UPDATE",
+            "DELETE",
+            "DROP",
+            "CREATE",
+            "ALTER",
+            "TRUNCATE",
+            "UNION",
+            "OR",
+            "AND",
         ]
 
         upper_value = value.upper()
@@ -276,11 +244,7 @@ validator = InputValidator()
 # Pydantic 验证器
 def validate_question(value: str) -> str:
     """Pydantic 验证器 - 验证问题输入"""
-    return validator.validate_string(
-        value,
-        max_length=500,
-        field_name="question"
-    )
+    return validator.validate_string(value, max_length=500, field_name="question")
 
 
 def sanitize_search_query(value: str) -> str:

@@ -7,10 +7,10 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import Request, Response, HTTPException
+from fastapi import HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from gateway.rate_limiter import InMemoryRateLimiter, RateLimit
+from backend.gateway.rate_limiter import InMemoryRateLimiter, RateLimit
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +25,15 @@ def get_rate_limiter() -> InMemoryRateLimiter:
     if rate_limiter is None:
         # 从环境变量读取配置
         requests_per_minute = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
-        whitelist_ips = os.getenv("RATE_LIMIT_WHITELIST", "").split(",") if os.getenv("RATE_LIMIT_WHITELIST") else []
+        whitelist_ips = (
+            os.getenv("RATE_LIMIT_WHITELIST", "").split(",")
+            if os.getenv("RATE_LIMIT_WHITELIST")
+            else []
+        )
 
         rate_limiter = InMemoryRateLimiter(
             default_limit=RateLimit(requests=requests_per_minute, window=60),
-            whitelist=[ip.strip() for ip in whitelist_ips if ip.strip()]
+            whitelist=[ip.strip() for ip in whitelist_ips if ip.strip()],
         )
         logger.info(f"初始化限流器: {requests_per_minute} 请求/分钟, 白名单: {whitelist_ips}")
     return rate_limiter
@@ -49,9 +53,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app, **kwargs)
         trusted = os.getenv("TRUSTED_PROXIES", "")
         if trusted:
-            self._trusted_proxies = {
-                ip.strip() for ip in trusted.split(",") if ip.strip()
-            }
+            self._trusted_proxies = {ip.strip() for ip in trusted.split(",") if ip.strip()}
 
     async def dispatch(self, request: Request, call_next) -> Response:
         """处理请求并应用限流"""
@@ -61,28 +63,35 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         limiter = get_rate_limiter()
-        allowed, info = await limiter.check(client_ip)
+        allowed, info = await limiter.check(client_ip) if limiter else (True, {})
 
         if not allowed:
             logger.warning(f"限流触发: IP={client_ip}, 信息={info}")
+            limit_info = info.get("limit") or {}
             raise HTTPException(
                 status_code=429,
                 detail={
                     "error": "Rate limit exceeded",
                     "retry_after": info.get("retry_after", 60),
-                    "limit": info.get("limit", {})
+                    "limit": limit_info,
                 },
                 headers={
                     "Retry-After": str(info.get("retry_after", 60)),
-                    "X-RateLimit-Limit": str(info.get("limit", {}).get("requests", 60)),
-                    "X-RateLimit-Reset": str(int(info.get("reset_at", 0)))
-                }
+                    "X-RateLimit-Limit": str(limit_info.get("requests", 60) if isinstance(limit_info, dict) else 60),
+                    "X-RateLimit-Reset": str(int(info.get("reset_at", 0))),
+                },
             )
 
         response = await call_next(request)
 
-        response.headers["X-RateLimit-Limit"] = str(info.get("limit", {}).get("requests", 60))
-        response.headers["X-RateLimit-Remaining"] = str(info.get("remaining", 0))
+        # 安全地添加限流头信息（处理白名单情况）
+        if info:
+            limit_info = info.get("limit")
+            if isinstance(limit_info, dict):
+                response.headers["X-RateLimit-Limit"] = str(limit_info.get("requests", 60))
+            else:
+                response.headers["X-RateLimit-Limit"] = str(limit_info if limit_info else 60)
+            response.headers["X-RateLimit-Remaining"] = str(info.get("remaining", 0))
 
         return response
 
