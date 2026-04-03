@@ -3,8 +3,10 @@
 These indexes are slow to build on 3M+ rows and need a longer timeout
 than the default asyncpg command_timeout.
 """
+
 import asyncio
 import time
+
 import asyncpg
 
 DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"

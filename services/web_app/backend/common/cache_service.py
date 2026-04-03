@@ -74,9 +74,7 @@ class UserCacheService:
         cache_data = user_data.copy()
         cache_data.pop("password_hash", None)
 
-        return await self._cache.set(
-            key, cache_data, self._namespace, CacheTTL.USER_INFO
-        )
+        return await self._cache.set(key, cache_data, self._namespace, CacheTTL.USER_INFO)
 
     async def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         """
@@ -91,9 +89,7 @@ class UserCacheService:
         key = CacheKeyPattern.user_by_username(username)
         return await self._cache.get(key, self._namespace)
 
-    async def set_user_by_username(
-        self, username: str, user_data: Dict[str, Any]
-    ) -> bool:
+    async def set_user_by_username(self, username: str, user_data: Dict[str, Any]) -> bool:
         """
         根据用户名设置用户缓存
 
@@ -107,9 +103,7 @@ class UserCacheService:
         key = CacheKeyPattern.user_by_username(username)
         cache_data = user_data.copy()
         cache_data.pop("password_hash", None)
-        return await self._cache.set(
-            key, cache_data, self._namespace, CacheTTL.USER_BY_USERNAME
-        )
+        return await self._cache.set(key, cache_data, self._namespace, CacheTTL.USER_BY_USERNAME)
 
     async def get_user_roles(self, user_id: int) -> Optional[List[str]]:
         """
@@ -138,9 +132,7 @@ class UserCacheService:
         key = CacheKeyPattern.user_roles(user_id)
         return await self._cache.set(key, roles, self._namespace, CacheTTL.USER_ROLES)
 
-    async def invalidate_user(
-        self, user_id: int, username: Optional[str] = None
-    ) -> None:
+    async def invalidate_user(self, user_id: int, username: Optional[str] = None) -> None:
         """
         使用户相关缓存失效
 
@@ -151,14 +143,10 @@ class UserCacheService:
         # 删除用户信息缓存
         await self._cache.delete(CacheKeyPattern.user_info(user_id), self._namespace)
         await self._cache.delete(CacheKeyPattern.user_roles(user_id), self._namespace)
-        await self._cache.delete(
-            CacheKeyPattern.user_permissions(user_id), self._namespace
-        )
+        await self._cache.delete(CacheKeyPattern.user_permissions(user_id), self._namespace)
 
         if username:
-            await self._cache.delete(
-                CacheKeyPattern.user_by_username(username), self._namespace
-            )
+            await self._cache.delete(CacheKeyPattern.user_by_username(username), self._namespace)
 
         logger.debug(f"Invalidated cache for user {user_id}")
 
@@ -202,9 +190,7 @@ class DocumentCacheService:
             是否设置成功
         """
         key = CacheKeyPattern.document_info(doc_id)
-        return await self._cache.set(
-            key, doc_data, self._namespace, CacheTTL.DOCUMENT_INFO
-        )
+        return await self._cache.set(key, doc_data, self._namespace, CacheTTL.DOCUMENT_INFO)
 
     async def get_document_metadata(self, doc_id: int) -> Optional[Dict[str, Any]]:
         """
@@ -219,9 +205,7 @@ class DocumentCacheService:
         key = CacheKeyPattern.document_metadata(doc_id)
         return await self._cache.get(key, self._namespace)
 
-    async def set_document_metadata(
-        self, doc_id: int, metadata: Dict[str, Any]
-    ) -> bool:
+    async def set_document_metadata(self, doc_id: int, metadata: Dict[str, Any]) -> bool:
         """
         设置文档元数据缓存
 
@@ -233,9 +217,7 @@ class DocumentCacheService:
             是否设置成功
         """
         key = CacheKeyPattern.document_metadata(doc_id)
-        return await self._cache.set(
-            key, metadata, self._namespace, CacheTTL.DOCUMENT_METADATA
-        )
+        return await self._cache.set(key, metadata, self._namespace, CacheTTL.DOCUMENT_METADATA)
 
     async def get_document_chunks(self, doc_id: int) -> Optional[List[Dict[str, Any]]]:
         """
@@ -250,9 +232,7 @@ class DocumentCacheService:
         key = CacheKeyPattern.document_chunks(doc_id)
         return await self._cache.get(key, self._namespace)
 
-    async def set_document_chunks(
-        self, doc_id: int, chunks: List[Dict[str, Any]]
-    ) -> bool:
+    async def set_document_chunks(self, doc_id: int, chunks: List[Dict[str, Any]]) -> bool:
         """
         设置文档分块列表缓存
 
@@ -264,13 +244,9 @@ class DocumentCacheService:
             是否设置成功
         """
         key = CacheKeyPattern.document_chunks(doc_id)
-        return await self._cache.set(
-            key, chunks, self._namespace, CacheTTL.DOCUMENT_CHUNKS
-        )
+        return await self._cache.set(key, chunks, self._namespace, CacheTTL.DOCUMENT_CHUNKS)
 
-    async def get_document_list(
-        self, filters: Dict[str, Any]
-    ) -> Optional[List[Dict[str, Any]]]:
+    async def get_document_list(self, filters: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
         """
         获取文档列表（带缓存）
 
@@ -299,9 +275,7 @@ class DocumentCacheService:
         """
         filter_str = json.dumps(filters, sort_keys=True)
         key = CacheKeyPattern.document_list(filter_str)
-        return await self._cache.set(
-            key, documents, self._namespace, CacheTTL.DOCUMENT_LIST
-        )
+        return await self._cache.set(key, documents, self._namespace, CacheTTL.DOCUMENT_LIST)
 
     async def invalidate_document(self, doc_id: int) -> None:
         """
@@ -391,9 +365,7 @@ class SearchCacheService:
         key = CacheKeyPattern.search_result(query, search_type, domains_str)
         full_key = f"{key}:l{limit}:o{offset}"
 
-        return await self._cache.set(
-            full_key, result, self._namespace, CacheTTL.SEARCH_RESULT
-        )
+        return await self._cache.set(full_key, result, self._namespace, CacheTTL.SEARCH_RESULT)
 
     async def get_trending_queries(self, limit: int = 10) -> Optional[List[str]]:
         """
@@ -469,13 +441,9 @@ class HotwordCacheService:
             是否设置成功
         """
         key = CacheKeyPattern.hotword_list(domain)
-        return await self._cache.set(
-            key, words, self._namespace, CacheTTL.SEARCH_HOTWORD
-        )
+        return await self._cache.set(key, words, self._namespace, CacheTTL.SEARCH_HOTWORD)
 
-    async def get_hotwords_by_domain(
-        self, domain: str
-    ) -> Optional[List[Dict[str, Any]]]:
+    async def get_hotwords_by_domain(self, domain: str) -> Optional[List[Dict[str, Any]]]:
         """
         获取指定领域的热词
 
@@ -488,9 +456,7 @@ class HotwordCacheService:
         key = CacheKeyPattern.hotword_by_domain(domain)
         return await self._cache.get(key, self._namespace)
 
-    async def set_hotwords_by_domain(
-        self, domain: str, words: List[Dict[str, Any]]
-    ) -> bool:
+    async def set_hotwords_by_domain(self, domain: str, words: List[Dict[str, Any]]) -> bool:
         """
         设置指定领域的热词缓存
 
@@ -502,9 +468,7 @@ class HotwordCacheService:
             是否设置成功
         """
         key = CacheKeyPattern.hotword_by_domain(domain)
-        return await self._cache.set(
-            key, words, self._namespace, CacheTTL.SEARCH_HOTWORD
-        )
+        return await self._cache.set(key, words, self._namespace, CacheTTL.SEARCH_HOTWORD)
 
     async def invalidate_hotwords(self, domain: Optional[str] = None) -> None:
         """
@@ -566,9 +530,7 @@ class SessionCacheService:
             是否设置成功
         """
         key = CacheKeyPattern.session(session_id)
-        return await self._cache.set(
-            key, session_data, self._namespace, ttl or CacheTTL.SESSION
-        )
+        return await self._cache.set(key, session_data, self._namespace, ttl or CacheTTL.SESSION)
 
     async def delete_session(self, session_id: str) -> bool:
         """
@@ -596,9 +558,7 @@ class SessionCacheService:
         """
         key = CacheKeyPattern.session(session_id)
         if isinstance(self._cache._default_backend, type(self._cache._default_backend)):
-            return await self._cache._default_backend.expire(
-                key, ttl or CacheTTL.SESSION
-            )
+            return await self._cache._default_backend.expire(key, ttl or CacheTTL.SESSION)
         return False
 
 

@@ -10,11 +10,10 @@ import ast
 import sys
 from pathlib import Path
 
-
 # 必须使用 ImportManager 的脚本模式
 IMPORT_SCRIPT_PATTERNS = [
-    "import_",      # import_*.py
-    "_import.py",   # *_import.py
+    "import_",  # import_*.py
+    "_import.py",  # *_import.py
 ]
 
 # 允许的例外（这些脚本不需要 ImportManager）
@@ -45,7 +44,9 @@ def check_import_manager_usage(file_path: Path) -> tuple[bool, str]:
                     if "ImportManager" in alias.name or "import_manager" in alias.name:
                         has_import_manager_import = True
             elif isinstance(node, ast.ImportFrom):
-                if node.module and ("ImportManager" in str(node.module) or "import_manager" in str(node.module)):
+                if node.module and (
+                    "ImportManager" in str(node.module) or "import_manager" in str(node.module)
+                ):
                     has_import_manager_import = True
                 if node.module and "import_guard" in str(node.module):
                     has_import_guard_import = True
@@ -69,7 +70,12 @@ def check_import_manager_usage(file_path: Path) -> tuple[bool, str]:
                         has_import_guard_call = True
 
         # 判断是否安全
-        is_safe = has_with_import_manager or has_import_guard_call or has_import_manager_import or has_import_guard_import
+        is_safe = (
+            has_with_import_manager
+            or has_import_guard_call
+            or has_import_manager_import
+            or has_import_guard_import
+        )
 
         if is_safe:
             return True, "✅ 使用 ImportManager 或 import_guard"

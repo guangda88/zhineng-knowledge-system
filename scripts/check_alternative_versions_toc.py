@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 from backend.textbook_processing.deep_toc_parser import DeepTocParser, ParseMethod
 
+
 def check_toc_depth(text_path: Path) -> int:
     """检查目录深度"""
     print(f"\n检查文件: {text_path.name}")
@@ -20,12 +21,12 @@ def check_toc_depth(text_path: Path) -> int:
         return 0
 
     # 读取文本
-    encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
+    encodings = ["utf-8", "gbk", "gb2312", "gb18030"]
     content = None
 
     for encoding in encodings:
         try:
-            with open(text_path, 'r', encoding=encoding) as f:
+            with open(text_path, "r", encoding=encoding) as f:
                 content = f.read()
             if len(content) > 1000:
                 break
@@ -42,10 +43,7 @@ def check_toc_depth(text_path: Path) -> int:
     # 尝试多种解析方法
     for method in [ParseMethod.HEURISTIC, ParseMethod.REGEX]:
         try:
-            result = parser.parse(
-                content,
-                method=method
-            )
+            result = parser.parse(content, method=method)
 
             depth = result.max_depth
             items_count = len(result.items)
@@ -85,10 +83,7 @@ def main():
     results7 = []
     for version_path in textbook7_versions:
         depth = check_toc_depth(version_path)
-        results7.append({
-            "path": str(version_path),
-            "depth": depth
-        })
+        results7.append({"path": str(version_path), "depth": depth})
 
     # 教材8的替代版本
     print("\n" + "=" * 70)
@@ -103,10 +98,7 @@ def main():
     results8 = []
     for version_path in textbook8_versions:
         depth = check_toc_depth(version_path)
-        results8.append({
-            "path": str(version_path),
-            "depth": depth
-        })
+        results8.append({"path": str(version_path), "depth": depth})
 
     # 汇总结果
     print("\n" + "=" * 70)
@@ -115,12 +107,12 @@ def main():
 
     print("\n教材7:")
     for r in results7:
-        path = Path(r['path'])
+        path = Path(r["path"])
         print(f"  {path.name}: {r['depth']} 层")
 
     print("\n教材8:")
     for r in results8:
-        path = Path(r['path'])
+        path = Path(r["path"])
         print(f"  {path.name}: {r['depth']} 层")
 
     # 推荐
@@ -130,16 +122,16 @@ def main():
 
     # 找到深度≥6的版本
     print("\n教材7（目标6层）:")
-    best7 = max(results7, key=lambda x: x['depth'])
-    if best7['depth'] >= 6:
+    best7 = max(results7, key=lambda x: x["depth"])
+    if best7["depth"] >= 6:
         print(f"  ✓ 推荐使用: {Path(best7['path']).name} ({best7['depth']}层)")
     else:
         print(f"  ⚠️  所有版本都不足6层，需要AI补充")
         print(f"  最佳版本: {Path(best7['path']).name} ({best7['depth']}层)")
 
     print("\n教材8（目标6层）:")
-    best8 = max(results8, key=lambda x: x['depth'])
-    if best8['depth'] >= 6:
+    best8 = max(results8, key=lambda x: x["depth"])
+    if best8["depth"] >= 6:
         print(f"  ✓ 推荐使用: {Path(best8['path']).name} ({best8['depth']}层)")
     else:
         print(f"  ⚠️  所有版本都不足6层，需要AI补充")

@@ -25,14 +25,16 @@ logger = logging.getLogger(__name__)
 
 class CacheLevel(Enum):
     """缓存级别"""
-    HOT = 1      # 热数据（频繁访问）- 1小时
-    WARM = 2     # 温数据（偶尔访问）- 30分钟
-    COLD = 3     # 冷数据（很少访问）- 5分钟
+
+    HOT = 1  # 热数据（频繁访问）- 1小时
+    WARM = 2  # 温数据（偶尔访问）- 30分钟
+    COLD = 3  # 冷数据（很少访问）- 5分钟
 
 
 @dataclass
 class CacheEntry:
     """缓存条目"""
+
     value: Any
     created_at: float
     expires_at: float
@@ -75,9 +77,9 @@ class StaleWhileRevalidateCache:
 
         # 默认TTL配置
         self.ttl_by_level = ttl_by_level or {
-            CacheLevel.HOT: 3600,    # 1小时
-            CacheLevel.WARM: 1800,   # 30分钟
-            CacheLevel.COLD: 300,    # 5分钟
+            CacheLevel.HOT: 3600,  # 1小时
+            CacheLevel.WARM: 1800,  # 30分钟
+            CacheLevel.COLD: 300,  # 5分钟
         }
 
         # 内存缓存（L1）
@@ -145,9 +147,7 @@ class StaleWhileRevalidateCache:
                         # 已过期
                         if self.enable_stale:
                             if data_loader and key not in self.refreshing_keys:
-                                asyncio.create_task(
-                                    self._revalidate(key, data_loader, level)
-                                )
+                                asyncio.create_task(self._revalidate(key, data_loader, level))
                             return entry.value, True
                         else:
                             await asyncio.to_thread(self.redis_client.delete, key)
@@ -157,12 +157,7 @@ class StaleWhileRevalidateCache:
 
         return None, False
 
-    async def set(
-        self,
-        key: str,
-        value: Any,
-        level: CacheLevel = CacheLevel.WARM
-    ):
+    async def set(self, key: str, value: Any, level: CacheLevel = CacheLevel.WARM):
         """
         设置缓存
 
@@ -199,12 +194,7 @@ class StaleWhileRevalidateCache:
             except Exception as e:
                 logger.warning(f"Failed to set to Redis: {e}")
 
-    async def _revalidate(
-        self,
-        key: str,
-        data_loader: Callable,
-        level: CacheLevel
-    ):
+    async def _revalidate(self, key: str, data_loader: Callable, level: CacheLevel):
         """
         异步刷新缓存
 
@@ -264,11 +254,7 @@ class StaleWhileRevalidateCache:
     async def clear_expired(self):
         """清理过期缓存"""
         now = time.time()
-        expired_keys = [
-            key
-            for key, entry in self.memory_cache.items()
-            if entry.expires_at <= now
-        ]
+        expired_keys = [key for key, entry in self.memory_cache.items() if entry.expires_at <= now]
 
         for key in expired_keys:
             del self.memory_cache[key]
@@ -292,7 +278,9 @@ class StaleWhileRevalidateCache:
             "expired": expired,
             "hot_keys": hot_keys,
             "max_size": self.memory_max_size,
-            "usage_percent": (total / self.memory_max_size) * 100 if self.memory_max_size > 0 else 0,
+            "usage_percent": (
+                (total / self.memory_max_size) * 100 if self.memory_max_size > 0 else 0
+            ),
             "refreshing": len(self.refreshing_keys),
         }
 
@@ -307,7 +295,7 @@ def get_tiered_cache() -> StaleWhileRevalidateCache:
     if _tiered_cache is None:
         # 初始化Redis客户端
         redis_client = redis.Redis(
-            host='localhost',
+            host="localhost",
             port=6379,
             db=0,
             decode_responses=False,  # 需要二进制模式存储pickle数据

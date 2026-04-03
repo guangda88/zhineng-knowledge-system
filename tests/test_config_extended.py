@@ -3,8 +3,9 @@
 覆盖: BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig
 """
 
-import pytest
 import os
+
+import pytest
 
 
 class TestBaseConfig:
@@ -25,22 +26,26 @@ class TestBaseConfig:
 
     def test_config_has_api_settings(self):
         from backend.config import get_config
+
         config = get_config()
         assert hasattr(config, "API_HOST")
         assert hasattr(config, "API_PORT")
 
     def test_config_has_categories(self):
         from backend.config import get_config
+
         config = get_config()
         assert hasattr(config, "VALID_CATEGORIES")
 
     def test_config_environment(self):
         from backend.config import get_config
+
         config = get_config()
         assert config.ENVIRONMENT in ("development", "testing", "production")
 
     def test_config_log_level(self):
         from backend.config import get_config
+
         config = get_config()
         assert hasattr(config, "LOG_LEVEL")
 

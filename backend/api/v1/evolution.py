@@ -122,7 +122,8 @@ async def trigger_comparison(
         # 如果表不存在，只返回结果，不记录到数据库
         try:
             await db.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO ai_comparison_log
                     (user_id, session_id, request_type, user_query,
                      lingzhi_response, competitor_responses, comparison_metrics,
@@ -130,7 +131,8 @@ async def trigger_comparison(
                     VALUES (:user_id, :session_id, :request_type, :user_query,
                             :lingzhi_response, :competitor_responses, :comparison_metrics,
                             :winner, NOW())
-                """),
+                """
+                ),
                 {
                     "user_id": None,  # 从JWT获取
                     "session_id": comparison_id,
@@ -194,13 +196,15 @@ async def track_user_behavior(
         try:
             for behavior in request.behaviors:
                 await db.execute(
-                    text("""
+                    text(
+                        """
                         INSERT INTO user_focus_log
                         (session_id, request_id, element_id, element_type,
                          dwell_time_ms, viewport_position, timestamp)
                         VALUES (:session_id, :request_id, :element_id, :element_type,
                                 :dwell_time_ms, :viewport_position, NOW())
-                    """),
+                    """
+                    ),
                     {
                         "session_id": session_id,
                         "request_id": request.request_id,
@@ -250,13 +254,15 @@ async def submit_evolution_feedback(
         # 回写用户反馈到 ai_comparison_log
         try:
             result = await db.execute(
-                text("""
+                text(
+                    """
                     UPDATE ai_comparison_log
                     SET user_feedback = :feedback,
                         user_comment = :comment,
                         user_preference = :preference
                     WHERE id = :comparison_id
-                """),
+                """
+                ),
                 {
                     "feedback": request.rating,
                     "comment": request.comment,
@@ -295,7 +301,8 @@ async def get_comparison_result(comparison_id: str, db: AsyncSession = Depends(g
     """获取对比结果详情"""
     try:
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT id, session_id, request_type, user_query,
                        lingzhi_response, competitor_responses,
                        comparison_metrics, winner,
@@ -306,7 +313,8 @@ async def get_comparison_result(comparison_id: str, db: AsyncSession = Depends(g
                 WHERE session_id = :comparison_id
                 ORDER BY created_at DESC
                 LIMIT 1
-            """),
+            """
+            ),
             {"comparison_id": comparison_id},
         )
         row = result.mappings().first()
@@ -345,18 +353,24 @@ async def get_evolution_dashboard(
         interval = interval_map.get(period, "30 days")
 
         # 1. 对比统计摘要
-        summary_row = await db.execute(text(f"""
+        summary_row = await db.execute(
+            text(
+                f"""
                 SELECT
                     COUNT(*) AS total_comparisons,
                     COALESCE(SUM(CASE WHEN winner = 'lingzhi' THEN 1 ELSE 0 END)::float
                         / NULLIF(COUNT(*), 0) * 100, 0) AS lingzhi_win_rate
                 FROM ai_comparison_log
                 WHERE created_at >= NOW() - INTERVAL '{interval}'
-            """))
+            """
+            )
+        )
         summary = summary_row.mappings().first()
 
         # 2. 各AI胜率
-        perf_rows = await db.execute(text(f"""
+        perf_rows = await db.execute(
+            text(
+                f"""
                 SELECT
                     winner AS provider,
                     COUNT(*) AS wins,
@@ -365,7 +379,9 @@ async def get_evolution_dashboard(
                 WHERE created_at >= NOW() - INTERVAL '{interval}'
                   AND winner IS NOT NULL
                 GROUP BY winner
-            """))
+            """
+            )
+        )
         ai_performance = {}
         for row in perf_rows.mappings().all():
             ai_performance[row["provider"]] = {
@@ -376,25 +392,33 @@ async def get_evolution_dashboard(
             ai_performance.setdefault(provider, {"wins": 0, "win_rate": 0.0})
 
         # 3. 进化趋势
-        evo_rows = await db.execute(text(f"""
+        evo_rows = await db.execute(
+            text(
+                f"""
                 SELECT
                     COUNT(*) AS total_issues,
                     SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS resolved_issues
                 FROM evolution_log
                 WHERE created_at >= NOW() - INTERVAL '{interval}'
-            """))
+            """
+            )
+        )
         evo = evo_rows.mappings().first()
         total_issues = evo["total_issues"] if evo else 0
         resolved = evo["resolved_issues"] if evo else 0
 
         # 4. 最近对比
-        recent_rows = await db.execute(text(f"""
+        recent_rows = await db.execute(
+            text(
+                f"""
                 SELECT id, session_id, request_type, winner, created_at
                 FROM ai_comparison_log
                 WHERE created_at >= NOW() - INTERVAL '{interval}'
                 ORDER BY created_at DESC
                 LIMIT 10
-            """))
+            """
+            )
+        )
         recent_comparisons = [dict(r) for r in recent_rows.mappings().all()]
 
         return JSONResponse(

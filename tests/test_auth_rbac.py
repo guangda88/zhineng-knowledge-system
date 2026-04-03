@@ -2,15 +2,17 @@
 
 测试重构后的RBAC系统功能
 """
+
 import pytest
+
 from backend.auth.rbac import (
-    User,
     Permission,
-    Role,
     RBACManager,
+    Role,
+    User,
     get_rbac,
-    reset_rbac,
     require_permission,
+    reset_rbac,
 )
 
 
@@ -90,9 +92,7 @@ class TestUser:
 
     def test_has_permission_disabled_user(self):
         """测试禁用用户"""
-        user = User(
-            id="test1", username="charlie", role="admin", enabled=False
-        )
+        user = User(id="test1", username="charlie", role="admin", enabled=False)
         assert user.has_permission("system:admin", {"system:admin"}) is False
 
     def test_has_role(self):
@@ -176,9 +176,7 @@ class TestRBACManager:
     def test_check_permission_with_direct_permission(self):
         """测试直接权限检查"""
         rbac = get_rbac()
-        user = rbac.create_user(
-            "u1", "alice", Role.GUEST.value, permissions={"document:write"}
-        )
+        user = rbac.create_user("u1", "alice", Role.GUEST.value, permissions={"document:write"})
         assert rbac.check_permission(user, "document:write") is True
 
     def test_check_permission_with_role_permission(self):

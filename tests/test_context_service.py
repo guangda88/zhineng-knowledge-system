@@ -1,17 +1,18 @@
 """上下文管理服务测试"""
 
 import json
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 from backend.services.context_service import (
     ContextService,
-    TokenEstimate,
-    MessageScore,
-    ContextStatus,
     ContextSnapshot,
-    get_context_service
+    ContextStatus,
+    MessageScore,
+    TokenEstimate,
+    get_context_service,
 )
 
 
@@ -68,7 +69,7 @@ class TestMessageScoring:
         """测试简单消息评分"""
         messages = [
             {"role": "user", "content": "fix the bug in login"},
-            {"role": "assistant", "content": "I'll help you fix the bug"}
+            {"role": "assistant", "content": "I'll help you fix the bug"},
         ]
 
         scores = context_service.score_messages(messages)
@@ -82,7 +83,7 @@ class TestMessageScoring:
         """测试重要关键词检测"""
         messages = [
             {"role": "user", "content": "implement critical feature"},
-            {"role": "user", "content": "hello world"}
+            {"role": "user", "content": "hello world"},
         ]
 
         scores = context_service.score_messages(messages)
@@ -108,8 +109,7 @@ class TestMessageRecording:
         context_service.record_message("user", "fix the critical bug now", is_important=True)
 
         # 应该提取任务信息
-        assert len(context_service.snapshot.tasks_pending) > 0 or \
-               context_service.message_count > 0
+        assert len(context_service.snapshot.tasks_pending) > 0 or context_service.message_count > 0
 
     def test_record_multiple_messages(self, context_service):
         """测试记录多条消息"""

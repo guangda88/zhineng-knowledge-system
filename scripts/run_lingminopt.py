@@ -8,10 +8,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.services.evolution.lingminopt import (
-    get_lingminopt_framework,
-    MetricsCollector,
     EvolutionOptimizer,
-    OptimizationOrchestrator
+    MetricsCollector,
+    OptimizationOrchestrator,
+    get_lingminopt_framework,
 )
 
 
@@ -69,8 +69,7 @@ async def run_analysis():
 
         phase1 = plan.phases[0]
         phase1_opportunities = [
-            opp for opp in plan.opportunities
-            if opp.id in phase1["opportunities"]
+            opp for opp in plan.opportunities if opp.id in phase1["opportunities"]
         ]
 
         orchestrator = OptimizationOrchestrator()
@@ -83,7 +82,12 @@ async def run_analysis():
             steps = opp.implementation.strip().split("\n")
             for step in steps:
                 step = step.strip()
-                if step and (step.startswith("1.") or step.startswith("2.") or step.startswith("3.") or step.startswith("4.")):
+                if step and (
+                    step.startswith("1.")
+                    or step.startswith("2.")
+                    or step.startswith("3.")
+                    or step.startswith("4.")
+                ):
                     print(f"    {step}")
 
             # 模拟执行（实际会调用API）
@@ -126,15 +130,15 @@ async def run_analysis():
                 "expected_improvement": opp.expected_improvement,
                 "effort": opp.effort,
                 "risk": opp.risk,
-                "implementation": opp.implementation
+                "implementation": opp.implementation,
             }
             for opp in opportunities
         ],
         "plan": {
             "estimated_duration": plan.estimated_duration,
             "expected_impact": plan.expected_impact,
-            "phases": plan.phases
-        }
+            "phases": plan.phases,
+        },
     }
 
     config_file.write_text(json.dumps(plan_data, indent=2, ensure_ascii=False))

@@ -15,7 +15,17 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 SOURCE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guoxue.db"
-PSQL_CMD = ["docker", "exec", "-i", "dfdd3b278296_zhineng-postgres", "psql", "-U", "zhineng", "-d", "zhineng_kb"]
+PSQL_CMD = [
+    "docker",
+    "exec",
+    "-i",
+    "dfdd3b278296_zhineng-postgres",
+    "psql",
+    "-U",
+    "zhineng",
+    "-d",
+    "zhineng_kb",
+]
 BATCH_SIZE = 10000
 
 
@@ -44,7 +54,9 @@ def main():
     conn = sqlite3.connect(str(SOURCE_DB))
     conn.execute("PRAGMA cache_size = -512000")
     cur = conn.cursor()
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name")
+    cur.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name"
+    )
     tables = []
     for (name,) in cur.fetchall():
         cur.execute(f"SELECT COUNT(*) FROM [{name}]")
@@ -59,7 +71,9 @@ def main():
     copy_sql = "COPY guji_documents (source_table, source_id, title, content, content_length, dynasty, category, tags) FROM STDIN WITH (FORMAT text, DELIMITER E'\\t', NULL '\\N');"
     proc = subprocess.Popen(
         PSQL_CMD + ["-c", copy_sql],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
 
     conn = sqlite3.connect(str(SOURCE_DB))
@@ -78,27 +92,32 @@ def main():
         buf = []
 
         while True:
-            cur.execute(f"SELECT * FROM [{table}] WHERE rowid > ? ORDER BY rowid LIMIT {BATCH_SIZE}", (last_id,))
+            cur.execute(
+                f"SELECT * FROM [{table}] WHERE rowid > ? ORDER BY rowid LIMIT {BATCH_SIZE}",
+                (last_id,),
+            )
             rows = cur.fetchall()
             if not rows:
                 break
 
             for row in rows:
-                row_id = row['id'] if 'id' in row.keys() else row[0]
+                row_id = row["id"] if "id" in row.keys() else row[0]
                 content = None
-                if 'body' in row.keys() and row['body']:
-                    content = row['body']
-                elif 'd' in row.keys() and row['d']:
-                    content = row['d']
+                if "body" in row.keys() and row["body"]:
+                    content = row["body"]
+                elif "d" in row.keys() and row["d"]:
+                    content = row["d"]
 
                 if not content or len(content) < 10:
                     continue
 
-                title = content[:50].split('\n')[0][:50]
-                buf.append(f"{esc(table)}\t{esc(row_id)}\t{esc(title)}\t{esc(content)}\t{esc(len(content))}\t\\N\t古籍\t{{}}")
+                title = content[:50].split("\n")[0][:50]
+                buf.append(
+                    f"{esc(table)}\t{esc(row_id)}\t{esc(title)}\t{esc(content)}\t{esc(len(content))}\t\\N\t古籍\t{{}}"
+                )
                 table_count += 1
 
-            last_id = rows[-1]['id'] if 'id' in rows[-1].keys() else rows[-1][0]
+            last_id = rows[-1]["id"] if "id" in rows[-1].keys() else rows[-1][0]
 
             if len(buf) >= BATCH_SIZE:
                 proc.stdin.write(("\n".join(buf) + "\n").encode("utf-8"))
@@ -124,7 +143,11 @@ def main():
     logger.info(f"DONE in {elapsed:.0f}s, {total:,} rows")
 
     # Verify
-    r = subprocess.run(PSQL_CMD + ["-c", "SELECT COUNT(*), COUNT(DISTINCT source_table) FROM guji_documents;"], capture_output=True, text=True)
+    r = subprocess.run(
+        PSQL_CMD + ["-c", "SELECT COUNT(*), COUNT(DISTINCT source_table) FROM guji_documents;"],
+        capture_output=True,
+        text=True,
+    )
     logger.info(f"Verify: {r.stdout.strip()}")
 
 

@@ -510,13 +510,15 @@ class KnowledgeGraphBuilder:
 
         async with pool.acquire() as conn:
             # Get distinct domain/subcategory combinations
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT domain, subcategory, COUNT(*) as cnt
                 FROM sys_books
                 WHERE domain IS NOT NULL
                 GROUP BY domain, subcategory
                 ORDER BY cnt DESC
-            """)
+            """
+            )
 
             for row in rows:
                 domain = row["domain"]
@@ -585,26 +587,32 @@ class KnowledgeGraphBuilder:
             entity_count = await conn.fetchval("SELECT COUNT(*) FROM kg_entities")
             relation_count = await conn.fetchval("SELECT COUNT(*) FROM kg_relations")
 
-            entity_types = await conn.fetch("""
+            entity_types = await conn.fetch(
+                """
                 SELECT entity_type, COUNT(*) as cnt
                 FROM kg_entities
                 GROUP BY entity_type
                 ORDER BY cnt DESC
-            """)
+            """
+            )
 
-            relation_types = await conn.fetch("""
+            relation_types = await conn.fetch(
+                """
                 SELECT relation_type, COUNT(*) as cnt
                 FROM kg_relations
                 GROUP BY relation_type
                 ORDER BY cnt DESC
-            """)
+            """
+            )
 
-            top_entities = await conn.fetch("""
+            top_entities = await conn.fetch(
+                """
                 SELECT name, entity_type, mention_count
                 FROM kg_entities
                 ORDER BY mention_count DESC
                 LIMIT 10
-            """)
+            """
+            )
 
             return {
                 "total_entities": entity_count,

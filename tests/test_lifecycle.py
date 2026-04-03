@@ -3,8 +3,9 @@
 覆盖: 用户等级、生命状态追踪、练习记录、练习计划、用户概览
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -132,9 +133,7 @@ class TestLifeStateTracking:
     def test_record_life_state_new(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(side_effect=[True, None])
-        mock_pool.fetchrow = AsyncMock(
-            return_value={"id": 1, "tracked_date": "2026-04-03"}
-        )
+        mock_pool.fetchrow = AsyncMock(return_value={"id": 1, "tracked_date": "2026-04-03"})
 
         response = client.post(
             "/api/v1/lifecycle/life-state/record",
@@ -283,9 +282,7 @@ class TestPracticeRecords:
             ]
         )
 
-        response = client.get(
-            "/api/v1/lifecycle/practice/my-records?user_id=test_user&limit=20"
-        )
+        response = client.get("/api/v1/lifecycle/practice/my-records?user_id=test_user&limit=20")
         assert response.status_code == 200 or response.status_code == 500
         if response.status_code == 200:
             data = response.json()
@@ -413,9 +410,7 @@ class TestPracticePlans:
             ]
         )
 
-        response = client.get(
-            "/api/v1/lifecycle/practice/plans?user_id=test_user"
-        )
+        response = client.get("/api/v1/lifecycle/practice/plans?user_id=test_user")
         assert response.status_code == 200 or response.status_code == 500
         if response.status_code == 200:
             data = response.json()
@@ -427,9 +422,7 @@ class TestPracticePlans:
         mock_init.return_value = mock_pool
         mock_pool.fetch = AsyncMock(return_value=[])
 
-        response = client.get(
-            "/api/v1/lifecycle/practice/plans?user_id=test_user&status=active"
-        )
+        response = client.get("/api/v1/lifecycle/practice/plans?user_id=test_user&status=active")
         assert response.status_code == 200 or response.status_code == 500
 
     @patch("backend.api.v1.lifecycle.init_db_pool")
@@ -509,9 +502,7 @@ class TestDashboard:
     @patch("backend.api.v1.lifecycle.init_db_pool")
     def test_dashboard_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
-        mock_pool.fetchrow = AsyncMock(
-            side_effect=[None]
-        )
+        mock_pool.fetchrow = AsyncMock(side_effect=[None])
 
         response = client.get("/api/v1/lifecycle/dashboard/nonexistent")
         assert response.status_code in [404, 500]
@@ -574,6 +565,7 @@ class TestLifecycleModels:
 
     def test_practice_plan_create_defaults(self):
         from datetime import date
+
         from backend.api.v1.lifecycle import PracticePlanCreate
 
         model = PracticePlanCreate(

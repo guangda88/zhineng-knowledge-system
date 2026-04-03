@@ -5,20 +5,21 @@
 专门针对智能气功九本教材的复杂目录结构
 """
 
-import re
 import json
 import logging
-from pathlib import Path
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple, Set
+import re
 from collections import defaultdict
+from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class ParseMethod(Enum):
     """解析方法"""
+
     REGEX = "regex"
     HEURISTIC = "heuristic"
     AI_ASSISTED = "ai"
@@ -27,8 +28,9 @@ class ParseMethod(Enum):
 @dataclass
 class TocItem:
     """目录条目"""
+
     title: str
-    level: int                          # 层级 1-9
+    level: int  # 层级 1-9
     page_number: Optional[int] = None
     line_number: int = 0
     confidence: float = 1.0
@@ -45,13 +47,14 @@ class TocItem:
             "confidence": self.confidence,
             "parent_index": self.parent_index,
             "parse_method": self.parse_method.value,
-            "chapter_number": self.chapter_number
+            "chapter_number": self.chapter_number,
         }
 
 
 @dataclass
 class TocParseResult:
     """目录解析结果"""
+
     items: List[TocItem] = field(default_factory=list)
     raw_lines: List[str] = field(default_factory=list)
     parse_method: ParseMethod = ParseMethod.HEURISTIC
@@ -66,7 +69,7 @@ class TocParseResult:
             "parse_method": self.parse_method.value,
             "confidence": self.confidence,
             "issues": self.issues,
-            "max_depth": self.max_depth
+            "max_depth": self.max_depth,
         }
 
 
@@ -76,46 +79,42 @@ class DeepTocParser:
     # 智能气功教材目录模式 - 更全面的匹配规则
     PATTERNS = {
         # 层级1: 第X章
-        "level1_chinese_full": re.compile(r'^第([一二三四五六七八九十百零\d]+)章\s+(.+)$'),
-        "level1_chinese": re.compile(r'^第([一二三四五六七八九十百零\d]+)章[、\s]*(.+)$'),
-        "level1_arabic": re.compile(r'^第?(\d+)章[、\s]*(.+)$'),
-        "level1_simple": re.compile(r'^(\d+)\s*[、.．]\s*(.+)$'),
-
+        "level1_chinese_full": re.compile(r"^第([一二三四五六七八九十百零\d]+)章\s+(.+)$"),
+        "level1_chinese": re.compile(r"^第([一二三四五六七八九十百零\d]+)章[、\s]*(.+)$"),
+        "level1_arabic": re.compile(r"^第?(\d+)章[、\s]*(.+)$"),
+        "level1_simple": re.compile(r"^(\d+)\s*[、.．]\s*(.+)$"),
         # 层级1-2: 编号+篇/编/部分
-        "level1_part": re.compile(r'^([第]?[一二三四五六七八九十\d]+)[篇编部部分]\s+(.+)$'),
-
+        "level1_part": re.compile(r"^([第]?[一二三四五六七八九十\d]+)[篇编部部分]\s+(.+)$"),
         # 层级2: 第X节
-        "level2_chinese": re.compile(r'^第([一二三四五六七八九十百零\d]+)节[、\s]*(.+)$'),
-        "level2_arabic": re.compile(r'^(\d+)[、.．]\s+(.+)$'),
-        "level2_dot": re.compile(r'^(\d+)\.(\d+)\s+(.+)$'),
-
+        "level2_chinese": re.compile(r"^第([一二三四五六七八九十百零\d]+)节[、\s]*(.+)$"),
+        "level2_arabic": re.compile(r"^(\d+)[、.．]\s+(.+)$"),
+        "level2_dot": re.compile(r"^(\d+)\.(\d+)\s+(.+)$"),
         # 层级2-3: 中文数字 +顿号
-        "level2_1_chinese": re.compile(r'^([一二三四五六七八九十]+)、\s*(.+)$'),
-        "level3_chinese": re.compile(r'^([\(（]?[一二三四五六七八九十]+)[）\)]?[、.．]\s*(.+)$'),
-
+        "level2_1_chinese": re.compile(r"^([一二三四五六七八九十]+)、\s*(.+)$"),
+        "level3_chinese": re.compile(r"^([\(（]?[一二三四五六七八九十]+)[）\)]?[、.．]\s*(.+)$"),
         # 层级3-4: 罗马数字 (I, II, III, IV, V, VI, VII, VIII, IX, X)
-        "level3_roman": re.compile(r'^([IVX]+)[、.．\s]+([^\(]+)$'),
-        "level3_roman_paren": re.compile(r'^([IVX]+)[、.．\s]+\(([^)]+)\)$'),
-        "level4_roman_nested": re.compile(r'^([IVX]+)[、.．]+(.+)$'),
-
+        "level3_roman": re.compile(r"^([IVX]+)[、.．\s]+([^\(]+)$"),
+        "level3_roman_paren": re.compile(r"^([IVX]+)[、.．\s]+\(([^)]+)\)$"),
+        "level4_roman_nested": re.compile(r"^([IVX]+)[、.．]+(.+)$"),
         # 层级4-5: 阿拉伯数字子项 (一、二、三 或 1、2、3)
-        "level4_chinese_sub": re.compile(r'^([一二三四五六七八九十]+)[、.．]\s*(.+)$'),
-        "level4_arabic_sub": re.compile(r'^(\d+)[、.．]\s*(.+)$'),
-
+        "level4_chinese_sub": re.compile(r"^([一二三四五六七八九十]+)[、.．]\s*(.+)$"),
+        "level4_arabic_sub": re.compile(r"^(\d+)[、.．]\s*(.+)$"),
         # 层级5-6: 带括号的子项 ((一) (二) 或 (1) (2))
-        "level5_paren_chinese": re.compile(r'^[（\(]([一二三四五六七八九十]+)[）\)][、.．]?\s*(.+)$'),
-        "level5_paren_arabic": re.compile(r'^[（\(](\d+)[）\)][、.．]?\s*(.+)$'),
-
+        "level5_paren_chinese": re.compile(
+            r"^[（\(]([一二三四五六七八九十]+)[）\)][、.．]?\s*(.+)$"
+        ),
+        "level5_paren_arabic": re.compile(r"^[（\(](\d+)[）\)][、.．]?\s*(.+)$"),
         # 层级6-7: 中文数字 + 序 (第一次、第二次等)
-        "level6_ordinal": re.compile(r'^(第[一二三四五六七八九十]+[次次遍式])\s*(.+)$'),
-        "level6_paren_ordinal": re.compile(r'^[（\(](第?[一二三四五六七八九十]+[次次遍式])[）\)]\s*(.+)$'),
-
+        "level6_ordinal": re.compile(r"^(第[一二三四五六七八九十]+[次次遍式])\s*(.+)$"),
+        "level6_paren_ordinal": re.compile(
+            r"^[（\(](第?[一二三四五六七八九十]+[次次遍式])[）\)]\s*(.+)$"
+        ),
         # 层级7-8: 嵌套子项
-        "level7_nested": re.compile(r'^([\(\)【\]\da-zA-Z]+)[、.．]\s*(.+)$'),
+        "level7_nested": re.compile(r"^([\(\)【\]\da-zA-Z]+)[、.．]\s*(.+)$"),
     }
 
     # 换行符模式（用于识别段落分隔）
-    PARAGRAPH_BREAK = re.compile(r'^(={3,}|−{3,}|—{3,}|\*{3,})$')
+    PARAGRAPH_BREAK = re.compile(r"^(={3,}|−{3,}|—{3,}|\*{3,})$")
 
     def __init__(self, enable_ai: bool = False):
         """初始化解析器"""
@@ -123,25 +122,21 @@ class DeepTocParser:
 
     def detect_encoding(self, file_path: Path) -> str:
         """检测文件编码"""
-        encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030', 'big5']
+        encodings = ["utf-8", "gbk", "gb2312", "gb18030", "big5"]
         for encoding in encodings:
             try:
-                with open(file_path, 'r', encoding=encoding) as f:
+                with open(file_path, "r", encoding=encoding) as f:
                     content = f.read(1000)
-                if len(content) > 100 and any('\u4e00' <= c <= '\u9fff' for c in content):
+                if len(content) > 100 and any("\u4e00" <= c <= "\u9fff" for c in content):
                     return encoding
             except (UnicodeDecodeError, IOError, OSError):
                 # 尝试下一个编码
                 continue
-        return 'utf-8'  # 默认
+        return "utf-8"  # 默认
 
-    def parse(
-        self,
-        content: str,
-        method: ParseMethod = ParseMethod.HEURISTIC
-    ) -> TocParseResult:
+    def parse(self, content: str, method: ParseMethod = ParseMethod.HEURISTIC) -> TocParseResult:
         """解析目录"""
-        lines = content.split('\n')
+        lines = content.split("\n")
         result = TocParseResult(raw_lines=lines, parse_method=method)
 
         # 定位目录区域
@@ -244,9 +239,14 @@ class DeepTocParser:
 
         # 检查是否匹配任何目录模式
         for pattern_name in [
-            "level1_chinese", "level1_arabic", "level1_part",
-            "level2_chinese", "level2_arabic", "level2_1_chinese",
-            "level3_roman", "level4_chinese_sub"
+            "level1_chinese",
+            "level1_arabic",
+            "level1_part",
+            "level2_chinese",
+            "level2_arabic",
+            "level2_1_chinese",
+            "level3_roman",
+            "level4_chinese_sub",
         ]:
             if self.PATTERNS[pattern_name].match(line):
                 return True
@@ -260,11 +260,11 @@ class DeepTocParser:
 
         # 检查是否匹配章节标题模式
         chapter_patterns = [
-            r'^第[一二三四五六七八九十百零\d]+章[：\s]',
-            r'^第[一二三四五六七八九十百零\d]+节[：\s]',
-            r'^[一二三四五六七八九十]+、',
-            r'^\d+、',
-            r'^第[一二三四五六七八九十百零\d]+部分[：\s]',
+            r"^第[一二三四五六七八九十百零\d]+章[：\s]",
+            r"^第[一二三四五六七八九十百零\d]+节[：\s]",
+            r"^[一二三四五六七八九十]+、",
+            r"^\d+、",
+            r"^第[一二三四五六七八九十百零\d]+部分[：\s]",
         ]
 
         for pattern in chapter_patterns:
@@ -273,11 +273,7 @@ class DeepTocParser:
 
         return False
 
-    def _parse_deep_structure(
-        self,
-        lines: List[str],
-        result: TocParseResult
-    ) -> TocParseResult:
+    def _parse_deep_structure(self, lines: List[str], result: TocParseResult) -> TocParseResult:
         """深度解析目录结构"""
         items = []
         indent_levels = {}  # 缩进 -> 层级映射
@@ -299,30 +295,25 @@ class DeepTocParser:
         result.items = items
         return result
 
-    def _try_parse_line(
-        self,
-        line: str,
-        line_num: int,
-        original_line: str
-    ) -> Optional[TocItem]:
+    def _try_parse_line(self, line: str, line_num: int, original_line: str) -> Optional[TocItem]:
         """尝试解析单行"""
         indent = len(original_line) - len(line)
 
         # 去除页码（目录中常见的\t数字格式）
-        page_num_pattern = re.compile(r'\t\d+$')
+        page_num_pattern = re.compile(r"\t\d+$")
         page_number = None
         if page_num_pattern.search(line):
             match = page_num_pattern.search(line)
-            page_number = match.group(0).strip('\t')
-            line = page_num_pattern.sub('', line).strip()
+            page_number = match.group(0).strip("\t")
+            line = page_num_pattern.sub("", line).strip()
 
         # 去除末尾的纯数字（也是页码的另一种格式）
-        trailing_num_pattern = re.compile(r'\s+\d{1,4}$')
-        if trailing_num_pattern.search(line) and not re.search(r'[一二三四五六七八九十]', line):
+        trailing_num_pattern = re.compile(r"\s+\d{1,4}$")
+        if trailing_num_pattern.search(line) and not re.search(r"[一二三四五六七八九十]", line):
             match = trailing_num_pattern.search(line)
             try:
                 page_number = match.group(0).strip()
-                line = trailing_num_pattern.sub('', line).strip()
+                line = trailing_num_pattern.sub("", line).strip()
             except (AttributeError, IndexError):
                 # 匹配失败，保持原样
                 pass
@@ -370,7 +361,7 @@ class DeepTocParser:
                     confidence=0.8,
                     parse_method=ParseMethod.HEURISTIC,
                     chapter_number=chapter_num,
-                    page_number=int(page_number) if page_number and page_number.isdigit() else None
+                    page_number=int(page_number) if page_number and page_number.isdigit() else None,
                 )
 
         # 如果没有匹配，检查是否是简单的标题行（全中文，较短）
@@ -379,34 +370,34 @@ class DeepTocParser:
         # 2. 必须包含章节标识符（第、节、章等）
         # 3. 避免纯标点符号的行
         # 4. 避免过长的连续文本（正文特征）
-        
+
         # 排除纯标点和空白
-        punctuation_pattern = r'^[\s，。！？、；：""''（）【]+$'
+        punctuation_pattern = r'^[\s，。！？、；：""' "（）【]+$"
         if re.match(punctuation_pattern, line):
             return None  # 直接跳过，不作为标题
 
         is_candidate = (
-            len(line) < 60 and  # 严格长度限制
-            any('\u4e00' <= c <= '\u9fff' for c in line) and  # 包含中文
-            not re.match(r'^[\s，。！？、；：""''（）【]+$', line)  # 避免纯标点
+            len(line) < 60  # 严格长度限制
+            and any("\u4e00" <= c <= "\u9fff" for c in line)  # 包含中文
+            and not re.match(r'^[\s，。！？、；：""' "（）【]+$", line)  # 避免纯标点
         )
-        
+
         # 检查是否像章节标题的特征（放宽条件）
         chapter_like = False
         chapter_patterns = [
-            r'^第[一二三四五六七八九十百零\d]+[章节部分]',  # 第X章/节/部分
-            r'^[一二三四五六七八九十]+、',  # 中文数字编号
-            r'^[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+[、.]',  # 罗马数字编号
-            r'^[A-Z]+[、.]',  # 字母编号
-            r'^\d+[、.]',  # 阿拉伯数字编号
-            r'综述|概论|引言|绪论|概述|说明',  # 常见章节关键词
+            r"^第[一二三四五六七八九十百零\d]+[章节部分]",  # 第X章/节/部分
+            r"^[一二三四五六七八九十]+、",  # 中文数字编号
+            r"^[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+[、.]",  # 罗马数字编号
+            r"^[A-Z]+[、.]",  # 字母编号
+            r"^\d+[、.]",  # 阿拉伯数字编号
+            r"综述|概论|引言|绪论|概述|说明",  # 常见章节关键词
         ]
-        
+
         for pattern in chapter_patterns:
             if re.search(pattern, line):
                 chapter_like = True
                 break
-        
+
         # 放宽条件：有章节特征，或者是有序号的中短文本
         if is_candidate and chapter_like:
             # 根据缩进推断层级
@@ -420,7 +411,7 @@ class DeepTocParser:
                 line_number=line_num,
                 confidence=0.5,
                 parse_method=ParseMethod.HEURISTIC,
-                page_number=int(page_number) if page_number and page_number.isdigit() else None
+                page_number=int(page_number) if page_number and page_number.isdigit() else None,
             )
 
         return None
@@ -490,7 +481,7 @@ def parse_textbook_toc(text_file: Path) -> TocParseResult:
     logger.info(f"  使用编码: {encoding}")
 
     # 读取内容
-    with open(text_file, 'r', encoding=encoding, errors='ignore') as f:
+    with open(text_file, "r", encoding=encoding, errors="ignore") as f:
         content = f.read()
 
     # 解析
@@ -503,7 +494,11 @@ if __name__ == "__main__":
     import sys
     from pathlib import Path
 
-    text_file = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/processed/textbooks_v2/04-功法学/full_text.txt")
+    text_file = (
+        Path(sys.argv[1])
+        if len(sys.argv) > 1
+        else Path("data/processed/textbooks_v2/04-功法学/full_text.txt")
+    )
 
     result = parse_textbook_toc(text_file)
 

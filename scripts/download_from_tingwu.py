@@ -47,8 +47,9 @@ from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import aiohttp
 import logging
+
+import aiohttp
 
 logging.basicConfig(
     level=logging.INFO,
@@ -142,7 +143,9 @@ class TingwuDownloader:
             response = await asyncio.to_thread(
                 self._client.get_task_info_with_options,
                 task_id,
-                None, None, None,
+                None,
+                None,
+                None,
             )
 
             if response.status_code != 200 or not response.body:
@@ -210,9 +213,7 @@ class TingwuDownloader:
                         return True
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                logger.warning(
-                    f"下载异常 [{desc}] (尝试 {attempt}/{RETRY_ATTEMPTS}): {e}"
-                )
+                logger.warning(f"下载异常 [{desc}] (尝试 {attempt}/{RETRY_ATTEMPTS}): {e}")
                 if attempt < RETRY_ATTEMPTS:
                     await asyncio.sleep(RETRY_DELAY * attempt)
 
@@ -259,9 +260,7 @@ class TingwuDownloader:
                         transcription_url, transcript_path, f"转写 {task_id[:12]}..."
                     )
                     if ok:
-                        base_name = self._extract_name_from_transcript(
-                            transcript_path, task_id
-                        )
+                        base_name = self._extract_name_from_transcript(transcript_path, task_id)
                     elif not self._transcripts_only:
                         self._stats["failed"] += 1
                         return
@@ -271,9 +270,7 @@ class TingwuDownloader:
                 if self._skip_existing and audio_path.exists():
                     logger.info(f"  跳过已存在: {audio_path.name}")
                 else:
-                    ok = await self._download_file(
-                        audio_url, audio_path, f"音频 {task_id[:12]}..."
-                    )
+                    ok = await self._download_file(audio_url, audio_path, f"音频 {task_id[:12]}...")
                     if not ok:
                         self._stats["failed"] += 1
                         return
@@ -313,10 +310,7 @@ class TingwuDownloader:
             logger.info("  跳过已存在文件")
 
         start = time.time()
-        tasks = [
-            self._process_task(tid, i + 1, total)
-            for i, tid in enumerate(task_ids)
-        ]
+        tasks = [self._process_task(tid, i + 1, total) for i, tid in enumerate(task_ids)]
         await asyncio.gather(*tasks)
 
         elapsed = time.time() - start
@@ -351,31 +345,39 @@ async def main():
         epilog=__doc__,
     )
     parser.add_argument(
-        "--task-ids", required=True,
+        "--task-ids",
+        required=True,
         help="task ID 文件路径 或 逗号分隔的 task ID 列表",
     )
     parser.add_argument(
-        "--audio-dir", default=DEFAULT_AUDIO_DIR,
+        "--audio-dir",
+        default=DEFAULT_AUDIO_DIR,
         help=f"音频保存目录 (默认: {DEFAULT_AUDIO_DIR})",
     )
     parser.add_argument(
-        "--transcript-dir", default=DEFAULT_TRANSCRIPT_DIR,
+        "--transcript-dir",
+        default=DEFAULT_TRANSCRIPT_DIR,
         help=f"转写保存目录 (默认: {DEFAULT_TRANSCRIPT_DIR})",
     )
     parser.add_argument(
-        "--concurrency", type=int, default=3,
+        "--concurrency",
+        type=int,
+        default=3,
         help=f"并发下载数 (默认: 3, 最大: {MAX_CONCURRENCY})",
     )
     parser.add_argument(
-        "--transcripts-only", action="store_true",
+        "--transcripts-only",
+        action="store_true",
         help="仅下载转写结果，不下载音频文件",
     )
     parser.add_argument(
-        "--skip-existing", action="store_true",
+        "--skip-existing",
+        action="store_true",
         help="跳过已存在的文件",
     )
     parser.add_argument(
-        "--dry-run", action="store_true",
+        "--dry-run",
+        action="store_true",
         help="仅验证 task IDs，不下载",
     )
     args = parser.parse_args()

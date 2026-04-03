@@ -1,7 +1,8 @@
 """Tests for backend.monitoring.health — HealthChecker"""
+
 import pytest
 
-from backend.monitoring.health import HealthChecker, HealthStatus, HealthCheckResult
+from backend.monitoring.health import HealthChecker, HealthCheckResult, HealthStatus
 
 
 class TestHealthStatus:
@@ -17,9 +18,7 @@ class TestHealthCheckResult:
     """Test HealthCheckResult dataclass"""
 
     def test_to_dict(self):
-        result = HealthCheckResult(
-            name="db", status=HealthStatus.HEALTHY, message="OK"
-        )
+        result = HealthCheckResult(name="db", status=HealthStatus.HEALTHY, message="OK")
         d = result.to_dict()
         assert d["name"] == "db"
         assert d["status"] == "healthy"

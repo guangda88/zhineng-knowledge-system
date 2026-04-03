@@ -82,12 +82,14 @@ async def get_pipeline_stats():
         )
 
         # sys_books extraction stats — use pg_class estimate
-        extraction = await conn.fetch("""
+        extraction = await conn.fetch(
+            """
             SELECT extraction_status, COUNT(*) as cnt
             FROM sys_books
             GROUP BY extraction_status
             ORDER BY cnt DESC
-        """)
+        """
+        )
 
         # sys_books tagging — partial GIN index makes this fast
         tagged = await conn.fetchval(
@@ -95,12 +97,14 @@ async def get_pipeline_stats():
         )
 
         # Cross-reference stats
-        cross_ref = await conn.fetch("""
+        cross_ref = await conn.fetch(
+            """
             SELECT cross_ref_status, COUNT(*) as cnt
             FROM sys_books
             GROUP BY cross_ref_status
             ORDER BY cnt DESC
-        """)
+        """
+        )
 
         # Content stats
         contents = await conn.fetchval("SELECT COUNT(*) FROM sys_book_contents")
@@ -113,13 +117,15 @@ async def get_pipeline_stats():
         relations = await conn.fetchval("SELECT COUNT(*) FROM kg_relations")
 
         # Recent tasks
-        tasks = await conn.fetch("""
+        tasks = await conn.fetch(
+            """
             SELECT id, task_type, status, total_items, processed_items,
                    failed_items, created_at, completed_at
             FROM extraction_tasks
             ORDER BY created_at DESC
             LIMIT 5
-        """)
+        """
+        )
 
         return {
             "status": "ok",

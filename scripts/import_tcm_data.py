@@ -18,7 +18,7 @@ import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -28,8 +28,7 @@ from tqdm import tqdm
 
 # 配置日志
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,8 @@ DYNASTY_KEYWORDS = {
 
 async def create_tcm_tables(conn: asyncpg.Connection) -> None:
     """创建中医数据表"""
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS tcm_documents (
             id SERIAL PRIMARY KEY,
             source_type VARCHAR(50) NOT NULL,
@@ -97,31 +97,43 @@ async def create_tcm_tables(conn: asyncpg.Connection) -> None:
             updated_at TIMESTAMP DEFAULT NOW(),
             UNIQUE(source_type, source_id)
         );
-    """)
+    """
+    )
 
     # 创建索引
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_source ON tcm_documents(source_type, source_id);
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_category ON tcm_documents(main_category, sub_categories);
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_title ON tcm_documents USING gin(to_tsvector('chinese', title));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_content ON tcm_documents USING gin(to_tsvector('chinese', content));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_tags ON tcm_documents USING gin(tags);
-    """)
+    """
+    )
 
     # 创建中医词表
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS tcm_vocabulary (
             id SERIAL PRIMARY KEY,
             term TEXT NOT NULL UNIQUE,
@@ -135,15 +147,20 @@ async def create_tcm_tables(conn: asyncpg.Connection) -> None:
             frequency INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT NOW()
         );
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_vocab_term ON tcm_vocabulary USING gin(to_tsvector('chinese', term));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_tcm_vocab_category ON tcm_vocabulary(category);
-    """)
+    """
+    )
 
     logger.info("中医数据表创建完成")
 
@@ -171,7 +188,7 @@ def categorize_tcm_content(title: str, content: str) -> Tuple[str, List[str]]:
 
 def detect_dynasty(title: str, content: str) -> str:
     """检测中医文档的朝代"""
-    text = (title + " " + (content or ""))
+    text = title + " " + (content or "")
 
     for dynasty, keywords in DYNASTY_KEYWORDS.items():
         for keyword in keywords:
@@ -209,7 +226,7 @@ async def import_kxzd_data(conn: asyncpg.Connection, kxzd_db: str) -> int:
         if val is None:
             return None
         if isinstance(val, bytes):
-            return val.decode('utf-8', errors='ignore')
+            return val.decode("utf-8", errors="ignore")
         return str(val)
 
     for row in tqdm(rows, desc="处理知识字典"):
@@ -239,42 +256,46 @@ async def import_kxzd_data(conn: asyncpg.Connection, kxzd_db: str) -> int:
 
         main_cat, sub_cats = categorize_tcm_content(char, definition)
 
-        insert_docs.append((
-            "kxzd",                    # source_type
-            str(kxzd_id),              # source_id
-            char,                      # title
-            content,                   # content
-            len(content),              # content_length
-            main_cat,                  # main_category
-            sub_cats,                  # sub_categories
-            {"radical": radical, "strokes": strokes},  # tags
-            f"知识字典 ID: {kxzd_id}", # source_reference
-        ))
+        insert_docs.append(
+            (
+                "kxzd",  # source_type
+                str(kxzd_id),  # source_id
+                char,  # title
+                content,  # content
+                len(content),  # content_length
+                main_cat,  # main_category
+                sub_cats,  # sub_categories
+                {"radical": radical, "strokes": strokes},  # tags
+                f"知识字典 ID: {kxzd_id}",  # source_reference
+            )
+        )
 
         # 作为词汇导入
         if is_tcm or definition:
-            insert_vocab.append((
-                char,
-                pinyin,
-                category,
-                definition,
-            ))
+            insert_vocab.append(
+                (
+                    char,
+                    pinyin,
+                    category,
+                    definition,
+                )
+            )
 
     # 批量插入 - 转换tags为JSONB
     if insert_docs:
         prepared_docs = []
         for doc in insert_docs:
             # doc: (source_type, source_id, title, content, content_length, main_category, sub_categories, tags, source_reference)
-            prepared_docs.append((
-                doc[0], doc[1], doc[2], doc[3], doc[4], doc[5], doc[6], json.dumps(doc[7]), doc[8]
-            ))
+            prepared_docs.append(
+                (doc[0], doc[1], doc[2], doc[3], doc[4], doc[5], doc[6], json.dumps(doc[7]), doc[8])
+            )
         await conn.executemany(
             """
             INSERT INTO tcm_documents (source_type, source_id, title, content, content_length, main_category, sub_categories, tags, source_reference)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
             ON CONFLICT (source_type, source_id) DO NOTHING
             """,
-            prepared_docs
+            prepared_docs,
         )
 
     if insert_vocab:
@@ -286,7 +307,7 @@ async def import_kxzd_data(conn: asyncpg.Connection, kxzd_db: str) -> int:
                 definition = EXCLUDED.definition,
                 pinyin = EXCLUDED.pinyin
             """,
-            insert_vocab
+            insert_vocab,
         )
 
     logger.info(f"导入知识字典: {len(insert_docs)} 条文档, {len(insert_vocab)} 条词汇")
@@ -312,7 +333,7 @@ async def import_tcm_data(database_url: str) -> dict:
         # 导入其他中医文本数据
         if TCM_DATA_DIR.exists():
             for file_path in TCM_DATA_DIR.glob("*.txt"):
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                     main_cat, sub_cats = categorize_tcm_content(file_path.stem, content)
@@ -324,19 +345,30 @@ async def import_tcm_data(database_url: str) -> dict:
                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                         ON CONFLICT (source_type, source_id) DO NOTHING
                         """,
-                        ("file", str(file_path), file_path.stem, content, len(content), main_cat, sub_cats, dynasty)
+                        (
+                            "file",
+                            str(file_path),
+                            file_path.stem,
+                            content,
+                            len(content),
+                            main_cat,
+                            sub_cats,
+                            dynasty,
+                        ),
                     )
                     total_imported += 1
 
         # 获取统计
-        stats = await conn.fetchrow("""
+        stats = await conn.fetchrow(
+            """
             SELECT
                 COUNT(*) as total_documents,
                 COUNT(DISTINCT main_category) as total_categories,
                 SUM(content_length) as total_content,
                 COUNT(DISTINCT dynasty) as distinct_dynasties
             FROM tcm_documents
-        """)
+        """
+        )
 
         vocab_stats = await conn.fetchrow("SELECT COUNT(*) as count FROM tcm_vocabulary")
 
@@ -350,8 +382,8 @@ async def import_tcm_data(database_url: str) -> dict:
                 "total_categories": stats["total_categories"],
                 "total_content_chars": stats["total_content"],
                 "dynasties": stats["distinct_dynasties"],
-                "vocabulary_count": vocab_stats["count"]
-            }
+                "vocabulary_count": vocab_stats["count"],
+            },
         }
 
     except Exception as e:

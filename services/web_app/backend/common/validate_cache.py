@@ -156,9 +156,7 @@ class CacheValidator:
         if stats.size <= stats.maxsize:
             self._pass("LRU 容量限制", f"缓存大小保持在 {stats.maxsize} 以内")
         else:
-            self._fail(
-                "LRU 容量限制", f"缓存大小 {stats.size} 超过最大值 {stats.maxsize}"
-            )
+            self._fail("LRU 容量限制", f"缓存大小 {stats.size} 超过最大值 {stats.maxsize}")
 
         # 验证最早的键被驱逐
         value = await backend.get("lru:key0")
@@ -266,12 +264,8 @@ class CacheValidator:
             "results": [{"id": 1, "content": "测试内容"}],
             "total": 1,
         }
-        await search_service.set_search_result(
-            "中医治疗", search_result, "hybrid", ["tcm"]
-        )
-        cached_search = await search_service.get_search_result(
-            "中医治疗", "hybrid", ["tcm"]
-        )
+        await search_service.set_search_result("中医治疗", search_result, "hybrid", ["tcm"])
+        cached_search = await search_service.get_search_result("中医治疗", "hybrid", ["tcm"])
 
         if cached_search == search_result:
             self._pass("搜索缓存服务", "搜索结果缓存正常")
@@ -334,17 +328,13 @@ class CacheValidator:
         start = time.time()
         result1 = await expensive_function(1, 2)
         elapsed1 = time.time() - start
-        print(
-            f"     结果: {result1}, 耗时: {elapsed1:.4f}s, 调用次数: {call_count['value']}"
-        )
+        print(f"     结果: {result1}, 耗时: {elapsed1:.4f}s, 调用次数: {call_count['value']}")
 
         print("\n7.2 第二次调用（应从缓存获取）")
         start = time.time()
         result2 = await expensive_function(1, 2)
         elapsed2 = time.time() - start
-        print(
-            f"     结果: {result2}, 耗时: {elapsed2:.4f}s, 调用次数: {call_count['value']}"
-        )
+        print(f"     结果: {result2}, 耗时: {elapsed2:.4f}s, 调用次数: {call_count['value']}")
 
         if call_count["value"] == 1:
             self._pass("装饰器缓存命中", "第二次调用未执行函数")
@@ -357,9 +347,7 @@ class CacheValidator:
                 f"缓存调用 ({elapsed2:.4f}s) 比直接调用 ({elapsed1:.4f}s) 快",
             )
         else:
-            self._warn(
-                "装饰器性能提升", f"时间差异不明显: {elapsed1:.4f}s vs {elapsed2:.4f}s"
-            )
+            self._warn("装饰器性能提升", f"时间差异不明显: {elapsed1:.4f}s vs {elapsed2:.4f}s")
 
         # 测试不同参数
         print("\n7.3 不同参数调用")

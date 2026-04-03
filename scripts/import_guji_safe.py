@@ -12,12 +12,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import asyncpg
+
 from backend.services.import_manager import ImportManager
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -26,10 +24,7 @@ SOURCE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guox
 
 
 async def import_table_batch(
-    conn: asyncpg.Connection,
-    source_db: str,
-    table: str,
-    batch_size: int = 2000
+    conn: asyncpg.Connection, source_db: str, table: str, batch_size: int = 2000
 ) -> int:
     """
     导入单个表的数据（使用小事务批量提交）
@@ -69,11 +64,11 @@ async def import_table_batch(
         # 准备数据
         batch_data = []
         for row in rows:
-            row_id = row['id']
+            row_id = row["id"]
             content = None
 
             # 查找内容列
-            for col in ('body', 'd', 'content'):
+            for col in ("body", "d", "content"):
                 if col in row.keys() and row[col]:
                     content = row[col]
                     break
@@ -93,7 +88,7 @@ async def import_table_batch(
                         VALUES ($1, $2, $3, $4)
                         ON CONFLICT (source_table, source_id) DO NOTHING
                         """,
-                        batch_data
+                        batch_data,
                     )
                 imported += len(batch_data)
 
@@ -119,7 +114,8 @@ async def main():
         conn = mgr.conn
 
         # 1. 创建表
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS guji_documents (
                 id SERIAL PRIMARY KEY,
                 source_table VARCHAR(50) NOT NULL,
@@ -130,12 +126,15 @@ async def main():
                 created_at TIMESTAMP DEFAULT NOW(),
                 UNIQUE(source_table, source_id)
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_guji_source
             ON guji_documents(source_table, source_id);
-        """)
+        """
+        )
 
         # 2. 获取源数据库表列表
         sqlite_conn = sqlite3.connect(str(SOURCE_DB))
@@ -157,7 +156,9 @@ async def main():
 
         table_counts.sort(key=lambda x: -x[1])
 
-        logger.info(f"找到 {len(table_counts)} 个非空表，总计 {sum(c for _, c in table_counts):,} 条记录")
+        logger.info(
+            f"找到 {len(table_counts)} 个非空表，总计 {sum(c for _, c in table_counts):,} 条记录"
+        )
 
         # 3. 限制导入数量（避免过长时间）
         MAX_TABLES = 20  # 只导入前20个最大的表
@@ -167,12 +168,7 @@ async def main():
             logger.info(f"[{i}/{MAX_TABLES}] 开始处理 {table}")
 
             try:
-                imported = await import_table_batch(
-                    conn,
-                    str(SOURCE_DB),
-                    table,
-                    batch_size=2000
-                )
+                imported = await import_table_batch(conn, str(SOURCE_DB), table, batch_size=2000)
                 total_imported += imported
 
                 # 检查当前总数
@@ -184,13 +180,15 @@ async def main():
                 continue
 
         # 4. 输出最终统计
-        final_stats = await conn.fetchrow("""
+        final_stats = await conn.fetchrow(
+            """
             SELECT
                 COUNT(*) as total_documents,
                 COUNT(DISTINCT source_table) as total_tables,
                 SUM(content_length) as total_content
             FROM guji_documents
-        """)
+        """
+        )
 
         logger.info("=" * 50)
         logger.info("古籍数据导入完成!")
@@ -207,7 +205,9 @@ if __name__ == "__main__":
     except Exception as e:
         if "已在运行" in str(e) or "锁" in str(e):
             logger.error(f"导入失败: {e}")
-            logger.error("如需强制解锁，运行: python backend/services/import_manager.py guji_import --force-unlock")
+            logger.error(
+                "如需强制解锁，运行: python backend/services/import_manager.py guji_import --force-unlock"
+            )
         else:
             logger.error(f"导入失败: {e}")
         sys.exit(1)

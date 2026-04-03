@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """LingMinOpt自动优化循环启动器"""
 import asyncio
-import sys
 import signal
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -124,20 +124,16 @@ def main():
 
   # 仅分析当前状态
   python scripts/start_auto_optimization.py analyze
-        """
+        """,
     )
 
     parser.add_argument(
         "action",
         choices=["start", "once", "analyze"],
-        help="操作: start(启动循环), once(单次优化), analyze(仅分析)"
+        help="操作: start(启动循环), once(单次优化), analyze(仅分析)",
     )
 
-    parser.add_argument(
-        "--fast",
-        action="store_true",
-        help="快速演示模式（30秒检查一次）"
-    )
+    parser.add_argument("--fast", action="store_true", help="快速演示模式（30秒检查一次）")
 
     args = parser.parse_args()
 
@@ -154,9 +150,8 @@ def main():
         # 仅分析
         print("🔍 分析当前系统状态...")
         import subprocess
-        subprocess.run([
-            "python", "scripts/run_lingminopt.py"
-        ])
+
+        subprocess.run(["python", "scripts/run_lingminopt.py"])
 
 
 if __name__ == "__main__":

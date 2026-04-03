@@ -6,389 +6,389 @@ description: |
   工期: 14天
   团队: 3人 (Senior Dev + ML Engineer + Junior Dev)
 
-workflow_version: "1.0.0"
+workflow_version: 1.0.0
 project: 灵知系统技术质量提升
 
 # 全局变量
 vars:
-  project_root: "/home/ai/zhineng-knowledge-system"
-  backend_dir: "{{vars.project_root}}/backend"
-  tests_dir: "{{vars.project_root}}/tests"
-  docs_dir: "{{vars.project_root}}/docs"
-  db_migration_dir: "{{vars.backend_dir}}/migrations"
+  project_root: /home/ai/zhineng-knowledge-system
+  backend_dir: '{{vars.project_root}}/backend'
+  tests_dir: '{{vars.project_root}}/tests'
+  docs_dir: '{{vars.project_root}}/docs'
+  db_migration_dir: '{{vars.backend_dir}}/migrations'
 
 # 任务清单
 tasks:
   # ==================== Sprint 1: 基础功能 (Day 1-5) ====================
 
-  - id: sprint1_planning
-    name: "Sprint 1 规划会议"
-    skill: notification
-    params:
-      message: |
-        团队A Sprint 1 启动
-        目标: 正则检索 + 书籍电子版字段
-        工期: Day 1-5
-        团队: Senior Dev A + ML Engineer A
+- id: sprint1_planning
+  name: Sprint 1 规划会议
+  skill: notification
+  params:
+    message: |
+      团队A Sprint 1 启动
+      目标: 正则检索 + 书籍电子版字段
+      工期: Day 1-5
+      团队: Senior Dev A + ML Engineer A
 
-  - id: setup_dev_environment
-    name: "搭建开发环境"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
-        docker-compose exec backend bash -c "
-          pip install regex pytest-asyncio
-          pip install sentence-transformers
-        "
-    depends_on: [sprint1_planning]
+- id: setup_dev_environment
+  name: 搭建开发环境
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
+      docker-compose exec backend bash -c "
+        pip install regex pytest-asyncio
+        pip install sentence-transformers
+      "
+  depends_on: [sprint1_planning]
 
-  - id: database_migration_ebook_fields
-    name: "数据库迁移 - 添加书籍电子版字段"
-    skill: code-generation
-    params:
-      file_path: "{{vars.db_migration_dir}}/add_ebook_fields.sql"
-      content: |
-        -- Migration: 添加书籍电子版字段
-        -- Date: 2026-03-31
-        -- Author: Team A
+- id: database_migration_ebook_fields
+  name: 数据库迁移 - 添加书籍电子版字段
+  skill: code-generation
+  params:
+    file_path: '{{vars.db_migration_dir}}/add_ebook_fields.sql'
+    content: |
+      -- Migration: 添加书籍电子版字段
+      -- Date: 2026-03-31
+      -- Author: Team A
 
-        -- 添加电子版相关字段
-        ALTER TABLE books ADD COLUMN IF NOT EXISTS ebook_url VARCHAR(500);
-        ALTER TABLE books ADD COLUMN IF NOT EXISTS ebook_format VARCHAR(20);
-        ALTER TABLE books ADD COLUMN IF NOT EXISTS ebook_source VARCHAR(100);
+      -- 添加电子版相关字段
+      ALTER TABLE books ADD COLUMN IF NOT EXISTS ebook_url VARCHAR(500);
+      ALTER TABLE books ADD COLUMN IF NOT EXISTS ebook_format VARCHAR(20);
+      ALTER TABLE books ADD COLUMN IF NOT EXISTS ebook_source VARCHAR(100);
 
-        -- 添加索引
-        CREATE INDEX IF NOT EXISTS idx_books_ebook_source ON books(ebook_source);
+      -- 添加索引
+      CREATE INDEX IF NOT EXISTS idx_books_ebook_source ON books(ebook_source);
 
-        -- 添加注释
-        COMMENT ON COLUMN books.ebook_url IS '电子版下载链接';
-        COMMENT ON COLUMN books.ebook_format IS '电子版格式 (pdf/epub/txt)';
-        COMMENT ON COLUMN books.ebook_source IS '电子版来源 (gutenberg/archive/custom)';
-    depends_on: [setup_dev_environment]
+      -- 添加注释
+      COMMENT ON COLUMN books.ebook_url IS '电子版下载链接';
+      COMMENT ON COLUMN books.ebook_format IS '电子版格式 (pdf/epub/txt)';
+      COMMENT ON COLUMN books.ebook_source IS '电子版来源 (gutenberg/archive/custom)';
+  depends_on: [setup_dev_environment]
 
-  - id: apply_database_migration
-    name: "应用数据库迁移"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
-        docker-compose exec -T postgres psql -U lingzhi -d lingzhi_db < {{vars.db_migration_dir}}/add_ebook_fields.sql
-    depends_on: [database_migration_ebook_fields]
-    timeout: 120
+- id: apply_database_migration
+  name: 应用数据库迁移
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
+      docker-compose exec -T postgres psql -U lingzhi -d lingzhi_db < {{vars.db_migration_dir}}/add_ebook_fields.sql
+  depends_on: [database_migration_ebook_fields]
+  timeout: 120
 
-  - id: implement_regex_retriever
-    name: "实现正则检索器"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/retrieval/regex.py"
-      requirements: |
-        创建 RegexRetriever 类，支持：
-        1. 正则表达式搜索
-        2. 大小写敏感/不敏感模式
-        3. 多模式组合搜索
-        4. 与现有 HybridRetriever 集成
+- id: implement_regex_retriever
+  name: 实现正则检索器
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/retrieval/regex.py'
+    requirements: |
+      创建 RegexRetriever 类，支持：
+      1. 正则表达式搜索
+      2. 大小写敏感/不敏感模式
+      3. 多模式组合搜索
+      4. 与现有 HybridRetriever 集成
 
-        API设计:
-        - search(pattern: str, category: str = None) -> List[Dict]
-        - set_case_sensitive(flag: bool) -> None
-        - combine_patterns(patterns: List[str]) -> str
-    depends_on: [apply_database_migration]
-    timeout: 300
+      API设计:
+      - search(pattern: str, category: str = None) -> List[Dict]
+      - set_case_sensitive(flag: bool) -> None
+      - combine_patterns(patterns: List[str]) -> str
+  depends_on: [apply_database_migration]
+  timeout: 300
 
-  - id: integrate_regex_to_hybrid
-    name: "集成正则检索到混合检索器"
-    skill: code-refactor
-    params:
-      target_file: "{{vars.backend_dir}}/services/retrieval/hybrid.py"
-      changes:
-        - "添加 use_regex 参数到 HybridRetriever.search()"
-        - "在 HybridRetriever.__init__ 中初始化 RegexRetriever"
-        - "在 _rrf_merge 中加入正则检索结果"
-      test_requirements:
-        - "正则检索结果应包含在融合结果中"
-        - "权重可配置"
-    depends_on: [implement_regex_retriever]
+- id: integrate_regex_to_hybrid
+  name: 集成正则检索到混合检索器
+  skill: code-refactor
+  params:
+    target_file: '{{vars.backend_dir}}/services/retrieval/hybrid.py'
+    changes:
+    - 添加 use_regex 参数到 HybridRetriever.search()
+    - 在 HybridRetriever.__init__ 中初始化 RegexRetriever
+    - 在 _rrf_merge 中加入正则检索结果
+    test_requirements:
+    - 正则检索结果应包含在融合结果中
+    - 权重可配置
+  depends_on: [implement_regex_retriever]
 
-  - id: create_regex_search_api
-    name: "创建正则检索API端点"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/api/v1/search.py"
-      requirements: |
-        添加新端点:
-        POST /api/v1/search/regex
-        {
-          "pattern": "形.*桩",  # 正则表达式
-          "category": "气功",
-          "case_sensitive": false,
-          "top_k": 10
-        }
-    depends_on: [integrate_regex_to_hybrid]
+- id: create_regex_search_api
+  name: 创建正则检索API端点
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/api/v1/search.py'
+    requirements: |
+      添加新端点:
+      POST /api/v1/search/regex
+      {
+        "pattern": "形.*桩",  # 正则表达式
+        "category": "气功",
+        "case_sensitive": false,
+        "top_k": 10
+      }
+  depends_on: [integrate_regex_to_hybrid]
 
-  - id: sprint1_testing
-    name: "Sprint 1 测试"
-    skill: test-runner
-    params:
-      test_type: unit
-      target:
-        - "{{vars.tests_dir}}/test_retrieval/test_regex.py"
-        - "{{vars.tests_dir}}/test_api/test_search_regex.py"
-      coverage_threshold: 80
-    depends_on: [create_regex_search_api]
-    timeout: 180
+- id: sprint1_testing
+  name: Sprint 1 测试
+  skill: test-runner
+  params:
+    test_type: unit
+    target:
+    - '{{vars.tests_dir}}/test_retrieval/test_regex.py'
+    - '{{vars.tests_dir}}/test_api/test_search_regex.py'
+    coverage_threshold: 80
+  depends_on: [create_regex_search_api]
+  timeout: 180
 
   # ==================== Sprint 2: 意图识别 (Day 6-10) ====================
 
-  - id: sprint2_planning
-    name: "Sprint 2 规划会议"
-    skill: notification
-    params:
-      message: |
-        团队A Sprint 2 启动
-        目标: 意图识别 + 查询重写
-        工期: Day 6-10
-    depends_on: [sprint1_testing]
+- id: sprint2_planning
+  name: Sprint 2 规划会议
+  skill: notification
+  params:
+    message: |
+      团队A Sprint 2 启动
+      目标: 意图识别 + 查询重写
+      工期: Day 6-10
+  depends_on: [sprint1_testing]
 
-  - id: prepare_intent_training_data
-    name: "准备意图识别训练数据"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
-        mkdir -p data/training/intent_classifier
-        # 创建训练数据模板
-        cat > data/training/intent_classifier/intents.yaml << 'EOF'
-        intents:
-          practice_method:
-            keywords: ["怎么做", "如何练习", "动作要领", "步骤", "方法"]
-            examples: ["形神桩怎么做", "如何练习捧气贯顶", "三心并站庄的动作要领"]
+- id: prepare_intent_training_data
+  name: 准备意图识别训练数据
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
+      mkdir -p data/training/intent_classifier
+      # 创建训练数据模板
+      cat > data/training/intent_classifier/intents.yaml << 'EOF'
+      intents:
+        practice_method:
+          keywords: ["怎么做", "如何练习", "动作要领", "步骤", "方法"]
+          examples: ["形神桩怎么做", "如何练习捧气贯顶", "三心并站庄的动作要领"]
 
-          scientific_basis:
-            keywords: ["科学依据", "研究", "证明", "实验", "数据"]
-            examples: ["气功有科学依据吗", "有什么研究证明", "实验数据如何"]
+        scientific_basis:
+          keywords: ["科学依据", "研究", "证明", "实验", "数据"]
+          examples: ["气功有科学依据吗", "有什么研究证明", "实验数据如何"]
 
-          theory_explanation:
-            keywords: ["什么是", "原理", "为什么", "解释", "含义"]
-            examples: ["什么是混元", "为什么要有形神桩", "混元理论是什么"]
+        theory_explanation:
+          keywords: ["什么是", "原理", "为什么", "解释", "含义"]
+          examples: ["什么是混元", "为什么要有形神桩", "混元理论是什么"]
 
-          book_search:
-            keywords: ["哪本书", "出处", "参考", "来源", "章节"]
-            examples: ["形神桩在哪本书", "出处是哪里", "参考哪章"]
+        book_search:
+          keywords: ["哪本书", "出处", "参考", "来源", "章节"]
+          examples: ["形神桩在哪本书", "出处是哪里", "参考哪章"]
 
-          comparison:
-            keywords: ["区别", "不同", "对比", "差异", "关系"]
-            examples: ["形神桩和五元庄的区别", "有什么不同", "对比一下"]
-        EOF
-    depends_on: [sprint2_planning]
+        comparison:
+          keywords: ["区别", "不同", "对比", "差异", "关系"]
+          examples: ["形神桩和五元庄的区别", "有什么不同", "对比一下"]
+      EOF
+  depends_on: [sprint2_planning]
 
-  - id: implement_intent_analyzer
-    name: "实现意图分析器"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/intent/intent_analyzer.py"
-      requirements: |
-        创建 IntentAnalyzer 类：
-        1. 基于规则的意图分类（关键词匹配）
-        2. 置信度评分
-        3. 支持多意图（一个查询可能包含多个意图）
+- id: implement_intent_analyzer
+  name: 实现意图分析器
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/intent/intent_analyzer.py'
+    requirements: |
+      创建 IntentAnalyzer 类：
+      1. 基于规则的意图分类（关键词匹配）
+      2. 置信度评分
+      3. 支持多意图（一个查询可能包含多个意图）
 
-        API:
-        - analyze(query: str) -> IntentResult
-        - get_confidence(intent: str) -> float
+      API:
+      - analyze(query: str) -> IntentResult
+      - get_confidence(intent: str) -> float
 
-        IntentResult:
-        - primary_intent: str
-        - confidence: float
-        - all_intents: Dict[str, float]
-    depends_on: [prepare_intent_training_data]
-    timeout: 300
+      IntentResult:
+      - primary_intent: str
+      - confidence: float
+      - all_intents: Dict[str, float]
+  depends_on: [prepare_intent_training_data]
+  timeout: 300
 
-  - id: implement_query_rewriter
-    name: "实现查询重写器"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/intent/query_rewriter.py"
-      requirements: |
-        创建 QueryRewriter 类：
-        1. 同义词扩展（形神桩 -> 智能形神桩）
-        2. 错别字纠正（混元灵 -> 混元）
-        3. 查询补全（形神桩 -> 形神桩 动作要领）
+- id: implement_query_rewriter
+  name: 实现查询重写器
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/intent/query_rewriter.py'
+    requirements: |
+      创建 QueryRewriter 类：
+      1. 同义词扩展（形神桩 -> 智能形神桩）
+      2. 错别字纠正（混元灵 -> 混元）
+      3. 查询补全（形神桩 -> 形神桩 动作要领）
 
-        API:
-        - rewrite(query: str, intent: str) -> str
-        - expand_synonyms(query: str) -> List[str]
-    depends_on: [implement_intent_analyzer]
+      API:
+      - rewrite(query: str, intent: str) -> str
+      - expand_synonyms(query: str) -> List[str]
+  depends_on: [implement_intent_analyzer]
 
-  - id: integrate_intent_to_search
-    name: "集成意图识别到检索系统"
-    skill: code-refactor
-    params:
-      target_file: "{{vars.backend_dir}}/api/v1/search.py"
-      changes:
-        - "在 /api/v1/search/hybrid 中添加意图识别"
-        - "根据意图自动调整检索策略"
-        - "返回识别的意图和置信度"
-    depends_on: [implement_query_rewriter]
+- id: integrate_intent_to_search
+  name: 集成意图识别到检索系统
+  skill: code-refactor
+  params:
+    target_file: '{{vars.backend_dir}}/api/v1/search.py'
+    changes:
+    - 在 /api/v1/search/hybrid 中添加意图识别
+    - 根据意图自动调整检索策略
+    - 返回识别的意图和置信度
+  depends_on: [implement_query_rewriter]
 
-  - id: sprint2_testing
-    name: "Sprint 2 测试"
-    skill: test-runner
-    params:
-      test_type: unit
-      target:
-        - "{{vars.tests_dir}}/test_intent/test_analyzer.py"
-        - "{{vars.tests_dir}}/test_intent/test_rewriter.py"
-      coverage_threshold: 75
-    depends_on: [integrate_intent_to_search]
-    timeout: 180
+- id: sprint2_testing
+  name: Sprint 2 测试
+  skill: test-runner
+  params:
+    test_type: unit
+    target:
+    - '{{vars.tests_dir}}/test_intent/test_analyzer.py'
+    - '{{vars.tests_dir}}/test_intent/test_rewriter.py'
+    coverage_threshold: 75
+  depends_on: [integrate_intent_to_search]
+  timeout: 180
 
   # ==================== Sprint 3: 推理路由优化 (Day 11-14) ====================
 
-  - id: sprint3_planning
-    name: "Sprint 3 规划会议"
-    skill: notification
-    params:
-      message: |
-        团队A Sprint 3 启动
-        目标: 推理路由优化
-        工期: Day 11-14
-    depends_on: [sprint2_testing]
+- id: sprint3_planning
+  name: Sprint 3 规划会议
+  skill: notification
+  params:
+    message: |
+      团队A Sprint 3 启动
+      目标: 推理路由优化
+      工期: Day 11-14
+  depends_on: [sprint2_testing]
 
-  - id: implement_intelligent_router
-    name: "实现智能路由器"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/reasoning/router.py"
-      requirements: |
-        创建 IntelligentRouter 类：
-        1. 基于意图和复杂度的路由决策
-        2. 性能历史追踪
-        3. 动态权重调整
+- id: implement_intelligent_router
+  name: 实现智能路由器
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/reasoning/router.py'
+    requirements: |
+      创建 IntelligentRouter 类：
+      1. 基于意图和复杂度的路由决策
+      2. 性能历史追踪
+      3. 动态权重调整
 
-        路由策略:
-        - practice_method -> ReAct (需要步骤)
-        - scientific_basis -> CoT (需要推理)
-        - comparison -> GraphRAG (需要关系)
-        - 简单问题 -> CoT (默认)
+      路由策略:
+      - practice_method -> ReAct (需要步骤)
+      - scientific_basis -> CoT (需要推理)
+      - comparison -> GraphRAG (需要关系)
+      - 简单问题 -> CoT (默认)
 
-        API:
-        - route(question: str, context: List) -> str
-        - record_performance(mode: str, rating: float) -> None
-        - get_best_mode(intent: str) -> str
-    depends_on: [sprint3_planning]
-    timeout: 300
+      API:
+      - route(question: str, context: List) -> str
+      - record_performance(mode: str, rating: float) -> None
+      - get_best_mode(intent: str) -> str
+  depends_on: [sprint3_planning]
+  timeout: 300
 
-  - id: implement_performance_tracker
-    name: "实现性能追踪器"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/reasoning/performance_tracker.py"
-      requirements: |
-        创建 PerformanceTracker 类：
-        1. 记录每种推理模式的性能
-        2. 计算平均满意度
-        3. 生成优化建议
+- id: implement_performance_tracker
+  name: 实现性能追踪器
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/reasoning/performance_tracker.py'
+    requirements: |
+      创建 PerformanceTracker 类：
+      1. 记录每种推理模式的性能
+      2. 计算平均满意度
+      3. 生成优化建议
 
-        数据表:
-        CREATE TABLE reasoning_performance (
-          id SERIAL PRIMARY KEY,
-          mode VARCHAR(20),
-          intent VARCHAR(50),
-          question TEXT,
-          user_rating INT CHECK (user_rating BETWEEN 1 AND 5),
-          response_time_ms INT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-    depends_on: [implement_intelligent_router]
+      数据表:
+      CREATE TABLE reasoning_performance (
+        id SERIAL PRIMARY KEY,
+        mode VARCHAR(20),
+        intent VARCHAR(50),
+        question TEXT,
+        user_rating INT CHECK (user_rating BETWEEN 1 AND 5),
+        response_time_ms INT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+  depends_on: [implement_intelligent_router]
 
-  - id: integrate_router_to_reasoning_api
-    name: "集成智能路由到推理API"
-    skill: code-refactor
-    params:
-      target_file: "{{vars.backend_dir}}/api/v1/reasoning.py"
-      changes:
-        - "替换硬编码的路由逻辑为 IntelligentRouter"
-        - "添加性能记录端点 POST /api/v1/reasoning/feedback"
-        - "添加路由统计端点 GET /api/v1/reasoning/router/stats"
-    depends_on: [implement_performance_tracker]
+- id: integrate_router_to_reasoning_api
+  name: 集成智能路由到推理API
+  skill: code-refactor
+  params:
+    target_file: '{{vars.backend_dir}}/api/v1/reasoning.py'
+    changes:
+    - 替换硬编码的路由逻辑为 IntelligentRouter
+    - 添加性能记录端点 POST /api/v1/reasoning/feedback
+    - 添加路由统计端点 GET /api/v1/reasoning/router/stats
+  depends_on: [implement_performance_tracker]
 
-  - id: sprint3_testing
-    name: "Sprint 3 测试"
-    skill: test-runner
-    params:
-      test_type: integration
-      target:
-        - "{{vars.tests_dir}}/test_reasoning/test_router.py"
-        - "{{vars.tests_dir}}/test_reasoning/test_performance_tracker.py"
-      coverage_threshold: 70
-    depends_on: [integrate_router_to_reasoning_api]
-    timeout: 180
+- id: sprint3_testing
+  name: Sprint 3 测试
+  skill: test-runner
+  params:
+    test_type: integration
+    target:
+    - '{{vars.tests_dir}}/test_reasoning/test_router.py'
+    - '{{vars.tests_dir}}/test_reasoning/test_performance_tracker.py'
+    coverage_threshold: 70
+  depends_on: [integrate_router_to_reasoning_api]
+  timeout: 180
 
   # ==================== 最终验证 ====================
 
-  - id: final_integration_test
-    name: "最终集成测试"
-    skill: test-runner
-    params:
-      test_type: integration
-      target: "{{vars.tests_dir}}/test_integration/test_team_a_workflow.py"
-    depends_on: [sprint3_testing]
-    timeout: 300
+- id: final_integration_test
+  name: 最终集成测试
+  skill: test-runner
+  params:
+    test_type: integration
+    target: '{{vars.tests_dir}}/test_integration/test_team_a_workflow.py'
+  depends_on: [sprint3_testing]
+  timeout: 300
 
-  - id: generate_team_a_report
-    name: "生成团队A工作报告"
-    skill: notification
-    params:
-      message: |
-        团队A (文字数据处理) 工作流完成
+- id: generate_team_a_report
+  name: 生成团队A工作报告
+  skill: notification
+  params:
+    message: |
+      团队A (文字数据处理) 工作流完成
 
-        完成的功能:
-        ✅ 正则检索 (RegexRetriever)
-        ✅ 书籍电子版字段 (数据库迁移)
-        ✅ 意图识别 (IntentAnalyzer)
-        ✅ 查询重写 (QueryRewriter)
-        ✅ 智能路由 (IntelligentRouter)
-        ✅ 性能追踪 (PerformanceTracker)
+      完成的功能:
+      ✅ 正则检索 (RegexRetriever)
+      ✅ 书籍电子版字段 (数据库迁移)
+      ✅ 意图识别 (IntentAnalyzer)
+      ✅ 查询重写 (QueryRewriter)
+      ✅ 智能路由 (IntelligentRouter)
+      ✅ 性能追踪 (PerformanceTracker)
 
-        统计数据:
-        - 新增代码: ~2000行
-        - 测试覆盖率: 目标75%+
-        - API端点: +3
-        - 数据库字段: +3
+      统计数据:
+      - 新增代码: ~2000行
+      - 测试覆盖率: 目标75%+
+      - API端点: +3
+      - 数据库字段: +3
 
-        下一步:
-        - 与团队B集成 (音频内容进入检索)
-        - 性能优化
-    depends_on: [final_integration_test]
+      下一步:
+      - 与团队B集成 (音频内容进入检索)
+      - 性能优化
+  depends_on: [final_integration_test]
 
 # 成功标准
 success_criteria:
-  - task_id: sprint1_testing
-    condition: "tests_passed > 95%"
-  - task_id: sprint2_testing
-    condition: "tests_passed > 90%"
-  - task_id: sprint3_testing
-    condition: "tests_passed > 90%"
-  - task_id: final_integration_test
-    condition: "tests_passed == 100%"
+- task_id: sprint1_testing
+  condition: tests_passed > 95%
+- task_id: sprint2_testing
+  condition: tests_passed > 90%
+- task_id: sprint3_testing
+  condition: tests_passed > 90%
+- task_id: final_integration_test
+  condition: tests_passed == 100%
 
 # 失败回滚
 rollback_on_failure:
-  - "回滚数据库迁移: {{vars.db_migration_dir}}/rollback_add_ebook_fields.sql"
-  - "Git reset --hard HEAD~N (N为失败的commits数)"
+- '回滚数据库迁移: {{vars.db_migration_dir}}/rollback_add_ebook_fields.sql'
+- Git reset --hard HEAD~N (N为失败的commits数)
 
 # 通知配置
 notifications:
   on_start:
-    - type: slack
-      channel: "#team-a"
-      message: "团队A工作流启动"
+  - type: slack
+    channel: '#team-a'
+    message: 团队A工作流启动
   on_complete:
-    - type: slack
-      channel: "#team-a"
-      message: "🎉 团队A工作流完成"
+  - type: slack
+    channel: '#team-a'
+    message: 🎉 团队A工作流完成
   on_failure:
-    - type: slack
-      channel: "#team-a"
-      message: "❌ 团队A工作流失败: {{error}}"
+  - type: slack
+    channel: '#team-a'
+    message: '❌ 团队A工作流失败: {{error}}'

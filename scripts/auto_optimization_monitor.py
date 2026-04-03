@@ -2,11 +2,11 @@
 """LingMinOpt自动优化监控面板"""
 import asyncio
 import json
+import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.services.evolution.lingminopt import get_lingminopt_framework
@@ -45,7 +45,7 @@ class OptimizationMonitor:
                 print(f"\n{'='*70}")
                 print(f"🔄 优化轮次 #{iteration}")
                 print(f"⏰ 时间: {datetime.now().strftime('%H:%M:%S')}")
-                print('='*70)
+                print("=" * 70)
                 print()
 
                 # 执行一轮优化
@@ -55,7 +55,7 @@ class OptimizationMonitor:
                 progress = iteration / self.max_iterations
                 bar_length = 40
                 filled = int(bar_length * progress)
-                bar = '█' * filled + '░' * (bar_length - filled)
+                bar = "█" * filled + "░" * (bar_length - filled)
 
                 print(f"\n📊 总体进度: [{bar}] {progress*100:.0f}%")
 
@@ -68,7 +68,7 @@ class OptimizationMonitor:
                     for i in range(self.check_interval, 0, -5):
                         remaining = i
                         mins, secs = divmod(remaining, 60)
-                        print(f"   ⏰ 剩余时间: {mins:02d}:{secs:02d}", end='\r')
+                        print(f"   ⏰ 剩余时间: {mins:02d}:{secs:02d}", end="\r")
                         await asyncio.sleep(5)
 
                     print()  # 换行
@@ -118,11 +118,21 @@ class OptimizationMonitor:
                 snapshot = await self.framework.metrics_collector.collect_snapshot()
 
                 # 显示指标卡片
-                self._display_metric_card("API延迟", snapshot.metrics['avg_api_latency_ms'], "ms", "200", 300)
-                self._display_metric_card("API成功率", snapshot.metrics['api_success_rate']*100, "%", 98, 95)
-                self._display_metric_card("用户满意度", snapshot.metrics['avg_user_satisfaction'], "/5", 4.0, 3.8)
-                self._display_metric_card("竞品胜率", snapshot.metrics['competitor_win_rate']*100, "%", 50, 45)
-                self._display_metric_card("每日成本", f"¥{snapshot.metrics['daily_cost']:.2f}", "", 10, 15)
+                self._display_metric_card(
+                    "API延迟", snapshot.metrics["avg_api_latency_ms"], "ms", "200", 300
+                )
+                self._display_metric_card(
+                    "API成功率", snapshot.metrics["api_success_rate"] * 100, "%", 98, 95
+                )
+                self._display_metric_card(
+                    "用户满意度", snapshot.metrics["avg_user_satisfaction"], "/5", 4.0, 3.8
+                )
+                self._display_metric_card(
+                    "竞品胜率", snapshot.metrics["competitor_win_rate"] * 100, "%", 50, 45
+                )
+                self._display_metric_card(
+                    "每日成本", f"¥{snapshot.metrics['daily_cost']:.2f}", "", 10, 15
+                )
 
                 print()
                 print("-" * 70)
@@ -139,9 +149,9 @@ class OptimizationMonitor:
                         print(f"  {status_icon} {result.opportunity_id}")
                         print(f"     时间: {result.executed_at.strftime('%H:%M:%S')}")
                         if result.improvement:
-                            improvements = ", ".join([
-                                f"{k}:{v:+.0%}" for k, v in result.improvement.items()
-                            ])
+                            improvements = ", ".join(
+                                [f"{k}:{v:+.0%}" for k, v in result.improvement.items()]
+                            )
                             print(f"     改进: {improvements}")
                         print()
                 else:
@@ -197,7 +207,8 @@ async def run_interactive_mode():
 
     monitor = OptimizationMonitor()
 
-    print("""
+    print(
+        """
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║                   选择模式                                                ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
@@ -206,7 +217,8 @@ async def run_interactive_mode():
 2. 实时仪表板 - 显示实时指标和优化状态
 3. 单轮优化 - 执行一次优化后退出
 0. 退出
-""")
+"""
+    )
 
     while True:
         try:

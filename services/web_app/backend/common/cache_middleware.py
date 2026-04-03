@@ -1,4 +1,5 @@
 import hashlib
+
 # -*- coding: utf-8 -*-
 """
 缓存中间件
@@ -211,9 +212,7 @@ class CacheMiddleware(BaseHTTPMiddleware):
                         "headers": dict(response.headers),
                     }
 
-                    await self._cache.set(
-                        cache_key, cached_data, "http", self._default_ttl
-                    )
+                    await self._cache.set(cache_key, cached_data, "http", self._default_ttl)
 
                     # 添加缓存状态头
                     response.headers[self._cache_header] = "MISS"
@@ -359,11 +358,7 @@ def cached_endpoint(
             if request:
                 # 生成缓存键
                 path = request.url.path
-                query = (
-                    str(request.url.query)
-                    if include_query_params and request.url.query
-                    else ""
-                )
+                query = str(request.url.query) if include_query_params and request.url.query else ""
 
                 key_parts = [key_prefix, path, query]
                 if include_user and "Authorization" in request.headers:

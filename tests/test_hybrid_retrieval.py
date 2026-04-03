@@ -4,13 +4,15 @@
 文字处理工程流A-3的测试套件
 """
 
-import pytest
 import asyncio
+
+import pytest
+
 from backend.services.hybrid_retrieval import (
+    HybridRetrievalService,
+    ResultFusion,
     RetrievalMethod,
     RetrievalResult,
-    ResultFusion,
-    HybridRetrievalService
 )
 
 
@@ -21,16 +23,58 @@ class TestResultFusion:
         """测试RRF融合算法"""
         # 创建模拟的向量检索结果
         vector_results = [
-            RetrievalResult(id=1, title="A", content="...", category=None, score=0.9, method=RetrievalMethod.VECTOR),
-            RetrievalResult(id=2, title="B", content="...", category=None, score=0.8, method=RetrievalMethod.VECTOR),
-            RetrievalResult(id=3, title="C", content="...", category=None, score=0.7, method=RetrievalMethod.VECTOR),
+            RetrievalResult(
+                id=1,
+                title="A",
+                content="...",
+                category=None,
+                score=0.9,
+                method=RetrievalMethod.VECTOR,
+            ),
+            RetrievalResult(
+                id=2,
+                title="B",
+                content="...",
+                category=None,
+                score=0.8,
+                method=RetrievalMethod.VECTOR,
+            ),
+            RetrievalResult(
+                id=3,
+                title="C",
+                content="...",
+                category=None,
+                score=0.7,
+                method=RetrievalMethod.VECTOR,
+            ),
         ]
 
         # 创建模拟的全文检索结果（有些重叠，有些不重叠）
         fulltext_results = [
-            RetrievalResult(id=2, title="B", content="...", category=None, score=0.9, method=RetrievalMethod.FULLTEXT),
-            RetrievalResult(id=4, title="D", content="...", category=None, score=0.8, method=RetrievalMethod.FULLTEXT),
-            RetrievalResult(id=5, title="E", content="...", category=None, score=0.7, method=RetrievalMethod.FULLTEXT),
+            RetrievalResult(
+                id=2,
+                title="B",
+                content="...",
+                category=None,
+                score=0.9,
+                method=RetrievalMethod.FULLTEXT,
+            ),
+            RetrievalResult(
+                id=4,
+                title="D",
+                content="...",
+                category=None,
+                score=0.8,
+                method=RetrievalMethod.FULLTEXT,
+            ),
+            RetrievalResult(
+                id=5,
+                title="E",
+                content="...",
+                category=None,
+                score=0.7,
+                method=RetrievalMethod.FULLTEXT,
+            ),
         ]
 
         # 执行RRF融合
@@ -51,21 +95,46 @@ class TestResultFusion:
     def test_weighted_fusion(self):
         """测试加权融合"""
         vector_results = [
-            RetrievalResult(id=1, title="A", content="...", category=None, score=0.9, method=RetrievalMethod.VECTOR),
-            RetrievalResult(id=2, title="B", content="...", category=None, score=0.8, method=RetrievalMethod.VECTOR),
+            RetrievalResult(
+                id=1,
+                title="A",
+                content="...",
+                category=None,
+                score=0.9,
+                method=RetrievalMethod.VECTOR,
+            ),
+            RetrievalResult(
+                id=2,
+                title="B",
+                content="...",
+                category=None,
+                score=0.8,
+                method=RetrievalMethod.VECTOR,
+            ),
         ]
 
         fulltext_results = [
-            RetrievalResult(id=2, title="B", content="...", category=None, score=0.9, method=RetrievalMethod.FULLTEXT),
-            RetrievalResult(id=3, title="C", content="...", category=None, score=0.7, method=RetrievalMethod.FULLTEXT),
+            RetrievalResult(
+                id=2,
+                title="B",
+                content="...",
+                category=None,
+                score=0.9,
+                method=RetrievalMethod.FULLTEXT,
+            ),
+            RetrievalResult(
+                id=3,
+                title="C",
+                content="...",
+                category=None,
+                score=0.7,
+                method=RetrievalMethod.FULLTEXT,
+            ),
         ]
 
         # 执行加权融合
         fused = ResultFusion.weighted(
-            vector_results,
-            fulltext_results,
-            vector_weight=0.6,
-            fulltext_weight=0.4
+            vector_results, fulltext_results, vector_weight=0.6, fulltext_weight=0.4
         )
 
         # 验证结果
@@ -85,7 +154,7 @@ class TestRetrievalResult:
             category="test",
             score=0.9,
             method=RetrievalMethod.VECTOR,
-            rank=1
+            rank=1,
         )
 
         result_dict = result.to_dict()
@@ -116,11 +185,7 @@ class TestHybridRetrievalIntegration:
     @pytest.fixture
     def service(self, db_pool):
         """创建服务实例"""
-        return HybridRetrievalService(
-            db_pool=db_pool,
-            enable_cache=True,
-            cache_ttl=3600
-        )
+        return HybridRetrievalService(db_pool=db_pool, enable_cache=True, cache_ttl=3600)
 
     def test_cache_operations(self, service):
         """测试缓存操作"""
@@ -132,25 +197,16 @@ class TestHybridRetrievalIntegration:
                 content=f"内容{i}",
                 category=None,
                 score=0.9 - i * 0.1,
-                method=RetrievalMethod.VECTOR
+                method=RetrievalMethod.VECTOR,
             )
             for i in range(5)
         ]
 
         # 测试缓存保存
-        service.cache.set(
-            query="测试查询",
-            method="vector",
-            results=results,
-            top_k=5
-        )
+        service.cache.set(query="测试查询", method="vector", results=results, top_k=5)
 
         # 测试缓存获取
-        cached = service.cache.get(
-            query="测试查询",
-            method="vector",
-            top_k=5
-        )
+        cached = service.cache.get(query="测试查询", method="vector", top_k=5)
 
         assert cached is not None
         assert len(cached) == 5
@@ -165,25 +221,18 @@ class TestHybridRetrievalIntegration:
                 content="内容",
                 category=None,
                 score=0.9,
-                method=RetrievalMethod.VECTOR
+                method=RetrievalMethod.VECTOR,
             )
         ]
 
         # 保存到缓存
-        service.cache.set(
-            query="测试",
-            method="vector",
-            results=results
-        )
+        service.cache.set(query="测试", method="vector", results=results)
 
         # 清空缓存
         service.clear_cache()
 
         # 验证缓存已清空
-        cached = service.cache.get(
-            query="测试",
-            method="vector"
-        )
+        cached = service.cache.get(query="测试", method="vector")
 
         assert cached is None
 

@@ -12,11 +12,11 @@ Usage:
 """
 
 import asyncio
+import hashlib
 import os
 import re
 import sys
 import time
-import hashlib
 from pathlib import Path
 
 try:
@@ -118,8 +118,7 @@ def clean_title(filename: str) -> str:
 async def check_existing(conn, title: str) -> bool:
     """Check if a document with this title already exists."""
     row = await conn.fetchrow(
-        "SELECT id FROM documents WHERE title = $1 AND category = $2 LIMIT 1",
-        title, CATEGORY
+        "SELECT id FROM documents WHERE title = $1 AND category = $2 LIMIT 1", title, CATEGORY
     )
     return row is not None
 
@@ -174,9 +173,11 @@ async def import_documents(dry_run: bool = False):
                 skipped_empty += 1
                 continue
 
-            content = content.replace('\x00', '').strip()
+            content = content.replace("\x00", "").strip()
             if len(content) < 50:
-                print(f"  [{i+1}/{len(txt_files)}] SKIP (too short, {len(content)} chars): {filename}")
+                print(
+                    f"  [{i+1}/{len(txt_files)}] SKIP (too short, {len(content)} chars): {filename}"
+                )
                 skipped_empty += 1
                 continue
 
@@ -220,10 +221,15 @@ async def import_documents(dry_run: bool = False):
                     tags,
                 )
             except Exception as insert_err:
-                if "string too long" in str(insert_err).lower() or "tsvector" in str(insert_err).lower():
+                if (
+                    "string too long" in str(insert_err).lower()
+                    or "tsvector" in str(insert_err).lower()
+                ):
                     # Content too large for tsvector generated column - truncate
                     safe_len = 300000
-                    print(f"  [{i+1}/{len(txt_files)}] WARN: truncating {len(content)} chars -> {safe_len} for tsvector: {filename}")
+                    print(
+                        f"  [{i+1}/{len(txt_files)}] WARN: truncating {len(content)} chars -> {safe_len} for tsvector: {filename}"
+                    )
                     await conn.execute(
                         """
                         INSERT INTO documents (title, content, category, tags, created_at, updated_at)
@@ -256,6 +262,7 @@ async def import_documents(dry_run: bool = False):
     tb_path = Path(__file__).parent.parent / "data" / "textbooks.db"
     if tb_path.exists() and not dry_run:
         import sqlite3
+
         print(f"\n--- Importing textbooks.db documents (with content previews) ---")
         sq_conn = sqlite3.connect(str(tb_path))
         sq_cur = sq_conn.cursor()
@@ -285,7 +292,7 @@ async def import_documents(dry_run: bool = False):
             tags = ["智能气功", "教材", "textbooks.db导入"]
 
             try:
-                clean_preview = preview.replace('\x00', '')
+                clean_preview = preview.replace("\x00", "")
                 await conn.execute(
                     """
                     INSERT INTO documents (title, content, category, tags, created_at, updated_at)

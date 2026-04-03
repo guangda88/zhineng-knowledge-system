@@ -152,16 +152,20 @@ async def retrieval_status() -> JSONResponse:
     try:
         pool = await init_db_pool()
 
-        with_vector = await pool.fetchval("SELECT COUNT(*) FROM documents WHERE embedding IS NOT NULL")
+        with_vector = await pool.fetchval(
+            "SELECT COUNT(*) FROM documents WHERE embedding IS NOT NULL"
+        )
         total_docs = await pool.fetchval("SELECT COUNT(*) FROM documents")
 
         total_audio = await pool.fetchval("SELECT COUNT(*) FROM audio_files") or 0
         transcribed_audio = (
-            await pool.fetchval("SELECT COUNT(*) FROM audio_files WHERE status = 'transcribed'") or 0
+            await pool.fetchval("SELECT COUNT(*) FROM audio_files WHERE status = 'transcribed'")
+            or 0
         )
         audio_segments = await pool.fetchval("SELECT COUNT(*) FROM audio_segments") or 0
         audio_vectorized = (
-            await pool.fetchval("SELECT COUNT(*) FROM audio_segments WHERE embedding IS NOT NULL") or 0
+            await pool.fetchval("SELECT COUNT(*) FROM audio_segments WHERE embedding IS NOT NULL")
+            or 0
         )
 
         return {
@@ -224,8 +228,10 @@ async def get_categories() -> JSONResponse:
     """获取所有分类（缓存30分钟）"""
     try:
         pool = await init_db_pool()
-        rows = await pool.fetch("""SELECT category, COUNT(*) as count
-               FROM documents GROUP BY category ORDER BY count DESC""")
+        rows = await pool.fetch(
+            """SELECT category, COUNT(*) as count
+               FROM documents GROUP BY category ORDER BY count DESC"""
+        )
 
         return {"categories": rows_to_list(rows)}
     except Exception as e:

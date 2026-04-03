@@ -3,25 +3,22 @@
 Docker Volume删除检查Hook
 检查Docker Volume删除操作
 """
-import sys
 import subprocess
+import sys
 
 
 def print_header():
     """打印Hook头部信息"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🔒 Docker Volume删除检查Hook")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def get_volumes_info():
     """获取Volume信息"""
     try:
         result = subprocess.run(
-            ["docker", "volume", "ls"],
-            capture_output=True,
-            text=True,
-            timeout=5
+            ["docker", "volume", "ls"], capture_output=True, text=True, timeout=5
         )
 
         if result.returncode == 0:
@@ -54,7 +51,7 @@ def print_warning(volumes_info: str):
     print("📦 如果您想清理数据，请先备份:")
     print("   docker volume ls")
     print("   docker volume inspect <volume>")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():

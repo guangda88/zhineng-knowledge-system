@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Import guoxue.db (SQLite) -> guoxue_content (PostgreSQL) - streaming version."""
 
+import asyncio
 import os
 import sqlite3
 import time
+
 import asyncpg
-import asyncio
 
 SQLITE_PATH = "/home/ai/zhineng-knowledge-system/lingzhi_ubuntu/database/guoxue.db"
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
+)
 BATCH_SIZE = 100
 
 
@@ -61,7 +64,9 @@ async def main():
 
     sqlite_conn = sqlite3.connect(SQLITE_PATH)
     cur = sqlite_conn.cursor()
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name")
+    cur.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name"
+    )
     all_tables = [row[0] for row in cur.fetchall()]
     sqlite_conn.close()
 

@@ -8,9 +8,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.services.evolution.resilient_caller import (
-    get_resilient_caller,
+    PermanentError,
     RetryableError,
-    PermanentError
+    get_resilient_caller,
 )
 
 
@@ -43,10 +43,7 @@ async def test_retry_mechanism():
 
     try:
         result = await caller.call_with_retry(
-            provider="hunyuan",
-            func=flaky_api_call,
-            prompt="测试prompt",
-            max_failures=2
+            provider="hunyuan", func=flaky_api_call, prompt="测试prompt", max_failures=2
         )
         print(f"\n结果: {result}")
     except Exception as e:
@@ -64,9 +61,7 @@ async def test_retry_mechanism():
 
     try:
         result = await caller.call_with_retry(
-            provider="deepseek",
-            func=permanent_error_api_call,
-            prompt="测试prompt"
+            provider="deepseek", func=permanent_error_api_call, prompt="测试prompt"
         )
         print(f"结果: {result}")
     except PermanentError as e:
@@ -80,6 +75,7 @@ async def test_retry_mechanism():
     async def realistic_api_call(prompt: str):
         """模拟现实的API调用（30%失败率）"""
         import random
+
         if random.random() < 0.3:
             raise ConnectionError("Random network error")
         return {"content": f"Response to: {prompt}", "success": True}
@@ -89,9 +85,7 @@ async def test_retry_mechanism():
     for i in range(10):
         try:
             result = await caller.call_with_retry(
-                provider="hunyuan",
-                func=realistic_api_call,
-                prompt=f"Test call {i+1}"
+                provider="hunyuan", func=realistic_api_call, prompt=f"Test call {i+1}"
             )
             print(f"  调用 {i+1}: ✅ 成功")
         except Exception as e:

@@ -6,23 +6,22 @@
 """
 
 import asyncio
-import sys
-import os
 import json
-from pathlib import Path
-from datetime import datetime
 import logging
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from backend.services.enhanced_vector_service import EmbeddingProvider, TextVectorizer
 from backend.services.text_processor import EnhancedTextProcessor
-from backend.services.enhanced_vector_service import TextVectorizer, EmbeddingProvider
 
 # 配置日志
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -70,13 +69,14 @@ async def process_single_file(file_path: Path, processor, vectorizer):
             "file_size": file_path.stat().st_size,
             "chunks_count": len(chunks),
             "metadata": metadata.to_dict(),
-            "processed_at": datetime.now().isoformat()
+            "processed_at": datetime.now().isoformat(),
         }
 
         # 保存到processed目录
         import json
+
         output_file = PROCESSED_DIR / f"{file_path.stem}_processed.json"
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
         logger.info(f"✅ 处理完成: {file_path.name}")
@@ -88,7 +88,7 @@ async def process_single_file(file_path: Path, processor, vectorizer):
         return {
             "file_name": file_path.name,
             "error": str(e),
-            "processed_at": datetime.now().isoformat()
+            "processed_at": datetime.now().isoformat(),
         }
 
 
@@ -124,14 +124,9 @@ async def import_textbooks(limit: int = None, skip_processed: bool = True):
         logger.info(f"限制处理数量为: {limit}")
 
     # 初始化处理器
-    processor = EnhancedTextProcessor(
-        max_chunk_size=CHUNK_SIZE,
-        overlap=OVERLAP
-    )
+    processor = EnhancedTextProcessor(max_chunk_size=CHUNK_SIZE, overlap=OVERLAP)
 
-    vectorizer = TextVectorizer(
-        preferred_provider=EmbeddingProvider.LOCAL
-    )
+    vectorizer = TextVectorizer(preferred_provider=EmbeddingProvider.LOCAL)
 
     # 处理每个文件
     results = []
@@ -166,11 +161,11 @@ async def import_textbooks(limit: int = None, skip_processed: bool = True):
         "total_time": total_time,
         "avg_time_per_file": total_time / len(txt_files),
         "results": results,
-        "completed_at": datetime.now().isoformat()
+        "completed_at": datetime.now().isoformat(),
     }
 
     report_file = PROCESSED_DIR / "import_report.json"
-    with open(report_file, 'w', encoding='utf-8') as f:
+    with open(report_file, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     logger.info(f"导入报告已保存: {report_file}")
@@ -189,10 +184,7 @@ async def main():
     args = parser.parse_args()
 
     # 开始导入
-    await import_textbooks(
-        limit=args.limit,
-        skip_processed=not args.all
-    )
+    await import_textbooks(limit=args.limit, skip_processed=not args.all)
 
 
 if __name__ == "__main__":

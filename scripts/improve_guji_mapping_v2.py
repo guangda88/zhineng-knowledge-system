@@ -10,11 +10,12 @@
 """
 
 import asyncio
-import asyncpg
 import sqlite3
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
+
+import asyncpg
 
 # 配置
 SQLITE_DB = Path("/home/ai/zhineng-knowledge-system/lingzhi_ubuntu/database/guoxue.db")
@@ -25,9 +26,10 @@ BID_BOOK_MAPPING = Path("/home/ai/zhineng-knowledge-system/data/bid_book_mapping
 def load_bid_mapping() -> Dict[str, str]:
     """加载bid到书名的映射"""
     import json
-    with open(BID_BOOK_MAPPING, 'r', encoding='utf-8') as f:
+
+    with open(BID_BOOK_MAPPING, "r", encoding="utf-8") as f:
         data = json.load(f)
-    return {str(k): v.get('book_name', '') for k, v in data.items()}
+    return {str(k): v.get("book_name", "") for k, v in data.items()}
 
 
 def get_wx200_books(limit: int = 500) -> List[Tuple]:
@@ -36,15 +38,18 @@ def get_wx200_books(limit: int = 500) -> List[Tuple]:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT id, bid, substr(body, 1, 500) as preview
         FROM wx200
         WHERE bid > 0
         ORDER BY bid, id
         LIMIT ?
-    """, (limit,))
+    """,
+        (limit,),
+    )
 
-    results = [(row['id'], row['bid'], row['preview']) for row in cursor.fetchall()]
+    results = [(row["id"], row["bid"], row["preview"]) for row in cursor.fetchall()]
     conn.close()
     return results
 
@@ -55,15 +60,18 @@ def get_wx201_books(limit: int = 500) -> List[Tuple]:
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT id, bid, substr(body, 1, 500) as preview
         FROM wx201
         WHERE bid IS NOT NULL
         ORDER BY bid, id
         LIMIT ?
-    """, (limit,))
+    """,
+        (limit,),
+    )
 
-    results = [(row['id'], row['bid'], row['preview']) for row in cursor.fetchall()]
+    results = [(row["id"], row["bid"], row["preview"]) for row in cursor.fetchall()]
     conn.close()
     return results
 
@@ -80,14 +88,16 @@ async def update_guji_documents():
         print("📊 当前guji_documents状态")
         print("=" * 70)
 
-        stats = await conn.fetchrow("""
+        stats = await conn.fetchrow(
+            """
             SELECT
                 COUNT(*) as total,
                 COUNT(CASE WHEN title IS NOT NULL AND title != '' THEN 1 END) as has_title,
                 MIN(source_id) as min_id,
                 MAX(source_id) as max_id
             FROM guji_documents
-        """)
+        """
+        )
         print(f"总记录: {stats['total']}")
         print(f"有标题: {stats['has_title']}")
         print(f"ID范围: {stats['min_id']} - {stats['max_id']}")
@@ -118,18 +128,25 @@ async def update_guji_documents():
             # 检查是否已存在
             exists = await conn.fetchval(
                 "SELECT 1 FROM guji_documents WHERE source_table = 'wx200' AND source_id = $1",
-                source_id
+                source_id,
             )
 
             if not exists:
-                book_name = bid_mapping.get(str(bid), '')
+                book_name = bid_mapping.get(str(bid), "")
                 # 提取第一行作为标题
-                first_line = preview.split('\n')[0][:100] if preview else ''
+                first_line = preview.split("\n")[0][:100] if preview else ""
 
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO guji_documents (source_table, source_id, title, content, content_length)
                     VALUES ($1, $2, $3, $4, $5)
-                """, 'wx200', source_id, book_name or first_line, preview, len(preview))
+                """,
+                    "wx200",
+                    source_id,
+                    book_name or first_line,
+                    preview,
+                    len(preview),
+                )
 
                 inserted += 1
                 if inserted % 100 == 0:
@@ -143,7 +160,8 @@ async def update_guji_documents():
         print("=" * 70)
 
         # 首先通过bid_source_id关联更新
-        updated = await conn.execute("""
+        updated = await conn.execute(
+            """
             UPDATE guji_documents g
             SET title = bm.book_name
             FROM (
@@ -151,7 +169,10 @@ async def update_guji_documents():
             ) bm
             WHERE g.source_id::text = bm.bid
             AND g.title IS NULL OR g.title = ''
-        """, list(bid_mapping.keys()), list(bid_mapping.values()))
+        """,
+            list(bid_mapping.keys()),
+            list(bid_mapping.values()),
+        )
 
         print(f"✅ 更新了 {updated} 条记录的标题")
 
@@ -174,13 +195,15 @@ async def update_guji_documents():
         print("📊 最终统计")
         print("=" * 70)
 
-        final_stats = await conn.fetchrow("""
+        final_stats = await conn.fetchrow(
+            """
             SELECT
                 COUNT(*) as total,
                 COUNT(CASE WHEN title IS NOT NULL AND title != '' THEN 1 END) as has_title,
                 COUNT(DISTINCT source_table) as sources
             FROM guji_documents
-        """)
+        """
+        )
 
         print(f"总记录: {final_stats['total']}")
         print(f"有标题: {final_stats['has_title']}")
@@ -191,13 +214,15 @@ async def update_guji_documents():
         print("📖 书名样本 (前20条)")
         print("=" * 70)
 
-        samples = await conn.fetch("""
+        samples = await conn.fetch(
+            """
             SELECT source_id, LEFT(title, 40) as title, LEFT(content, 50) as preview
             FROM guji_documents
             WHERE title IS NOT NULL AND title != ''
             ORDER BY source_id
             LIMIT 20
-        """)
+        """
+        )
 
         for row in samples:
             print(f"  [{row['source_id']:6d}] {row['title']}")

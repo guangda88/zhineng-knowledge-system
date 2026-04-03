@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """快速验证API Key配置"""
 import os
+
 from dotenv import load_dotenv
 
 # 加载.env文件

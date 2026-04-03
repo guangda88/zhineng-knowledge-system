@@ -3,13 +3,13 @@
 实现高级上下文压缩功能，支持多种压缩策略。
 """
 
-import re
 import logging
+import re
+import string
+from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
-from collections import Counter
-import string
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class AdvancedContextCompressor:
         custom_keywords: Optional[List[str]] = None,
         strategies: Optional[List[CompressionStrategy]] = None,
         max_field_length: int = 2000,
-        max_list_items: int = 10
+        max_list_items: int = 10,
     ):
         """初始化压缩器
 
@@ -78,7 +78,7 @@ class AdvancedContextCompressor:
         self.strategies = strategies or [
             CompressionStrategy.DENSITY,
             CompressionStrategy.SEMANTIC,
-            CompressionStrategy.LIST
+            CompressionStrategy.LIST,
         ]
         self.max_field_length = max_field_length
         self.max_list_items = max_list_items
@@ -146,7 +146,7 @@ class AdvancedContextCompressor:
             return text
 
         # 分割成段落和句子
-        paragraphs = text.split('\n\n')
+        paragraphs = text.split("\n\n")
         compressed_paragraphs = []
 
         for paragraph in paragraphs:
@@ -165,9 +165,9 @@ class AdvancedContextCompressor:
             selected_indices = [idx for idx, _ in selected]
             compressed_sentences = [sentences[i] for i in sorted(selected_indices)]
 
-            compressed_paragraphs.append(' '.join(compressed_sentences))
+            compressed_paragraphs.append(" ".join(compressed_sentences))
 
-        return '\n\n'.join(compressed_paragraphs)
+        return "\n\n".join(compressed_paragraphs)
 
     def _density_compress(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """基于信息密度的压缩
@@ -248,7 +248,7 @@ class AdvancedContextCompressor:
 
         # 查找包含关键词的重要项
         important_items = []
-        for item in items[reserved_head:-reserved_tail if reserved_tail > 0 else len(items)]:
+        for item in items[reserved_head : -reserved_tail if reserved_tail > 0 else len(items)]:
             item_str = str(item)
             if self._has_keywords(item_str):
                 important_items.append(item)
@@ -307,7 +307,7 @@ class AdvancedContextCompressor:
             selected_indices = [idx for idx, _ in selected]
             result.extend(other_sentences[i] for i in sorted(selected_indices))
 
-        return ' '.join(result)
+        return " ".join(result)
 
     def _score_sentences(self, sentences: List[str]) -> List[Tuple[int, float]]:
         """为句子评分
@@ -335,7 +335,7 @@ class AdvancedContextCompressor:
             score += density * 2.0
 
             # 数字和特殊字符因子（通常包含重要信息）
-            if re.search(r'\d+', sentence):
+            if re.search(r"\d+", sentence):
                 score += 0.5
 
             # 非停用词比例
@@ -367,7 +367,7 @@ class AdvancedContextCompressor:
         digit_count = sum(c.isdigit() for c in text)
 
         # 关键字符
-        special_chars = sum(c in ':-=+[]{}()' for c in text)
+        special_chars = sum(c in ":-=+[]{}()" for c in text)
 
         total = len(words) + max(digit_count // 3, 0) + special_chars
         density = (non_stopwords + digit_count / 3 + special_chars) / max(total, 1)
@@ -383,10 +383,10 @@ class AdvancedContextCompressor:
         truncated = text[:max_length]
 
         # 查找最后的句子结束符
-        for sep in ('. ', '。', '! ', '！', '? ', '？', '\n'):
+        for sep in (". ", "。", "! ", "！", "? ", "？", "\n"):
             last_sep = truncated.rfind(sep)
             if last_sep > max_length // 2:  # 确保不会截断太多
-                return truncated[:last_sep + len(sep)] + "..."
+                return truncated[: last_sep + len(sep)] + "..."
 
         # 没有找到合适的边界，直接截断
         return truncated + "..."
@@ -394,7 +394,7 @@ class AdvancedContextCompressor:
     def _split_sentences(self, text: str) -> List[str]:
         """分割文本为句子"""
         # 简单的句子分割（支持中英文）
-        pattern = r'[.。!！?？]\s+|[\n]+'
+        pattern = r"[.。!！?？]\s+|[\n]+"
         sentences = re.split(pattern, text)
 
         # 清理空句子
@@ -415,18 +415,32 @@ class AdvancedContextCompressor:
 
         # 默认重要词
         default_keywords = [
-            "must", "should", "require", "ensure",
-            "critical", "important", "essential",
-            "verify", "validate", "confirm",
-            "定义", "原理", "方法", "步骤", "注意事项",
-            "禁忌", "功效", "作用", "要点"
+            "must",
+            "should",
+            "require",
+            "ensure",
+            "critical",
+            "important",
+            "essential",
+            "verify",
+            "validate",
+            "confirm",
+            "定义",
+            "原理",
+            "方法",
+            "步骤",
+            "注意事项",
+            "禁忌",
+            "功效",
+            "作用",
+            "要点",
         ]
 
         all_keywords = list(self.custom_keywords) + default_keywords
 
         for keyword in all_keywords:
             try:
-                pattern = re.compile(r'\b' + re.escape(keyword.lower()) + r'\b')
+                pattern = re.compile(r"\b" + re.escape(keyword.lower()) + r"\b")
                 patterns.append(pattern)
             except re.error:
                 # 忽略无效的正则表达式
@@ -439,14 +453,73 @@ class AdvancedContextCompressor:
         # 中英文常见停用词
         stopwords = {
             # 英文
-            "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
-            "of", "with", "by", "from", "as", "is", "was", "are", "were", "been",
-            "be", "have", "has", "had", "do", "does", "did", "will", "would",
-            "could", "should", "may", "might", "can", "this", "that", "these",
+            "a",
+            "an",
+            "the",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "as",
+            "is",
+            "was",
+            "are",
+            "were",
+            "been",
+            "be",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "can",
+            "this",
+            "that",
+            "these",
             # 中文
-            "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都",
-            "一", "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会",
-            "着", "没有", "看", "好", "自己", "这"
+            "的",
+            "了",
+            "在",
+            "是",
+            "我",
+            "有",
+            "和",
+            "就",
+            "不",
+            "人",
+            "都",
+            "一",
+            "一个",
+            "上",
+            "也",
+            "很",
+            "到",
+            "说",
+            "要",
+            "去",
+            "你",
+            "会",
+            "着",
+            "没有",
+            "看",
+            "好",
+            "自己",
+            "这",
         }
 
         return stopwords
@@ -454,9 +527,7 @@ class AdvancedContextCompressor:
 
 # 便捷函数
 def compress_context(
-    context: Dict[str, Any],
-    target_ratio: float = 0.5,
-    keywords: Optional[List[str]] = None
+    context: Dict[str, Any], target_ratio: float = 0.5, keywords: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """压缩上下文字典
 
@@ -468,18 +539,11 @@ def compress_context(
     Returns:
         压缩后的上下文
     """
-    compressor = AdvancedContextCompressor(
-        target_ratio=target_ratio,
-        custom_keywords=keywords
-    )
+    compressor = AdvancedContextCompressor(target_ratio=target_ratio, custom_keywords=keywords)
     return compressor.compress(context)
 
 
-def compress_text(
-    text: str,
-    target_ratio: float = 0.5,
-    preserve_keywords: bool = True
-) -> str:
+def compress_text(text: str, target_ratio: float = 0.5, preserve_keywords: bool = True) -> str:
     """压缩文本
 
     Args:
@@ -494,15 +558,13 @@ def compress_text(
         return text
 
     compressor = AdvancedContextCompressor(
-        target_ratio=target_ratio,
-        preserve_keywords=preserve_keywords
+        target_ratio=target_ratio, preserve_keywords=preserve_keywords
     )
     return compressor.semantic_compress(text)
 
 
 def compress_messages(
-    messages: List[Dict[str, str]],
-    max_messages: int = 20
+    messages: List[Dict[str, str]], max_messages: int = 20
 ) -> List[Dict[str, str]]:
     """压缩消息列表
 

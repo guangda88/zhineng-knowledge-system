@@ -1,5 +1,7 @@
 """Tests for backend.config modules — Pydantic V2 model_config validation"""
+
 import os
+
 import pytest
 
 from backend.config.base import BaseConfig

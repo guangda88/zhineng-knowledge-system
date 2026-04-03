@@ -10,13 +10,14 @@
 """
 
 import asyncio
-import asyncpg
-import aiohttp
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from datetime import datetime
+
+import aiohttp
+import asyncpg
 
 # Openlist API 配置
 OPENLIST_BASE = "http://100.66.1.8:2455"
@@ -43,7 +44,7 @@ class GujiMapper:
         """初始化连接"""
         self.session = aiohttp.ClientSession()
         self.conn = await asyncpg.connect(
-            'postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb'
+            "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
         )
 
     async def close(self):
@@ -62,27 +63,21 @@ class GujiMapper:
             "password": "",
             "page": page,
             "per_page": per_page,
-            "refresh": False
+            "refresh": False,
         }
 
         try:
-            async with self.session.post(
-                f"{OPENLIST_BASE}/api/fs/list",
-                json=payload
-            ) as resp:
+            async with self.session.post(f"{OPENLIST_BASE}/api/fs/list", json=payload) as resp:
                 data = await resp.json()
-                if data.get('code') == 200:
-                    return data.get('data', {})
+                if data.get("code") == 200:
+                    return data.get("data", {})
                 return None
         except Exception as e:
             print(f"  API 请求失败: {e}")
             return None
 
     async def scan_directory_recursive(
-        self,
-        base_path: str,
-        max_depth: int = 5,
-        current_depth: int = 0
+        self, base_path: str, max_depth: int = 5, current_depth: int = 0
     ) -> List[Dict]:
         """递归扫描目录"""
         if current_depth >= max_depth:
@@ -94,29 +89,24 @@ class GujiMapper:
         if not result:
             return []
 
-        items = result.get('content', [])
+        items = result.get("content", [])
         files = []
 
         for item in items:
-            name = item.get('name', '')
-            is_dir = item.get('is_dir', False)
-            path = item.get('path', f"{base_path}/{name}" if base_path == '/' else f"{base_path}/{name}")
+            name = item.get("name", "")
+            is_dir = item.get("is_dir", False)
+            path = item.get(
+                "path", f"{base_path}/{name}" if base_path == "/" else f"{base_path}/{name}"
+            )
 
             if is_dir:
                 # 递归扫描子目录
-                sub_files = await self.scan_directory_recursive(
-                    path, max_depth, current_depth + 1
-                )
+                sub_files = await self.scan_directory_recursive(path, max_depth, current_depth + 1)
                 files.extend(sub_files)
             else:
                 # 记录文件
-                ext = name.split('.')[-1].lower() if '.' in name else ''
-                files.append({
-                    'name': name,
-                    'path': path,
-                    'ext': ext,
-                    'size': item.get('size', 0)
-                })
+                ext = name.split(".")[-1].lower() if "." in name else ""
+                files.append({"name": name, "path": path, "ext": ext, "size": item.get("size", 0)})
 
         return files
 
@@ -132,7 +122,7 @@ class GujiMapper:
 
             for f in files:
                 # 提取文件名（不含扩展名）
-                name_key = f['name'].rsplit('.', 1)[0] if '.' in f['name'] else f['name']
+                name_key = f["name"].rsplit(".", 1)[0] if "." in f["name"] else f["name"]
                 self.file_index[name_key] = f
 
         print(f"\n✅ 文件索引建立完成: {len(self.file_index)} 个文件")
@@ -143,17 +133,20 @@ class GujiMapper:
 
         # 从 guoxue_content 获取标题
         # 由于 body 内容可能包含标题，我们需要提取
-        rows = await self.conn.fetch("""
+        rows = await self.conn.fetch(
+            """
             SELECT DISTINCT source_table, book_id
             FROM guoxue_content
             WHERE source_table LIKE 'wx%'
             LIMIT 50000
-        """)
+        """
+        )
 
         print(f"  从数据库读取 {len(rows)} 条记录...")
 
         # 从本地 SQLite 获取实际标题
         import sqlite3
+
         sqlite_db = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guoxue.db"
 
         if sqlite_db.exists():
@@ -162,9 +155,7 @@ class GujiMapper:
             cursor = conn.cursor()
 
             # 获取所有 wx 表
-            cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%'"
-            )
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%'")
             tables = [row[0] for row in cursor.fetchall()]
 
             print(f"  本地数据库有 {len(tables)} 个 wx 表")
@@ -175,8 +166,10 @@ class GujiMapper:
                     cols = [col[1] for col in cursor.fetchall()]
 
                     # 检查是否有 title 列
-                    if 'title' in cols:
-                        cursor.execute(f"SELECT id, title FROM {table} WHERE title IS NOT NULL LIMIT 1000")
+                    if "title" in cols:
+                        cursor.execute(
+                            f"SELECT id, title FROM {table} WHERE title IS NOT NULL LIMIT 1000"
+                        )
                         for row in cursor.fetchall():
                             title = row[1]
                             if title:
@@ -194,10 +187,10 @@ class GujiMapper:
     def normalize_title(self, title: str) -> str:
         """标准化标题用于匹配"""
         # 移除常见前缀后缀
-        title = re.sub(r'^[\d\s、.]+', '', title)
-        title = re.sub(r'[\s\s]+$', '', title)
+        title = re.sub(r"^[\d\s、.]+", "", title)
+        title = re.sub(r"[\s\s]+$", "", title)
         # 移除括号内容
-        title = re.sub(r'[（(].*?[）)]', '', title)
+        title = re.sub(r"[（(].*?[）)]", "", title)
         return title.strip()
 
     async def establish_mapping(self):
@@ -215,20 +208,26 @@ class GujiMapper:
             # 在标题索引中查找
             if normalized in self.title_index:
                 ref = self.title_index[normalized]
-                parts = ref.split(':')
+                parts = ref.split(":")
 
                 # 尝试提取 book_id
-                source_table = parts[0].replace('wx', '')
+                source_table = parts[0].replace("wx", "")
                 try:
                     book_id = int(parts[1]) if len(parts) > 1 else None
 
                     if book_id:
-                        await self.conn.execute("""
+                        await self.conn.execute(
+                            """
                             INSERT INTO guji_scan_mapping
                             (file_name, file_path, file_type, book_id, source_table)
                             VALUES ($1, $2, $3, $4, $5)
-                        """, file_info['name'], file_info['path'],
-                            file_info['ext'], book_id, source_table)
+                        """,
+                            file_info["name"],
+                            file_info["path"],
+                            file_info["ext"],
+                            book_id,
+                            source_table,
+                        )
 
                         matched += 1
                         if matched % 100 == 0:
@@ -246,27 +245,33 @@ class GujiMapper:
         print(f"  guji_scan_mapping 记录数: {total}")
 
         if total > 0:
-            rows = await self.conn.fetch("""
+            rows = await self.conn.fetch(
+                """
                 SELECT source_table, COUNT(*) as cnt
                 FROM guji_scan_mapping
                 GROUP BY source_table
                 ORDER BY cnt DESC
                 LIMIT 10
-            """)
+            """
+            )
 
             print("\n  按来源表统计:")
             for row in rows:
                 print(f"    {row['source_table']:15} {row['cnt']:6} 个文件")
 
-            samples = await self.conn.fetch("""
+            samples = await self.conn.fetch(
+                """
                 SELECT file_name, book_id, source_table
                 FROM guji_scan_mapping
                 LIMIT 10
-            """)
+            """
+            )
 
             print("\n  映射示例:")
             for row in samples:
-                print(f"    {row['file_name']:40} -> book_id={row['book_id']} ({row['source_table']})")
+                print(
+                    f"    {row['file_name']:40} -> book_id={row['book_id']} ({row['source_table']})"
+                )
 
     async def run(self, mode: str = "map"):
         """运行主流程"""

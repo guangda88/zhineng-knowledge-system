@@ -225,12 +225,14 @@ async def list_categories(
     """列出知识分类"""
     try:
         pool = await init_db_pool()
-        rows = await pool.fetch("""
+        rows = await pool.fetch(
+            """
             SELECT category, COUNT(*) as count
             FROM documents
             GROUP BY category
             ORDER BY count DESC
-            """)
+            """
+        )
         categories = {r["category"]: {"count": r["count"]} for r in rows}
 
         return APIResponse(

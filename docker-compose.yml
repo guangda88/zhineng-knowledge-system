@@ -1,48 +1,48 @@
-version: "3.8"
+version: '3.8'
 
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    shm_size: '4gb'
+    shm_size: 4gb
     container_name: zhineng-postgres
     command:
-      - postgres
-      - -c
-      - shared_buffers=4GB
-      - -c
-      - work_mem=128MB
-      - -c
-      - maintenance_work_mem=1GB
-      - -c
-      - effective_cache_size=24GB
-      - -c
-      - max_wal_size=4GB
-      - -c
-      - min_wal_size=1GB
-      - -c
-      - checkpoint_completion_target=0.9
-      - -c
-      - default_statistics_target=200
-      - -c
-      - max_connections=200
+    - postgres
+    - -c
+    - shared_buffers=4GB
+    - -c
+    - work_mem=128MB
+    - -c
+    - maintenance_work_mem=1GB
+    - -c
+    - effective_cache_size=24GB
+    - -c
+    - max_wal_size=4GB
+    - -c
+    - min_wal_size=1GB
+    - -c
+    - checkpoint_completion_target=0.9
+    - -c
+    - default_statistics_target=200
+    - -c
+    - max_connections=200
     environment:
       POSTGRES_USER: zhineng
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: zhineng_kb
-      POSTGRES_INITDB_ARGS: "-E UTF8"
+      POSTGRES_INITDB_ARGS: -E UTF8
     ports:
-      - "5436:5432"
+    - 5436:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    - postgres_data:/var/lib/postgresql/data
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zhineng -d zhineng_kb"]
+      test: [CMD-SHELL, pg_isready -U zhineng -d zhineng_kb]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -57,17 +57,17 @@ services:
     container_name: zhineng-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     ports:
-      - "6381:6379"
+    - 6381:6379
     volumes:
-      - redis_data:/data
+    - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: [CMD, redis-cli, -a, '${REDIS_PASSWORD}', ping]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -89,19 +89,19 @@ services:
       HF_ENDPOINT: https://hf-mirror.com
       PYTHONUNBUFFERED: 1
     ports:
-      - "8001:8001"
+    - 8001:8001
     volumes:
-      - /data/models/bge-small-zh:/model:ro
-      - embedding_cache:/cache
+    - /data/models/bge-small-zh:/model:ro
+    - embedding_cache:/cache
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      test: [CMD, python, -c, import urllib.request; urllib.request.urlopen('http://localhost:8001/health')]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 180s  # 给模型加载足够的时间
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -116,9 +116,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: zhineng-api
-    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    command: [uvicorn, backend.main:app, --host, 0.0.0.0, --port, '8000', --workers, '2']
     ports:
-      - "8000:8000"
+    - 8000:8000
     environment:
       PYTHONPATH: /app
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -131,9 +131,9 @@ services:
       ENVIRONMENT: production
       EMBEDDING_SERVICE_URL: http://embedding:8001
     volumes:
-      - ./backend:/app/backend
-      - ./jwt_private.pem:/app/jwt_private.pem
-      - ./jwt_public.pem:/app/jwt_public.pem
+    - ./backend:/app/backend
+    - ./jwt_private.pem:/app/jwt_private.pem
+    - ./jwt_public.pem:/app/jwt_public.pem
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,7 +143,7 @@ services:
         condition: service_started
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -157,15 +157,15 @@ services:
     image: nginx:alpine
     container_name: zhineng-nginx
     ports:
-      - "8008:80"
+    - 8008:80
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./frontend:/usr/share/nginx/html:ro
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./frontend:/usr/share/nginx/html:ro
     depends_on:
-      - api
+    - api
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -180,19 +180,19 @@ services:
     image: prom/prometheus:latest
     container_name: zhineng-prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-      - '--web.enable-lifecycle'
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
+    - --web.console.libraries=/usr/share/prometheus/console_libraries
+    - --web.console.templates=/usr/share/prometheus/consoles
+    - --web.enable-lifecycle
     ports:
-      - "9090:9090"
+    - 9090:9090
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
+    - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - prometheus_data:/prometheus
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -208,18 +208,18 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
-      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_ALLOW_SIGN_UP: 'false'
     ports:
-      - "3000:3000"
+    - 3000:3000
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    - grafana_data:/var/lib/grafana
+    - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
-      - prometheus
+    - prometheus
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -236,12 +236,12 @@ services:
       REDIS_ADDR: redis://redis:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
-      - "9121:9121"
+    - 9121:9121
     depends_on:
-      - redis
+    - redis
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:
@@ -255,14 +255,14 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: zhineng-postgres-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://zhineng:${POSTGRES_PASSWORD}@postgres:5432/zhineng_kb?sslmode=disable"
+      DATA_SOURCE_NAME: postgresql://zhineng:${POSTGRES_PASSWORD}@postgres:5432/zhineng_kb?sslmode=disable
     ports:
-      - "9187:9187"
+    - 9187:9187
     depends_on:
-      - postgres
+    - postgres
     restart: unless-stopped
     networks:
-      - zhineng-network
+    - zhineng-network
     deploy:
       resources:
         limits:

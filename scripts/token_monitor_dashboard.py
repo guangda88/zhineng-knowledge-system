@@ -5,18 +5,19 @@
 """
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
+from backend.services.ai_service import format_pool_status
 from backend.services.evolution.free_token_pool import get_free_token_pool
 from backend.services.evolution.token_monitor import get_token_monitor
-from backend.services.ai_service import format_pool_status
 
 
 async def show_dashboard():
@@ -49,9 +50,7 @@ async def show_dashboard():
 
         # 按成功率排序
         providers_sorted = sorted(
-            summary["providers"].items(),
-            key=lambda x: x[1]["success_rate"],
-            reverse=True
+            summary["providers"].items(), key=lambda x: x[1]["success_rate"], reverse=True
         )
 
         for provider, stats in providers_sorted:
@@ -99,16 +98,24 @@ async def export_report():
     print(f"✅ 导出记录数: {len(records)}")
 
     # 保存到文件
-    report_file = Path("data/monitoring") / f"token_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        Path("data/monitoring") / f"token_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     report_file.parent.mkdir(parents=True, exist_ok=True)
 
     import json
+
     with open(report_file, "w", encoding="utf-8") as f:
-        json.dump({
-            "export_time": datetime.now().isoformat(),
-            "summary": monitor.get_summary(hours=24),
-            "records": records
-        }, f, ensure_ascii=False, indent=2)
+        json.dump(
+            {
+                "export_time": datetime.now().isoformat(),
+                "summary": monitor.get_summary(hours=24),
+                "records": records,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     print(f"✅ 报告已保存: {report_file}")
 
@@ -126,7 +133,9 @@ async def show_provider_comparison():
         print("暂无统计数据")
         return
 
-    print(f"\n{'Provider':<15} {'总调用':<10} {'成功':<10} {'失败':<10} {'成功率':<10} {'平均延迟':<10} {'总Token'}")
+    print(
+        f"\n{'Provider':<15} {'总调用':<10} {'成功':<10} {'失败':<10} {'成功率':<10} {'平均延迟':<10} {'总Token'}"
+    )
     print("-" * 100)
 
     for name, stat in sorted(stats.items(), key=lambda x: x[1].total_calls, reverse=True):

@@ -3,15 +3,15 @@
 会话开始时提醒Hook
 在每次Claude Code会话开始时提醒阅读规则
 """
-import sys
 import os
+import sys
 
 
 def print_header():
     """打印头部信息"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📋 智能知识系统 - 开发规则提醒")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def print_reminder():
@@ -24,7 +24,7 @@ def print_reminder():
         ("已完成开发前检查清单", "确认需求、原则、影响"),
         ("涉及数据库写操作时已获批准", "防止数据丢失"),
         ("涉及文件删除时已生成预览", "防止误删重要文件"),
-        ("理解当前系统状态", "是否有紧急问题需要优先处理")
+        ("理解当前系统状态", "是否有紧急问题需要优先处理"),
     ]
 
     for i, (item, description) in enumerate(checklist_items, 1):
@@ -51,7 +51,7 @@ def print_reminder():
     print("   - HOOKS_IMPLEMENTATION_GUIDE.md")
     print("")
 
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():

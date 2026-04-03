@@ -10,13 +10,14 @@
 """
 
 import asyncio
-import aiohttp
+import re
 import sqlite3
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 from datetime import datetime
-import re
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import aiohttp
 
 # Openlist API
 OPENLIST_BASE = "http://100.66.1.8:2455"
@@ -36,26 +37,17 @@ async def fetch_directory(session: aiohttp.ClientSession, path: str, page: int =
     """获取目录内容"""
     await asyncio.sleep(API_DELAY)
 
-    payload = {
-        "path": path,
-        "password": "",
-        "page": page,
-        "per_page": 200,
-        "refresh": False
-    }
+    payload = {"path": path, "password": "", "page": page, "per_page": 200, "refresh": False}
 
     async with session.post(f"{OPENLIST_BASE}/api/fs/list", json=payload) as resp:
         data = await resp.json()
-        if data.get('code') == 200:
-            return data.get('data', {})
+        if data.get("code") == 200:
+            return data.get("data", {})
         return {}
 
 
 async def scan_files_recursive(
-    session: aiohttp.ClientSession,
-    base_path: str,
-    max_depth: int = 4,
-    depth: int = 0
+    session: aiohttp.ClientSession, base_path: str, max_depth: int = 4, depth: int = 0
 ) -> List[dict]:
     """递归扫描文件"""
     if depth >= max_depth:
@@ -69,27 +61,23 @@ async def scan_files_recursive(
         print(f"    ⚠️  无法访问 {base_path}: {e}")
         return []
 
-    items = result.get('content')
+    items = result.get("content")
     if not items:
         return []
 
     files = []
 
     for item in items:
-        name = item.get('name', '')
-        is_dir = item.get('is_dir', False)
-        path = item.get('path', f"{base_path}/{name}")
+        name = item.get("name", "")
+        is_dir = item.get("is_dir", False)
+        path = item.get("path", f"{base_path}/{name}")
 
         if is_dir:
             sub_files = await scan_files_recursive(session, path, max_depth, depth + 1)
             files.extend(sub_files)
         else:
-            ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
-            files.append({
-                'name': name,
-                'path': path,
-                'ext': ext
-            })
+            ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+            files.append({"name": name, "path": path, "ext": ext})
 
     return files
 
@@ -97,17 +85,17 @@ async def scan_files_recursive(
 def extract_book_id_from_filename(filename: str) -> Tuple[Optional[int], str]:
     """从文件名提取 book_id"""
     # 尝试匹配数字前缀
-    match = re.match(r'^(\d+)', filename)
+    match = re.match(r"^(\d+)", filename)
     if match:
         return int(match.group(1)), filename
 
     # 尝试匹配 wx 模式
-    match = re.search(r'wx(\d+)', filename, re.IGNORECASE)
+    match = re.search(r"wx(\d+)", filename, re.IGNORECASE)
     if match:
         return int(match.group(1)), filename
 
     # 尝试匹配 bid 模式
-    match = re.search(r'bid[:\s]*(\d+)', filename, re.IGNORECASE)
+    match = re.search(r"bid[:\s]*(\d+)", filename, re.IGNORECASE)
     if match:
         return int(match.group(1)), filename
 
@@ -132,9 +120,7 @@ async def main():
     cursor = conn.cursor()
 
     # 获取所有 wx 表
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%'"
-    )
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%'")
     tables = [row[0] for row in cursor.fetchall()]
     print(f"  找到 {len(tables)} 个 wx 表")
 
@@ -146,14 +132,14 @@ async def main():
             min_bid, max_bid, count = cursor.fetchone()
             if min_bid and max_bid:
                 # 提取数字部分
-                table_num = re.search(r'\d+', table)
+                table_num = re.search(r"\d+", table)
                 if table_num:
                     num = int(table_num.group())
                     bid_info[num] = {
-                        'table': table,
-                        'min_bid': min_bid,
-                        'max_bid': max_bid,
-                        'count': count
+                        "table": table,
+                        "min_bid": min_bid,
+                        "max_bid": max_bid,
+                        "count": count,
                     }
         except Exception:
             continue
@@ -181,19 +167,19 @@ async def main():
     print("🔬 分析文件名...")
     name_patterns = {}
     for f in all_files:
-        name = f['name']
+        name = f["name"]
         # 去除扩展名
-        base_name = name.rsplit('.', 1)[0] if '.' in name else name
+        base_name = name.rsplit(".", 1)[0] if "." in name else name
 
         # 分类
-        if re.match(r'^\d+', base_name):
-            pattern = '数字开头'
-        elif re.match(r'^[a-zA-Z]', base_name):
-            pattern = '字母开头'
-        elif re.match(r'^[一-龥]', base_name):
-            pattern = '中文开头'
+        if re.match(r"^\d+", base_name):
+            pattern = "数字开头"
+        elif re.match(r"^[a-zA-Z]", base_name):
+            pattern = "字母开头"
+        elif re.match(r"^[一-龥]", base_name):
+            pattern = "中文开头"
         else:
-            pattern = '其他'
+            pattern = "其他"
 
         name_patterns[pattern] = name_patterns.get(pattern, 0) + 1
 
@@ -205,31 +191,37 @@ async def main():
 
     # 连接 PostgreSQL
     import asyncpg
-    pg_conn = await asyncpg.connect(
-        'postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb'
-    )
+
+    pg_conn = await asyncpg.connect("postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb")
 
     # 清空旧映射
     await pg_conn.execute("TRUNCATE TABLE guji_scan_mapping")
 
     mapped = 0
     for f in all_files:
-        book_id, name = extract_book_id_from_filename(f['name'])
+        book_id, name = extract_book_id_from_filename(f["name"])
 
         if book_id:
             # 查找对应的 source_table
             source_table = None
             for num, info in bid_info.items():
-                if info['min_bid'] <= book_id <= info['max_bid']:
+                if info["min_bid"] <= book_id <= info["max_bid"]:
                     source_table = f"wx{num}"
                     break
 
             if source_table:
-                await pg_conn.execute("""
+                await pg_conn.execute(
+                    """
                     INSERT INTO guji_scan_mapping
                     (file_name, file_path, file_type, book_id, source_table)
                     VALUES ($1, $2, $3, $4, $5)
-                """, f['name'], f['path'], f['ext'], book_id, source_table)
+                """,
+                    f["name"],
+                    f["path"],
+                    f["ext"],
+                    book_id,
+                    source_table,
+                )
 
                 mapped += 1
                 if mapped % 50 == 0:

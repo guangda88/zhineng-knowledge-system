@@ -54,9 +54,7 @@ class ValidationResult:
     封装验证操作的结果
     """
 
-    def __init__(
-        self, is_valid: bool, message: str = "", details: Optional[dict] = None
-    ):
+    def __init__(self, is_valid: bool, message: str = "", details: Optional[dict] = None):
         self.is_valid = is_valid
         self.message = message
         self.details = details or {}
@@ -65,9 +63,7 @@ class ValidationResult:
         return self.is_valid
 
     def __str__(self) -> str:
-        return (
-            self.message if self.message else ("Valid" if self.is_valid else "Invalid")
-        )
+        return self.message if self.message else ("Valid" if self.is_valid else "Invalid")
 
 
 def validate_file_size(
@@ -95,16 +91,12 @@ def validate_file_size(
         )
 
     if not path.is_file():
-        return ValidationResult(
-            False, f"Path is not a file: {file_path}", {"file_path": str(path)}
-        )
+        return ValidationResult(False, f"Path is not a file: {file_path}", {"file_path": str(path)})
 
     try:
         file_size = path.stat().st_size
     except OSError as e:
-        return ValidationResult(
-            False, f"Cannot get file size: {e}", {"file_path": str(path)}
-        )
+        return ValidationResult(False, f"Cannot get file size: {e}", {"file_path": str(path)})
 
     if file_size > max_size:
         size_mb = file_size / (1024 * 1024)
@@ -115,9 +107,7 @@ def validate_file_size(
             {"file_size": file_size, "max_size": max_size},
         )
 
-    return ValidationResult(
-        True, f"File size OK: {file_size} bytes", {"file_size": file_size}
-    )
+    return ValidationResult(True, f"File size OK: {file_size} bytes", {"file_size": file_size})
 
 
 def validate_file_type(
@@ -166,9 +156,7 @@ def validate_file_type(
                 {"mime_type": mime_type, "allowed": list(allowed_mime_types)},
             )
 
-    return ValidationResult(
-        True, f"File type OK: {extension}", {"extension": extension}
-    )
+    return ValidationResult(True, f"File type OK: {extension}", {"extension": extension})
 
 
 def validate_file_path(
@@ -277,9 +265,7 @@ def validate_image_file(
             {"extension": Path(file_path).suffix.lower()},
         )
     except Exception as e:
-        return ValidationResult(
-            False, f"Image verification failed: {e}", {"error": str(e)}
-        )
+        return ValidationResult(False, f"Image verification failed: {e}", {"error": str(e)})
 
 
 def validate_video_file(
@@ -426,9 +412,7 @@ def validate_upload(
     if file_size > max_size:
         max_mb = max_size / (1024 * 1024)
         size_mb = file_size / (1024 * 1024)
-        return ValidationResult(
-            False, f"File size {size_mb:.2f}MB exceeds maximum {max_mb:.2f}MB"
-        )
+        return ValidationResult(False, f"File size {size_mb:.2f}MB exceeds maximum {max_mb:.2f}MB")
 
     # 检查扩展名
     if allowed_extensions is not None:
@@ -453,9 +437,7 @@ def sanitize_filename(filename: str) -> str:
     filename = filename.replace("/", "").replace("\\", "")
 
     # 保留安全字符：字母、数字、中文、下划线、点号、连字符、空格
-    safe_chars = set(
-        "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" "._- "
-    )
+    safe_chars = set("abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" "._- ")
 
     # 添加中文字符范围
     safe_filename = []

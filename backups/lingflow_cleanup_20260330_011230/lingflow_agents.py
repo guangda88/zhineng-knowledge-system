@@ -8,12 +8,12 @@ LingFlow Agents Flow Service
 """
 
 import asyncio
-import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, field
 import json
+import logging
+from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +22,11 @@ try:
     from backend.lingflow.autonomous_processor import (
         AutonomousTextbookProcessor,
         ProcessingResult,
-        TocItem,
+        ProcessingStage,
         TextBlock,
-        ProcessingStage
+        TocItem,
     )
+
     LINGFLOW_AGENTS_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"LingFlow agents module not available: {e}")
@@ -40,6 +41,7 @@ except ImportError as e:
 @dataclass
 class AgentTaskConfig:
     """Agent任务配置"""
+
     target_toc_depth: int = 5
     max_block_chars: int = 300
     enable_toc_expansion: bool = True
@@ -52,13 +54,14 @@ class AgentTaskConfig:
             "max_block_chars": self.max_block_chars,
             "enable_toc_expansion": self.enable_toc_expansion,
             "enable_quality_assessment": self.enable_quality_assessment,
-            "max_retries": self.max_retries
+            "max_retries": self.max_retries,
         }
 
 
 @dataclass
 class AgentTaskResult:
     """Agent任务结果"""
+
     task_id: str
     textbook_id: str
     textbook_title: str
@@ -87,7 +90,7 @@ class AgentTaskResult:
             "quality_score": self.quality_score,
             "statistics": self.statistics,
             "issues": self.issues,
-            "error": self.error
+            "error": self.error,
         }
 
 
@@ -112,7 +115,7 @@ class LingFlowAgentsService:
         textbook_path: str,
         config: Optional[AgentTaskConfig] = None,
         textbook_id: Optional[str] = None,
-        textbook_title: Optional[str] = None
+        textbook_title: Optional[str] = None,
     ) -> AgentTaskResult:
         """处理教材
 
@@ -145,7 +148,7 @@ class LingFlowAgentsService:
             textbook_title=textbook_title,
             status="running",
             stage="initialization",
-            started_at=datetime.now()
+            started_at=datetime.now(),
         )
         self.tasks[task_id] = task_result
 
@@ -170,20 +173,22 @@ class LingFlowAgentsService:
             result: ProcessingResult = await processor.process(
                 content=content,
                 title=textbook_title,
-                enable_toc_expansion=config.enable_toc_expansion
+                enable_toc_expansion=config.enable_toc_expansion,
             )
 
             # 更新任务结果
             task_result.stage = result.stage.value
             task_result.toc_items_count = len(result.toc_items)
             task_result.text_blocks_count = len(result.text_blocks)
-            task_result.quality_score = result.quality_metrics.get('overall', 0.0)
+            task_result.quality_score = result.quality_metrics.get("overall", 0.0)
             task_result.statistics = result.statistics
             task_result.issues = result.issues
             task_result.status = "completed"
             task_result.completed_at = datetime.now()
 
-            logger.info(f"处理完成: {textbook_title}, TOC: {len(result.toc_items)}, 块: {len(result.text_blocks)}")
+            logger.info(
+                f"处理完成: {textbook_title}, TOC: {len(result.toc_items)}, 块: {len(result.text_blocks)}"
+            )
 
         except Exception as e:
             logger.error(f"处理教材失败: {e}", exc_info=True)
@@ -194,9 +199,7 @@ class LingFlowAgentsService:
         return task_result
 
     async def batch_process_textbooks(
-        self,
-        textbooks: List[Dict[str, str]],
-        config: Optional[AgentTaskConfig] = None
+        self, textbooks: List[Dict[str, str]], config: Optional[AgentTaskConfig] = None
     ) -> List[AgentTaskResult]:
         """批量处理教材
 
@@ -217,21 +220,23 @@ class LingFlowAgentsService:
                     textbook_path=textbook.get("path", ""),
                     config=config,
                     textbook_id=textbook.get("id"),
-                    textbook_title=textbook.get("title")
+                    textbook_title=textbook.get("title"),
                 )
                 results.append(result)
             except Exception as e:
                 logger.error(f"批量处理失败 {textbook.get('title')}: {e}")
-                results.append(AgentTaskResult(
-                    task_id=f"failed_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    textbook_id=textbook.get("id", ""),
-                    textbook_title=textbook.get("title", ""),
-                    status="failed",
-                    stage="initialization",
-                    error=str(e),
-                    started_at=datetime.now(),
-                    completed_at=datetime.now()
-                ))
+                results.append(
+                    AgentTaskResult(
+                        task_id=f"failed_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        textbook_id=textbook.get("id", ""),
+                        textbook_title=textbook.get("title", ""),
+                        status="failed",
+                        stage="initialization",
+                        error=str(e),
+                        started_at=datetime.now(),
+                        completed_at=datetime.now(),
+                    )
+                )
 
         return results
 
@@ -245,17 +250,17 @@ class LingFlowAgentsService:
 
     def _read_text_file(self, file_path: Path) -> str:
         """读取文本文件，自动检测编码"""
-        encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
+        encodings = ["utf-8", "gbk", "gb2312", "gb18030"]
 
         for encoding in encodings:
             try:
-                with open(file_path, 'r', encoding=encoding) as f:
+                with open(file_path, "r", encoding=encoding) as f:
                     return f.read()
             except (UnicodeDecodeError, UnicodeError):
                 continue
 
         # 如果所有编码都失败，使用错误处理
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             return f.read()
 
 
@@ -268,6 +273,7 @@ def get_agents_service() -> LingFlowAgentsService:
     global _service_instance
     if _service_instance is None:
         from config import config
+
         _service_instance = LingFlowAgentsService(api_key=config.DEEPSEEK_API_KEY)
     return _service_instance
 
@@ -284,5 +290,5 @@ __all__ = [
     "AgentTaskResult",
     "LingFlowAgentsService",
     "get_agents_service",
-    "reset_agents_service"
+    "reset_agents_service",
 ]

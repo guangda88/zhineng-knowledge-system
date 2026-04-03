@@ -34,8 +34,7 @@ class TestTokenEstimation:
     def test_estimate_tokens_short(self, client):
         """测试短文本估算"""
         response = client.post(
-            "/api/v1/context/estimate",
-            json={"text": "Hello, world!", "model": "claude-opus-4"}
+            "/api/v1/context/estimate", json={"text": "Hello, world!", "model": "claude-opus-4"}
         )
 
         assert response.status_code == 200
@@ -47,10 +46,7 @@ class TestTokenEstimation:
     def test_estimate_tokens_long(self, client):
         """测试长文本估算"""
         long_text = "This is a test message. " * 100
-        response = client.post(
-            "/api/v1/context/estimate",
-            json={"text": long_text}
-        )
+        response = client.post("/api/v1/context/estimate", json={"text": long_text})
 
         assert response.status_code == 200
         data = response.json()
@@ -58,20 +54,14 @@ class TestTokenEstimation:
 
     def test_estimate_tokens_empty(self, client):
         """测试空文本"""
-        response = client.post(
-            "/api/v1/context/estimate",
-            json={"text": ""}
-        )
+        response = client.post("/api/v1/context/estimate", json={"text": ""})
 
         # 应该返回 422 验证错误
         assert response.status_code == 422
 
     def test_estimate_tokens_default_model(self, client):
         """测试默认模型"""
-        response = client.post(
-            "/api/v1/context/estimate",
-            json={"text": "test message"}
-        )
+        response = client.post("/api/v1/context/estimate", json={"text": "test message"})
 
         assert response.status_code == 200
         data = response.json()
@@ -85,13 +75,10 @@ class TestMessageScoring:
         """测试消息评分"""
         messages = [
             {"role": "user", "content": "fix the critical bug"},
-            {"role": "assistant", "content": "I'll help you fix that bug"}
+            {"role": "assistant", "content": "I'll help you fix that bug"},
         ]
 
-        response = client.post(
-            "/api/v1/context/messages/score",
-            json={"messages": messages}
-        )
+        response = client.post("/api/v1/context/messages/score", json={"messages": messages})
 
         assert response.status_code == 200
         data = response.json()
@@ -102,10 +89,7 @@ class TestMessageScoring:
 
     def test_score_messages_empty(self, client):
         """测试空消息列表"""
-        response = client.post(
-            "/api/v1/context/messages/score",
-            json={"messages": []}
-        )
+        response = client.post("/api/v1/context/messages/score", json={"messages": []})
 
         assert response.status_code == 200
         data = response.json()
@@ -120,11 +104,7 @@ class TestMessageRecording:
         """测试记录消息"""
         response = client.post(
             "/api/v1/context/messages/record",
-            json={
-                "role": "user",
-                "content": "test message",
-                "is_important": False
-            }
+            json={"role": "user", "content": "test message", "is_important": False},
         )
 
         assert response.status_code == 200
@@ -137,11 +117,7 @@ class TestMessageRecording:
         """测试记录重要消息"""
         response = client.post(
             "/api/v1/context/messages/record",
-            json={
-                "role": "user",
-                "content": "fix critical bug",
-                "is_important": True
-            }
+            json={"role": "user", "content": "fix critical bug", "is_important": True},
         )
 
         assert response.status_code == 200
@@ -153,8 +129,7 @@ class TestTaskManagement:
     def test_add_pending_task(self, client):
         """测试添加待完成任务"""
         response = client.post(
-            "/api/v1/context/tasks",
-            json={"task": "Implement new feature", "completed": False}
+            "/api/v1/context/tasks", json={"task": "Implement new feature", "completed": False}
         )
 
         assert response.status_code == 200
@@ -166,8 +141,7 @@ class TestTaskManagement:
     def test_add_completed_task(self, client):
         """测试添加已完成任务"""
         response = client.post(
-            "/api/v1/context/tasks",
-            json={"task": "Fixed bug", "completed": True}
+            "/api/v1/context/tasks", json={"task": "Fixed bug", "completed": True}
         )
 
         assert response.status_code == 200
@@ -177,10 +151,7 @@ class TestTaskManagement:
     def test_complete_task(self, client):
         """测试完成任务"""
         # 先添加任务
-        client.post(
-            "/api/v1/context/tasks",
-            json={"task": "Test completion", "completed": False}
-        )
+        client.post("/api/v1/context/tasks", json={"task": "Test completion", "completed": False})
 
         # 完成任务
         response = client.put("/api/v1/context/tasks/Test%20completion")
@@ -196,8 +167,7 @@ class TestDecisionRecording:
     def test_add_decision(self, client):
         """测试添加决策"""
         response = client.post(
-            "/api/v1/context/decisions",
-            json={"decision": "Use PostgreSQL for primary storage"}
+            "/api/v1/context/decisions", json={"decision": "Use PostgreSQL for primary storage"}
         )
 
         assert response.status_code == 200
@@ -275,10 +245,7 @@ class TestContextReset:
     def test_reset_context(self, client):
         """测试重置上下文"""
         # 先添加一些数据
-        client.post(
-            "/api/v1/context/tasks",
-            json={"task": "Test task", "completed": False}
-        )
+        client.post("/api/v1/context/tasks", json={"task": "Test task", "completed": False})
 
         # 获取旧 session ID
         status_before = client.get("/api/v1/context/status").json()

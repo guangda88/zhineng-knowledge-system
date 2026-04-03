@@ -1,106 +1,106 @@
 global:
   resolve_timeout: 5m
   # SMTP配置（需要根据实际情况修改）
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'alertmanager@example.com'
-  smtp_auth_username: 'your-email@gmail.com'
-  smtp_auth_password: 'your-app-password'
+  smtp_smarthost: smtp.gmail.com:587
+  smtp_from: alertmanager@example.com
+  smtp_auth_username: your-email@gmail.com
+  smtp_auth_password: your-app-password
 
 # 模板文件
 templates:
-  - '/etc/alertmanager/templates/*.tmpl'
+- /etc/alertmanager/templates/*.tmpl
 
 # 路由配置
 route:
-  group_by: ['alertname', 'severity', 'category']
+  group_by: [alertname, severity, category]
   group_wait: 10s
   group_interval: 10s
   repeat_interval: 12h
-  receiver: 'default-receiver'
+  receiver: default-receiver
 
   # 子路由：按严重级别分类
   routes:
     # Critical 级别告警 - 立即发送
-    - match:
-        severity: critical
-      receiver: 'critical-alerts'
-      group_wait: 0s
-      repeat_interval: 5m
+  - match:
+      severity: critical
+    receiver: critical-alerts
+    group_wait: 0s
+    repeat_interval: 5m
 
     # Warning 级别告警 - 汇总发送
-    - match:
-        severity: warning
-      receiver: 'warning-alerts'
-      group_wait: 5m
-      repeat_interval: 1h
+  - match:
+      severity: warning
+    receiver: warning-alerts
+    group_wait: 5m
+    repeat_interval: 1h
 
     # 容器相关告警
-    - match:
-        category: container
-      receiver: 'container-alerts'
+  - match:
+      category: container
+    receiver: container-alerts
 
     # 数据库相关告警
-    - match:
-        category: database
-      receiver: 'database-alerts'
+  - match:
+      category: database
+    receiver: database-alerts
 
 # 接收器配置
 receivers:
   # 默认接收器
-  - name: 'default-receiver'
-    email_configs:
-      - to: 'admin@example.com'
-        send_resolved: true
-        headers:
-          Subject: '【监控告警】{{ .GroupLabels.alertname }}'
+- name: default-receiver
+  email_configs:
+  - to: admin@example.com
+    send_resolved: true
+    headers:
+      Subject: 【监控告警】{{ .GroupLabels.alertname }}
 
   # Critical 告警接收器
-  - name: 'critical-alerts'
-    email_configs:
-      - to: 'admin@example.com'
-        send_resolved: true
-        headers:
-          Subject: '🚨【紧急告警】{{ .GroupLabels.alertname }}'
+- name: critical-alerts
+  email_configs:
+  - to: admin@example.com
+    send_resolved: true
+    headers:
+      Subject: 🚨【紧急告警】{{ .GroupLabels.alertname }}
     # 可以添加其他通知方式，如钉钉、企业微信等
     # webhook_configs:
     #   - url: 'https://oapi.dingtalk.com/robot/send?access_token=xxx'
 
   # Warning 告警接收器
-  - name: 'warning-alerts'
-    email_configs:
-      - to: 'ops@example.com'
-        send_resolved: true
-        headers:
-          Subject: '⚠️  【警告】{{ .GroupLabels.alertname }}'
+- name: warning-alerts
+  email_configs:
+  - to: ops@example.com
+    send_resolved: true
+    headers:
+      Subject: ⚠️  【警告】{{ .GroupLabels.alertname }}
 
   # 容器告警接收器
-  - name: 'container-alerts'
-    email_configs:
-      - to: 'devops@example.com'
-        send_resolved: true
+- name: container-alerts
+  email_configs:
+  - to: devops@example.com
+    send_resolved: true
 
   # 数据库告警接收器
-  - name: 'database-alerts'
-    email_configs:
-      - to: 'dba@example.com'
-        send_resolved: true
+- name: database-alerts
+  email_configs:
+  - to: dba@example.com
+    send_resolved: true
 
 # 抑制规则：避免告警风暴
 inhibit_rules:
   # 如果有Critical级别的容器OOM告警，抑制该容器的Warning级别高内存告警
-  - source_match:
-      severity: 'critical'
-      alertname: 'ContainerOOMKilled'
-    target_match:
-      severity: 'warning'
-      alertname: 'ContainerHighMemory'
-    equal: ['container']
+- source_match:
+    severity: critical
+    alertname: ContainerOOMKilled
+  target_match:
+    severity: warning
+    alertname: ContainerHighMemory
+  equal: [container]
 
   # 如果系统内存Critical，抑制容器的Warning级别内存告警
-  - source_match:
-      severity: 'critical'
-      category: 'memory'
-    target_match:
-      severity: 'warning'
-      category: 'container'
-    equal: ['instance']
+- source_match:
+    severity: critical
+    category: memory
+  target_match:
+    severity: warning
+    category: container
+  equal: [instance]

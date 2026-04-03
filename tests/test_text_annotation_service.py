@@ -4,12 +4,11 @@
 文字处理工程流A-5的测试套件
 """
 
+from unittest.mock import MagicMock, Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
-from backend.services.text_annotation_service import (
-    TextAnnotationService,
-    AnnotationTagService
-)
+
+from backend.services.text_annotation_service import AnnotationTagService, TextAnnotationService
 
 
 class TestTextAnnotationService:
@@ -47,7 +46,7 @@ class TestTextAnnotationService:
             start_pos=0,
             end_pos=4,
             importance="high",
-            created_by="test_user"
+            created_by="test_user",
         )
 
         # 验证调用
@@ -95,7 +94,7 @@ class TestTextAnnotationService:
                 "annotation_type": "keyword",
                 "content": "混元灵通",
                 "importance": "high",
-                "confidence": 0.95
+                "confidence": 0.95,
             },
             {
                 "id": 2,
@@ -103,8 +102,8 @@ class TestTextAnnotationService:
                 "annotation_type": "topic",
                 "content": "智能气功理论",
                 "importance": "medium",
-                "confidence": 0.85
-            }
+                "confidence": 0.85,
+            },
         ]
 
         # 导出JSON
@@ -126,7 +125,7 @@ class TestTextAnnotationService:
                 "importance": "high",
                 "confidence": 0.95,
                 "created_by": "test_user",
-                "created_at": "2026-04-01T00:00:00"
+                "created_at": "2026-04-01T00:00:00",
             }
         ]
 
@@ -188,9 +187,7 @@ class TestAnnotationTagService:
 
         # 创建标签
         tag = service.create_tag(
-            name="气功理论",
-            description="智能气功相关理论标签",
-            color="#FF0000"
+            name="气功理论", description="智能气功相关理论标签", color="#FF0000"
         )
 
         # 验证

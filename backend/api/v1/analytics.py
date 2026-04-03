@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import text, bindparam, JSON
+from sqlalchemy import JSON, bindparam, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.common.typing import JSONResponse
@@ -131,36 +131,44 @@ async def get_or_create_user_profile(
 ) -> Dict[str, Any]:
     """获取或创建用户状态"""
     if user_id:
-        query = text("""
+        query = text(
+            """
             SELECT user_id, session_id, display_name, level, first_seen_at,
                    last_active_at, total_sessions, current_streak,
                    last_feedback_date, preferences
             FROM user_profile
             WHERE user_id = :user_id
-        """)
+        """
+        )
         result = await db.execute(query, {"user_id": user_id})
         row = result.fetchone()
 
         if row:
             # 更新最后活跃时间
             await db.execute(
-                text("""
+                text(
+                    """
                     UPDATE user_profile
                     SET last_active_at = NOW()
                     WHERE user_id = :user_id
-                """),
+                """
+                ),
                 {"user_id": user_id},
             )
             await db.commit()
             return dict(row._mapping)
         else:
             # 创建新用户状态
-            stmt = text("""
+            stmt = text(
+                """
                     INSERT INTO user_profile (user_id, session_id, level, preferences)
                     VALUES (:user_id, :session_id, 'beginner', :preferences)
-                """)
+                """
+            )
             stmt = stmt.bindparams(bindparam("preferences", type_=JSON))
-            await db.execute(stmt, {"user_id": user_id, "session_id": session_id, "preferences": {}})
+            await db.execute(
+                stmt, {"user_id": user_id, "session_id": session_id, "preferences": {}}
+            )
             await db.commit()
             return {
                 "user_id": user_id,
@@ -172,33 +180,39 @@ async def get_or_create_user_profile(
             }
     else:
         # 匿名用户
-        query = text("""
+        query = text(
+            """
             SELECT user_id, session_id, display_name, level, first_seen_at,
                    last_active_at, total_sessions, current_streak,
                    last_feedback_date, preferences
             FROM user_profile
             WHERE session_id = :session_id
-        """)
+        """
+        )
         result = await db.execute(query, {"session_id": session_id})
         row = result.fetchone()
 
         if row:
             await db.execute(
-                text("""
+                text(
+                    """
                     UPDATE user_profile
                     SET last_active_at = NOW()
                     WHERE session_id = :session_id
-                """),
+                """
+                ),
                 {"session_id": session_id},
             )
             await db.commit()
             return dict(row._mapping)
         else:
             # 创建新的匿名用户状态
-            stmt = text("""
+            stmt = text(
+                """
                     INSERT INTO user_profile (session_id, level, preferences)
                     VALUES (:session_id, 'guest', :preferences)
-                """)
+                """
+            )
             stmt = stmt.bindparams(bindparam("preferences", type_=JSON))
             await db.execute(stmt, {"session_id": session_id, "preferences": {}})
             await db.commit()
@@ -252,22 +266,27 @@ async def track_activity(
             content_to_store = request.content
 
         # 记录活动
-        stmt = text("""
+        stmt = text(
+            """
                 INSERT INTO user_activity_log
                 (user_id, session_id, action_type, content, content_anonymous, metadata, ip_address, user_agent)
                 VALUES (:user_id, :session_id, :action_type, :content, :content_anonymous, :metadata, :ip_address, :user_agent)
-            """)
+            """
+        )
         stmt = stmt.bindparams(bindparam("metadata", type_=JSON))
-        await db.execute(stmt, {
-            "user_id": user_id,
-            "session_id": session_id,
-            "action_type": request.action_type,
-            "content": content_to_store,
-            "content_anonymous": content_anonymous,
-            "metadata": request.metadata or {},
-            "ip_address": http_request.client.host if http_request.client else None,
-            "user_agent": http_request.headers.get("user-agent"),
-        })
+        await db.execute(
+            stmt,
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "action_type": request.action_type,
+                "content": content_to_store,
+                "content_anonymous": content_anonymous,
+                "metadata": request.metadata or {},
+                "ip_address": http_request.client.host if http_request.client else None,
+                "user_agent": http_request.headers.get("user-agent"),
+            },
+        )
         await db.commit()
 
         logger.info(f"Activity tracked: {request.action_type} for user {user_id or session_id}")
@@ -299,27 +318,34 @@ async def submit_instant_feedback(
             # 不强制要求，但记录警告
 
         # 记录反馈
-        stmt = text("""
+        stmt = text(
+            """
                 INSERT INTO user_feedback
                 (user_id, session_id, feedback_type, rating, comment, context)
                 VALUES (:user_id, :session_id, 'instant', :rating, :comment, :context)
-            """)
+            """
+        )
         stmt = stmt.bindparams(bindparam("context", type_=JSON))
-        await db.execute(stmt, {
-            "user_id": user_id,
-            "session_id": session_id,
-            "rating": request.rating,
-            "comment": request.comment,
-            "context": request.context or {},
-        })
+        await db.execute(
+            stmt,
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "rating": request.rating,
+                "comment": request.comment,
+                "context": request.context or {},
+            },
+        )
 
         # 更新用户状态
         await db.execute(
-            text("""
+            text(
+                """
                 UPDATE user_profile
                 SET last_feedback_date = CURRENT_DATE
                 WHERE user_id = :user_id OR (user_id IS NULL AND session_id = :session_id)
-            """),
+            """
+            ),
             {"user_id": user_id, "session_id": session_id},
         )
 
@@ -349,28 +375,35 @@ async def submit_extended_feedback(
         user_id = get_user_id(http_request)
 
         # 记录深度反馈
-        stmt = text("""
+        stmt = text(
+            """
                 INSERT INTO user_feedback
                 (user_id, session_id, feedback_type, rating, comment, context)
                 VALUES (:user_id, :session_id, :feedback_type, :rating, :comment, :context)
-            """)
+            """
+        )
         stmt = stmt.bindparams(bindparam("context", type_=JSON))
-        await db.execute(stmt, {
-            "user_id": user_id,
-            "session_id": session_id,
-            "feedback_type": request.feedback_type,
-            "rating": request.rating,
-            "comment": request.comment,
-            "context": request.additional_context or {},
-        })
+        await db.execute(
+            stmt,
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "feedback_type": request.feedback_type,
+                "rating": request.rating,
+                "comment": request.comment,
+                "context": request.additional_context or {},
+            },
+        )
 
         # 更新用户状态
         await db.execute(
-            text("""
+            text(
+                """
                 UPDATE user_profile
                 SET last_feedback_date = CURRENT_DATE
                 WHERE user_id = :user_id OR (user_id IS NULL AND session_id = :session_id)
-            """),
+            """
+            ),
             {"user_id": user_id, "session_id": session_id},
         )
 
@@ -438,12 +471,14 @@ async def get_dashboard(
 
         # 总用户数（去重session_id）
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(DISTINCT session_id) as total_users,
                        COUNT(DISTINCT user_id) as total_logged_in_users
                 FROM user_activity_log
                 WHERE created_at >= :start_date
-            """),
+            """
+            ),
             {"start_date": start_date},
         )
         row = result.fetchone()
@@ -451,11 +486,13 @@ async def get_dashboard(
 
         # 活跃用户数（最近7天有活动）
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(DISTINCT session_id) as active_users
                 FROM user_activity_log
                 WHERE created_at >= :recent_start
-            """),
+            """
+            ),
             {"recent_start": datetime.now() - timedelta(days=7)},
         )
         row = result.fetchone()
@@ -463,11 +500,13 @@ async def get_dashboard(
 
         # 总活动数
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(*) as total_activities
                 FROM user_activity_log
                 WHERE created_at >= :start_date
-            """),
+            """
+            ),
             {"start_date": start_date},
         )
         row = result.fetchone()
@@ -475,11 +514,13 @@ async def get_dashboard(
 
         # 总反馈数
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(*) as total_feedbacks
                 FROM user_feedback
                 WHERE created_at >= :start_date
-            """),
+            """
+            ),
             {"start_date": start_date},
         )
         row = result.fetchone()
@@ -487,7 +528,8 @@ async def get_dashboard(
 
         # 平均评分（good=5, neutral=3, poor=1）
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT
                     AVG(CASE WHEN rating = 'good' THEN 5
                              WHEN rating = 'neutral' THEN 3
@@ -495,7 +537,8 @@ async def get_dashboard(
                              END) as avg_rating
                 FROM user_feedback
                 WHERE created_at >= :start_date
-            """),
+            """
+            ),
             {"start_date": start_date},
         )
         row = result.fetchone()
@@ -503,12 +546,14 @@ async def get_dashboard(
 
         # 评分分布
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT rating, COUNT(*) as count
                 FROM user_feedback
                 WHERE created_at >= :start_date
                 GROUP BY rating
-            """),
+            """
+            ),
             {"start_date": start_date},
         )
         rows = result.fetchall()
@@ -516,14 +561,16 @@ async def get_dashboard(
 
         # Top功能
         result = await db.execute(
-            text("""
+            text(
+                """
                 SELECT action_type, COUNT(*) as count
                 FROM user_activity_log
                 WHERE created_at >= :start_date
                 GROUP BY action_type
                 ORDER BY count DESC
                 LIMIT 5
-            """),
+            """
+            ),
             {"start_date": start_date},
         )
         rows = result.fetchall()
@@ -532,7 +579,8 @@ async def get_dashboard(
         # 留存率（简化计算）
         # 7日留存：7天前活跃的用户中，今天还活跃的比例
         result = await db.execute(
-            text("""
+            text(
+                """
                 WITH users_7d_ago AS (
                     SELECT DISTINCT session_id
                     FROM user_activity_log
@@ -547,7 +595,8 @@ async def get_dashboard(
                     COUNT(DISTINCT u.session_id) * 1.0 / NULLIF(COUNT(DISTINCT t.session_id), 0) as retention_rate
                 FROM users_7d_ago t
                 LEFT JOIN users_today u ON t.session_id = u.session_id
-            """),
+            """
+            ),
             {
                 "start_7d": datetime.now() - timedelta(days=14),
                 "end_7d": datetime.now() - timedelta(days=7),
@@ -600,11 +649,13 @@ async def request_data_deletion(
 
         # 记录删除请求
         await db.execute(
-            text("""
+            text(
+                """
                 INSERT INTO data_deletion_requests
                 (user_id, session_id, contact_email, status)
                 VALUES (:user_id, :session_id, :contact_email, 'pending')
-            """),
+            """
+            ),
             {"user_id": user_id, "session_id": session_id, "contact_email": request.contact_email},
         )
         await db.commit()

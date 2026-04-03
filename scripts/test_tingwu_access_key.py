@@ -15,6 +15,7 @@ from pathlib import Path
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 def test_access_key():
     """测试AccessKey是否可用"""
 
@@ -43,8 +44,9 @@ def test_access_key():
     # 2. 尝试导入SDK
     print("\n[2/4] 检查SDK...")
     try:
-        from alibabacloud_tingwu20230930.client import Client as TingwuClient
         from alibabacloud_core.models import Config
+        from alibabacloud_tingwu20230930.client import Client as TingwuClient
+
         print("✅ SDK已安装")
     except ImportError as e:
         print(f"❌ 错误: SDK未安装")
@@ -57,7 +59,7 @@ def test_access_key():
         config = Config(
             access_key_id=access_key_id,
             access_key_secret=access_key_secret,
-            region_id='cn-hangzhou'  # 听悟服务在杭州区域
+            region_id="cn-hangzhou",  # 听悟服务在杭州区域
         )
 
         client = TingwuClient(config)
@@ -71,17 +73,15 @@ def test_access_key():
     print("\n[4/4] 测试API调用...")
     try:
         # 调用ListTasks API
-        response = client.list_tasks(
-            page_size=1  # 只查询1条，快速测试
-        )
+        response = client.list_tasks(page_size=1)  # 只查询1条，快速测试
 
         print("✅ API调用成功！")
         print(f"✅ 状态码: {response.status_code}")
 
         # 显示响应信息
-        if hasattr(response, 'body') and response.body:
+        if hasattr(response, "body") and response.body:
             body = response.body
-            if hasattr(body, 'account_id'):
+            if hasattr(body, "account_id"):
                 print(f"✅ 账号ID: {body.account_id}")
 
         print("\n" + "=" * 60)
@@ -101,19 +101,20 @@ def test_access_key():
 
         # 分析错误类型
         error_str = str(e).lower()
-        if 'invalid' in error_str or 'access' in error_str:
+        if "invalid" in error_str or "access" in error_str:
             print("\n💡 提示: AccessKey可能无效或已过期")
             print("   请检查:")
             print("   - AccessKey ID是否正确")
             print("   - AccessKey Secret是否正确")
             print("   - 是否已禁用该AccessKey")
-        elif 'permission' in error_str or 'authorized' in error_str:
+        elif "permission" in error_str or "authorized" in error_str:
             print("\n💡 提示: 权限不足")
             print("   请检查:")
             print("   - RAM用户是否有听悟服务权限")
             print("   - 是否已添加 AliyunTingwuFullAccess 策略")
 
         return False
+
 
 if __name__ == "__main__":
     success = test_access_key()

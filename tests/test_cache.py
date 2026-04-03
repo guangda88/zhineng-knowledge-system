@@ -4,15 +4,16 @@
 """
 
 import asyncio
-
-import pytest
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture
 async def memory_cache():
     from backend.cache.memory_cache import MemoryCache
+
     mc = MemoryCache()
     yield mc
     await mc.clear()
@@ -88,7 +89,7 @@ class TestCacheDecorators:
     """缓存装饰器测试"""
 
     def test_import_decorators(self):
-        from backend.cache.decorators import cached, memoize_async, CacheAside
+        from backend.cache.decorators import CacheAside, cached, memoize_async
 
         assert callable(cached)
         assert callable(memoize_async)

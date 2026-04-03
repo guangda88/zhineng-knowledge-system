@@ -19,16 +19,23 @@ POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
 
 def load_guji_mapping():
     """加载 guji_mapping.json"""
-    with open(GUJI_MAPPING_FILE, 'r', encoding='utf-8') as f:
+    with open(GUJI_MAPPING_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def execute_sql(sql: str):
     """执行SQL"""
     cmd = [
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb",
-        "-c", sql
+        "docker",
+        "exec",
+        POSTGRES_CONTAINER,
+        "psql",
+        "-U",
+        "zhineng",
+        "-d",
+        "zhineng_kb",
+        "-c",
+        sql,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     return result.stdout
@@ -71,14 +78,14 @@ def main():
 
     insert_count = 0
     for book_name, info in mapping_data.items():
-        files = info.get('files', [])
-        content_sources = info.get('content_sources', [])
+        files = info.get("files", [])
+        content_sources = info.get("content_sources", [])
 
         for file_name in files:
             for cs in content_sources:
-                source_table = cs.get('source_table', 'wx200')
-                source_id = cs.get('source_id', 0)
-                preview = cs.get('preview', '')[:500]
+                source_table = cs.get("source_table", "wx200")
+                source_id = cs.get("source_id", 0)
+                preview = cs.get("preview", "")[:500]
 
                 # 清理预览文本中的单引号
                 preview = preview.replace("'", "''")

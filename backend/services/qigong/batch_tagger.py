@@ -4,8 +4,8 @@
 提供批量自动打标、覆盖率统计、维度验证等功能
 """
 
-from datetime import datetime
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -58,9 +58,7 @@ class QigongBatchTagger:
     async def _get_pool(self) -> asyncpg.Pool:
         """获取连接池"""
         if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                self.db_url, min_size=2, max_size=10, timeout=10
-            )
+            self._pool = await asyncpg.create_pool(self.db_url, min_size=2, max_size=10, timeout=10)
         return self._pool
 
     async def close(self):
@@ -167,14 +165,16 @@ class QigongBatchTagger:
 
         async with pool.acquire() as conn:
             # 查询需要打标的文档（使用 title 替代 file_path）
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT id, title, content, category, qigong_dims
                 FROM documents
                 WHERE category = '气功'
                   AND qigong_dims = '{}'::jsonb
                 ORDER BY id
                 LIMIT 10000
-            """)
+            """
+            )
 
             stats = {
                 "total": len(rows),
@@ -304,17 +304,21 @@ class QigongBatchTagger:
 
         async with pool.acquire() as conn:
             # 总数
-            total = await conn.fetchval("""
+            total = await conn.fetchval(
+                """
                 SELECT COUNT(*)::int FROM documents WHERE category = '气功'
-            """)
+            """
+            )
 
             # 已打标
-            tagged = await conn.fetchval("""
+            tagged = await conn.fetchval(
+                """
                 SELECT COUNT(*)::int FROM documents
                 WHERE category = '气功'
                   AND qigong_dims IS NOT NULL
                   AND qigong_dims != '{}'::jsonb
-            """)
+            """
+            )
 
             # 各维度覆盖率
             dimensions = [
@@ -396,22 +400,26 @@ class QigongBatchTagger:
 
         async with pool.acquire() as conn:
             # 获取所有已使用的维度值
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT DISTINCT
                     jsonb_object_keys(qigong_dims) AS dimensions
                 FROM documents
                 WHERE category = '气功'
                   AND qigong_dims IS NOT NULL
-            """)
+            """
+            )
 
             all_dimensions = set()
             for r in rows:
                 all_dimensions.update(r["dimensions"])
 
             # 获取受控词表中的维度
-            vocab_dims = await conn.fetch(f"""
+            vocab_dims = await conn.fetch(
+                f"""
                 SELECT dimension_code FROM {vocab_table}
-            """)
+            """
+            )
 
             vocab_dimension_set = {r["dimension_code"] for r in vocab_dims}
 
@@ -565,12 +573,14 @@ class QigongBatchTagger:
 
         async with pool.acquire() as conn:
             # 获取所有气功文档
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT id, file_path, title, qigong_dims
                 FROM documents
                 WHERE category = '气功'
                 ORDER BY id
-            """)
+            """
+            )
 
             stats = {
                 "total_scanned": len(rows),
@@ -648,7 +658,8 @@ class QigongBatchTagger:
 
         async with pool.acquire() as conn:
             # 从 qigong_dims 统计
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT
                     COALESCE(qigong_dims->>'security_level', 'public') AS level,
                     COUNT(*) AS count
@@ -663,17 +674,21 @@ class QigongBatchTagger:
                         WHEN 'public' THEN 4
                         ELSE 5
                     END
-            """)
+            """
+            )
 
             dimension_stats = {r["level"]: r["count"] for r in rows}
 
             # 从 documents_confidential 表统计
-            confidential_count = await conn.fetchval("""
+            confidential_count = await conn.fetchval(
+                """
                 SELECT COUNT(*) FROM documents_confidential
-            """)
+            """
+            )
 
             # 按级别统计保密文档
-            confidential_by_level = await conn.fetch("""
+            confidential_by_level = await conn.fetch(
+                """
                 SELECT security_level, COUNT(*) AS count
                 FROM documents_confidential
                 GROUP BY security_level
@@ -683,7 +698,8 @@ class QigongBatchTagger:
                         WHEN 'confidential' THEN 2
                         WHEN 'internal' THEN 3
                     END
-            """)
+            """
+            )
 
             confidential_stats = {r["security_level"]: r["count"] for r in confidential_by_level}
 

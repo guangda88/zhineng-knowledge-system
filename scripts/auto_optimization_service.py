@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """LingMinOpt自动优化 - 非交互式持续运行版本"""
 import asyncio
+import logging
 import signal
 import sys
-import logging
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -27,13 +27,11 @@ class AutoOptimizationService:
 
         # 设置日志
         import logging
+
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('/tmp/lingminopt_auto.log'),
-                logging.StreamHandler()
-            ]
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=[logging.FileHandler("/tmp/lingminopt_auto.log"), logging.StreamHandler()],
         )
 
         logger = logging.getLogger(__name__)
@@ -104,8 +102,7 @@ class AutoOptimizationService:
                 for opp in critical_ops:
                     try:
                         result = await self.framework.orchestrator.execute_optimization(
-                            opp,
-                            {"metrics_collector": self.framework.metrics_collector}
+                            opp, {"metrics_collector": self.framework.metrics_collector}
                         )
 
                         if result.success:
@@ -151,10 +148,7 @@ async def main():
 
     parser = argparse.ArgumentParser(description="LingMinOpt自动优化服务")
     parser.add_argument(
-        "--interval",
-        type=int,
-        default=300,
-        help="检查间隔（秒），默认300秒（5分钟）"
+        "--interval", type=int, default=300, help="检查间隔（秒），默认300秒（5分钟）"
     )
 
     args = parser.parse_args()

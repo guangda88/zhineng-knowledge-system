@@ -32,10 +32,10 @@ logger = logging.getLogger(__name__)
 class AccessFrequency(str, Enum):
     """访问频率"""
 
-    FREQUENT = "frequent"      # 每天多次
-    MODERATE = "moderate"      # 每周多次
-    RARE = "rare"            # 每月多次
-    ARCHIVE = "archive"        # 很少访问
+    FREQUENT = "frequent"  # 每天多次
+    MODERATE = "moderate"  # 每周多次
+    RARE = "rare"  # 每月多次
+    ARCHIVE = "archive"  # 很少访问
 
 
 @dataclass
@@ -60,10 +60,12 @@ class FileAccessInfo:
         """
         self.access_count += 1
         self.last_access_time = access_time
-        self.access_history.append({
-            'timestamp': access_time,
-            'duration': duration,
-        })
+        self.access_history.append(
+            {
+                "timestamp": access_time,
+                "duration": duration,
+            }
+        )
         self.total_access_duration += duration
 
     def calculate_frequency(self, days: int = 30) -> AccessFrequency:
@@ -80,8 +82,7 @@ class FileAccessInfo:
 
         # 统计周期内的访问次数
         recent_accesses = [
-            access for access in self.access_history
-            if access['timestamp'] >= cutoff_time
+            access for access in self.access_history if access["timestamp"] >= cutoff_time
         ]
 
         access_count = len(recent_accesses)
@@ -106,10 +107,7 @@ class FileAccessInfo:
         if not self.access_history:
             return 0.0
 
-        durations = [
-            access['duration'] for access in self.access_history
-            if access['duration'] > 0
-        ]
+        durations = [access["duration"] for access in self.access_history if access["duration"] > 0]
 
         if not durations:
             return 0.0
@@ -133,20 +131,24 @@ class TieringConfig:
     RARE_MIN_ACCESSES: int = 2
 
     # 成本因素（存储层级相对成本）
-    COST_FACTORS: Dict[StorageTier, float] = field(default_factory=lambda: {
-        StorageTier.HOT: 1.0,       # SSD: 1.0x
-        StorageTier.WARM: 0.5,     # HDD: 0.5x
-        StorageTier.COLD: 0.1,     # Object: 0.1x
-        StorageTier.ARCHIVE: 0.05, # Archive: 0.05x
-    })
+    COST_FACTORS: Dict[StorageTier, float] = field(
+        default_factory=lambda: {
+            StorageTier.HOT: 1.0,  # SSD: 1.0x
+            StorageTier.WARM: 0.5,  # HDD: 0.5x
+            StorageTier.COLD: 0.1,  # Object: 0.1x
+            StorageTier.ARCHIVE: 0.05,  # Archive: 0.05x
+        }
+    )
 
     # 性能因素（相对延迟）
-    LATENCY_FACTORS: Dict[StorageTier, float] = field(default_factory=lambda: {
-        StorageTier.HOT: 1.0,       # < 1ms
-        StorageTier.WARM: 5.0,     # ~ 5ms
-        StorageTier.COLD: 50.0,    # ~ 50ms
-        StorageTier.ARCHIVE: 200.0, # ~ 200ms
-    })
+    LATENCY_FACTORS: Dict[StorageTier, float] = field(
+        default_factory=lambda: {
+            StorageTier.HOT: 1.0,  # < 1ms
+            StorageTier.WARM: 5.0,  # ~ 5ms
+            StorageTier.COLD: 50.0,  # ~ 50ms
+            StorageTier.ARCHIVE: 200.0,  # ~ 200ms
+        }
+    )
 
     # 转换配置
     enable_auto_tiering: bool = True
@@ -218,22 +220,19 @@ class StorageTieringManager:
             files = await self.storage.list_files(tier=tier)
 
             for file_info in files:
-                object_key = file_info['object_key']
+                object_key = file_info["object_key"]
 
                 # 创建访问信息
                 self.file_access_info[object_key] = FileAccessInfo(
                     object_key=object_key,
                     tier=tier,
-                    file_size=file_info['size'],
+                    file_size=file_info["size"],
                 )
 
                 # 更新统计
                 self.stats["total_analyzed"] += 1
 
-        logger.info(
-            f"Tiering initialized: "
-            f"{len(self.file_access_info)} files tracked"
-        )
+        logger.info(f"Tiering initialized: " f"{len(self.file_access_info)} files tracked")
 
     async def record_access(
         self,
@@ -250,9 +249,7 @@ class StorageTieringManager:
         if object_key not in self.file_access_info:
             # 获取文件信息（如果不存在）
             # 简化处理，创建新的访问信息
-            logger.warning(
-                f"Access recorded for untracked file: {object_key}"
-            )
+            logger.warning(f"Access recorded for untracked file: {object_key}")
             return
 
         # 记录访问
@@ -299,20 +296,17 @@ class StorageTieringManager:
                 # 检查冷却时间
                 if await self._check_cooldown(object_key, access_info.tier):
                     transition = {
-                        'object_key': object_key,
-                        'source_tier': access_info.tier,
-                        'target_tier': target_tier,
-                        'frequency': frequency.value,
-                        'access_count': access_info.access_count,
-                        'file_size': access_info.file_size,
-                        'reason': self._get_transition_reason(frequency),
+                        "object_key": object_key,
+                        "source_tier": access_info.tier,
+                        "target_tier": target_tier,
+                        "frequency": frequency.value,
+                        "access_count": access_info.access_count,
+                        "file_size": access_info.file_size,
+                        "reason": self._get_transition_reason(frequency),
                     }
                     transitions.append(transition)
 
-        logger.info(
-            f"Tiering analysis complete: {len(transitions)} "
-            f"transitions needed"
-        )
+        logger.info(f"Tiering analysis complete: {len(transitions)} " f"transitions needed")
 
         return transitions
 
@@ -334,53 +328,49 @@ class StorageTieringManager:
         batch_size = batch_size or self.config.tiering_batch_size
 
         results = {
-            'success_count': 0,
-            'failed_count': 0,
-            'total_size': 0,
-            'cost_savings': 0.0,
-            'latency_improvement': 0.0,
+            "success_count": 0,
+            "failed_count": 0,
+            "total_size": 0,
+            "cost_savings": 0.0,
+            "latency_improvement": 0.0,
         }
 
         # 分批处理
         for i in range(0, len(transitions), batch_size):
-            batch = transitions[i:i + batch_size]
+            batch = transitions[i : i + batch_size]
 
-            logger.info(
-                f"Processing tiering batch {i // batch_size + 1}: "
-                f"{len(batch)} files"
-            )
+            logger.info(f"Processing tiering batch {i // batch_size + 1}: " f"{len(batch)} files")
 
             # 并发处理批次
-            tasks = [
-                self._execute_transition(transition)
-                for transition in batch
-            ]
+            tasks = [self._execute_transition(transition) for transition in batch]
 
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # 统计结果
             for result in batch_results:
                 if isinstance(result, Exception):
-                    results['failed_count'] += 1
+                    results["failed_count"] += 1
                     logger.error(f"Transition failed: {str(result)}")
                 else:
-                    results['success_count'] += 1
-                    results['total_size'] += result['file_size']
-                    results['cost_savings'] += result['cost_savings']
-                    results['latency_improvement'] += result['latency_improvement']
+                    results["success_count"] += 1
+                    results["total_size"] += result["file_size"]
+                    results["cost_savings"] += result["cost_savings"]
+                    results["latency_improvement"] += result["latency_improvement"]
 
         # 更新统计
-        self.stats['files_moved'] = results['success_count']
-        self.stats['total_cost_savings'] += results['cost_savings']
+        self.stats["files_moved"] = results["success_count"]
+        self.stats["total_cost_savings"] += results["cost_savings"]
 
         # 记录历史
-        self.tiering_history.append({
-            'timestamp': datetime.utcnow().isoformat(),
-            'transitions_executed': results['success_count'],
-            'transitions_failed': results['failed_count'],
-            'total_size_moved': results['total_size'],
-            'cost_savings': results['cost_savings'],
-        })
+        self.tiering_history.append(
+            {
+                "timestamp": datetime.utcnow().isoformat(),
+                "transitions_executed": results["success_count"],
+                "transitions_failed": results["failed_count"],
+                "total_size_moved": results["total_size"],
+                "cost_savings": results["cost_savings"],
+            }
+        )
 
         logger.info(
             f"Tiering execution complete: "
@@ -390,10 +380,7 @@ class StorageTieringManager:
 
         return results
 
-    async def _execute_transition(
-        self,
-        transition: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_transition(self, transition: Dict[str, Any]) -> Dict[str, Any]:
         """
         执行单个转换
 
@@ -403,10 +390,10 @@ class StorageTieringManager:
         Returns:
             转换结果
         """
-        object_key = transition['object_key']
-        source_tier = transition['source_tier']
-        target_tier = transition['target_tier']
-        file_size = transition['file_size']
+        object_key = transition["object_key"]
+        source_tier = transition["source_tier"]
+        target_tier = transition["target_tier"]
+        file_size = transition["file_size"]
 
         try:
             # 移动文件
@@ -432,39 +419,35 @@ class StorageTieringManager:
                 latency_improvement = source_latency - target_latency
 
                 logger.info(
-                    f"File tiered: {object_key} "
-                    f"({source_tier.value} → {target_tier.value})"
+                    f"File tiered: {object_key} " f"({source_tier.value} → {target_tier.value})"
                 )
 
                 return {
-                    'object_key': object_key,
-                    'success': True,
-                    'file_size': file_size,
-                    'cost_savings': cost_savings,
-                    'latency_improvement': latency_improvement,
+                    "object_key": object_key,
+                    "success": True,
+                    "file_size": file_size,
+                    "cost_savings": cost_savings,
+                    "latency_improvement": latency_improvement,
                 }
             else:
                 return {
-                    'object_key': object_key,
-                    'success': False,
-                    'error': 'Move operation failed',
-                    'file_size': file_size,
-                    'cost_savings': 0.0,
-                    'latency_improvement': 0.0,
+                    "object_key": object_key,
+                    "success": False,
+                    "error": "Move operation failed",
+                    "file_size": file_size,
+                    "cost_savings": 0.0,
+                    "latency_improvement": 0.0,
                 }
 
         except Exception as e:
-            logger.error(
-                f"Failed to tier {object_key}: {str(e)}",
-                exc_info=True
-            )
+            logger.error(f"Failed to tier {object_key}: {str(e)}", exc_info=True)
             return {
-                'object_key': object_key,
-                'success': False,
-                'error': str(e),
-                'file_size': file_size,
-                'cost_savings': 0.0,
-                'latency_improvement': 0.0,
+                "object_key": object_key,
+                "success": False,
+                "error": str(e),
+                "file_size": file_size,
+                "cost_savings": 0.0,
+                "latency_improvement": 0.0,
             }
 
     def _determine_target_tier(
@@ -492,11 +475,7 @@ class StorageTieringManager:
         else:
             return StorageTier.ARCHIVE
 
-    async def _check_cooldown(
-        self,
-        object_key: str,
-        current_tier: StorageTier
-    ) -> bool:
+    async def _check_cooldown(self, object_key: str, current_tier: StorageTier) -> bool:
         """
         检查转换冷却时间
 
@@ -509,8 +488,8 @@ class StorageTieringManager:
         """
         # 检查历史记录
         for history in reversed(self.tiering_history):
-            if history.get('object_key') == object_key:
-                transition_time = datetime.fromisoformat(history['timestamp'])
+            if history.get("object_key") == object_key:
+                transition_time = datetime.fromisoformat(history["timestamp"])
                 time_since_transition = (datetime.utcnow() - transition_time).days
 
                 if time_since_transition < self.config.cooldown_between_transitions_days:
@@ -567,23 +546,22 @@ class StorageTieringManager:
             total_latency_weight += tier_latency
 
         return {
-            'tier_distribution': {
+            "tier_distribution": {
                 tier.value: {
-                    'file_count': count,
-                    'total_size': tier_sizes[tier],
-                    'size_gb': tier_sizes[tier] / (1024 * 1024 * 1024),
+                    "file_count": count,
+                    "total_size": tier_sizes[tier],
+                    "size_gb": tier_sizes[tier] / (1024 * 1024 * 1024),
                 }
                 for tier in StorageTier
             },
-            'total_files': len(self.file_access_info),
-            'total_size_gb': sum(tier_sizes.values()) / (1024 * 1024 * 1024),
-            'estimated_monthly_cost': total_cost * 30,  # 简化计算
-            'estimated_monthly_cost_savings': self.stats['total_cost_savings'] * 30,
-            'files_moved': self.stats['files_moved'],
-            'transitions_executed': len(self.tiering_history),
-            'cost_savings_pct': (
-                self.stats['total_cost_savings'] / total_cost * 100
-                if total_cost > 0 else 0
+            "total_files": len(self.file_access_info),
+            "total_size_gb": sum(tier_sizes.values()) / (1024 * 1024 * 1024),
+            "estimated_monthly_cost": total_cost * 30,  # 简化计算
+            "estimated_monthly_cost_savings": self.stats["total_cost_savings"] * 30,
+            "files_moved": self.stats["files_moved"],
+            "transitions_executed": len(self.tiering_history),
+            "cost_savings_pct": (
+                self.stats["total_cost_savings"] / total_cost * 100 if total_cost > 0 else 0
             ),
         }
 
@@ -610,7 +588,7 @@ class StorageTieringManager:
             return
 
         # 执行转换（限制每次运行的数量）
-        transitions_to_execute = transitions[:self.config.max_files_per_tiering_run]
+        transitions_to_execute = transitions[: self.config.max_files_per_tiering_run]
 
         if len(transitions_to_execute) > 0:
             # 执行转换

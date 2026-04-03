@@ -153,9 +153,7 @@ class HTTPConnectionPool:
         """
         # 使用默认值
         max_connections = max_connections or self.DEFAULT_MAX_CONNECTIONS
-        max_keepalive_connections = (
-            max_keepalive_connections or self.DEFAULT_MAX_KEEPALIVE
-        )
+        max_keepalive_connections = max_keepalive_connections or self.DEFAULT_MAX_KEEPALIVE
         timeout = timeout or self.DEFAULT_TIMEOUT
         connect_timeout = connect_timeout or self.DEFAULT_CONNECT_TIMEOUT
         pool_idle_timeout = pool_idle_timeout or 30.0
@@ -218,9 +216,7 @@ class HTTPConnectionPool:
             httpx.Client实例
         """
         max_connections = max_connections or self.DEFAULT_MAX_CONNECTIONS
-        max_keepalive_connections = (
-            max_keepalive_connections or self.DEFAULT_MAX_KEEPALIVE
-        )
+        max_keepalive_connections = max_keepalive_connections or self.DEFAULT_MAX_KEEPALIVE
         timeout = timeout or self.DEFAULT_TIMEOUT
         connect_timeout = connect_timeout or self.DEFAULT_CONNECT_TIMEOUT
 
@@ -411,9 +407,7 @@ class HTTPConnectionPool:
                 self._metrics_async.total_timeout_errors += 1
 
                 if attempt < max_retries and retry_on_timeout:
-                    logger.warning(
-                        f"Request timed out, retrying ({attempt + 1}/{max_retries})"
-                    )
+                    logger.warning(f"Request timed out, retrying ({attempt + 1}/{max_retries})")
                     await asyncio.sleep(retry_delay * (2**attempt))
                     continue
                 raise
@@ -421,9 +415,7 @@ class HTTPConnectionPool:
             except httpx.HTTPError as e:
                 last_error = e
                 if attempt < max_retries:
-                    logger.warning(
-                        f"Request failed: {e}, retrying ({attempt + 1}/{max_retries})"
-                    )
+                    logger.warning(f"Request failed: {e}, retrying ({attempt + 1}/{max_retries})")
                     await asyncio.sleep(retry_delay * (2**attempt))
                     continue
                 raise

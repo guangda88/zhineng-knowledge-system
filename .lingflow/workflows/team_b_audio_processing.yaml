@@ -7,471 +7,471 @@ description: |
   团队: 3人 (Audio Engineer + ML Engineer + Frontend Dev)
   关键路径: ASR引擎集成 (Day 3-9)
 
-workflow_version: "1.0.0"
+workflow_version: 1.0.0
 project: 灵知系统技术质量提升
 
 # 全局变量
 vars:
-  project_root: "/home/ai/zhineng-knowledge-system"
-  backend_dir: "{{vars.project_root}}/backend"
-  frontend_dir: "{{vars.project_root}}/frontend"
-  tests_dir: "{{vars.project_root}}/tests"
-  audio_data_dir: "{{vars.project_root}}/data/audio/test"
-  models_dir: "{{vars.project_root}}/models"
+  project_root: /home/ai/zhineng-knowledge-system
+  backend_dir: '{{vars.project_root}}/backend'
+  frontend_dir: '{{vars.project_root}}/frontend'
+  tests_dir: '{{vars.project_root}}/tests'
+  audio_data_dir: '{{vars.project_root}}/data/audio/test'
+  models_dir: '{{vars.project_root}}/models'
 
 # 任务清单
 tasks:
   # ==================== Sprint 0: 基础准备 (Day 1-2) ====================
 
-  - id: sprint0_planning
-    name: "Sprint 0 规划会议"
-    skill: notification
-    params:
-      message: |
-        团队B Sprint 0 启动
-        目标: 环境搭建 + 基础准备
-        工期: Day 1-2
-        关键: ASR引擎依赖安装
+- id: sprint0_planning
+  name: Sprint 0 规划会议
+  skill: notification
+  params:
+    message: |
+      团队B Sprint 0 启动
+      目标: 环境搭建 + 基础准备
+      工期: Day 1-2
+      关键: ASR引擎依赖安装
 
-  - id: install_audio_dependencies
-    name: "安装音频处理依赖"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
+- id: install_audio_dependencies
+  name: 安装音频处理依赖
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
 
-        # 安装 faster-whisper (推荐，比官方whisper快4倍)
-        docker-compose exec backend bash -c "
-          pip install faster-whisper==0.10.0
-          pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install av pydub
-        "
+      # 安装 faster-whisper (推荐，比官方whisper快4倍)
+      docker-compose exec backend bash -c "
+        pip install faster-whisper==0.10.0
+        pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+        pip install av pydub
+      "
 
-        # 创建models目录
-        mkdir -p {{vars.models_dir}}
-    depends_on: [sprint0_planning]
-    timeout: 600  # 10分钟，下载torch可能较慢
+      # 创建models目录
+      mkdir -p {{vars.models_dir}}
+  depends_on: [sprint0_planning]
+  timeout: 600    # 10分钟，下载torch可能较慢
 
-  - id: create_transcription_tables
-    name: "创建转写标注相关数据表"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/migrations/create_transcription_tables.sql"
-      content: |
-        -- Migration: 创建转写标注相关表
-        -- Date: 2026-03-31
-        -- Author: Team B
+- id: create_transcription_tables
+  name: 创建转写标注相关数据表
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/migrations/create_transcription_tables.sql'
+    content: |
+      -- Migration: 创建转写标注相关表
+      -- Date: 2026-03-31
+      -- Author: Team B
 
-        -- 转写任务表
-        CREATE TABLE IF NOT EXISTS transcription_tasks (
-          id SERIAL PRIMARY KEY,
-          task_id VARCHAR(100) UNIQUE NOT NULL,
-          audio_path TEXT NOT NULL,
-          audio_duration_seconds FLOAT,
-          original_transcript TEXT,
-          corrected_transcript TEXT,
-          status VARCHAR(20) DEFAULT 'pending',
-          engine VARCHAR(50),
-          language VARCHAR(10) DEFAULT 'zh',
-          speaker_count INT DEFAULT 1,
-          metadata JSONB,
-          created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW(),
-          completed_at TIMESTAMP
-        );
+      -- 转写任务表
+      CREATE TABLE IF NOT EXISTS transcription_tasks (
+        id SERIAL PRIMARY KEY,
+        task_id VARCHAR(100) UNIQUE NOT NULL,
+        audio_path TEXT NOT NULL,
+        audio_duration_seconds FLOAT,
+        original_transcript TEXT,
+        corrected_transcript TEXT,
+        status VARCHAR(20) DEFAULT 'pending',
+        engine VARCHAR(50),
+        language VARCHAR(10) DEFAULT 'zh',
+        speaker_count INT DEFAULT 1,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        completed_at TIMESTAMP
+      );
 
-        -- 转写校正记录表
-        CREATE TABLE IF NOT EXISTS transcription_corrections (
-          id SERIAL PRIMARY KEY,
-          task_id VARCHAR(100) REFERENCES transcription_tasks(task_id),
-          position INT NOT NULL,
-          original_text TEXT NOT NULL,
-          corrected_text TEXT NOT NULL,
-          correction_type VARCHAR(20),
-          confidence FLOAT DEFAULT 1.0,
-          annotator VARCHAR(100),
-          created_at TIMESTAMP DEFAULT NOW()
-        );
+      -- 转写校正记录表
+      CREATE TABLE IF NOT EXISTS transcription_corrections (
+        id SERIAL PRIMARY KEY,
+        task_id VARCHAR(100) REFERENCES transcription_tasks(task_id),
+        position INT NOT NULL,
+        original_text TEXT NOT NULL,
+        corrected_text TEXT NOT NULL,
+        correction_type VARCHAR(20),
+        confidence FLOAT DEFAULT 1.0,
+        annotator VARCHAR(100),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
 
-        -- ASR性能追踪表
-        CREATE TABLE IF NOT EXISTS asr_performance (
-          id SERIAL PRIMARY KEY,
-          engine VARCHAR(50),
-          audio_path TEXT,
-          wer FLOAT,  -- Word Error Rate
-          cer FLOAT,  -- Character Error Rate
-          processing_time_seconds FLOAT,
-          audio_duration_seconds FLOAT,
-          realtime_factor FLOAT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
+      -- ASR性能追踪表
+      CREATE TABLE IF NOT EXISTS asr_performance (
+        id SERIAL PRIMARY KEY,
+        engine VARCHAR(50),
+        audio_path TEXT,
+        wer FLOAT,  -- Word Error Rate
+        cer FLOAT,  -- Character Error Rate
+        processing_time_seconds FLOAT,
+        audio_duration_seconds FLOAT,
+        realtime_factor FLOAT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
 
-        -- 创建索引
-        CREATE INDEX IF NOT EXISTS idx_transcription_tasks_status ON transcription_tasks(status);
-        CREATE INDEX IF NOT EXISTS idx_transcription_tasks_engine ON transcription_tasks(engine);
-        CREATE INDEX IF NOT EXISTS idx_transcription_corrections_task ON transcription_corrections(task_id);
+      -- 创建索引
+      CREATE INDEX IF NOT EXISTS idx_transcription_tasks_status ON transcription_tasks(status);
+      CREATE INDEX IF NOT EXISTS idx_transcription_tasks_engine ON transcription_tasks(engine);
+      CREATE INDEX IF NOT EXISTS idx_transcription_corrections_task ON transcription_corrections(task_id);
 
-        -- 添加注释
-        COMMENT ON TABLE transcription_tasks IS '音频转写标注任务表';
-        COMMENT ON TABLE transcription_corrections IS '转写校正记录表';
-        COMMENT ON TABLE asr_performance IS 'ASR引擎性能追踪表';
-    depends_on: [install_audio_dependencies]
+      -- 添加注释
+      COMMENT ON TABLE transcription_tasks IS '音频转写标注任务表';
+      COMMENT ON TABLE transcription_corrections IS '转写校正记录表';
+      COMMENT ON TABLE asr_performance IS 'ASR引擎性能追踪表';
+  depends_on: [install_audio_dependencies]
 
-  - id: apply_database_migration
-    name: "应用数据库迁移"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
-        docker-compose exec -T postgres psql -U lingzhi -d lingzhi_db < {{vars.backend_dir}}/migrations/create_transcription_tables.sql
-    depends_on: [create_transcription_tables]
-    timeout: 120
+- id: apply_database_migration
+  name: 应用数据库迁移
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
+      docker-compose exec -T postgres psql -U lingzhi -d lingzhi_db < {{vars.backend_dir}}/migrations/create_transcription_tables.sql
+  depends_on: [create_transcription_tables]
+  timeout: 120
 
-  - id: download_whisper_model
-    name: "预下载Whisper模型"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
-        docker-compose exec backend bash -c "
-          python3 << 'PYTHON'
-          from faster_whisper import WhisperModel
-          import os
+- id: download_whisper_model
+  name: 预下载Whisper模型
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
+      docker-compose exec backend bash -c "
+        python3 << 'PYTHON'
+        from faster_whisper import WhisperModel
+        import os
 
-          model_size = 'medium'  # 中文准确率最佳
-          print(f'Downloading Whisper model: {model_size}...')
+        model_size = 'medium'  # 中文准确率最佳
+        print(f'Downloading Whisper model: {model_size}...')
 
-          # 下载模型到指定目录
-          model = WhisperModel(model_size, device='cpu', compute_type='int8')
-          print(f'Model downloaded successfully!')
-          print(f'Model directory: {os.path.dirname(os.path.abspath(__file__))}')
-          PYTHON
-        "
-    depends_on: [install_audio_dependencies]
-    timeout: 900  # 15分钟，初次下载模型
+        # 下载模型到指定目录
+        model = WhisperModel(model_size, device='cpu', compute_type='int8')
+        print(f'Model downloaded successfully!')
+        print(f'Model directory: {os.path.dirname(os.path.abspath(__file__))}')
+        PYTHON
+      "
+  depends_on: [install_audio_dependencies]
+  timeout: 900    # 15分钟，初次下载模型
 
-  - id: prepare_test_audio_data
-    name: "准备测试音频数据"
-    skill: task-runner
-    params:
-      command: |
-        # 创建测试音频目录
-        mkdir -p {{vars.audio_data_dir}}
+- id: prepare_test_audio_data
+  name: 准备测试音频数据
+  skill: task-runner
+  params:
+    command: |
+      # 创建测试音频目录
+      mkdir -p {{vars.audio_data_dir}}
 
-        # 检查是否有测试音频
-        if [ ! -f "{{vars.audio_data_dir}}/test_01.wav" ]; then
-          echo "警告: 测试音频文件不存在"
-          echo "请准备以下测试文件:"
-          echo "  - {{vars.audio_data_dir}}/test_01.wav (短音频, 30秒)"
-          echo "  - {{vars.audio_data_dir}}/test_02.wav (中音频, 2分钟)"
-          echo "  - {{vars.audio_data_dir}}/test_03.wav (长音频, 10分钟)"
-          echo "  - {{vars.audio_data_dir}}/test_04_multi_speaker.wav (多说话人)"
-        fi
-    depends_on: [sprint0_planning]
+      # 检查是否有测试音频
+      if [ ! -f "{{vars.audio_data_dir}}/test_01.wav" ]; then
+        echo "警告: 测试音频文件不存在"
+        echo "请准备以下测试文件:"
+        echo "  - {{vars.audio_data_dir}}/test_01.wav (短音频, 30秒)"
+        echo "  - {{vars.audio_data_dir}}/test_02.wav (中音频, 2分钟)"
+        echo "  - {{vars.audio_data_dir}}/test_03.wav (长音频, 10分钟)"
+        echo "  - {{vars.audio_data_dir}}/test_04_multi_speaker.wav (多说话人)"
+      fi
+  depends_on: [sprint0_planning]
 
   # ==================== Sprint 1: ASR引擎集成 (Day 3-9) ====================
   # ⚡ 最关键路径，阻塞后续所有工作
 
-  - id: sprint1_planning
-    name: "Sprint 1 规划会议"
-    skill: notification
-    params:
-      message: |
-        团队B Sprint 1 启动 ⚡ 关键路径
-        目标: ASR引擎集成 (Whisper)
-        工期: Day 3-9
-        关键: 必须完成，否则阻塞所有后续工作
-    depends_on: [apply_database_migration, download_whisper_model, prepare_test_audio_data]
+- id: sprint1_planning
+  name: Sprint 1 规划会议
+  skill: notification
+  params:
+    message: |
+      团队B Sprint 1 启动 ⚡ 关键路径
+      目标: ASR引擎集成 (Whisper)
+      工期: Day 3-9
+      关键: 必须完成，否则阻塞所有后续工作
+  depends_on: [apply_database_migration, download_whisper_model, prepare_test_audio_data]
 
-  - id: implement_whisper_engine
-    name: "实现WhisperEngine类"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/asr/whisper_engine.py"
-      requirements: |
-        创建 WhisperEngine 类：
-        1. 封装 faster-whisper API
-        2. 支持中文语音识别
-        3. 返回时间戳和置信度
-        4. 支持批量处理
+- id: implement_whisper_engine
+  name: 实现WhisperEngine类
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/asr/whisper_engine.py'
+    requirements: |
+      创建 WhisperEngine 类：
+      1. 封装 faster-whisper API
+      2. 支持中文语音识别
+      3. 返回时间戳和置信度
+      4. 支持批量处理
 
-        API设计:
-        - transcribe(audio_path: str, language: str = 'zh') -> TranscriptionResult
-        - transcribe_batch(audio_paths: List[str]) -> List[TranscriptionResult]
-        - get_supported_languages() -> List[str]
+      API设计:
+      - transcribe(audio_path: str, language: str = 'zh') -> TranscriptionResult
+      - transcribe_batch(audio_paths: List[str]) -> List[TranscriptionResult]
+      - get_supported_languages() -> List[str]
 
-        TranscriptionResult:
-        - text: str
-        - segments: List[Segment]
-        - language: str
-        - duration: float
-        - processing_time: float
+      TranscriptionResult:
+      - text: str
+      - segments: List[Segment]
+      - language: str
+      - duration: float
+      - processing_time: float
 
-        Segment:
-        - id: int
-        - start: float (秒)
-        - end: float
-        - text: str
-        - confidence: float
-    depends_on: [sprint1_planning]
-    timeout: 400  # 给足够时间实现和调试
+      Segment:
+      - id: int
+      - start: float (秒)
+      - end: float
+      - text: str
+      - confidence: float
+  depends_on: [sprint1_planning]
+  timeout: 400    # 给足够时间实现和调试
 
-  - id: implement_speaker_diarization
-    name: "实现说话人分离 (可选)"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/asr/speaker_diarization.py"
-      requirements: |
-        使用 pyannote.audio 或简单的能量阈值法
+- id: implement_speaker_diarization
+  name: 实现说话人分离 (可选)
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/asr/speaker_diarization.py'
+    requirements: |
+      使用 pyannote.audio 或简单的能量阈值法
 
-        优先级: 中（可选功能）
-        如果时间紧张，可以先跳过
-    depends_on: [implement_whisper_engine]
-    optional: true  # 标记为可选任务
+      优先级: 中（可选功能）
+      如果时间紧张，可以先跳过
+  depends_on: [implement_whisper_engine]
+  optional: true    # 标记为可选任务
 
-  - id: integrate_whisper_to_transcription_annotator
-    name: "集成Whisper到TranscriptionAnnotator"
-    skill: code-refactor
-    params:
-      target_file: "{{vars.backend_dir}}/services/annotation/transcription_annotator.py"
-      changes:
-        - "移除 _perform_transcription 中的 NotImplementedError"
-        - "集成 WhisperEngine"
-        - "实现实际的转写功能"
-      requirements:
-        - "使用 WhisperEngine 替代占位符"
-        - "保存转写结果到数据库"
-        - "返回完整的 TranscriptionResult"
-    depends_on: [implement_whisper_engine]
+- id: integrate_whisper_to_transcription_annotator
+  name: 集成Whisper到TranscriptionAnnotator
+  skill: code-refactor
+  params:
+    target_file: '{{vars.backend_dir}}/services/annotation/transcription_annotator.py'
+    changes:
+    - 移除 _perform_transcription 中的 NotImplementedError
+    - 集成 WhisperEngine
+    - 实现实际的转写功能
+    requirements:
+    - 使用 WhisperEngine 替代占位符
+    - 保存转写结果到数据库
+    - 返回完整的 TranscriptionResult
+  depends_on: [implement_whisper_engine]
 
-  - id: create_asr_performance_tracker
-    name: "创建ASR性能追踪"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/services/asr/performance_tracker.py"
-      requirements: |
-        创建 ASRPerformanceTracker 类：
-        1. 计算WER (Word Error Rate)
-        2. 计算CER (Character Error Rate)
-        3. 计算实时率 (Real-time Factor)
-        4. 生成性能报告
+- id: create_asr_performance_tracker
+  name: 创建ASR性能追踪
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/services/asr/performance_tracker.py'
+    requirements: |
+      创建 ASRPerformanceTracker 类：
+      1. 计算WER (Word Error Rate)
+      2. 计算CER (Character Error Rate)
+      3. 计算实时率 (Real-time Factor)
+      4. 生成性能报告
 
-        API:
-        - track_performance(engine, audio_path, result, ground_truth)
-        - get_average_performance(engine) -> Dict
-        - generate_report() -> str
-    depends_on: [integrate_whisper_to_transcription_annotator]
+      API:
+      - track_performance(engine, audio_path, result, ground_truth)
+      - get_average_performance(engine) -> Dict
+      - generate_report() -> str
+  depends_on: [integrate_whisper_to_transcription_annotator]
 
-  - id: sprint1_testing
-    name: "Sprint 1 测试 - ASR引擎"
-    skill: test-runner
-    params:
-      test_type: integration
-      target:
-        - "{{vars.tests_dir}}/test_asr/test_whisper_engine.py"
-        - "{{vars.tests_dir}}/test_asr/test_performance_tracker.py"
-      audio_files:
-        - "{{vars.audio_data_dir}}/test_01.wav"
-      success_criteria:
-        - "WER < 15%"
-        - "实时率 < 2.0"
-    depends_on: [create_asr_performance_tracker]
-    timeout: 300
+- id: sprint1_testing
+  name: Sprint 1 测试 - ASR引擎
+  skill: test-runner
+  params:
+    test_type: integration
+    target:
+    - '{{vars.tests_dir}}/test_asr/test_whisper_engine.py'
+    - '{{vars.tests_dir}}/test_asr/test_performance_tracker.py'
+    audio_files:
+    - '{{vars.audio_data_dir}}/test_01.wav'
+    success_criteria:
+    - WER < 15%
+    - 实时率 < 2.0
+  depends_on: [create_asr_performance_tracker]
+  timeout: 300
 
   # ==================== Sprint 2: 标注系统完善 (Day 10-14) ====================
 
-  - id: sprint2_planning
-    name: "Sprint 2 规划会议"
-    skill: notification
-    params:
-      message: |
-        团队B Sprint 2 启动
-        目标: 标注系统完善 + 标注界面
-        工期: Day 10-14
-    depends_on: [sprint1_testing]
+- id: sprint2_planning
+  name: Sprint 2 规划会议
+  skill: notification
+  params:
+    message: |
+      团队B Sprint 2 启动
+      目标: 标注系统完善 + 标注界面
+      工期: Day 10-14
+  depends_on: [sprint1_testing]
 
-  - id: enhance_transcription_api
-    name: "增强转写标注API"
-    skill: code-refactor
-    params:
-      target_file: "{{vars.backend_dir}}/api/v1/annotation.py"
-      changes:
-        - "添加 /annotation/transcription/transcribe 端点"
-        - "支持音频文件上传"
-        - "返回完整的转写结果和时间戳"
-        - "支持说话人分离结果"
-      requirements:
-        - "POST /api/v1/annotation/transcription/transcribe"
-        - "GET /api/v1/annotation/transcription/task/{task_id}/segments"
-    depends_on: [sprint2_planning]
+- id: enhance_transcription_api
+  name: 增强转写标注API
+  skill: code-refactor
+  params:
+    target_file: '{{vars.backend_dir}}/api/v1/annotation.py'
+    changes:
+    - 添加 /annotation/transcription/transcribe 端点
+    - 支持音频文件上传
+    - 返回完整的转写结果和时间戳
+    - 支持说话人分离结果
+    requirements:
+    - POST /api/v1/annotation/transcription/transcribe
+    - GET /api/v1/annotation/transcription/task/{task_id}/segments
+  depends_on: [sprint2_planning]
 
-  - id: create_annotation_frontend
-    name: "创建音频标注前端界面"
-    skill: code-generation
-    params:
-      file_path: "{{vars.frontend_dir}}/annotation.html"
-      requirements: |
-        创建简易的音频标注界面：
-        1. 音频播放器 (带波形可视化)
-        2. 原始转写文本显示
-        3. 校正编辑区域
-        4. 时间戳定位
-        5. 提交按钮
+- id: create_annotation_frontend
+  name: 创建音频标注前端界面
+  skill: code-generation
+  params:
+    file_path: '{{vars.frontend_dir}}/annotation.html'
+    requirements: |
+      创建简易的音频标注界面：
+      1. 音频播放器 (带波形可视化)
+      2. 原始转写文本显示
+      3. 校正编辑区域
+      4. 时间戳定位
+      5. 提交按钮
 
-        功能:
-        - 点击时间戳跳转到对应音频位置
-        - 高亮显示当前播放位置
-        - 实时保存校正内容
-        - 支持键盘快捷键
-    depends_on: [enhance_transcription_api]
-    timeout: 300
+      功能:
+      - 点击时间戳跳转到对应音频位置
+      - 高亮显示当前播放位置
+      - 实时保存校正内容
+      - 支持键盘快捷键
+  depends_on: [enhance_transcription_api]
+  timeout: 300
 
-  - id: integrate_frontend_with_backend
-    name: "前后端集成"
-    skill: code-generation
-    params:
-      file_path: "{{vars.frontend_dir}}/js/annotation.js"
-      requirements: |
-        创建前端JavaScript：
-        1. 调用后端API获取转写结果
-        2. 音频播放控制
-        3. 提交校正数据
-        4. 显示校正统计
+- id: integrate_frontend_with_backend
+  name: 前后端集成
+  skill: code-generation
+  params:
+    file_path: '{{vars.frontend_dir}}/js/annotation.js'
+    requirements: |
+      创建前端JavaScript：
+      1. 调用后端API获取转写结果
+      2. 音频播放控制
+      3. 提交校正数据
+      4. 显示校正统计
 
-        API调用:
-        - GET /api/v1/annotation/transcription/task/{task_id}
-        - POST /api/v1/annotation/transcription/correct
-    depends_on: [create_annotation_frontend]
+      API调用:
+      - GET /api/v1/annotation/transcription/task/{task_id}
+      - POST /api/v1/annotation/transcription/correct
+  depends_on: [create_annotation_frontend]
 
-  - id: sprint2_testing
-    name: "Sprint 2 测试 - 标注系统"
-    skill: test-runner
-    params:
-      test_type: e2e
-      target:
-        - "{{vars.tests_dir}}/test_annotation/test_e2e_workflow.py"
-      scenario:
-        - "上传音频文件"
-        - "执行转写"
-        - "打开标注界面"
-        - "提交校正"
-        - "验证结果保存"
-    depends_on: [integrate_frontend_with_backend]
-    timeout: 300
+- id: sprint2_testing
+  name: Sprint 2 测试 - 标注系统
+  skill: test-runner
+  params:
+    test_type: e2e
+    target:
+    - '{{vars.tests_dir}}/test_annotation/test_e2e_workflow.py'
+    scenario:
+    - 上传音频文件
+    - 执行转写
+    - 打开标注界面
+    - 提交校正
+    - 验证结果保存
+  depends_on: [integrate_frontend_with_backend]
+  timeout: 300
 
   # ==================== 最终验证 ====================
 
-  - id: final_integration_test
-    name: "最终集成测试"
-    skill: test-runner
-    params:
-      test_type: integration
-      target: "{{vars.tests_dir}}/test_integration/test_team_b_workflow.py"
-      scenarios:
-        - "端到端音频转写流程"
-        - "标注界面功能测试"
-        - "ASR性能验证"
-    depends_on: [sprint2_testing]
-    timeout: 400
+- id: final_integration_test
+  name: 最终集成测试
+  skill: test-runner
+  params:
+    test_type: integration
+    target: '{{vars.tests_dir}}/test_integration/test_team_b_workflow.py'
+    scenarios:
+    - 端到端音频转写流程
+    - 标注界面功能测试
+    - ASR性能验证
+  depends_on: [sprint2_testing]
+  timeout: 400
 
-  - id: benchmark_asr_performance
-    name: "ASR性能基准测试"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
-        docker-compose exec backend python3 << 'PYTHON'
-        import asyncio
-        from services.asr.whisper_engine import WhisperEngine
-        from services.asr.performance_tracker import ASRPerformanceTracker
-        import time
+- id: benchmark_asr_performance
+  name: ASR性能基准测试
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
+      docker-compose exec backend python3 << 'PYTHON'
+      import asyncio
+      from services.asr.whisper_engine import WhisperEngine
+      from services.asr.performance_tracker import ASRPerformanceTracker
+      import time
 
-        async def benchmark():
-            engine = WhisperEngine(model_size="medium")
-            tracker = ASRPerformanceTracker()
+      async def benchmark():
+          engine = WhisperEngine(model_size="medium")
+          tracker = ASRPerformanceTracker()
 
-            test_files = [
-                "{{vars.audio_data_dir}}/test_01.wav",
-                "{{vars.audio_data_dir}}/test_02.wav",
-            ]
+          test_files = [
+              "{{vars.audio_data_dir}}/test_01.wav",
+              "{{vars.audio_data_dir}}/test_02.wav",
+          ]
 
-            for audio_file in test_files:
-                start = time.time()
-                result = await engine.transcribe(audio_file)
-                duration = time.time() - start
+          for audio_file in test_files:
+              start = time.time()
+              result = await engine.transcribe(audio_file)
+              duration = time.time() - start
 
-                print(f"File: {audio_file}")
-                print(f"  Duration: {result.duration:.2f}s")
-                print(f"  Processing: {duration:.2f}s")
-                print(f"  Real-time Factor: {duration/result.duration:.2f}x")
+              print(f"File: {audio_file}")
+              print(f"  Duration: {result.duration:.2f}s")
+              print(f"  Processing: {duration:.2f}s")
+              print(f"  Real-time Factor: {duration/result.duration:.2f}x")
 
-            print("\n✅ ASR Benchmark Complete")
-        PYTHON
-    depends_on: [final_integration_test]
-    timeout: 600
+          print("\n✅ ASR Benchmark Complete")
+      PYTHON
+  depends_on: [final_integration_test]
+  timeout: 600
 
-  - id: generate_team_b_report
-    name: "生成团队B工作报告"
-    skill: notification
-    params:
-      message: |
-        团队B (音频处理) 工作流完成
+- id: generate_team_b_report
+  name: 生成团队B工作报告
+  skill: notification
+  params:
+    message: |
+      团队B (音频处理) 工作流完成
 
-        完成的功能:
-        ✅ ASR引擎集成 (WhisperEngine)
-        ✅ 说话人分离 (可选)
-        ✅ 转写标注系统完善
-        ✅ 标注界面开发
-        ✅ ASR性能追踪
+      完成的功能:
+      ✅ ASR引擎集成 (WhisperEngine)
+      ✅ 说话人分离 (可选)
+      ✅ 转写标注系统完善
+      ✅ 标注界面开发
+      ✅ ASR性能追踪
 
-        统计数据:
-        - 新增代码: ~2500行
-        - ASR准确率: WER < 15%
-        - 实时率: < 2.0x
-        - 数据库表: +3
+      统计数据:
+      - 新增代码: ~2500行
+      - ASR准确率: WER < 15%
+      - 实时率: < 2.0x
+      - 数据库表: +3
 
-        下一步:
-        - 与团队A集成 (音频内容进入检索系统)
-        - 模型微调 (可选)
-    depends_on: [benchmark_asr_performance]
+      下一步:
+      - 与团队A集成 (音频内容进入检索系统)
+      - 模型微调 (可选)
+  depends_on: [benchmark_asr_performance]
 
 # 成功标准
 success_criteria:
-  - task_id: sprint1_testing
-    condition: "wer < 0.15 AND realtime_factor < 2.0"
-  - task_id: sprint2_testing
-    condition: "tests_passed > 90%"
-  - task_id: final_integration_test
-    condition: "tests_passed == 100%"
-  - task_id: benchmark_asr_performance
-    condition: "realtime_factor < 2.0"
+- task_id: sprint1_testing
+  condition: wer < 0.15 AND realtime_factor < 2.0
+- task_id: sprint2_testing
+  condition: tests_passed > 90%
+- task_id: final_integration_test
+  condition: tests_passed == 100%
+- task_id: benchmark_asr_performance
+  condition: realtime_factor < 2.0
 
 # 失败回滚
 rollback_on_failure:
-  - "回滚数据库迁移"
-  - "Git reset --hard"
+- 回滚数据库迁移
+- Git reset --hard
 
 # 关键路径警告
 critical_path_alerts:
-  - task_id: sprint1_testing
-    message: "⚠️ ASR引擎集成是关键路径，必须优先完成！"
-    if_blocked: "阻塞所有后续工作"
+- task_id: sprint1_testing
+  message: ⚠️ ASR引擎集成是关键路径，必须优先完成！
+  if_blocked: 阻塞所有后续工作
 
 # 通知配置
 notifications:
   on_start:
-    - type: slack
-      channel: "#team-b"
-      message: "团队B工作流启动"
+  - type: slack
+    channel: '#team-b'
+    message: 团队B工作流启动
   on_critical_path_complete:
-    - type: slack
-      channel: "#team-b"
-      message: "🎯 关键路径完成: ASR引擎集成"
+  - type: slack
+    channel: '#team-b'
+    message: '🎯 关键路径完成: ASR引擎集成'
   on_complete:
-    - type: slack
-      channel: "#team-b"
-      message: "🎉 团队B工作流完成"
+  - type: slack
+    channel: '#team-b'
+    message: 🎉 团队B工作流完成
   on_failure:
-    - type: slack
-      channel: "#team-b"
-      message: "❌ 团队B工作流失败: {{error}}"
+  - type: slack
+    channel: '#team-b'
+    message: '❌ 团队B工作流失败: {{error}}'

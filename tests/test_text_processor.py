@@ -4,18 +4,20 @@
 文字处理工程流A-1的测试套件
 """
 
-import pytest
 import asyncio
 from pathlib import Path
+
+import pytest
+
 from backend.services.text_processor import (
-    TextFormat,
-    TextChunk,
-    TextMetadata,
-    TextCleaner,
     EncodingDetector,
+    EnhancedTextProcessor,
     MetadataExtractor,
     SemanticChunker,
-    EnhancedTextProcessor
+    TextChunk,
+    TextCleaner,
+    TextFormat,
+    TextMetadata,
 )
 
 
@@ -55,7 +57,7 @@ class TestTextCleaner:
         text = '这是"中文"标点（还有这个）'
         normalized = TextCleaner.normalize_punctuation(text)
         assert '"' in normalized
-        assert '(' in normalized
+        assert "(" in normalized
 
 
 class TestSemanticChunker:
@@ -72,10 +74,7 @@ class TestSemanticChunker:
 
     def test_chunk_size_limits(self):
         """测试块大小限制"""
-        chunker = SemanticChunker(
-            max_chunk_size=50,
-            min_chunk_size=10
-        )
+        chunker = SemanticChunker(max_chunk_size=50, min_chunk_size=10)
 
         # 创建较长的文本
         text = "这是一段测试文本。" * 20
@@ -87,11 +86,7 @@ class TestSemanticChunker:
     def test_chunk_metadata(self):
         """测试块元数据"""
         chunker = SemanticChunker()
-        metadata = TextMetadata(
-            title="测试标题",
-            author="测试作者",
-            tags=["标签1", "标签2"]
-        )
+        metadata = TextMetadata(title="测试标题", author="测试作者", tags=["标签1", "标签2"])
 
         text = "这是测试内容。" * 20
         chunks = chunker.chunk(text, metadata)
@@ -154,18 +149,12 @@ class TestEnhancedTextProcessor:
     @pytest.fixture
     def processor(self):
         """创建处理器实例"""
-        return EnhancedTextProcessor(
-            max_chunk_size=200,
-            min_chunk_size=50,
-            overlap=30
-        )
+        return EnhancedTextProcessor(max_chunk_size=200, min_chunk_size=50, overlap=30)
 
     def test_process_short_text(self, processor):
         """测试处理短文本"""
         text = "这是一段短文本。"
-        chunks, metadata = asyncio.run(
-            processor.process_content(text)
-        )
+        chunks, metadata = asyncio.run(processor.process_content(text))
 
         assert len(chunks) >= 1
         assert isinstance(metadata, TextMetadata)
@@ -173,14 +162,9 @@ class TestEnhancedTextProcessor:
     def test_process_long_text(self, processor):
         """测试处理长文本"""
         # 创建较长的测试文本
-        text = "\n\n".join([
-            f"这是第{i}段内容。" * 10
-            for i in range(20)
-        ])
+        text = "\n\n".join([f"这是第{i}段内容。" * 10 for i in range(20)])
 
-        chunks, metadata = asyncio.run(
-            processor.process_content(text)
-        )
+        chunks, metadata = asyncio.run(processor.process_content(text))
 
         assert len(chunks) > 1
         assert all(c.char_count > 0 for c in chunks)
@@ -260,16 +244,10 @@ class TestTextProcessorIntegration:
 
     def test_process_sample_textbook(self, sample_textbook):
         """测试处理示例教材"""
-        processor = EnhancedTextProcessor(
-            max_chunk_size=300,
-            overlap=50
-        )
+        processor = EnhancedTextProcessor(max_chunk_size=300, overlap=50)
 
         chunks, metadata = asyncio.run(
-            processor.process_content(
-                sample_textbook,
-                file_format=TextFormat.MARKDOWN
-            )
+            processor.process_content(sample_textbook, file_format=TextFormat.MARKDOWN)
         )
 
         # 验证元数据
@@ -293,9 +271,7 @@ class TestTextProcessorIntegration:
         """测试块的语义完整性"""
         processor = EnhancedTextProcessor(max_chunk_size=200)
 
-        chunks, _ = asyncio.run(
-            processor.process_content(sample_textbook)
-        )
+        chunks, _ = asyncio.run(processor.process_content(sample_textbook))
 
         # 验证有chunk生成
         assert len(chunks) > 0
@@ -312,10 +288,10 @@ class TestTextProcessorIntegration:
             # 注意：中文在某些情况下不会触发isupper()
             first_char = chunk.content[0]
             assert (
-                first_char.isupper() or
-                first_char.isdigit() or
-                first_char in "#\n《" or  # 添加书名号等中文标点
-                first_char.isalpha()  # 允许任何字母（包括中文）
+                first_char.isupper()
+                or first_char.isdigit()
+                or first_char in "#\n《"  # 添加书名号等中文标点
+                or first_char.isalpha()  # 允许任何字母（包括中文）
             )
 
 

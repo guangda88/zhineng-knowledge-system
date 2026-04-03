@@ -5,18 +5,18 @@
 """
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
-from backend.services.ai_service import chat, reason, generate_code
+from backend.services.ai_service import chat, format_pool_status, generate_code, reason
 from backend.services.evolution.token_monitor import get_token_monitor
-from backend.services.ai_service import format_pool_status
 
 
 async def demo():
@@ -90,7 +90,9 @@ async def demo():
     stats = monitor.get_all_stats()
 
     if stats:
-        print(f"\n{'Provider':<15} {'调用':<8} {'成功':<8} {'失败':<8} {'成功率':<10} {'平均延迟':<10}")
+        print(
+            f"\n{'Provider':<15} {'调用':<8} {'成功':<8} {'失败':<8} {'成功率':<10} {'平均延迟':<10}"
+        )
         print("-" * 80)
 
         for name, stat in sorted(stats.items(), key=lambda x: x[1].total_calls, reverse=True):

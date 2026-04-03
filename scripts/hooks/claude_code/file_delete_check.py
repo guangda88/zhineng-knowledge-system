@@ -3,16 +3,16 @@
 文件删除检查Hook
 检查危险的文件删除操作
 """
-import sys
 import os
 import re
+import sys
 
 
 def print_header():
     """打印Hook头部信息"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🔒 文件删除操作检查Hook")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def analyze_risk(command: str) -> dict:
@@ -35,7 +35,7 @@ def analyze_risk(command: str) -> dict:
         (r"rm\s+-rf\s+data/", "删除 data/ 目录"),
         (r"rm\s+-rf\s+backend/", "删除 backend/ 目录"),
         (r"rm\s+-rf\s+.*\.db", "删除数据库文件"),
-        (r"rm\s+-rf\s+\*", "删除所有文件")
+        (r"rm\s+-rf\s+\*", "删除所有文件"),
     ]
 
     for pattern, description in important_patterns:
@@ -58,11 +58,7 @@ def analyze_risk(command: str) -> dict:
     else:
         risk_level = "LOW"
 
-    return {
-        "risk_level": risk_level,
-        "risk_score": risk_score,
-        "warnings": warnings
-    }
+    return {"risk_level": risk_level, "risk_score": risk_score, "warnings": warnings}
 
 
 def print_help():
@@ -83,7 +79,7 @@ def print_help():
     print("")
     print("4. 对于重要操作，考虑创建备份:")
     print("   cp -r <source> <backup>")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():
@@ -112,19 +108,19 @@ def main():
     print(f"   风险等级: {risk_info['risk_level']}")
     print(f"   风险评分: {risk_info['risk_score']}/10")
 
-    if risk_info['warnings']:
+    if risk_info["warnings"]:
         print("\n   警告:")
-        for warning in risk_info['warnings']:
+        for warning in risk_info["warnings"]:
             print(f"   {warning}")
 
     print("")
 
     # 根据风险等级决定是否阻止
-    if risk_info['risk_score'] >= 7:
+    if risk_info["risk_score"] >= 7:
         print("🚫 高风险操作，已被阻止！")
         print_help()
         sys.exit(1)
-    elif risk_info['risk_score'] >= 4:
+    elif risk_info["risk_score"] >= 4:
         print("⚠️  中等风险操作，请谨慎操作")
         print_help()
         # 中等风险不阻止，只是警告

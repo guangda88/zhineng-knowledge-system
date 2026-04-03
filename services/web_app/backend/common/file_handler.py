@@ -74,9 +74,7 @@ class TempFileHandler:
         # 确保目录存在
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
-        fd, path = tempfile.mkstemp(
-            prefix=prefix, suffix=suffix, dir=str(self.base_dir)
-        )
+        fd, path = tempfile.mkstemp(prefix=prefix, suffix=suffix, dir=str(self.base_dir))
         os.close(fd)
 
         temp_path = Path(path)
@@ -547,9 +545,7 @@ def get_file_size(file_path: Union[str, Path]) -> int:
     path = Path(file_path)
 
     if not path.exists():
-        raise FileProcessingError(
-            f"File does not exist: {file_path}", file_path=str(path)
-        )
+        raise FileProcessingError(f"File does not exist: {file_path}", file_path=str(path))
 
     return path.stat().st_size
 

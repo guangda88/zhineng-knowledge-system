@@ -3,20 +3,14 @@
 测试 JWT 令牌的生成、验证和黑名单功能
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock, AsyncMock
 from typing import Set
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from backend.auth.jwt import (
-    JWTAuth,
-    TokenPayload,
-    TokenType,
-    AuthConfig,
-    TokenPair,
-    TokenBlacklist
-)
+import pytest
+
+from backend.auth.jwt import AuthConfig, JWTAuth, TokenBlacklist, TokenPair, TokenPayload, TokenType
 
 
 class TestTokenType:
@@ -46,7 +40,7 @@ class TestTokenPayload:
             exp=now + 3600,
             iat=now,
             jti="test-jti",
-            type="access"
+            type="access",
         )
 
         assert payload.user_id == "user123"
@@ -68,7 +62,7 @@ class TestTokenPayload:
             iat=now,
             jti="test-jti",
             type="access",
-            permissions=permissions
+            permissions=permissions,
         )
 
         assert payload.permissions == permissions
@@ -83,7 +77,7 @@ class TestTokenPayload:
             exp=now + 3600,
             iat=now,
             jti="test-jti",
-            type="access"
+            type="access",
         )
 
         data = payload.to_dict()
@@ -105,7 +99,7 @@ class TestTokenPayload:
             "iat": now,
             "jti": "test-jti",
             "type": "access",
-            "permissions": ["read:documents"]
+            "permissions": ["read:documents"],
         }
 
         payload = TokenPayload.from_dict(data)
@@ -133,7 +127,7 @@ class TestAuthConfig:
             issuer="custom-issuer",
             access_token_expire_minutes=60,
             refresh_token_expire_days=14,
-            algorithm="HS256"
+            algorithm="HS256",
         )
 
         assert config.issuer == "custom-issuer"
@@ -148,9 +142,7 @@ class TestTokenPair:
     def test_token_pair_creation(self):
         """测试创建 token 对"""
         token_pair = TokenPair(
-            access_token="access_token_value",
-            refresh_token="refresh_token_value",
-            expires_in=1800
+            access_token="access_token_value", refresh_token="refresh_token_value", expires_in=1800
         )
 
         assert token_pair.access_token == "access_token_value"

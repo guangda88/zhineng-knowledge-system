@@ -8,15 +8,13 @@ import asyncio
 import json
 import logging
 import os
-from pathlib import Path
-from typing import Dict, List, Any
-import asyncpg
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+import asyncpg
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -33,20 +31,12 @@ class DataImporter:
         self.db_url = db_url
         self.data_dir = Path(data_dir)
         self.pool: asyncpg.Pool = None
-        self.stats = {
-            "total": 0,
-            "success": 0,
-            "failed": 0,
-            "by_category": {}
-        }
+        self.stats = {"total": 0, "success": 0, "failed": 0, "by_category": {}}
 
     async def init_pool(self) -> None:
         """初始化数据库连接池"""
         self.pool = await asyncpg.create_pool(
-            self.db_url,
-            min_size=1,
-            max_size=10,
-            command_timeout=120
+            self.db_url, min_size=1, max_size=10, command_timeout=120
         )
         logger.info("数据库连接池已初始化")
 
@@ -66,12 +56,12 @@ class DataImporter:
             数据列表
         """
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict):
                     # 如果是字典，检查是否有data字段
-                    if 'data' in data:
-                        return data['data']
+                    if "data" in data:
+                        return data["data"]
                     # 或者将字典包装成列表
                     return [data]
                 return data
@@ -89,17 +79,17 @@ class DataImporter:
             分类名称
         """
         filename_lower = filename.lower()
-        if '气功' in filename_lower or 'qigong' in filename_lower:
-            return '气功'
-        elif '中医' in filename_lower or 'tcm' in filename_lower:
-            return '中医'
-        elif '儒家' in filename_lower or 'confucian' in filename_lower:
-            return '儒家'
-        elif '太极' in filename_lower or 'taiji' in filename_lower:
+        if "气功" in filename_lower or "qigong" in filename_lower:
+            return "气功"
+        elif "中医" in filename_lower or "tcm" in filename_lower:
+            return "中医"
+        elif "儒家" in filename_lower or "confucian" in filename_lower:
+            return "儒家"
+        elif "太极" in filename_lower or "taiji" in filename_lower:
             # 太极归类到气功
-            return '气功'
+            return "气功"
         else:
-            return '气功'  # 默认分类
+            return "气功"  # 默认分类
 
     async def import_file(self, filepath: Path, category: str) -> int:
         """导入单个文件
@@ -120,15 +110,15 @@ class DataImporter:
             for item in data:
                 try:
                     # 提取字段
-                    title = item.get('title', item.get('name', '无标题'))
-                    content = item.get('content', item.get('description', item.get('正文', '')))
+                    title = item.get("title", item.get("name", "无标题"))
+                    content = item.get("content", item.get("description", item.get("正文", "")))
 
                     # 如果内容为空，跳过
-                    if not content or content.strip() == '':
+                    if not content or content.strip() == "":
                         continue
 
                     # 构建标签
-                    tags = item.get('tags', [])
+                    tags = item.get("tags", [])
                     if isinstance(tags, str):
                         tags = [tags]
                     elif not isinstance(tags, list):
@@ -146,7 +136,7 @@ class DataImporter:
                         title[:500],  # 标题长度限制
                         content,
                         category,
-                        tags
+                        tags,
                     )
 
                     imported += 1
@@ -222,10 +212,7 @@ class DataImporter:
 async def main():
     """主函数"""
     # 数据库配置
-    db_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
-    )
+    db_url = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb")
 
     # 数据目录
     data_dir = os.getenv("DATA_DIR", "/home/ai/zhineng-knowledge-system/data")

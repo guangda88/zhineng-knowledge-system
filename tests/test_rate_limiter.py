@@ -1,6 +1,8 @@
 """Tests for backend.common.rate_limiter — DistributedRateLimiter"""
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from backend.common.rate_limiter import DistributedRateLimiter
 

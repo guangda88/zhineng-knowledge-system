@@ -16,6 +16,7 @@
 import os
 import sys
 
+
 def test_tingwu_api():
     """测试听愚API调用"""
 
@@ -37,8 +38,8 @@ def test_tingwu_api():
     print()
 
     try:
-        from alibabacloud_tingwu20230930.client import Client as TingwuClient
         from alibabacloud_core.models import Config
+        from alibabacloud_tingwu20230930.client import Client as TingwuClient
 
         print(f"📡 连接到阿里云听愚...")
         print(f"   AccessKey ID: {access_key_id[:15]}...{access_key_id[-4:]}")
@@ -49,7 +50,7 @@ def test_tingwu_api():
         config = Config(
             access_key_id=access_key_id,
             access_key_secret=access_key_secret,
-            region_id='cn-hangzhou'
+            region_id="cn-hangzhou",
         )
 
         client = TingwuClient(config)
@@ -59,22 +60,18 @@ def test_tingwu_api():
         print()
         print(f"📂 获取文件夹 265086 的任务...")
 
-        response = client.list_tasks(
-            folder_id="265086",
-            page_size=20,
-            page_number=1
-        )
+        response = client.list_tasks(folder_id="265086", page_size=20, page_number=1)
 
         print(f"✅ API调用成功!")
         print(f"   状态码: {response.status_code}")
 
         # 解析响应
-        if hasattr(response, 'body') and response.body:
+        if hasattr(response, "body") and response.body:
             body = response.body
             print(f"   账号ID: {body.account_id}")
 
             # 显示任务列表
-            if hasattr(body, 'data') and body.data:
+            if hasattr(body, "data") and body.data:
                 tasks = body.data
                 print(f"   找到 {len(tasks)} 个任务:")
                 print()
@@ -83,7 +80,7 @@ def test_tingwu_api():
                     print(f"   [{i}] {task.task_name}")
                     print(f"       ID: {task.task_id}")
                     print(f"       状态: {task.status}")
-                    if hasattr(task, 'create_time'):
+                    if hasattr(task, "create_time"):
                         print(f"       创建时间: {task.create_time}")
                     print()
 
@@ -111,6 +108,7 @@ def test_tingwu_api():
         print("   docs/AliYun_AccessKey_Creation_Guide.md")
 
         return False
+
 
 if __name__ == "__main__":
     success = test_tingwu_api()

@@ -2,8 +2,9 @@
 
 测试用户追踪和反馈系统的API端点
 """
+
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from backend.main import app
 
@@ -29,11 +30,8 @@ class TestAnalyticsAPI:
             json={
                 "action_type": "search",
                 "content": "三心 mindful awareness",
-                "metadata": {
-                    "result_count": 10,
-                    "response_time_ms": 150
-                }
-            }
+                "metadata": {"result_count": 10, "response_time_ms": 150},
+            },
         )
 
         # 可能返回200或500（如果数据库未迁移）
@@ -52,11 +50,8 @@ class TestAnalyticsAPI:
             json={
                 "action_type": "ask",
                 "content": "收功后可以立即吃饭吗？",
-                "metadata": {
-                    "response_time_ms": 500,
-                    "has_answer": True
-                }
-            }
+                "metadata": {"response_time_ms": 500, "has_answer": True},
+            },
         )
 
         assert response.status_code == 200 or response.status_code == 500
@@ -66,13 +61,7 @@ class TestAnalyticsAPI:
         """测试提交好评反馈"""
         response = await client.post(
             "/api/v1/analytics/feedback/instant",
-            json={
-                "rating": "good",
-                "context": {
-                    "feature": "ask",
-                    "content_id": "test-question-1"
-                }
-            }
+            json={"rating": "good", "context": {"feature": "ask", "content_id": "test-question-1"}},
         )
 
         assert response.status_code == 200 or response.status_code == 500
@@ -89,11 +78,8 @@ class TestAnalyticsAPI:
             json={
                 "rating": "poor",
                 "comment": "搜索结果不够准确，建议改进相关性排序",
-                "context": {
-                    "feature": "search",
-                    "content_id": "test-query-1"
-                }
-            }
+                "context": {"feature": "search", "content_id": "test-query-1"},
+            },
         )
 
         assert response.status_code == 200 or response.status_code == 500
@@ -106,8 +92,8 @@ class TestAnalyticsAPI:
             json={
                 "feedback_type": "weekly",
                 "rating": "neutral",
-                "comment": "整体不错，但希望能增加更多音频内容。搜索功能很准确，问答系统有时理解不够深入。建议加强语音识别的准确性。"
-            }
+                "comment": "整体不错，但希望能增加更多音频内容。搜索功能很准确，问答系统有时理解不够深入。建议加强语音识别的准确性。",
+            },
         )
 
         assert response.status_code == 200 or response.status_code == 500
@@ -147,10 +133,7 @@ class TestAnalyticsAPI:
         """测试请求数据删除"""
         response = await client.post(
             "/api/v1/analytics/request-deletion",
-            json={
-                "contact_email": "test@example.com",
-                "reason": "测试数据删除功能"
-            }
+            json={"contact_email": "test@example.com", "reason": "测试数据删除功能"},
         )
 
         assert response.status_code == 200 or response.status_code == 500
@@ -174,10 +157,7 @@ class TestAnalyticsAPI:
         """测试无效的评价等级"""
         response = await client.post(
             "/api/v1/analytics/feedback/instant",
-            json={
-                "rating": "invalid",
-                "context": {"feature": "test"}
-            }
+            json={"rating": "invalid", "context": {"feature": "test"}},
         )
 
         # 应该返回422验证错误
@@ -187,11 +167,7 @@ class TestAnalyticsAPI:
     async def test_invalid_action_type(self, client):
         """测试无效的行为类型"""
         response = await client.post(
-            "/api/v1/analytics/track",
-            json={
-                "action_type": "invalid_action",
-                "content": "test"
-            }
+            "/api/v1/analytics/track", json={"action_type": "invalid_action", "content": "test"}
         )
 
         # 应该返回422验证错误
@@ -219,8 +195,8 @@ class TestAnalyticsDataFlow:
             json={
                 "action_type": "search",
                 "content": "智能气功入门",
-                "metadata": {"result_count": 5}
-            }
+                "metadata": {"result_count": 5},
+            },
         )
 
         # 2. 用户提交反馈
@@ -229,8 +205,8 @@ class TestAnalyticsDataFlow:
             json={
                 "rating": "good",
                 "comment": "找到了想要的内容",
-                "context": {"feature": "search"}
-            }
+                "context": {"feature": "search"},
+            },
         )
 
         # 3. 查看用户状态
@@ -259,11 +235,7 @@ class TestAnalyticsPrivacy:
 
             response = await client.post(
                 "/api/v1/analytics/track",
-                json={
-                    "action_type": "search",
-                    "content": "敏感搜索词",
-                    "metadata": {}
-                }
+                json={"action_type": "search", "content": "敏感搜索词", "metadata": {}},
             )
 
             assert response.status_code == 200 or response.status_code == 500
@@ -275,11 +247,7 @@ class TestAnalyticsPrivacy:
             # 不提供session_id，应该自动生成
             response = await client.post(
                 "/api/v1/analytics/track",
-                json={
-                    "action_type": "search",
-                    "content": "test",
-                    "metadata": {}
-                }
+                json={"action_type": "search", "content": "test", "metadata": {}},
             )
 
             if response.status_code == 200:

@@ -1,10 +1,12 @@
 """速率限制测试脚本"""
 
 import asyncio
-import aiohttp
 import time
 
+import aiohttp
+
 BASE_URL = "http://localhost:8000"
+
 
 async def test_rate_limit():
     """测试速率限制"""
@@ -29,6 +31,7 @@ async def test_rate_limit():
     async with aiohttp.ClientSession() as session:
         tasks = []
         for i in range(100):
+
             async def fetch():
                 nonlocal success_count, rate_limited_count, error_count
                 try:
@@ -57,6 +60,7 @@ async def test_rate_limit():
         print("\n✅ 速率限制已启用并正常工作！")
     else:
         print("\n⚠️  未检测到速率限制，请检查配置。")
+
 
 if __name__ == "__main__":
     asyncio.run(test_rate_limit())

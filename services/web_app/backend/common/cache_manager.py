@@ -60,9 +60,7 @@ class CacheKeyPattern:
     VERSION = "v1"
 
     @classmethod
-    def build(
-        cls, resource: str, data_type: str, identifier: str, version: str = VERSION
-    ) -> str:
+    def build(cls, resource: str, data_type: str, identifier: str, version: str = VERSION) -> str:
         """
         构建缓存键
 
@@ -127,9 +125,7 @@ class CacheKeyPattern:
     def search_result(cls, query: str, search_type: str, domains: str = "") -> str:
         """搜索结果缓存键"""
         # 对查询参数进行哈希以获得固定长度的键
-        query_hash = hashlib.sha256(
-            f"{query}:{search_type}:{domains}".encode()
-        ).hexdigest()[:12]
+        query_hash = hashlib.sha256(f"{query}:{search_type}:{domains}".encode()).hexdigest()[:12]
         return cls.build(cls.SEARCH, cls.RESULT, query_hash)
 
     @classmethod
@@ -337,9 +333,7 @@ class MemoryCacheBackend(CacheBackend):
             maxsize: 最大缓存条目数
             default_ttl: 默认TTL（秒）
         """
-        self._cache: TTLCache[str, CacheEntry] = TTLCache(
-            maxsize=maxsize, ttl=default_ttl
-        )
+        self._cache: TTLCache[str, CacheEntry] = TTLCache(maxsize=maxsize, ttl=default_ttl)
         self._lock = asyncio.Lock()
         self._default_ttl = default_ttl
         self._maxsize = maxsize
@@ -453,9 +447,7 @@ class MemoryCacheBackend(CacheBackend):
 
         count = 0
         async with self._lock:
-            keys_to_delete = [
-                k for k in self._cache.keys() if fnmatch.fnmatch(k, pattern)
-            ]
+            keys_to_delete = [k for k in self._cache.keys() if fnmatch.fnmatch(k, pattern)]
             for key in keys_to_delete:
                 del self._cache[key]
                 count += 1
@@ -832,9 +824,7 @@ class RedisCacheBackend(CacheBackend):
             logger.error(f"Redis cache get_many error: {e}")
             return {}
 
-    async def set_many(
-        self, mapping: Dict[str, Any], ttl: Optional[int] = None
-    ) -> bool:
+    async def set_many(self, mapping: Dict[str, Any], ttl: Optional[int] = None) -> bool:
         """
         批量设置
 
@@ -909,21 +899,15 @@ class RedisCacheBackend(CacheBackend):
                 ),
                 "errors": self._errors,
                 "memory": {
-                    "used_memory_mb": round(
-                        memory_info.get("used_memory", 0) / (1024 * 1024), 2
-                    ),
+                    "used_memory_mb": round(memory_info.get("used_memory", 0) / (1024 * 1024), 2),
                     "used_memory_peak_mb": round(
                         memory_info.get("used_memory_peak", 0) / (1024 * 1024), 2
                     ),
-                    "maxmemory_mb": round(
-                        memory_info.get("maxmemory", 0) / (1024 * 1024), 2
-                    ),
+                    "maxmemory_mb": round(memory_info.get("maxmemory", 0) / (1024 * 1024), 2),
                 },
                 "stats": {
                     "total_commands_processed": info.get("total_commands_processed", 0),
-                    "total_connections_received": info.get(
-                        "total_connections_received", 0
-                    ),
+                    "total_connections_received": info.get("total_connections_received", 0),
                     "keyspace_hits": info.get("keyspace_hits", 0),
                     "keyspace_misses": info.get("keyspace_misses", 0),
                 },
@@ -1032,9 +1016,7 @@ class CacheManager:
         if backend == "redis" and redis_config:
             self._default_backend = RedisCacheBackend(**redis_config)
         else:
-            self._default_backend = MemoryCacheBackend(
-                maxsize=10000, default_ttl=default_ttl
-            )
+            self._default_backend = MemoryCacheBackend(maxsize=10000, default_ttl=default_ttl)
 
         self._backends["default"] = self._default_backend
 
@@ -1184,17 +1166,13 @@ class CacheManager:
             if self._l1_cache:
                 l1_stats = self._l1_cache.get_stats()
                 stats["L1_memory"] = (
-                    l1_stats.to_dict()
-                    if hasattr(l1_stats, "to_dict")
-                    else l1_stats.__dict__
+                    l1_stats.to_dict() if hasattr(l1_stats, "to_dict") else l1_stats.__dict__
                 )
             return stats
         backend = self.get_backend(namespace)
         backend_stats = backend.get_stats()
         return (
-            backend_stats.to_dict()
-            if hasattr(backend_stats, "to_dict")
-            else backend_stats.__dict__
+            backend_stats.to_dict() if hasattr(backend_stats, "to_dict") else backend_stats.__dict__
         )
 
     async def get_detailed_stats(self) -> Dict[str, Any]:
@@ -1238,9 +1216,7 @@ class CacheManager:
 
     async def get_document_info(self, doc_id: int) -> Optional[Any]:
         """获取文档信息缓存"""
-        return await self.get(
-            CacheKeyPattern.document_info(doc_id), self.NAMESPACE_DOCUMENT
-        )
+        return await self.get(CacheKeyPattern.document_info(doc_id), self.NAMESPACE_DOCUMENT)
 
     async def set_document_info(self, doc_id: int, doc_data: Any) -> bool:
         """设置文档信息缓存"""
@@ -1278,9 +1254,7 @@ class CacheManager:
 
     async def get_hotwords(self, domain: str = "all") -> Optional[Any]:
         """获取热词列表缓存"""
-        return await self.get(
-            CacheKeyPattern.hotword_list(domain), self.NAMESPACE_HOTWORD
-        )
+        return await self.get(CacheKeyPattern.hotword_list(domain), self.NAMESPACE_HOTWORD)
 
     async def set_hotwords(self, words: Any, domain: str = "all") -> bool:
         """设置热词列表缓存"""
@@ -1310,9 +1284,7 @@ class CacheManager:
 
     async def is_blacklisted(self, token_jti: str) -> bool:
         """检查令牌是否在黑名单中"""
-        return await self.exists(
-            CacheKeyPattern.token_blacklist(token_jti), self.NAMESPACE_TOKEN
-        )
+        return await self.exists(CacheKeyPattern.token_blacklist(token_jti), self.NAMESPACE_TOKEN)
 
     async def check_rate_limit(
         self, identifier: str, endpoint: str, limit: int = 100, window: int = 60
@@ -1400,9 +1372,9 @@ def cached(
                 cache_key = CacheKeyPattern.build(
                     func.__name__,
                     "result",
-                    hashlib.sha256(
-                        str(args + tuple(sorted(kwargs.items()))).encode()
-                    ).hexdigest()[:16],
+                    hashlib.sha256(str(args + tuple(sorted(kwargs.items()))).encode()).hexdigest()[
+                        :16
+                    ],
                 )
 
             # 尝试从缓存获取
@@ -1429,9 +1401,9 @@ def cached(
                 cache_key = CacheKeyPattern.build(
                     func.__name__,
                     "result",
-                    hashlib.sha256(
-                        str(args + tuple(sorted(kwargs.items()))).encode()
-                    ).hexdigest()[:16],
+                    hashlib.sha256(str(args + tuple(sorted(kwargs.items()))).encode()).hexdigest()[
+                        :16
+                    ],
                 )
 
             # 尝试从缓存获取
@@ -1439,16 +1411,10 @@ def cached(
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
                     # 在运行的事件循环中，创建任务
-                    task = asyncio.ensure_future(
-                        cache_manager.get(cache_key, namespace)
-                    )
-                    cached_value = asyncio.run_coroutine_threadsafe(task, loop).result(
-                        timeout=1
-                    )
+                    task = asyncio.ensure_future(cache_manager.get(cache_key, namespace))
+                    cached_value = asyncio.run_coroutine_threadsafe(task, loop).result(timeout=1)
                 else:
-                    cached_value = loop.run_until_complete(
-                        cache_manager.get(cache_key, namespace)
-                    )
+                    cached_value = loop.run_until_complete(cache_manager.get(cache_key, namespace))
 
                 if cached_value is not None:
                     return cached_value
@@ -1461,9 +1427,7 @@ def cached(
             # 异步设置缓存
             try:
                 loop = asyncio.get_event_loop()
-                asyncio.ensure_future(
-                    cache_manager.set(cache_key, result, namespace, ttl)
-                )
+                asyncio.ensure_future(cache_manager.set(cache_key, result, namespace, ttl))
             except RuntimeError:
                 pass
 

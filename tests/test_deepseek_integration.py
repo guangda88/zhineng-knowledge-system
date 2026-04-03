@@ -7,13 +7,15 @@
 """
 
 import asyncio
-import sys
 import os
+import sys
 from pathlib import Path
 
 # 设置测试环境变量
-os.environ["ALLOWED_ORIGINS"] = '["http://localhost:3000","http://localhost:8008","http://localhost:8000"]'
-os.environ.setdefault('DATABASE_URL', 'postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb')
+os.environ["ALLOWED_ORIGINS"] = (
+    '["http://localhost:3000","http://localhost:8008","http://localhost:8000"]'
+)
+os.environ.setdefault("DATABASE_URL", "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb")
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -31,7 +33,9 @@ async def test_deepseek_api():
 
     # 检查配置
     print(f"\n1. 配置检查:")
-    print(f"   - API Key: {'已设置' if config.DEEPSEEK_API_KEY and config.DEEPSEEK_API_KEY != 'sk-dummy' else '未设置'}")
+    print(
+        f"   - API Key: {'已设置' if config.DEEPSEEK_API_KEY and config.DEEPSEEK_API_KEY != 'sk-dummy' else '未设置'}"
+    )
     print(f"   - API URL: {config.DEEPSEEK_API_URL}")
     print(f"   - Model: {config.DEEPSEEK_MODEL}")
 
@@ -47,12 +51,7 @@ async def test_deepseek_api():
     expander = TocExpander()
 
     # 创建测试 TOC 条目
-    test_item = TocItem(
-        id="test_001",
-        title="气功基础理论",
-        level=1,
-        line_number=0
-    )
+    test_item = TocItem(id="test_001", title="气功基础理论", level=1, line_number=0)
 
     # 测试文本
     test_text = """
@@ -80,10 +79,7 @@ async def test_deepseek_api():
         print(f"   层级: {test_item.level}")
 
         subsections = await expander._generate_subsections(
-            parent_item=test_item,
-            text=test_text,
-            target_depth=2,
-            max_count=3
+            parent_item=test_item, text=test_text, target_depth=2, max_count=3
         )
 
         if subsections:
@@ -99,6 +95,7 @@ async def test_deepseek_api():
     except Exception as e:
         print(f"\n   ❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:

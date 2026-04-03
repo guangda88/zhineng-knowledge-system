@@ -1,6 +1,7 @@
 """
 测试规则检查器功能（独立版本，避免导入问题）
 """
+
 import os
 import sys
 import unittest
@@ -14,8 +15,7 @@ import importlib.util
 
 # 加载RulesChecker模块
 spec = importlib.util.spec_from_file_location(
-    "rules_checker",
-    os.path.join(backend_path, "backend", "core", "rules_checker.py")
+    "rules_checker", os.path.join(backend_path, "backend", "core", "rules_checker.py")
 )
 rules_checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(rules_checker)
@@ -37,7 +37,7 @@ class TestRulesCheckerStandalone(unittest.TestCase):
             "data_source": "static_analysis",
             "consensus": True,
             "discussion_summary": "团队讨论结果",
-            "participants": ["AI", "User"]
+            "participants": ["AI", "User"],
         }
 
         # 应该不抛出异常
@@ -46,11 +46,7 @@ class TestRulesCheckerStandalone(unittest.TestCase):
 
     def test_check_modify_rules_not_discussed(self):
         """测试未讨论的规则修改"""
-        action_data = {
-            "discussed": False,
-            "data_source": "static_analysis",
-            "consensus": True
-        }
+        action_data = {"discussed": False, "data_source": "static_analysis", "consensus": True}
 
         with self.assertRaises(PermissionError) as context:
             self.checker.check_modify_rules(action_data)
@@ -60,11 +56,7 @@ class TestRulesCheckerStandalone(unittest.TestCase):
 
     def test_check_modify_rules_assumption_data(self):
         """测试基于假设的规则修改"""
-        action_data = {
-            "discussed": True,
-            "data_source": "assumption",
-            "consensus": True
-        }
+        action_data = {"discussed": True, "data_source": "assumption", "consensus": True}
 
         with self.assertRaises(PermissionError) as context:
             self.checker.check_modify_rules(action_data)
@@ -74,11 +66,7 @@ class TestRulesCheckerStandalone(unittest.TestCase):
 
     def test_check_modify_rules_no_consensus(self):
         """测试未达成共识的规则修改"""
-        action_data = {
-            "discussed": True,
-            "data_source": "static_analysis",
-            "consensus": False
-        }
+        action_data = {"discussed": True, "data_source": "static_analysis", "consensus": False}
 
         with self.assertRaises(PermissionError) as context:
             self.checker.check_modify_rules(action_data)
@@ -88,11 +76,7 @@ class TestRulesCheckerStandalone(unittest.TestCase):
 
     def test_validate_action_data_valid(self):
         """测试验证有效的操作数据"""
-        action_data = {
-            "discussed": True,
-            "data_source": "static_analysis",
-            "consensus": True
-        }
+        action_data = {"discussed": True, "data_source": "static_analysis", "consensus": True}
 
         result = self.checker.validate_action_data(action_data)
 

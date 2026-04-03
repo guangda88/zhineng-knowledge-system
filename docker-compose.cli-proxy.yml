@@ -12,34 +12,34 @@ services:
     image: routerforme/cli-proxy-api:latest
     container_name: lingzhi-cliproxyapi
     ports:
-      - "8317:8317"  # HTTP API
-      - "9090:9090"  # Prometheus metrics
+    - 8317:8317      # HTTP API
+    - 9090:9090      # Prometheus metrics
     volumes:
       # Mount configuration
-      - ./config/cliproxyapi:/app/config:ro
+    - ./config/cliproxyapi:/app/config:ro
       # Mount logs
-      - ./logs/cliproxyapi:/app/logs
+    - ./logs/cliproxyapi:/app/logs
     environment:
       # DeepSeek API
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+    - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       # Claude API
-      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+    - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
       # Gemini API
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       # Qwen API
-      - QWEN_API_KEY=${QWEN_API_KEY:-}
+    - QWEN_API_KEY=${QWEN_API_KEY:-}
       # JWT Secret (if using JWT auth)
-      - JWT_SECRET=${JWT_SECRET:-lingzhi-default-secret-change-in-production}
+    - JWT_SECRET=${JWT_SECRET:-lingzhi-default-secret-change-in-production}
       # OAuth Credentials (optional)
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+    - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+    - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+    - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+    - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     networks:
-      - lingzhi-network
+    - lingzhi-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8317/health"]
+      test: [CMD, curl, -f, http://localhost:8317/health]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -58,16 +58,16 @@ services:
   backend:
     environment:
       # CLIProxyAPI endpoint
-      - CLIPROXYAPI_BASE_URL=http://cliproxyapi:8317/v1
-      - CLIPROXYAPI_API_KEY=lingzhi-api-key-001
+    - CLIPROXYAPI_BASE_URL=http://cliproxyapi:8317/v1
+    - CLIPROXYAPI_API_KEY=lingzhi-api-key-001
       # Enable unified AI service
-      - ENABLE_UNIFIED_AI_SERVICE=true
+    - ENABLE_UNIFIED_AI_SERVICE=true
       # Default AI model
-      - DEFAULT_AI_MODEL=deepseek-chat
+    - DEFAULT_AI_MODEL=deepseek-chat
     depends_on:
-      - cliproxyapi
+    - cliproxyapi
     networks:
-      - lingzhi-network
+    - lingzhi-network
 
 networks:
   lingzhi-network:

@@ -100,7 +100,9 @@ class TestFilterString:
 
     def test_filter_string_jwt(self):
         """检测 JWT 令牌"""
-        result = _filter_string("Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0. signature")
+        result = _filter_string(
+            "Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0. signature"
+        )
         # JWT模式匹配后会被替换
         assert "***" in result
 

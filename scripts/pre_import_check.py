@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgresql://zhineng:{os.getenv('POSTGRES_PASSWORD', 'zhineng_secure_2024')}@localhost:5436/zhineng_kb"
+    f"postgresql://zhineng:{os.getenv('POSTGRES_PASSWORD', 'zhineng_secure_2024')}@localhost:5436/zhineng_kb",
 )
 EMBEDDING_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
 
@@ -39,12 +39,14 @@ async def check_postgres_config(conn) -> list[dict]:
     """检查 PostgreSQL 配置参数"""
     results = []
 
-    params = await conn.fetch("""
+    params = await conn.fetch(
+        """
         SELECT name, setting, unit, short_desc
         FROM pg_settings
         WHERE name IN ('shared_buffers', 'maintenance_work_mem', 'work_mem',
                        'effective_cache_size', 'max_wal_size', 'max_connections')
-    """)
+    """
+    )
 
     param_map = {r["name"]: r for r in params}
 
@@ -68,17 +70,21 @@ async def check_postgres_config(conn) -> list[dict]:
             val_mb = raw
 
         if val_mb >= min_val:
-            results.append({
-                "check": f"pg_{name}",
-                "status": "PASS",
-                "message": f"{name} = {val_mb:.0f}MB (>= {min_val}MB)"
-            })
+            results.append(
+                {
+                    "check": f"pg_{name}",
+                    "status": "PASS",
+                    "message": f"{name} = {val_mb:.0f}MB (>= {min_val}MB)",
+                }
+            )
         else:
-            results.append({
-                "check": f"pg_{name}",
-                "status": "WARN",
-                "message": f"{name} = {val_mb:.0f}MB (< 推荐 {min_val}MB)"
-            })
+            results.append(
+                {
+                    "check": f"pg_{name}",
+                    "status": "WARN",
+                    "message": f"{name} = {val_mb:.0f}MB (< 推荐 {min_val}MB)",
+                }
+            )
 
     return results
 
@@ -88,9 +94,11 @@ async def check_disk_space(conn) -> list[dict]:
     results = []
 
     try:
-        row = await conn.fetchrow("""
+        row = await conn.fetchrow(
+            """
             SELECT pg_database_size(current_database()) as db_size
-        """)
+        """
+        )
         db_size_gb = row["db_size"] / 1024**3
 
         df_path = Path("/data") if Path("/data").exists() else Path("/")
@@ -98,17 +106,21 @@ async def check_disk_space(conn) -> list[dict]:
         free_gb = (stat.f_bavail * stat.f_frsize) / 1024**3
 
         if free_gb >= MIN_DISK_FREE_GB:
-            results.append({
-                "check": "disk_space",
-                "status": "PASS",
-                "message": f"可用 {free_gb:.1f}GB (>= {MIN_DISK_FREE_GB}GB), 数据库 {db_size_gb:.1f}GB"
-            })
+            results.append(
+                {
+                    "check": "disk_space",
+                    "status": "PASS",
+                    "message": f"可用 {free_gb:.1f}GB (>= {MIN_DISK_FREE_GB}GB), 数据库 {db_size_gb:.1f}GB",
+                }
+            )
         else:
-            results.append({
-                "check": "disk_space",
-                "status": "FAIL",
-                "message": f"可用 {free_gb:.1f}GB (< {MIN_DISK_FREE_GB}GB), 数据库 {db_size_gb:.1f}GB"
-            })
+            results.append(
+                {
+                    "check": "disk_space",
+                    "status": "FAIL",
+                    "message": f"可用 {free_gb:.1f}GB (< {MIN_DISK_FREE_GB}GB), 数据库 {db_size_gb:.1f}GB",
+                }
+            )
     except Exception as e:
         results.append({"check": "disk_space", "status": "WARN", "message": f"无法检查磁盘: {e}"})
 
@@ -127,11 +139,13 @@ async def check_embedding_service() -> list[dict]:
         data = json.loads(resp.read())
 
         if data.get("model_loaded"):
-            results.append({
-                "check": "embedding_service",
-                "status": "PASS",
-                "message": f"模型已加载, 设备: {data.get('device', '?')}"
-            })
+            results.append(
+                {
+                    "check": "embedding_service",
+                    "status": "PASS",
+                    "message": f"模型已加载, 设备: {data.get('device', '?')}",
+                }
+            )
 
             try:
                 req2 = urllib.request.Request(f"{EMBEDDING_URL}/embed")
@@ -139,34 +153,38 @@ async def check_embedding_service() -> list[dict]:
                     req2,
                     data=json.dumps({"texts": ["测试"]}).encode(),
                     timeout=10,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
                 embed_data = json.loads(resp2.read())
                 dim = len(embed_data.get("embeddings", [[]])[0])
-                results.append({
-                    "check": "embedding_dimension",
-                    "status": "PASS",
-                    "message": f"向量维度: {dim}"
-                })
+                results.append(
+                    {
+                        "check": "embedding_dimension",
+                        "status": "PASS",
+                        "message": f"向量维度: {dim}",
+                    }
+                )
             except Exception:
-                results.append({
-                    "check": "embedding_dimension",
-                    "status": "WARN",
-                    "message": "无法获取实际向量维度"
-                })
+                results.append(
+                    {
+                        "check": "embedding_dimension",
+                        "status": "WARN",
+                        "message": "无法获取实际向量维度",
+                    }
+                )
         else:
             error = data.get("model_error", "未知错误")
-            results.append({
+            results.append(
+                {"check": "embedding_service", "status": "FAIL", "message": f"模型未加载: {error}"}
+            )
+    except Exception as e:
+        results.append(
+            {
                 "check": "embedding_service",
                 "status": "FAIL",
-                "message": f"模型未加载: {error}"
-            })
-    except Exception as e:
-        results.append({
-            "check": "embedding_service",
-            "status": "FAIL",
-            "message": f"服务不可达 ({EMBEDDING_URL}): {e}"
-        })
+                "message": f"服务不可达 ({EMBEDDING_URL}): {e}",
+            }
+        )
 
     return results
 
@@ -175,7 +193,8 @@ async def check_vector_dimensions(conn) -> list[dict]:
     """检查所有 vector 列的维度是否一致"""
     results = []
 
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT table_name, column_name,
                pg_catalog.format_type(atttypid, atttypmod) as full_type
         FROM information_schema.columns c
@@ -185,28 +204,34 @@ async def check_vector_dimensions(conn) -> list[dict]:
           AND c.data_type = 'USER-DEFINED'
           AND c.udt_name = 'vector'
         ORDER BY table_name
-    """)
+    """
+    )
 
     dims = {}
     for r in rows:
         import re
-        m = re.search(r'\((\d+)\)', r["full_type"])
+
+        m = re.search(r"\((\d+)\)", r["full_type"])
         if m:
             dim = int(m.group(1))
             dims[r["table_name"]] = {r["column_name"]: dim}
             if dim != 512:
-                results.append({
-                    "check": "vector_dim",
-                    "status": "WARN",
-                    "message": f"{r['table_name']}.{r['column_name']} = vector({dim}) (!= 512)"
-                })
+                results.append(
+                    {
+                        "check": "vector_dim",
+                        "status": "WARN",
+                        "message": f"{r['table_name']}.{r['column_name']} = vector({dim}) (!= 512)",
+                    }
+                )
 
     if not any(r["check"] == "vector_dim" and r["status"] == "WARN" for r in results):
-        results.append({
-            "check": "vector_dimensions",
-            "status": "PASS",
-            "message": f"所有 vector 列维度一致: {list(dims.keys())}"
-        })
+        results.append(
+            {
+                "check": "vector_dimensions",
+                "status": "PASS",
+                "message": f"所有 vector 列维度一致: {list(dims.keys())}",
+            }
+        )
 
     return results
 
@@ -215,7 +240,8 @@ async def check_blocking_queries(conn) -> list[dict]:
     """检查是否有长时间运行的阻塞查询"""
     results = []
 
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT pid, now() - pg_stat_activity.query_start AS duration,
                query, state
         FROM pg_stat_activity
@@ -224,22 +250,23 @@ async def check_blocking_queries(conn) -> list[dict]:
           AND now() - query_start > interval '5 minutes'
         ORDER BY duration DESC
         LIMIT 5
-    """)
+    """
+    )
 
     if rows:
         for r in rows:
             mins = r["duration"].total_seconds() / 60
-            results.append({
-                "check": "blocking_query",
-                "status": "WARN",
-                "message": f"PID {r['pid']} 运行 {mins:.1f}min: {r['query'][:80]}..."
-            })
+            results.append(
+                {
+                    "check": "blocking_query",
+                    "status": "WARN",
+                    "message": f"PID {r['pid']} 运行 {mins:.1f}min: {r['query'][:80]}...",
+                }
+            )
     else:
-        results.append({
-            "check": "blocking_queries",
-            "status": "PASS",
-            "message": "无长时间运行的查询"
-        })
+        results.append(
+            {"check": "blocking_queries", "status": "PASS", "message": "无长时间运行的查询"}
+        )
 
     return results
 
@@ -248,7 +275,8 @@ async def check_analyze_status(conn) -> list[dict]:
     """检查是否有大表未执行 ANALYZE"""
     results = []
 
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT relname, n_live_tup,
                last_analyze, last_autoanalyze
         FROM pg_stat_user_tables
@@ -256,21 +284,20 @@ async def check_analyze_status(conn) -> list[dict]:
           AND last_analyze IS NULL
           AND last_autoanalyze IS NULL
         ORDER BY n_live_tup DESC
-    """)
+    """
+    )
 
     if rows:
         for r in rows:
-            results.append({
-                "check": "analyze",
-                "status": "WARN",
-                "message": f"{r['relname']}: ~{r['n_live_tup']} 行, 从未 ANALYZE"
-            })
+            results.append(
+                {
+                    "check": "analyze",
+                    "status": "WARN",
+                    "message": f"{r['relname']}: ~{r['n_live_tup']} 行, 从未 ANALYZE",
+                }
+            )
     else:
-        results.append({
-            "check": "analyze",
-            "status": "PASS",
-            "message": "所有大表均已 ANALYZE"
-        })
+        results.append({"check": "analyze", "status": "PASS", "message": "所有大表均已 ANALYZE"})
 
     return results
 
@@ -327,6 +354,7 @@ async def run_checks(strict: bool = False, table: str = None) -> int:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="数据导入前健康检查")
     parser.add_argument("--strict", action="store_true", help="警告也视为失败")
     parser.add_argument("--table", help="仅检查指定表")

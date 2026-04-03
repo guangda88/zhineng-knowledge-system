@@ -6,531 +6,531 @@ description: |
   工期: 28天 (4周)
   角色: 架构师 + Tech Leads
 
-workflow_version: "1.0.0"
+workflow_version: 1.0.0
 project: 灵知系统技术质量提升
 
 # 全局变量
 vars:
-  project_root: "/home/ai/zhineng-knowledge-system"
-  team_a_workflow: ".lingflow/workflows/team_a_text_processing.yaml"
-  team_b_workflow: ".lingflow/workflows/team_b_audio_processing.yaml"
-  api_contract_doc: "{{vars.project_root}}/docs/API_INTERFACE_CONTRACT.md"
-  integration_tests_dir: "{{vars.project_root}}/tests/integration"
+  project_root: /home/ai/zhineng-knowledge-system
+  team_a_workflow: .lingflow/workflows/team_a_text_processing.yaml
+  team_b_workflow: .lingflow/workflows/team_b_audio_processing.yaml
+  api_contract_doc: '{{vars.project_root}}/docs/API_INTERFACE_CONTRACT.md'
+  integration_tests_dir: '{{vars.project_root}}/tests/integration'
 
 # 工作流依赖
 depends_on:
-  - workflow: "{{vars.team_a_workflow}}"
-    status: "in_progress"
-  - workflow: "{{vars.team_b_workflow}}"
-    status: "in_progress"
+- workflow: '{{vars.team_a_workflow}}'
+  status: in_progress
+- workflow: '{{vars.team_b_workflow}}'
+  status: in_progress
 
 # 任务清单
 tasks:
   # ==================== 阶段0: 共享基础准备 (Day 1-2) ====================
 
-  - id: phase0_kickoff
-    name: "阶段0启动会议"
-    skill: notification
-    params:
-      message: |
-        🚀 双团队并行工作流启动
+- id: phase0_kickoff
+  name: 阶段0启动会议
+  skill: notification
+  params:
+    message: |
+      🚀 双团队并行工作流启动
 
-        参与者:
-        - 架构师
-        - Team A Tech Lead
-        - Team B Tech Lead
-        - DevOps
+      参与者:
+      - 架构师
+      - Team A Tech Lead
+      - Team B Tech Lead
+      - DevOps
 
-        议程:
-        1. 确认共享依赖清单
-        2. 锁定数据库Schema
-        3. 确认接口约定
-        4. 分配工作
+      议程:
+      1. 确认共享依赖清单
+      2. 锁定数据库Schema
+      3. 确认接口约定
+      4. 分配工作
 
-        预期产出:
-        - ✅ 数据库Schema锁定
-        - ✅ 依赖包确认
-        - ✅ 接口约定文档
-        - ✅ Git分支策略
+      预期产出:
+      - ✅ 数据库Schema锁定
+      - ✅ 依赖包确认
+      - ✅ 接口约定文档
+      - ✅ Git分支策略
 
-  - id: lock_database_schema
-    name: "锁定数据库Schema"
-    skill: code-generation
-    params:
-      file_path: "{{vars.project_root}}/docs/DATABASE_SCHEMA_LOCKED.md"
-      content: |
-        # 数据库Schema锁定
+- id: lock_database_schema
+  name: 锁定数据库Schema
+  skill: code-generation
+  params:
+    file_path: '{{vars.project_root}}/docs/DATABASE_SCHEMA_LOCKED.md'
+    content: |
+      # 数据库Schema锁定
 
-        **锁定日期**: 2026-03-31
-        **锁定人**: 架构师
-        **状态**: 🔒 LOCKED - 未经架构师+2个Tech Lead同意不得修改
+      **锁定日期**: 2026-03-31
+      **锁定人**: 架构师
+      **状态**: 🔒 LOCKED - 未经架构师+2个Tech Lead同意不得修改
 
-        ## 现有表 (已有)
-        - documents ✅
-        - books ✅
-        - book_chapters ✅
-        - data_sources ✅
-        - chat_history ✅
+      ## 现有表 (已有)
+      - documents ✅
+      - books ✅
+      - book_chapters ✅
+      - data_sources ✅
+      - chat_history ✅
 
-        ## 团队A新增表
-        - reasoning_performance ✅ (推理性能追踪)
+      ## 团队A新增表
+      - reasoning_performance ✅ (推理性能追踪)
 
-        ## 团队B新增表
-        - transcription_tasks ✅ (转写任务)
-        - transcription_corrections ✅ (转写校正)
-        - asr_performance ✅ (ASR性能)
+      ## 团队B新增表
+      - transcription_tasks ✅ (转写任务)
+      - transcription_corrections ✅ (转写校正)
+      - asr_performance ✅ (ASR性能)
 
-        ## 团队A新增字段
-        - books.ebook_url VARCHAR(500)
-        - books.ebook_format VARCHAR(20)
-        - books.ebook_source VARCHAR(100)
+      ## 团队A新增字段
+      - books.ebook_url VARCHAR(500)
+      - books.ebook_format VARCHAR(20)
+      - books.ebook_source VARCHAR(100)
 
-        ## 变更流程
-        1. 提交 RFC (Request for Comments)
-        2. 架构师审核
-        3. 2个Tech Lead批准
-        4. 创建Migration脚本
-        5. 在测试环境验证
-        6. 部署到生产环境
-    depends_on: [phase0_kickoff]
+      ## 变更流程
+      1. 提交 RFC (Request for Comments)
+      2. 架构师审核
+      3. 2个Tech Lead批准
+      4. 创建Migration脚本
+      5. 在测试环境验证
+      6. 部署到生产环境
+  depends_on: [phase0_kickoff]
 
-  - id: verify_dependencies_compatibility
-    name: "验证依赖包兼容性"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
+- id: verify_dependencies_compatibility
+  name: 验证依赖包兼容性
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
 
-        # 检查依赖冲突
-        docker-compose exec backend bash -c "
-          # 检查whisper和sentence-transformers是否冲突
-          pip check | grep -i conflict
+      # 检查依赖冲突
+      docker-compose exec backend bash -c "
+        # 检查whisper和sentence-transformers是否冲突
+        pip check | grep -i conflict
 
-          # 检查torch版本兼容性
-          python3 -c 'import torch; print(f\"PyTorch: {torch.__version__}\")'
+        # 检查torch版本兼容性
+        python3 -c 'import torch; print(f\"PyTorch: {torch.__version__}\")'
 
-          # 检查faster-whisper
-          python3 -c 'import faster_whisper; print(\"faster-whisper: OK\")'
+        # 检查faster-whisper
+        python3 -c 'import faster_whisper; print(\"faster-whisper: OK\")'
 
-          # 检查sentence-transformers
-          python3 -c 'import sentence_transformers; print(\"sentence-transformers: OK\")'
-        "
-    depends_on: [phase0_kickoff]
-    timeout: 180
+        # 检查sentence-transformers
+        python3 -c 'import sentence_transformers; print(\"sentence-transformers: OK\")'
+      "
+  depends_on: [phase0_kickoff]
+  timeout: 180
 
-  - id: create_api_contract_document
-    name: "创建API接口约定文档"
-    skill: doc-generation
-    params:
-      file_path: "{{vars.api_contract_doc}}"
-      content: |
-        # API接口约定文档
+- id: create_api_contract_document
+  name: 创建API接口约定文档
+  skill: doc-generation
+  params:
+    file_path: '{{vars.api_contract_doc}}'
+    content: |
+      # API接口约定文档
 
-        **版本**: 1.0.0
-        **日期**: 2026-03-31
-        **状态**: 📝 IN PROGRESS - 随时更新
+      **版本**: 1.0.0
+      **日期**: 2026-03-31
+      **状态**: 📝 IN PROGRESS - 随时更新
 
-        ## 变更规则
-        任何接口变更必须：
-        1. 更新本文档
-        2. 通知对方团队
-        3. 在每日同步会议确认
+      ## 变更规则
+      任何接口变更必须：
+      1. 更新本文档
+      2. 通知对方团队
+      3. 在每日同步会议确认
 
-        ## 团队A提供的接口
+      ## 团队A提供的接口
 
-        ### 1. 文本向量化
-        ```
-        POST /api/v1/search/embeddings
-        Request: { "text": "..." }
-        Response: { "embedding": [0.1, 0.2, ...], "dim": 512 }
-        ```
+      ### 1. 文本向量化
+      ```
+      POST /api/v1/search/embeddings
+      Request: { "text": "..." }
+      Response: { "embedding": [0.1, 0.2, ...], "dim": 512 }
+      ```
 
-        ### 2. 意图识别
-        ```
-        POST /api/v1/intent/analyze
-        Request: { "query": "..." }
-        Response: { "intent": "practice_method", "confidence": 0.95 }
-        ```
+      ### 2. 意图识别
+      ```
+      POST /api/v1/intent/analyze
+      Request: { "query": "..." }
+      Response: { "intent": "practice_method", "confidence": 0.95 }
+      ```
 
-        ## 团队B提供的接口
+      ## 团队B提供的接口
 
-        ### 1. 音频转写
-        ```
-        POST /api/v1/annotation/transcription/transcribe
-        Request: multipart/form-data { "audio": file.wav }
-        Response: {
-          "task_id": "...",
-          "text": "...",
-          "segments": [
-            { "start": 0.0, "end": 5.2, "text": "...", "confidence": 0.98 }
-          ]
-        }
-        ```
+      ### 1. 音频转写
+      ```
+      POST /api/v1/annotation/transcription/transcribe
+      Request: multipart/form-data { "audio": file.wav }
+      Response: {
+        "task_id": "...",
+        "text": "...",
+        "segments": [
+          { "start": 0.0, "end": 5.2, "text": "...", "confidence": 0.98 }
+        ]
+      }
+      ```
 
-        ### 2. 转写状态查询
-        ```
-        GET /api/v1/annotation/transcription/task/{task_id}
-        Response: { "status": "completed", "text": "...", "corrected_text": "..." }
-        ```
+      ### 2. 转写状态查询
+      ```
+      GET /api/v1/annotation/transcription/task/{task_id}
+      Response: { "status": "completed", "text": "...", "corrected_text": "..." }
+      ```
 
-        ## 集成接口 (Phase 2)
+      ## 集成接口 (Phase 2)
 
-        ### 音频内容进入检索系统
-        ```
-        POST /api/v1/search/index/transcription
-        Request: { "task_id": "...", "metadata": {...} }
-        Response: { "indexed": true, "doc_id": 123 }
-        ```
+      ### 音频内容进入检索系统
+      ```
+      POST /api/v1/search/index/transcription
+      Request: { "task_id": "...", "metadata": {...} }
+      Response: { "indexed": true, "doc_id": 123 }
+      ```
 
-        ### 音频内容进入推理系统
-        ```
-        POST /api/v1/reasoning/with_audio
-        Request: { "question": "...", "audio_context": ["task_id_1", ...] }
-        Response: { "answer": "...", "sources": [...] }
-        ```
-    depends_on: [phase0_kickoff]
+      ### 音频内容进入推理系统
+      ```
+      POST /api/v1/reasoning/with_audio
+      Request: { "question": "...", "audio_context": ["task_id_1", ...] }
+      Response: { "answer": "...", "sources": [...] }
+      ```
+  depends_on: [phase0_kickoff]
 
-  - id: setup_git_branching_strategy
-    name: "设置Git分支策略"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
+- id: setup_git_branching_strategy
+  name: 设置Git分支策略
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
 
-        # 创建分支
-        git checkout -b feature/team-a-text-processing origin/develop
-        git checkout -b feature/team-b-audio-processing origin/develop
+      # 创建分支
+      git checkout -b feature/team-a-text-processing origin/develop
+      git checkout -b feature/team-b-audio-processing origin/develop
 
-        # 设置分支保护规则
-        # develop分支需要PR + 1个approval
-    depends_on: [lock_database_schema]
+      # 设置分支保护规则
+      # develop分支需要PR + 1个approval
+  depends_on: [lock_database_schema]
 
   # ==================== 阶段1: 独立开发期监控 (Day 3-14) ====================
 
-  - id: phase1_monitoring_start
-    name: "阶段1监控启动"
-    skill: notification
-    params:
-      message: |
-        阶段1: 独立开发期 (Day 3-14)
+- id: phase1_monitoring_start
+  name: 阶段1监控启动
+  skill: notification
+  params:
+    message: |
+      阶段1: 独立开发期 (Day 3-14)
 
-        团队A: 文字数据处理
-        团队B: 音频处理
+      团队A: 文字数据处理
+      团队B: 音频处理
 
-        协调任务:
-        - 每日同步会议 (9:30, 15分钟)
-        - 每周代码合并 (周五下午)
-        - 监控共享资源使用
+      协调任务:
+      - 每日同步会议 (9:30, 15分钟)
+      - 每周代码合并 (周五下午)
+      - 监控共享资源使用
 
-  - id: daily_sync_check
-    name: "每日同步检查 (自动化)"
-    skill: loop-iterator
-    params:
-      iterations: 12  # 12个工作日 (Day 3-14)
-      interval: 86400  # 每24小时
-      task:
-        skill: task-runner
-        params:
-          command: |
-            # 检查两个团队的工作状态
-            echo "=== 每日同步检查 ==="
-            date
-            echo ""
-            echo "团队A状态:"
-            git log --oneline feature/team-a-text-processing -1
-            echo ""
-            echo "团队B状态:"
-            git log --oneline feature/team-b-audio-processing -1
-            echo ""
-            echo "共享资源:"
-            docker-compose ps
-            docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
-    depends_on: [phase1_monitoring_start]
+- id: daily_sync_check
+  name: 每日同步检查 (自动化)
+  skill: loop-iterator
+  params:
+    iterations: 12    # 12个工作日 (Day 3-14)
+    interval: 86400    # 每24小时
+    task:
+      skill: task-runner
+      params:
+        command: |
+          # 检查两个团队的工作状态
+          echo "=== 每日同步检查 ==="
+          date
+          echo ""
+          echo "团队A状态:"
+          git log --oneline feature/team-a-text-processing -1
+          echo ""
+          echo "团队B状态:"
+          git log --oneline feature/team-b-audio-processing -1
+          echo ""
+          echo "共享资源:"
+          docker-compose ps
+          docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+  depends_on: [phase1_monitoring_start]
 
-  - id: weekly_integration_check
-    name: "每周集成检查"
-    skill: loop-iterator
-    params:
-      iterations: 2  # 2周 (Day 3-14)
-      interval: 604800  # 每7天
-      task:
-        skill: test-runner
-        params:
-          test_type: integration
-          target: "{{vars.integration_tests_dir}}/test_weekly_integration.py"
-          message: "每周集成检查 - 确保两个团队的代码可以共同运行"
-    depends_on: [phase1_monitoring_start]
+- id: weekly_integration_check
+  name: 每周集成检查
+  skill: loop-iterator
+  params:
+    iterations: 2    # 2周 (Day 3-14)
+    interval: 604800    # 每7天
+    task:
+      skill: test-runner
+      params:
+        test_type: integration
+        target: '{{vars.integration_tests_dir}}/test_weekly_integration.py'
+        message: 每周集成检查 - 确保两个团队的代码可以共同运行
+  depends_on: [phase1_monitoring_start]
 
   # ==================== 阶段2: 联合开发期 (Day 15-21) ====================
 
-  - id: phase2_kickoff
-    name: "阶段2启动会议"
-    skill: notification
-    params:
-      message: |
-        🔗 阶段2: 联合开发期 (Day 15-21)
+- id: phase2_kickoff
+  name: 阶段2启动会议
+  skill: notification
+  params:
+    message: |
+      🔗 阶段2: 联合开发期 (Day 15-21)
 
-        集成点:
-        1. Day 15-17: 音频内容进入检索系统
-        2. Day 18-21: 音频内容进入推理系统
+      集成点:
+      1. Day 15-17: 音频内容进入检索系统
+      2. Day 18-21: 音频内容进入推理系统
 
-        参与者: 团队A + 团队B 全员
-        协调方式: 每日会议延长到30分钟
-    depends_on: [daily_sync_check]
+      参与者: 团队A + 团队B 全员
+      协调方式: 每日会议延长到30分钟
+  depends_on: [daily_sync_check]
 
-  - id: integrate_audio_to_search
-    name: "集成: 音频内容进入检索系统"
-    skill: task-runner
-    params:
-      command: |
-        cd {{vars.project_root}}
+- id: integrate_audio_to_search
+  name: '集成: 音频内容进入检索系统'
+  skill: task-runner
+  params:
+    command: |
+      cd {{vars.project_root}}
 
-        # 创建集成代码
-        cat > backend/services/integration/audio_indexer.py << 'PYTHON'
-        """
-        将音频转写文本索引到检索系统
-        """
-        from services.retrieval.hybrid import HybridRetriever
-        from services.annotation.transcription_annotator import TranscriptionAnnotator
+      # 创建集成代码
+      cat > backend/services/integration/audio_indexer.py << 'PYTHON'
+      """
+      将音频转写文本索引到检索系统
+      """
+      from services.retrieval.hybrid import HybridRetriever
+      from services.annotation.transcription_annotator import TranscriptionAnnotator
 
-        class AudioIndexer:
-            async def index_transcription(self, task_id: str) -> int:
-                """将转写结果索引到documents表"""
-                annotator = TranscriptionAnnotator()
-                task = await annotator.get_task(task_id)
+      class AudioIndexer:
+          async def index_transcription(self, task_id: str) -> int:
+              """将转写结果索引到documents表"""
+              annotator = TranscriptionAnnotator()
+              task = await annotator.get_task(task_id)
 
-                if not task or task.status != "completed":
-                    raise ValueError(f"Task {task_id} not completed")
+              if not task or task.status != "completed":
+                  raise ValueError(f"Task {task_id} not completed")
 
-                # 转写文本作为文档内容
-                retriever = HybridRetriever(pool)
-                await retriever.vector_retriever.update_embedding(doc_id)
+              # 转写文本作为文档内容
+              retriever = HybridRetriever(pool)
+              await retriever.vector_retriever.update_embedding(doc_id)
 
-                return doc_id
-        PYTHON
-    depends_on: [phase2_kickoff]
+              return doc_id
+      PYTHON
+  depends_on: [phase2_kickoff]
 
-  - id: create_audio_search_api
-    name: "创建音频搜索API"
-    skill: code-generation
-    params:
-      file_path: "{{vars.backend_dir}}/api/v1/search_audio.py"
-      requirements: |
-        新增端点: POST /api/v1/search/audio
-        功能: 搜索音频转写内容
+- id: create_audio_search_api
+  name: 创建音频搜索API
+  skill: code-generation
+  params:
+    file_path: '{{vars.backend_dir}}/api/v1/search_audio.py'
+    requirements: |
+      新增端点: POST /api/v1/search/audio
+      功能: 搜索音频转写内容
 
-        工作流程:
-        1. 接收查询文本
-        2. 在documents表中搜索 (包含转写文本)
-        3. 返回匹配的音频元数据
-        4. 提供音频播放链接
-    depends_on: [integrate_audio_to_search]
+      工作流程:
+      1. 接收查询文本
+      2. 在documents表中搜索 (包含转写文本)
+      3. 返回匹配的音频元数据
+      4. 提供音频播放链接
+  depends_on: [integrate_audio_to_search]
 
-  - id: integrate_audio_to_reasoning
-    name: "集成: 音频内容进入推理系统"
-    skill: code-refactor
-    params:
-      target_file: "{{vars.backend_dir}}/api/v1/reasoning.py"
-      changes:
-        - "添加 audio_context 参数到 ReasoningRequest"
-        - "从 audio_context 中的 task_id 获取转写文本"
-        - "将音频转写作为额外上下文传递给推理器"
-      requirements:
-        - "支持音频转录文本作为推理上下文"
-        - "在返回结果中标明音频来源"
-    depends_on: [create_audio_search_api]
+- id: integrate_audio_to_reasoning
+  name: '集成: 音频内容进入推理系统'
+  skill: code-refactor
+  params:
+    target_file: '{{vars.backend_dir}}/api/v1/reasoning.py'
+    changes:
+    - 添加 audio_context 参数到 ReasoningRequest
+    - 从 audio_context 中的 task_id 获取转写文本
+    - 将音频转写作为额外上下文传递给推理器
+    requirements:
+    - 支持音频转录文本作为推理上下文
+    - 在返回结果中标明音频来源
+  depends_on: [create_audio_search_api]
 
-  - id: phase2_integration_testing
-    name: "阶段2集成测试"
-    skill: test-runner
-    params:
-      test_type: integration
-      target:
-        - "{{vars.integration_tests_dir}}/test_audio_search_integration.py"
-        - "{{vars.integration_tests_dir}}/test_audio_reasoning_integration.py"
-      scenarios:
-        - "搜索音频转写内容"
-        - "使用音频上下文进行推理"
-    depends_on: [integrate_audio_to_reasoning]
-    timeout: 300
+- id: phase2_integration_testing
+  name: 阶段2集成测试
+  skill: test-runner
+  params:
+    test_type: integration
+    target:
+    - '{{vars.integration_tests_dir}}/test_audio_search_integration.py'
+    - '{{vars.integration_tests_dir}}/test_audio_reasoning_integration.py'
+    scenarios:
+    - 搜索音频转写内容
+    - 使用音频上下文进行推理
+  depends_on: [integrate_audio_to_reasoning]
+  timeout: 300
 
   # ==================== 阶段3: 测试与优化 (Day 22-28) ====================
 
-  - id: phase3_kickoff
-    name: "阶段3启动会议"
-    skill: notification
-    params:
-      message: |
-        🧪 阶段3: 测试与优化 (Day 22-28)
+- id: phase3_kickoff
+  name: 阶段3启动会议
+  skill: notification
+  params:
+    message: |
+      🧪 阶段3: 测试与优化 (Day 22-28)
 
-        目标:
-        1. 完整的端到端测试
-        2. 性能优化
-        3. 文档完善
-        4. 准备发布
+      目标:
+      1. 完整的端到端测试
+      2. 性能优化
+      3. 文档完善
+      4. 准备发布
 
-        最终交付:
-        - 两个团队的功能完全集成
-        - 测试覆盖率 > 75%
-        - 性能指标达标
-    depends_on: [phase2_integration_testing]
+      最终交付:
+      - 两个团队的功能完全集成
+      - 测试覆盖率 > 75%
+      - 性能指标达标
+  depends_on: [phase2_integration_testing]
 
-  - id: end_to_end_testing
-    name: "端到端测试"
-    skill: test-runner
-    params:
-      test_type: e2e
-      target: "{{vars.integration_tests_dir}}/test_e2e_multimodal.py"
-      scenarios:
-        - "用户上传音频 → 转写 → 索引 → 搜索 → 推理"
-        - "用户查询文字内容 → 检索 → 音频播放"
-        - "混合查询: 文字 + 音频 → 综合推理"
-      success_criteria:
-        - "所有场景通过"
-        - "响应时间 < 3秒"
-    depends_on: [phase3_kickoff]
-    timeout: 600
+- id: end_to_end_testing
+  name: 端到端测试
+  skill: test-runner
+  params:
+    test_type: e2e
+    target: '{{vars.integration_tests_dir}}/test_e2e_multimodal.py'
+    scenarios:
+    - 用户上传音频 → 转写 → 索引 → 搜索 → 推理
+    - 用户查询文字内容 → 检索 → 音频播放
+    - '混合查询: 文字 + 音频 → 综合推理'
+    success_criteria:
+    - 所有场景通过
+    - 响应时间 < 3秒
+  depends_on: [phase3_kickoff]
+  timeout: 600
 
-  - id: performance_optimization
-    name: "性能优化"
-    skill: code-optimizer
-    params:
-      target:
-        - "{{vars.backend_dir}}/services/retrieval/"
-        - "{{vars.backend_dir}}/services/asr/"
-      metrics:
-        - "检索响应时间 < 200ms"
-        - "ASR实时率 < 2.0x"
-        - "推理响应时间 < 3s"
-      optimization_strategies:
-        - "缓存热点查询"
-        - "批量处理ASR请求"
-        - "并行执行检索和推理"
-    depends_on: [end_to_end_testing]
-    timeout: 400
+- id: performance_optimization
+  name: 性能优化
+  skill: code-optimizer
+  params:
+    target:
+    - '{{vars.backend_dir}}/services/retrieval/'
+    - '{{vars.backend_dir}}/services/asr/'
+    metrics:
+    - 检索响应时间 < 200ms
+    - ASR实时率 < 2.0x
+    - 推理响应时间 < 3s
+    optimization_strategies:
+    - 缓存热点查询
+    - 批量处理ASR请求
+    - 并行执行检索和推理
+  depends_on: [end_to_end_testing]
+  timeout: 400
 
-  - id: finalize_documentation
-    name: "完善文档"
-    skill: doc-generation
-    params:
-      files:
-        - "{{vars.api_contract_doc}}"
-        - "{{vars.project_root}}/docs/TEAM_A_WORKFLOW_REPORT.md"
-        - "{{vars.project_root}}/docs/TEAM_B_WORKFLOW_REPORT.md"
-        - "{{vars.project_root}}/docs/PARALLEL_TEAMS_FINAL_REPORT.md"
-      sections:
-        - "API接口文档"
-        - "架构设计文档"
-        - "部署指南"
-        - "故障排查指南"
-    depends_on: [performance_optimization]
+- id: finalize_documentation
+  name: 完善文档
+  skill: doc-generation
+  params:
+    files:
+    - '{{vars.api_contract_doc}}'
+    - '{{vars.project_root}}/docs/TEAM_A_WORKFLOW_REPORT.md'
+    - '{{vars.project_root}}/docs/TEAM_B_WORKFLOW_REPORT.md'
+    - '{{vars.project_root}}/docs/PARALLEL_TEAMS_FINAL_REPORT.md'
+    sections:
+    - API接口文档
+    - 架构设计文档
+    - 部署指南
+    - 故障排查指南
+  depends_on: [performance_optimization]
 
-  - id: generate_final_report
-    name: "生成最终报告"
-    skill: notification
-    params:
-      message: |
-        🎉 双团队并行工作流完成！
+- id: generate_final_report
+  name: 生成最终报告
+  skill: notification
+  params:
+    message: |
+      🎉 双团队并行工作流完成！
 
-        总结:
-        - 总工期: 28天 (4周)
-        - 团队A: 文字数据处理 ✅
-        - 团队B: 音频处理 ✅
-        - 集成: 多模态融合 ✅
+      总结:
+      - 总工期: 28天 (4周)
+      - 团队A: 文字数据处理 ✅
+      - 团队B: 音频处理 ✅
+      - 集成: 多模态融合 ✅
 
-        关键指标:
-        - 检索准确率: >90% ✅
-        - ASR字错误率: <15% ✅
-        - 测试覆盖率: >75% ✅
-        - 响应时间: <3s ✅
+      关键指标:
+      - 检索准确率: >90% ✅
+      - ASR字错误率: <15% ✅
+      - 测试覆盖率: >75% ✅
+      - 响应时间: <3s ✅
 
-        交付物:
-        - ✅ 正则检索系统
-        - ✅ 意图识别引擎
-        - ✅ 智能推理路由
-        - ✅ 书籍电子版功能
-        - ✅ Whisper ASR集成
-        - ✅ 音频标注系统
-        - ✅ 多模态融合检索
-        - ✅ 完整文档
+      交付物:
+      - ✅ 正则检索系统
+      - ✅ 意图识别引擎
+      - ✅ 智能推理路由
+      - ✅ 书籍电子版功能
+      - ✅ Whisper ASR集成
+      - ✅ 音频标注系统
+      - ✅ 多模态融合检索
+      - ✅ 完整文档
 
-        节省时间: 6天 (从34天缩短到28天)
-    depends_on: [finalize_documentation]
+      节省时间: 6天 (从34天缩短到28天)
+  depends_on: [finalize_documentation]
 
 # 成功标准
 success_criteria:
-  - task_id: phase2_integration_testing
-    condition: "tests_passed > 95%"
-  - task_id: end_to_end_testing
-    condition: "tests_passed == 100%"
-  - task_id: performance_optimization
-    condition: "all_metrics_met == true"
+- task_id: phase2_integration_testing
+  condition: tests_passed > 95%
+- task_id: end_to_end_testing
+  condition: tests_passed == 100%
+- task_id: performance_optimization
+  condition: all_metrics_met == true
 
 # 风险监控
 risk_monitoring:
-  - risk: "CPU资源竞争"
-    indicator: "docker_cpu_usage > 90%"
-    mitigation: "分时段运行或增加GPU"
-    alert_to: ["#devops", "#team-a", "#team-b"]
+- risk: CPU资源竞争
+  indicator: docker_cpu_usage > 90%
+  mitigation: 分时段运行或增加GPU
+  alert_to: ['#devops', '#team-a', '#team-b']
 
-  - risk: "数据库Schema冲突"
-    indicator: "migration_conflicts > 0"
-    mitigation: "立即召开协调会议"
-    alert_to: ["#tech-leads"]
+- risk: 数据库Schema冲突
+  indicator: migration_conflicts > 0
+  mitigation: 立即召开协调会议
+  alert_to: ['#tech-leads']
 
-  - risk: "API接口不一致"
-    indicator: "api_integration_tests_fails > 3"
-    mitigation: "更新接口约定文档"
-    alert_to: ["#team-a", "#team-b"]
+- risk: API接口不一致
+  indicator: api_integration_tests_fails > 3
+  mitigation: 更新接口约定文档
+  alert_to: ['#team-a', '#team-b']
 
-  - risk: "Whisper模型下载失败"
-    indicator: "whisper_model_not_found"
-    mitigation: "使用离线镜像或备用源"
-    alert_to: ["#team-b"]
+- risk: Whisper模型下载失败
+  indicator: whisper_model_not_found
+  mitigation: 使用离线镜像或备用源
+  alert_to: ['#team-b']
 
 # 通知配置
 notifications:
   on_start:
-    - type: slack
-      channel: "#general"
-      message: "🚀 双团队并行协调工作流启动"
+  - type: slack
+    channel: '#general'
+    message: 🚀 双团队并行协调工作流启动
   on_phase_complete:
-    - type: slack
-      channel: "#general"
-      message: "✅ 阶段 {phase} 完成: {description}"
+  - type: slack
+    channel: '#general'
+    message: '✅ 阶段 {phase} 完成: {description}'
   on_complete:
-    - type: slack
-      channel: "#general"
-      message: "🎉 双团队并行工作流全部完成"
+  - type: slack
+    channel: '#general'
+    message: 🎉 双团队并行工作流全部完成
   on_failure:
-    - type: slack
-      channel: "#alerts"
-      message: "❌ 协调工作流失败: {error}"
+  - type: slack
+    channel: '#alerts'
+    message: '❌ 协调工作流失败: {error}'
 
 # 协调规则
 coordination_rules:
   daily_sync:
-    time: "09:30"
-    duration: "15min"
-    participants: ["Tech Lead A", "Tech Lead B", "架构师"]
+    time: 09:30
+    duration: 15min
+    participants: [Tech Lead A, Tech Lead B, 架构师]
     agenda:
-      - "昨日完成情况"
-      - "今日计划"
-      - "阻塞问题"
+    - 昨日完成情况
+    - 今日计划
+    - 阻塞问题
 
   weekly_sync:
-    day: "Friday"
-    time: "15:00"
-    duration: "60min"
-    participants: ["全员"]
+    day: Friday
+    time: 15:00
+    duration: 60min
+    participants: [全员]
     agenda:
-      - "代码合并到develop"
-      - "集成测试"
-      - "Demo演示"
-      - "下周计划"
+    - 代码合并到develop
+    - 集成测试
+    - Demo演示
+    - 下周计划
 
   integration_protocol:
-    - "任何接口变更必须先更新API约定文档"
-    - "周五下午前必须提交代码到develop分支"
-    - "集成失败时立即召开紧急会议"
-    - "所有变更必须经过Code Review"
+  - 任何接口变更必须先更新API约定文档
+  - 周五下午前必须提交代码到develop分支
+  - 集成失败时立即召开紧急会议
+  - 所有变更必须经过Code Review

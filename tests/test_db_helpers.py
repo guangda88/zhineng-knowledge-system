@@ -1,14 +1,16 @@
 """Tests for backend.common.db_helpers"""
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from backend.common.db_helpers import (
-    row_to_dict,
-    rows_to_list,
-    fetch_one_or_404,
-    fetch_paginated,
     _validate_paginated_query,
     check_database_health,
+    fetch_one_or_404,
+    fetch_paginated,
+    row_to_dict,
+    rows_to_list,
 )
 
 

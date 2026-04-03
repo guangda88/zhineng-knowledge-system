@@ -61,9 +61,7 @@ class SensitiveDataFilter:
     ]
 
     # JWT Token 正则表达式
-    JWT_PATTERN = re.compile(
-        r"eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+", re.IGNORECASE
-    )
+    JWT_PATTERN = re.compile(r"eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+", re.IGNORECASE)
 
     # Bearer Token 正则表达式
     BEARER_PATTERN = re.compile(r"Bearer\s+[a-zA-Z0-9_.\-=]+", re.IGNORECASE)
@@ -95,9 +93,7 @@ class SensitiveDataFilter:
     # 身份证号正则表达式 (中国大陆)
     ID_CARD_PATTERNS = [
         # 18位身份证号
-        re.compile(
-            r"[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]"
-        ),
+        re.compile(r"[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]"),
         # 15位身份证号（旧版）
         re.compile(r"[1-9]\d{5}\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}"),
     ]
@@ -120,9 +116,7 @@ class SensitiveDataFilter:
     # 密码相关模式
     PASSWORD_PATTERNS = [
         # JSON 格式: "password": "xxx" 或 password="xxx"
-        re.compile(
-            r'(["\']?password["\']?\s*[:=]\s*["\'])([^"\']+)(["\'])', re.IGNORECASE
-        ),
+        re.compile(r'(["\']?password["\']?\s*[:=]\s*["\'])([^"\']+)(["\'])', re.IGNORECASE),
         # URL 参数: password=xxx (前面可能有 ? 或 & 或空格)
         re.compile(r'([\s?&]password=)([^&\s,"]+)', re.IGNORECASE),
         # 命令行: --password xxx 或 -p xxx
@@ -211,11 +205,7 @@ class SensitiveDataFilter:
             field_lower = field_name.lower()
 
             # 密码字段 - 完全脱敏
-            if (
-                "password" in field_lower
-                or "pwd" in field_lower
-                or "passwd" in field_lower
-            ):
+            if "password" in field_lower or "pwd" in field_lower or "passwd" in field_lower:
                 return cls.MASK_PLACEHOLDERS["password"]
 
             # Token 字段 - 完全脱敏
@@ -223,11 +213,7 @@ class SensitiveDataFilter:
                 return cls.MASK_PLACEHOLDERS["token"]
 
             # API Key 字段 - 完全脱敏
-            if (
-                "api_key" in field_lower
-                or "apikey" in field_lower
-                or "secret" in field_lower
-            ):
+            if "api_key" in field_lower or "apikey" in field_lower or "secret" in field_lower:
                 return cls.MASK_PLACEHOLDERS["api_key"]
 
             # 手机号字段 - 部分脱敏
@@ -308,9 +294,7 @@ class SensitiveDataFilter:
             id_card = match.group()
             return value.replace(id_card, id_card[:6] + "********" + id_card[-4:])
         # 15位身份证
-        match = re.search(
-            r"[1-9]\d{5}\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}", value
-        )
+        match = re.search(r"[1-9]\d{5}\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}", value)
         if match:
             id_card = match.group()
             return value.replace(id_card, id_card[:6] + "*****" + id_card[-4:])
@@ -447,22 +431,11 @@ class SensitiveDataFilter:
         def make_replacer(pattern_idx):
             def replace_password(match):
                 # 根据模式返回正确的替换结果
-                if (
-                    pattern_idx == 3
-                ):  # 通用模式 \b(password|pwd|passwd)\s*[=:]\s*([^\s,"]+)
+                if pattern_idx == 3:  # 通用模式 \b(password|pwd|passwd)\s*[=:]\s*([^\s,"]+)
                     field_name = match.group(1)
-                    return (
-                        field_name
-                        + match.group(2)[:1]
-                        + "="
-                        + cls.MASK_PLACEHOLDERS["password"]
-                    )
+                    return field_name + match.group(2)[:1] + "=" + cls.MASK_PLACEHOLDERS["password"]
                 elif match.lastindex >= 3:
-                    return (
-                        match.group(1)
-                        + cls.MASK_PLACEHOLDERS["password"]
-                        + match.group(3)
-                    )
+                    return match.group(1) + cls.MASK_PLACEHOLDERS["password"] + match.group(3)
                 else:
                     return match.group(1) + cls.MASK_PLACEHOLDERS["password"]
 
@@ -493,9 +466,7 @@ class SensitiveDataFilter:
             if cls.is_sensitive_field(key):
                 # 获取脱敏类型
                 mask_type = cls._get_mask_type(key)
-                result[key] = cls.MASK_PLACEHOLDERS.get(
-                    mask_type, cls.MASK_PLACEHOLDERS["default"]
-                )
+                result[key] = cls.MASK_PLACEHOLDERS.get(mask_type, cls.MASK_PLACEHOLDERS["default"])
             else:
                 # 递归处理值
                 if deep and isinstance(value, dict):

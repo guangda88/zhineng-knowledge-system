@@ -26,8 +26,7 @@ from tqdm import tqdm
 
 # 配置日志
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -87,7 +86,8 @@ def get_table_structure(source_db: str, table: str) -> List[Tuple]:
 
 async def create_guji_tables(conn: asyncpg.Connection) -> None:
     """创建古籍数据表"""
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS guji_documents (
             id SERIAL PRIMARY KEY,
             source_table VARCHAR(50) NOT NULL,
@@ -102,25 +102,35 @@ async def create_guji_tables(conn: asyncpg.Connection) -> None:
             created_at TIMESTAMP DEFAULT NOW(),
             UNIQUE(source_table, source_id)
         );
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_source ON guji_documents(source_table, source_id);
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_title ON guji_documents USING gin(to_tsvector('simple', title));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_content ON guji_documents USING gin(to_tsvector('simple', content));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_tags ON guji_documents USING gin(tags);
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS guji_import_log (
             id SERIAL PRIMARY KEY,
             source_table VARCHAR(50) NOT NULL,
@@ -128,16 +138,14 @@ async def create_guji_tables(conn: asyncpg.Connection) -> None:
             import_time TIMESTAMP DEFAULT NOW(),
             status VARCHAR(20) DEFAULT 'pending'
         );
-    """)
+    """
+    )
 
     logger.info("古籍数据表创建完成")
 
 
 async def import_table_data(
-    conn: asyncpg.Connection,
-    source_db: str,
-    table: str,
-    batch_size: int = BATCH_SIZE
+    conn: asyncpg.Connection, source_db: str, table: str, batch_size: int = BATCH_SIZE
 ) -> int:
     """导入单个表的数据"""
     structure = get_table_structure(source_db, table)
@@ -173,19 +181,19 @@ async def import_table_data(
 
                 # 根据列结构解析
                 if len(columns) >= 3:
-                    if 'body' in columns:
-                        body_idx = columns.index('body')
+                    if "body" in columns:
+                        body_idx = columns.index("body")
                         content = row[body_idx] if body_idx < len(row) else None
-                    elif 'd' in columns:
-                        body_idx = columns.index('d')
+                    elif "d" in columns:
+                        body_idx = columns.index("d")
                         content = row[body_idx] if body_idx < len(row) else None
 
-                    if 'title' in columns or 'a' in columns:
-                        title_idx = columns.index('a') if 'a' in columns else 0
+                    if "title" in columns or "a" in columns:
+                        title_idx = columns.index("a") if "a" in columns else 0
                         title = row[title_idx] if title_idx < len(row) else None
 
-                    if 'author' in columns or 'b' in columns:
-                        author_idx = columns.index('b') if 'b' in columns else 1
+                    if "author" in columns or "b" in columns:
+                        author_idx = columns.index("b") if "b" in columns else 1
                         author = row[author_idx] if author_idx < len(row) else None
 
                 # 计算内容长度
@@ -194,21 +202,23 @@ async def import_table_data(
                 # 提取朝代（从标题或内容中）
                 dynasty = None
                 if title:
-                    for d in ['唐', '宋', '元', '明', '清', '汉', '秦', '周', '商']:
+                    for d in ["唐", "宋", "元", "明", "清", "汉", "秦", "周", "商"]:
                         if d in title:
                             dynasty = d
                             break
 
-                insert_data.append((
-                    table,           # source_table
-                    row_id,          # source_id
-                    title,           # title
-                    author,          # author
-                    content,         # content
-                    content_length,  # content_length
-                    dynasty,         # dynasty
-                    '古籍',          # category
-                ))
+                insert_data.append(
+                    (
+                        table,  # source_table
+                        row_id,  # source_id
+                        title,  # title
+                        author,  # author
+                        content,  # content
+                        content_length,  # content_length
+                        dynasty,  # dynasty
+                        "古籍",  # category
+                    )
+                )
 
             # 批量插入
             if insert_data:
@@ -223,7 +233,7 @@ async def import_table_data(
                         content_length = EXCLUDED.content_length,
                         dynasty = EXCLUDED.dynasty
                     """,
-                    insert_data
+                    insert_data,
                 )
                 imported += len(insert_data)
                 pbar.update(len(insert_data))
@@ -236,7 +246,7 @@ async def import_table_data(
         INSERT INTO guji_import_log (source_table, records_imported, status)
         VALUES ($1, $2, 'completed')
         """,
-        (table, imported)
+        (table, imported),
     )
 
     logger.info(f"表 {table} 导入完成: {imported} 条记录")
@@ -280,14 +290,16 @@ async def import_all_guji_data(database_url: str) -> dict:
                 results[table] = 0
 
         # 获取导入后的统计
-        stats = await conn.fetchrow("""
+        stats = await conn.fetchrow(
+            """
             SELECT
                 COUNT(*) as total_documents,
                 COUNT(DISTINCT source_table) as total_tables,
                 SUM(content_length) as total_content,
                 COUNT(DISTINCT dynasty) as distinct_dynasties
             FROM guji_documents
-        """)
+        """
+        )
 
         await conn.close()
 
@@ -299,8 +311,8 @@ async def import_all_guji_data(database_url: str) -> dict:
                 "total_documents": stats["total_documents"],
                 "total_tables": stats["total_tables"],
                 "total_content_chars": stats["total_content"],
-                "dynasties": stats["distinct_dynasties"]
-            }
+                "dynasties": stats["distinct_dynasties"],
+            },
         }
 
     except Exception as e:

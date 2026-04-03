@@ -228,9 +228,7 @@ class APIMetrics:
     @staticmethod
     async def observe_duration(provider: str, duration: float) -> None:
         """观察请求持续时间"""
-        await registry.observe(
-            APIMetrics.REQUEST_DURATION, duration, labels={"provider": provider}
-        )
+        await registry.observe(APIMetrics.REQUEST_DURATION, duration, labels={"provider": provider})
 
     @staticmethod
     async def inc_error(provider: str, error_type: str) -> None:
@@ -276,9 +274,7 @@ class ModelMetrics:
     @staticmethod
     async def observe_inference(model_name: str, duration: float) -> None:
         """观察推理时间"""
-        await registry.observe(
-            ModelMetrics.INFERENCE_TIME, duration, labels={"model": model_name}
-        )
+        await registry.observe(ModelMetrics.INFERENCE_TIME, duration, labels={"model": model_name})
 
 
 def track_time(
@@ -315,13 +311,9 @@ def track_time(
                 try:
                     loop = asyncio.get_event_loop()
                     if loop.is_running():
-                        asyncio.create_task(
-                            registry.observe(metric_name, duration, labels)
-                        )
+                        asyncio.create_task(registry.observe(metric_name, duration, labels))
                     else:
-                        loop.run_until_complete(
-                            registry.observe(metric_name, duration, labels)
-                        )
+                        loop.run_until_complete(registry.observe(metric_name, duration, labels))
                 except RuntimeError:
                     pass  # 没有事件循环，忽略
 

@@ -6,18 +6,20 @@ CSRF Protection Middleware
 实现CSRF Token生成和验证机制，防止跨站请求伪造攻击
 """
 
-import secrets
 import logging
-from typing import Optional, Callable
-from fastapi import Request, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from itsdangerous import URLSafeTimedSerializer, BadSignature
+import secrets
+from typing import Callable, Optional
+
+from fastapi import HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 
 logger = logging.getLogger(__name__)
 
 
 class CSRFTokenError(Exception):
     """CSRF Token错误"""
+
     pass
 
 
@@ -54,10 +56,7 @@ class CSRFProtectionMiddleware:
         self.cookie_name = cookie_name
 
         # 使用itsdangerous进行安全的Token签名
-        self.serializer = URLSafeTimedSerializer(
-            self.secret_key,
-            salt="csrf-protection-salt"
-        )
+        self.serializer = URLSafeTimedSerializer(self.secret_key, salt="csrf-protection-salt")
 
         logger.info("CSRF Protection Middleware initialized")
 
@@ -89,10 +88,7 @@ class CSRFProtectionMiddleware:
         try:
             # 验证签名和有效期
             max_age = max_age or self.max_age
-            self.serializer.loads(
-                token,
-                max_age=max_age
-            )
+            self.serializer.loads(token, max_age=max_age)
             return True
         except BadSignature:
             logger.warning("CSRF token signature verification failed")
@@ -143,11 +139,7 @@ class CSRFProtectionMiddleware:
         """
         return request.cookies.get(self.cookie_name)
 
-    async def verify_csrf_token(
-        self,
-        request: Request,
-        skip_methods: Optional[set] = None
-    ) -> bool:
+    async def verify_csrf_token(self, request: Request, skip_methods: Optional[set] = None) -> bool:
         """
         验证请求的CSRF Token
 

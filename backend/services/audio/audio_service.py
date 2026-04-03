@@ -84,10 +84,12 @@ class AudioService:
         """向量化所有缺少embedding的音频分段"""
         pool = await init_db_pool()
 
-        file_ids = await pool.fetch("""
+        file_ids = await pool.fetch(
+            """
             SELECT DISTINCT audio_file_id FROM audio_segments
             WHERE embedding IS NULL
-            """)
+            """
+        )
 
         total = 0
         for row in file_ids:

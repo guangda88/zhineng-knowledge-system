@@ -6,234 +6,234 @@ description: |
   工期: 7天 (聚焦 P0 + P1 + P4-A)
   执行方式: 单 Agent 串行执行
 
-workflow_version: "1.0.0"
+workflow_version: 1.0.0
 project: 灵知系统技术债务清理
 
 vars:
-  project_root: "/home/ai/zhineng-knowledge-system"
-  backend_dir: "{{vars.project_root}}/backend"
-  tests_dir: "{{vars.project_root}}/tests"
-  docs_dir: "{{vars.project_root}}/docs"
+  project_root: /home/ai/zhineng-knowledge-system
+  backend_dir: '{{vars.project_root}}/backend'
+  tests_dir: '{{vars.project_root}}/tests'
+  docs_dir: '{{vars.project_root}}/docs'
 
 tasks:
   # ==================== Phase 1: P0 安全漏洞 (Day 1) ====================
 
-  - id: p0_security_audit
-    name: "P0 安全漏洞修复"
-    skill: notification
-    params:
-      message: |
-        ╔══════════════════════════════════════════╗
-        ║   Phase 1: P0 安全漏洞修复 (6项)        ║
-        ╠══════════════════════════════════════════╣
-        ║ S1: 硬编码 API 密钥 → 环境变量          ║
-        ║ S2: JWT 弱默认值 → 移除默认             ║
-        ║ S3: 硬编码 DB 凭据 → 环境变量           ║
-        ║ S4: docker-compose 弱密码 → 警告注释    ║
-        ║ S5: 命令注入 → shlex.quote()            ║
-        ║ S6: 缺少 .dockerignore → 创建           ║
-        ╚══════════════════════════════════════════╝
+- id: p0_security_audit
+  name: P0 安全漏洞修复
+  skill: notification
+  params:
+    message: |
+      ╔══════════════════════════════════════════╗
+      ║   Phase 1: P0 安全漏洞修复 (6项)        ║
+      ╠══════════════════════════════════════════╣
+      ║ S1: 硬编码 API 密钥 → 环境变量          ║
+      ║ S2: JWT 弱默认值 → 移除默认             ║
+      ║ S3: 硬编码 DB 凭据 → 环境变量           ║
+      ║ S4: docker-compose 弱密码 → 警告注释    ║
+      ║ S5: 命令注入 → shlex.quote()            ║
+      ║ S6: 缺少 .dockerignore → 创建           ║
+      ╚══════════════════════════════════════════╝
 
-  - id: fix_s1_api_keys
-    name: "S1: 移除 external.py 硬编码 API 密钥"
-    skill: code-refactor
-    params:
-      file: "backend/api/v1/external.py"
-      changes:
-        - 将 APIKey.valid_keys 改为从环境变量读取
-        - 支持 EXTERNAL_API_KEYS JSON 环境变量
-        - 保留开发模式回退 (仅 ENVIRONMENT=development)
-    depends_on: [p0_security_audit]
+- id: fix_s1_api_keys
+  name: 'S1: 移除 external.py 硬编码 API 密钥'
+  skill: code-refactor
+  params:
+    file: backend/api/v1/external.py
+    changes:
+    - 将 APIKey.valid_keys 改为从环境变量读取
+    - 支持 EXTERNAL_API_KEYS JSON 环境变量
+    - 保留开发模式回退 (仅 ENVIRONMENT=development)
+  depends_on: [p0_security_audit]
 
-  - id: fix_s2_jwt_secret
-    name: "S2: 移除 security.py JWT 弱默认密钥"
-    skill: code-refactor
-    params:
-      file: "backend/core/security.py"
-      changes:
-        - 移除 SECRET_KEY 默认值
-        - 未设置时抛出 ValueError
-        - 开发模式打印警告但仍可用
-    depends_on: [p0_security_audit]
+- id: fix_s2_jwt_secret
+  name: 'S2: 移除 security.py JWT 弱默认密钥'
+  skill: code-refactor
+  params:
+    file: backend/core/security.py
+    changes:
+    - 移除 SECRET_KEY 默认值
+    - 未设置时抛出 ValueError
+    - 开发模式打印警告但仍可用
+  depends_on: [p0_security_audit]
 
-  - id: fix_s3_db_credentials
-    name: "S3: 移除 textbook_importer.py 硬编码 DB URL"
-    skill: code-refactor
-    params:
-      file: "backend/services/textbook_importer.py"
-      changes:
-        - 从 os.getenv("DATABASE_URL") 读取
-        - 无默认值，缺失时提示设置
-    depends_on: [p0_security_audit]
+- id: fix_s3_db_credentials
+  name: 'S3: 移除 textbook_importer.py 硬编码 DB URL'
+  skill: code-refactor
+  params:
+    file: backend/services/textbook_importer.py
+    changes:
+    - 从 os.getenv("DATABASE_URL") 读取
+    - 无默认值，缺失时提示设置
+  depends_on: [p0_security_audit]
 
-  - id: fix_s5_command_injection
-    name: "S5: 修复 innovation_manager.py 命令注入"
-    skill: code-refactor
-    params:
-      file: "backend/services/learning/innovation_manager.py"
-      changes:
-        - subprocess.run() 改用列表参数
-        - 添加 shlex.quote() 转义
-        - 移除 shell=True
-    depends_on: [p0_security_audit]
+- id: fix_s5_command_injection
+  name: 'S5: 修复 innovation_manager.py 命令注入'
+  skill: code-refactor
+  params:
+    file: backend/services/learning/innovation_manager.py
+    changes:
+    - subprocess.run() 改用列表参数
+    - 添加 shlex.quote() 转义
+    - 移除 shell=True
+  depends_on: [p0_security_audit]
 
-  - id: fix_s6_dockerignore
-    name: "S6: 创建 .dockerignore"
-    skill: code-generation
-    params:
-      file_path: "{{vars.project_root}}/.dockerignore"
-      content: |
-        .git/
-        __pycache__/
-        *.pyc
-        venv/
-        .venv/
-        backups/
-        data/
-        *.pdf
-        *.docx
-        node_modules/
-        .env
-        .env.*
-        *.md
-        !README.md
-        docs/
-        tests/
-        monitoring/
-        scripts/
-    depends_on: [p0_security_audit]
+- id: fix_s6_dockerignore
+  name: 'S6: 创建 .dockerignore'
+  skill: code-generation
+  params:
+    file_path: '{{vars.project_root}}/.dockerignore'
+    content: |
+      .git/
+      __pycache__/
+      *.pyc
+      venv/
+      .venv/
+      backups/
+      data/
+      *.pdf
+      *.docx
+      node_modules/
+      .env
+      .env.*
+      *.md
+      !README.md
+      docs/
+      tests/
+      monitoring/
+      scripts/
+  depends_on: [p0_security_audit]
 
-  - id: p0_test_verification
-    name: "P0 修复验证测试"
-    skill: test-runner
-    params:
-      command: "cd {{vars.project_root}} && pytest tests/ -v --tb=short -x -q 2>&1 | tail -30"
-    depends_on: [fix_s1_api_keys, fix_s2_jwt_secret, fix_s3_db_credentials, fix_s5_command_injection, fix_s6_dockerignore]
+- id: p0_test_verification
+  name: P0 修复验证测试
+  skill: test-runner
+  params:
+    command: cd {{vars.project_root}} && pytest tests/ -v --tb=short -x -q 2>&1 | tail -30
+  depends_on: [fix_s1_api_keys, fix_s2_jwt_secret, fix_s3_db_credentials, fix_s5_command_injection, fix_s6_dockerignore]
 
   # ==================== Phase 2: P1 架构缺陷 (Day 2-3) ====================
 
-  - id: p1_architecture_audit
-    name: "P1 架构缺陷修复"
-    skill: notification
-    params:
-      message: |
-        ╔══════════════════════════════════════════╗
-        ║   Phase 2: P1 架构缺陷修复 (4项)        ║
-        ╠══════════════════════════════════════════╣
-        ║ A: 导入路径统一 (44文件)                ║
-        ║ B: 测试框架替换 (TestClient→AsyncClient)║
-        ║ C: FTS 索引语言修复                     ║
-        ║ D: 缺失数据库表补充                     ║
-        ╚══════════════════════════════════════════╝
-    depends_on: [p0_test_verification]
+- id: p1_architecture_audit
+  name: P1 架构缺陷修复
+  skill: notification
+  params:
+    message: |
+      ╔══════════════════════════════════════════╗
+      ║   Phase 2: P1 架构缺陷修复 (4项)        ║
+      ╠══════════════════════════════════════════╣
+      ║ A: 导入路径统一 (44文件)                ║
+      ║ B: 测试框架替换 (TestClient→AsyncClient)║
+      ║ C: FTS 索引语言修复                     ║
+      ║ D: 缺失数据库表补充                     ║
+      ╚══════════════════════════════════════════╝
+  depends_on: [p0_test_verification]
 
-  - id: fix_p1c_fts_index
-    name: "P1-C: 修复 FTS 索引语言配置"
-    skill: code-refactor
-    params:
-      file: "scripts/migrations/add_indexes.sql"
-      changes:
-        - 将 'english' 改为 'chinese'
-        - 提供 REINDEX 语句
-    depends_on: [p1_architecture_audit]
+- id: fix_p1c_fts_index
+  name: 'P1-C: 修复 FTS 索引语言配置'
+  skill: code-refactor
+  params:
+    file: scripts/migrations/add_indexes.sql
+    changes:
+    - 将 'english' 改为 'chinese'
+    - 提供 REINDEX 语句
+  depends_on: [p1_architecture_audit]
 
-  - id: p1_test_verification
-    name: "P1 修复验证测试"
-    skill: test-runner
-    params:
-      command: "cd {{vars.project_root}} && pytest tests/ -v --tb=short -x -q 2>&1 | tail -30"
-    depends_on: [fix_p1c_fts_index]
+- id: p1_test_verification
+  name: P1 修复验证测试
+  skill: test-runner
+  params:
+    command: cd {{vars.project_root}} && pytest tests/ -v --tb=short -x -q 2>&1 | tail -30
+  depends_on: [fix_p1c_fts_index]
 
   # ==================== Phase 3: P4 代码质量 (Day 4-5) ====================
 
-  - id: p4_code_quality_audit
-    name: "P4 代码质量改善"
-    skill: notification
-    params:
-      message: |
-        ╔══════════════════════════════════════════╗
-        ║   Phase 3: P4 代码质量 (批量修复)       ║
-        ╠══════════════════════════════════════════╣
-        ║ A: 弃用 API 替换 (6处)                  ║
-        ║ B: 阻塞 I/O → asyncio (3处)            ║
-        ║ C: 静默吞异常修复 (7处)                 ║
-        ║ D: 未使用导入清理 (2处)                 ║
-        ║ E: 死代码移除 (2处)                     ║
-        ╚══════════════════════════════════════════╝
-    depends_on: [p1_test_verification]
+- id: p4_code_quality_audit
+  name: P4 代码质量改善
+  skill: notification
+  params:
+    message: |
+      ╔══════════════════════════════════════════╗
+      ║   Phase 3: P4 代码质量 (批量修复)       ║
+      ╠══════════════════════════════════════════╣
+      ║ A: 弃用 API 替换 (6处)                  ║
+      ║ B: 阻塞 I/O → asyncio (3处)            ║
+      ║ C: 静默吞异常修复 (7处)                 ║
+      ║ D: 未使用导入清理 (2处)                 ║
+      ║ E: 死代码移除 (2处)                     ║
+      ╚══════════════════════════════════════════╝
+  depends_on: [p1_test_verification]
 
-  - id: fix_p4a_deprecated_api
-    name: "P4-A: 替换弃用 asyncio.get_event_loop()"
-    skill: code-refactor
-    params:
-      pattern: "asyncio.get_event_loop()"
-      replacement: "asyncio.get_running_loop()"
-      files:
-        - "backend/services/enhanced_vector_service.py:224"
-        - "backend/cache/manager.py:444"
-        - "backend/core/urgency_guard.py:88"
-        - "backend/core/services.py:332"
-        - "backend/cache/decorators.py:466"
-        - "backend/services/retrieval/vector.py:33"
-    depends_on: [p4_code_quality_audit]
+- id: fix_p4a_deprecated_api
+  name: 'P4-A: 替换弃用 asyncio.get_event_loop()'
+  skill: code-refactor
+  params:
+    pattern: asyncio.get_event_loop()
+    replacement: asyncio.get_running_loop()
+    files:
+    - backend/services/enhanced_vector_service.py:224
+    - backend/cache/manager.py:444
+    - backend/core/urgency_guard.py:88
+    - backend/core/services.py:332
+    - backend/cache/decorators.py:466
+    - backend/services/retrieval/vector.py:33
+  depends_on: [p4_code_quality_audit]
 
-  - id: fix_p4c_silent_exceptions
-    name: "P4-C: 修复静默吞异常 (7处)"
-    skill: code-refactor
-    params:
-      changes:
-        - 为 except...pass 添加 logger.warning() 日志
-        - 保留原有 try/except 结构（不改变逻辑）
-        - 每处添加异常信息记录
-    depends_on: [p4_code_quality_audit]
+- id: fix_p4c_silent_exceptions
+  name: 'P4-C: 修复静默吞异常 (7处)'
+  skill: code-refactor
+  params:
+    changes:
+    - 为 except...pass 添加 logger.warning() 日志
+    - 保留原有 try/except 结构（不改变逻辑）
+    - 每处添加异常信息记录
+  depends_on: [p4_code_quality_audit]
 
-  - id: fix_p4d_unused_imports
-    name: "P4-D: 移除未使用导入"
-    skill: code-refactor
-    params:
-      changes:
-        - "backend/services/hybrid_retrieval.py:21: 移除 import numpy as np"
-        - "backend/services/audio/cohere_transcriber.py:13: 移除 import numpy as np"
-    depends_on: [p4_code_quality_audit]
+- id: fix_p4d_unused_imports
+  name: 'P4-D: 移除未使用导入'
+  skill: code-refactor
+  params:
+    changes:
+    - 'backend/services/hybrid_retrieval.py:21: 移除 import numpy as np'
+    - 'backend/services/audio/cohere_transcriber.py:13: 移除 import numpy as np'
+  depends_on: [p4_code_quality_audit]
 
-  - id: p4_test_verification
-    name: "P4 修复验证测试"
-    skill: test-runner
-    params:
-      command: "cd {{vars.project_root}} && pytest tests/ -v --tb=short -x -q 2>&1 | tail -30"
-    depends_on: [fix_p4a_deprecated_api, fix_p4c_silent_exceptions, fix_p4d_unused_imports]
+- id: p4_test_verification
+  name: P4 修复验证测试
+  skill: test-runner
+  params:
+    command: cd {{vars.project_root}} && pytest tests/ -v --tb=short -x -q 2>&1 | tail -30
+  depends_on: [fix_p4a_deprecated_api, fix_p4c_silent_exceptions, fix_p4d_unused_imports]
 
   # ==================== Phase 4: 最终验证 (Day 6-7) ====================
 
-  - id: final_verification
-    name: "最终验证 - 完整测试套件"
-    skill: test-runner
-    params:
-      command: "cd {{vars.project_root}} && pytest tests/ -v --tb=short -q 2>&1 | tail -50"
-    depends_on: [p4_test_verification]
+- id: final_verification
+  name: 最终验证 - 完整测试套件
+  skill: test-runner
+  params:
+    command: cd {{vars.project_root}} && pytest tests/ -v --tb=short -q 2>&1 | tail -50
+  depends_on: [p4_test_verification]
 
-  - id: update_tech_debt_doc
-    name: "更新技术债务文档"
-    skill: doc-generation
-    params:
-      file: "docs/TECHNICAL_DEBT.md"
-      changes:
-        - 标记已修复项
-        - 更新统计数字
-        - 记录修复日期
-    depends_on: [final_verification]
+- id: update_tech_debt_doc
+  name: 更新技术债务文档
+  skill: doc-generation
+  params:
+    file: docs/TECHNICAL_DEBT.md
+    changes:
+    - 标记已修复项
+    - 更新统计数字
+    - 记录修复日期
+  depends_on: [final_verification]
 
 success_criteria:
-  - condition: "P0 安全漏洞修复率 = 100% ✅"
-  - condition: "P1-C FTS 索引修复 ✅"
-  - condition: "P4-A/C/D/E 代码质量修复 ✅ (共14项)"
-  - condition: "pytest 通过率 >= 380/430 (不退化) ✅"
-  - condition: "无新增 lint 错误 ✅"
+- condition: P0 安全漏洞修复率 = 100% ✅
+- condition: P1-C FTS 索引修复 ✅
+- condition: P4-A/C/D/E 代码质量修复 ✅ (共14项)
+- condition: pytest 通过率 >= 380/430 (不退化) ✅
+- condition: 无新增 lint 错误 ✅
 
 notifications:
   on_complete:
-    - type: log
-      message: "技术债务清理全部完成: P0(6) + P1-C(1) + P4-A(6) + P4-C(4) + P4-D(2) + P4-E(2) = 22项已修复"
+  - type: log
+    message: '技术债务清理全部完成: P0(6) + P1-C(1) + P4-A(6) + P4-C(4) + P4-D(2) + P4-E(2) = 22项已修复'
   on_failure:
-    - type: log
-      message: "清理过程中发现问题，请检查日志"
+  - type: log
+    message: 清理过程中发现问题，请检查日志

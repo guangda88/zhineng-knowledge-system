@@ -6,14 +6,16 @@
 
 import os
 import sys
-import pytest
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 from fastapi import FastAPI, Request
 from starlette.testclient import TestClient
+
 from backend.middleware.rate_limit import RateLimitMiddleware
 
 
@@ -53,21 +55,25 @@ class TestIPWithTrustedProxies:
     def test_reads_x_forwarded_for_from_trusted(self):
         def check():
             return _get_ip(FastAPI(), {"X-Forwarded-For": "9.9.9.9"})
+
         assert self._with_env("testclient", check) == "9.9.9.9"
 
     def test_reads_x_real_ip_from_trusted(self):
         def check():
             return _get_ip(FastAPI(), {"X-Real-IP": "8.8.8.8"})
+
         assert self._with_env("testclient", check) == "8.8.8.8"
 
     def test_ignores_headers_from_untrusted(self):
         def check():
             return _get_ip(FastAPI(), {"X-Forwarded-For": "9.9.9.9"})
+
         assert self._with_env("10.0.0.1", check) == "testclient"
 
     def test_multiple_trusted_proxies(self):
         def check():
             return _get_ip(FastAPI(), {"X-Forwarded-For": "7.7.7.7"})
+
         assert self._with_env("10.0.0.1,testclient,10.0.0.2", check) == "7.7.7.7"
 
 
@@ -82,9 +88,11 @@ class TestXForwardedForParsing:
     def test_takes_first_ip(self):
         def check():
             return _get_ip(FastAPI(), {"X-Forwarded-For": "1.1.1.1, 2.2.2.2, 3.3.3.3"})
+
         assert self._with_env(check) == "1.1.1.1"
 
     def test_strips_whitespace(self):
         def check():
             return _get_ip(FastAPI(), {"X-Forwarded-For": "  1.1.1.1  "})
+
         assert self._with_env(check) == "1.1.1.1"

@@ -2,15 +2,17 @@
 
 测试验证Agent的各项功能
 """
-import pytest
+
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from backend.services.evolution.verification_agent import (
     EvolutionVerificationAgent,
     VerificationResult,
-    get_verification_agent
+    get_verification_agent,
 )
 
 
@@ -136,7 +138,7 @@ def focus():
             "overall_improved": True,
             "has_competitor_data": True,
             "meets_threshold": True,  # competitor (重名，但context会区分)
-            "structure_score": 0.8
+            "structure_score": 0.8,
         }
 
         is_valid, confidence, reasons, suggestions = agent._make_decision(perfect_metrics)
@@ -152,7 +154,7 @@ def focus():
             "meets_threshold": False,  # structure
             "length_improved": False,
             "overall_improved": False,
-            "structure_score": 0.2
+            "structure_score": 0.2,
         }
 
         is_valid, confidence, reasons, suggestions = agent._make_decision(bad_metrics)
@@ -168,28 +170,24 @@ def focus():
 
         # Mock多AI适配器
         agent.multi_ai = AsyncMock()
-        agent.multi_ai.parallel_generate = AsyncMock(return_value={
-            "hunyuan": {
-                "content": "混元的回答内容",
-                "success": True,
-                "latency_ms": 300
-            },
-            "deepseek": {
-                "content": "DeepSeek的回答内容",
-                "success": True,
-                "latency_ms": 200
+        agent.multi_ai.parallel_generate = AsyncMock(
+            return_value={
+                "hunyuan": {"content": "混元的回答内容", "success": True, "latency_ms": 300},
+                "deepseek": {"content": "DeepSeek的回答内容", "success": True, "latency_ms": 200},
             }
-        })
+        )
 
         # Mock对比引擎
         agent.comparison_engine = AsyncMock()
-        agent.comparison_engine.compare_qa_responses = AsyncMock(return_value={
-            "scores": {
-                "lingzhi": {"overall": 8.5},
-                "hunyuan": {"overall": 7.0},
-                "deepseek": {"overall": 6.5}
+        agent.comparison_engine.compare_qa_responses = AsyncMock(
+            return_value={
+                "scores": {
+                    "lingzhi": {"overall": 8.5},
+                    "hunyuan": {"overall": 7.0},
+                    "deepseek": {"overall": 6.5},
+                }
             }
-        })
+        )
 
         query = "如何提高学习注意力？"
         response = "灵知的回答内容"
@@ -207,7 +205,8 @@ def focus():
 
         query = "如何提高学习注意力？"
         old_response = "这是一个简短的回答，缺少细节。"
-        new_response = """
+        new_response = (
+            """
 # 如何提高学习注意力
 
 ## 方法一：番茄工作法
@@ -235,16 +234,15 @@ def focus():
 - 使用降噪耳机
 
 通过持续练习，你的注意力会显著提升。
-        """ * 3  # 确保足够长
+        """
+            * 3
+        )  # 确保足够长
 
         # Mock多AI适配器和对比引擎
         agent.multi_ai = AsyncMock()
-        agent.multi_ai.parallel_generate = AsyncMock(return_value={
-            "hunyuan": {
-                "content": "混元的回答",
-                "success": True
-            }
-        })
+        agent.multi_ai.parallel_generate = AsyncMock(
+            return_value={"hunyuan": {"content": "混元的回答", "success": True}}
+        )
 
         agent.comparison_engine = AsyncMock()
         agent.comparison_engine.compare_qa_responses = AsyncMock(
@@ -252,17 +250,22 @@ def focus():
                 # 第一次调用：quality verification
                 {
                     "scores": {
-                        "lingzhi": {"completeness": 8, "usefulness": 9, "clarity": 8, "overall": 8.3},
-                        "old_version": {"completeness": 5, "usefulness": 6, "clarity": 5, "overall": 5.3}
+                        "lingzhi": {
+                            "completeness": 8,
+                            "usefulness": 9,
+                            "clarity": 8,
+                            "overall": 8.3,
+                        },
+                        "old_version": {
+                            "completeness": 5,
+                            "usefulness": 6,
+                            "clarity": 5,
+                            "overall": 5.3,
+                        },
                     }
                 },
                 # 第二次调用：competitor verification
-                {
-                    "scores": {
-                        "lingzhi": {"overall": 8.5},
-                        "hunyuan": {"overall": 7.0}
-                    }
-                }
+                {"scores": {"lingzhi": {"overall": 8.5}, "hunyuan": {"overall": 7.0}}},
             ]
         )
 
@@ -272,7 +275,7 @@ def focus():
             query=query,
             old_response=old_response,
             new_response=new_response,
-            user_feedback=None
+            user_feedback=None,
         )
 
         # 验证结果
@@ -296,7 +299,7 @@ def focus():
             confidence=0.85,
             reasons=["✅ 回答长度有显著提升"],
             suggestions=["继续保持"],
-            metrics={"length_improved": True}
+            metrics={"length_improved": True},
         )
 
         result_dict = result.to_dict()
@@ -310,10 +313,7 @@ def focus():
     def test_update_thresholds(self, agent):
         """测试动态更新阈值"""
 
-        new_thresholds = {
-            "min_confidence": 0.8,
-            "min_improvement_ratio": 1.5
-        }
+        new_thresholds = {"min_confidence": 0.8, "min_improvement_ratio": 1.5}
 
         # 在异步上下文中调用
         asyncio.run(agent.update_thresholds(new_thresholds))
@@ -351,7 +351,8 @@ class TestVerificationAgentIntegration:
         注意：这个测试需要配置HUNYUAN_API_KEY和DEEPSEEK_API_KEY
         """
         import os
-        from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+
+        from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
         from sqlalchemy.orm import sessionmaker
 
         # 检查API密钥
@@ -379,9 +380,7 @@ class TestVerificationAgentIntegration:
         new_response = "长回答" * 100
 
         # 使用同步方式测试
-        metrics = asyncio.run(
-            agent._verify_basic_metrics(old_response, new_response)
-        )
+        metrics = asyncio.run(agent._verify_basic_metrics(old_response, new_response))
 
         end = datetime.now()
         elapsed_ms = (end - start).total_seconds() * 1000

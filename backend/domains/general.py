@@ -109,9 +109,11 @@ class GeneralDomain(BaseDomain):
             return {}
 
         try:
-            rows = await self._db_pool.fetch("""SELECT category, COUNT(*) as count
+            rows = await self._db_pool.fetch(
+                """SELECT category, COUNT(*) as count
                    FROM documents
-                   GROUP BY category""")
+                   GROUP BY category"""
+            )
             return {row["category"]: row["count"] for row in rows}
         except Exception as e:
             logger.error(f"获取分类摘要失败: {e}")
