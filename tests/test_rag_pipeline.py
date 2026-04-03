@@ -4,18 +4,20 @@
 文字处理工程流A-4的测试套件
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+from backend.services.hybrid_retrieval import RetrievalMethod, RetrievalResult
 from backend.services.rag_pipeline import (
     AnswerQuality,
+    AnswerQualityAssessor,
     Citation,
     ContextBuilder,
-    AnswerQualityAssessor,
+    RAGAnswer,
     RAGPipeline,
-    RAGAnswer
 )
-from backend.services.hybrid_retrieval import RetrievalResult, RetrievalMethod
 
 
 class TestContextBuilder:
@@ -30,7 +32,7 @@ class TestContextBuilder:
                 content="混元灵通是智能气功的核心理论。",
                 category=None,
                 score=0.9,
-                method=RetrievalMethod.VECTOR
+                method=RetrievalMethod.VECTOR,
             ),
             RetrievalResult(
                 id=2,
@@ -38,8 +40,8 @@ class TestContextBuilder:
                 content="组场是智能气功的练习方法。",
                 category=None,
                 score=0.8,
-                method=RetrievalMethod.VECTOR
-            )
+                method=RetrievalMethod.VECTOR,
+            ),
         ]
 
         context, citations = ContextBuilder.build_context(results)
@@ -66,15 +68,12 @@ class TestContextBuilder:
                 content=long_content,
                 category=None,
                 score=0.9,
-                method=RetrievalMethod.VECTOR
+                method=RetrievalMethod.VECTOR,
             )
         ]
 
         # 限制最大长度为500字符
-        context, citations = ContextBuilder.build_context(
-            results,
-            max_context_length=500
-        )
+        context, citations = ContextBuilder.build_context(results, max_context_length=500)
 
         # 验证上下文被截断
         assert len(context) <= 550  # 允许一些误差
@@ -91,21 +90,17 @@ class TestAnswerQualityAssessor:
                 source_id=1,
                 title="混元灵通理论",
                 content_snippet="混元灵通是智能气功的核心理论",
-                relevance_score=0.9
+                relevance_score=0.9,
             ),
             Citation(
                 source_id=2,
                 title="组场方法",
                 content_snippet="组场是智能气功的练习方法",
-                relevance_score=0.8
-            )
+                relevance_score=0.8,
+            ),
         ]
 
-        quality, confidence = AnswerQualityAssessor.assess(
-            answer,
-            citations,
-            context_length=500
-        )
+        quality, confidence = AnswerQualityAssessor.assess(answer, citations, context_length=500)
 
         assert quality == AnswerQuality.HIGH
         assert confidence > 0.8
@@ -115,11 +110,7 @@ class TestAnswerQualityAssessor:
         answer = "我不知道"
         citations = []
 
-        quality, confidence = AnswerQualityAssessor.assess(
-            answer,
-            citations,
-            context_length=0
-        )
+        quality, confidence = AnswerQualityAssessor.assess(answer, citations, context_length=0)
 
         assert quality in [AnswerQuality.LOW, AnswerQuality.FAILED]
         assert confidence < 0.5
@@ -129,18 +120,11 @@ class TestAnswerQualityAssessor:
         answer = "混元灵通是智能气功的理论。"
         citations = [
             Citation(
-                source_id=1,
-                title="混元灵通理论",
-                content_snippet="混元灵通",
-                relevance_score=0.9
+                source_id=1, title="混元灵通理论", content_snippet="混元灵通", relevance_score=0.9
             )
         ]
 
-        quality, confidence = AnswerQualityAssessor.assess(
-            answer,
-            citations,
-            context_length=200
-        )
+        quality, confidence = AnswerQualityAssessor.assess(answer, citations, context_length=200)
 
         assert quality in [AnswerQuality.MEDIUM, AnswerQuality.HIGH]
         assert confidence >= 0.5
@@ -154,10 +138,7 @@ class TestCitation:
         long_content = "这是一段很长的内容。" * 50
 
         citation = Citation(
-            source_id=1,
-            title="测试标题",
-            content_snippet=long_content,
-            relevance_score=0.9
+            source_id=1, title="测试标题", content_snippet=long_content, relevance_score=0.9
         )
 
         citation_dict = citation.to_dict()
@@ -172,7 +153,7 @@ class TestCitation:
             title="测试标题",
             content_snippet="测试内容",
             relevance_score=0.85,
-            page_number=10
+            page_number=10,
         )
 
         citation_dict = citation.to_dict()
@@ -193,16 +174,11 @@ class TestRAGAnswer:
             quality=AnswerQuality.HIGH,
             confidence=0.9,
             citations=[
-                Citation(
-                    source_id=1,
-                    title="测试",
-                    content_snippet="内容",
-                    relevance_score=0.9
-                )
+                Citation(source_id=1, title="测试", content_snippet="内容", relevance_score=0.9)
             ],
             retrieval_method="hybrid",
             context_used=["测试"],
-            processing_time=1.5
+            processing_time=1.5,
         )
 
         answer_dict = answer.to_dict()
@@ -241,7 +217,7 @@ class TestRAGPipelineIntegration:
                 content="混元灵通是智能气功的核心理论",
                 category=None,
                 score=0.9,
-                method=RetrievalMethod.VECTOR
+                method=RetrievalMethod.VECTOR,
             )
         ]
         mock_result.vector_count = 1
@@ -257,7 +233,9 @@ class TestRAGPipelineIntegration:
         service = Mock()
         service.rag_query = AsyncMock(return_value="混元灵通是智能气功的核心理论")
         service.adapter = Mock()
-        service.adapter.chat = AsyncMock(return_value={"content": "混元灵通是智能气功的核心理论特点"})
+        service.adapter.chat = AsyncMock(
+            return_value={"content": "混元灵通是智能气功的核心理论特点"}
+        )
         return service
 
     @pytest.fixture
@@ -266,14 +244,12 @@ class TestRAGPipelineIntegration:
         return RAGPipeline(
             db_pool=mock_db_pool,
             retrieval_service=mock_retrieval_service,
-            ai_service=mock_ai_service
+            ai_service=mock_ai_service,
         )
 
     def test_query_basic(self, pipeline):
         """测试基础查询"""
-        answer = asyncio.run(
-            pipeline.query("什么是混元灵通？")
-        )
+        answer = asyncio.run(pipeline.query("什么是混元灵通？"))
 
         # 验证答案
         assert isinstance(answer, RAGAnswer)
@@ -284,14 +260,10 @@ class TestRAGPipelineIntegration:
     def test_multi_turn_conversation(self, pipeline):
         """测试多轮对话"""
         # 第一轮
-        answer1 = asyncio.run(
-            pipeline.query("什么是混元灵通？")
-        )
+        answer1 = asyncio.run(pipeline.query("什么是混元灵通？"))
 
         # 第二轮
-        answer2 = asyncio.run(
-            pipeline.query("它有什么特点？")
-        )
+        answer2 = asyncio.run(pipeline.query("它有什么特点？"))
 
         # 验证对话历史
         assert len(pipeline.conversation_history) == 2

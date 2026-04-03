@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class NotificationChannel(Enum):
     """通知渠道"""
+
     EMAIL = "email"
     SLACK = "slack"
     DINGTALK = "dingtalk"
@@ -95,9 +96,7 @@ class SecurityAlertNotifier:
         logger.info("Security Alert Notifier initialized")
 
     async def send_alert(
-        self,
-        alert: "SecurityAlert",
-        channels: Optional[List[NotificationChannel]] = None
+        self, alert: "SecurityAlert", channels: Optional[List[NotificationChannel]] = None
     ) -> bool:
         """
         发送告警通知
@@ -122,12 +121,11 @@ class SecurityAlertNotifier:
         if self.config.enable_cooldown:
             last_notified = self.notified_alerts.get(alert.alert_id, 0)
             import time
+
             cooldown_seconds = self.config.cooldown_minutes * 60
 
             if time.time() - last_notified < cooldown_seconds:
-                logger.debug(
-                    f"Alert {alert.alert_id} in cooldown, skipping notification"
-                )
+                logger.debug(f"Alert {alert.alert_id} in cooldown, skipping notification")
                 return False
 
         # 确定发送渠道
@@ -138,32 +136,24 @@ class SecurityAlertNotifier:
         success = False
         for channel in channels:
             try:
-                channel_success = await self._send_to_channel(
-                    channel, alert
-                )
+                channel_success = await self._send_to_channel(channel, alert)
                 if channel_success:
                     success = True
-                    logger.info(
-                        f"Alert {alert.alert_id} sent via {channel.value}"
-                    )
+                    logger.info(f"Alert {alert.alert_id} sent via {channel.value}")
             except Exception as e:
                 logger.error(
-                    f"Failed to send alert {alert.alert_id} "
-                    f"via {channel.value}: {str(e)}"
+                    f"Failed to send alert {alert.alert_id} " f"via {channel.value}: {str(e)}"
                 )
 
         # 记录通知时间
         if success:
             import time
+
             self.notified_alerts[alert.alert_id] = time.time()
 
         return success
 
-    async def _send_to_channel(
-        self,
-        channel: NotificationChannel,
-        alert: "SecurityAlert"
-    ) -> bool:
+    async def _send_to_channel(self, channel: NotificationChannel, alert: "SecurityAlert") -> bool:
         """
         发送到指定渠道
 
@@ -203,9 +193,7 @@ class SecurityAlertNotifier:
             # 创建邮件
             msg = MIMEMultipart("alternative")
             msg["Subject"] = self._get_email_subject(alert)
-            msg["From"] = formataddr(
-                ("ZBOX Security", self.config.smtp_from)
-            )
+            msg["From"] = formataddr(("ZBOX Security", self.config.smtp_from))
             msg["To"] = ", ".join(self.config.email_recipients)
 
             # HTML内容
@@ -213,18 +201,12 @@ class SecurityAlertNotifier:
             msg.attach(MIMEText(html_content, "html", "utf-8"))
 
             # 发送邮件
-            with smtplib.SMTP(
-                self.config.smtp_host,
-                self.config.smtp_port
-            ) as server:
+            with smtplib.SMTP(self.config.smtp_host, self.config.smtp_port) as server:
                 if self.config.smtp_tls:
                     server.starttls()
 
                 if self.config.smtp_username:
-                    server.login(
-                        self.config.smtp_username,
-                        self.config.smtp_password
-                    )
+                    server.login(self.config.smtp_username, self.config.smtp_password)
 
                 server.send_message(msg)
 
@@ -277,18 +259,13 @@ class SecurityAlertNotifier:
                 ],
             }
 
-            response = await self.http_client.post(
-                self.config.slack_webhook_url,
-                json=payload
-            )
+            response = await self.http_client.post(self.config.slack_webhook_url, json=payload)
 
             if response.status_code == 200:
                 logger.info(f"Slack alert sent for {alert.alert_id}")
                 return True
             else:
-                logger.warning(
-                    f"Slack webhook returned status {response.status_code}"
-                )
+                logger.warning(f"Slack webhook returned status {response.status_code}")
                 return False
 
         except Exception as e:
@@ -326,25 +303,20 @@ class SecurityAlertNotifier:
                 hmac_code = hmac.new(
                     self.config.dingtalk_secret.encode("utf-8"),
                     string_to_sign.encode("utf-8"),
-                    hashlib.sha256
+                    hashlib.sha256,
                 ).digest()
                 sign = urllib.parse.quote_plus(base64.b64encode(hmac_code).decode())
 
                 payload["sign"] = sign
                 payload["timestamp"] = timestamp
 
-            response = await self.http_client.post(
-                self.config.dingtalk_webhook_url,
-                json=payload
-            )
+            response = await self.http_client.post(self.config.dingtalk_webhook_url, json=payload)
 
             if response.status_code == 200:
                 logger.info(f"Dingtalk alert sent for {alert.alert_id}")
                 return True
             else:
-                logger.warning(
-                    f"Dingtalk webhook returned status {response.status_code}"
-                )
+                logger.warning(f"Dingtalk webhook returned status {response.status_code}")
                 return False
 
         except Exception as e:
@@ -365,18 +337,13 @@ class SecurityAlertNotifier:
                 },
             }
 
-            response = await self.http_client.post(
-                self.config.wework_webhook_url,
-                json=payload
-            )
+            response = await self.http_client.post(self.config.wework_webhook_url, json=payload)
 
             if response.status_code == 200:
                 logger.info(f"WeWork alert sent for {alert.alert_id}")
                 return True
             else:
-                logger.warning(
-                    f"WeWork webhook returned status {response.status_code}"
-                )
+                logger.warning(f"WeWork webhook returned status {response.status_code}")
                 return False
 
         except Exception as e:
@@ -390,9 +357,7 @@ class SecurityAlertNotifier:
             return False
 
         try:
-            headers = self.config.webhook_headers or {
-                "Content-Type": "application/json"
-            }
+            headers = self.config.webhook_headers or {"Content-Type": "application/json"}
 
             payload = {
                 "alert_id": alert.alert_id,
@@ -404,18 +369,14 @@ class SecurityAlertNotifier:
             }
 
             response = await self.http_client.post(
-                self.config.webhook_url,
-                json=payload,
-                headers=headers
+                self.config.webhook_url, json=payload, headers=headers
             )
 
             if response.status_code in [200, 201, 202, 204]:
                 logger.info(f"Webhook alert sent for {alert.alert_id}")
                 return True
             else:
-                logger.warning(
-                    f"Webhook returned status {response.status_code}"
-                )
+                logger.warning(f"Webhook returned status {response.status_code}")
                 return False
 
         except Exception as e:
@@ -431,7 +392,9 @@ class SecurityAlertNotifier:
             "low": "🟢",
         }
         emoji = severity_emoji.get(alert.severity.value, "⚠️")
-        return f"{emoji} [{alert.severity.value.upper()}] {alert.event_type.value} - {alert.alert_id}"
+        return (
+            f"{emoji} [{alert.severity.value.upper()}] {alert.event_type.value} - {alert.alert_id}"
+        )
 
     def _get_email_html(self, alert: "SecurityAlert") -> str:
         """获取邮件HTML内容"""
@@ -524,9 +487,9 @@ class SecurityAlertNotifier:
         """获取颜色"""
         colors = {
             "critical": "#FF0000",  # 红色
-            "high": "#FF6600",      # 橙色
-            "medium": "#FFCC00",    # 黄色
-            "low": "#00CC66",       # 绿色
+            "high": "#FF6600",  # 橙色
+            "medium": "#FFCC00",  # 黄色
+            "low": "#00CC66",  # 绿色
         }
         return colors.get(severity.value, "#999999")
 
@@ -567,8 +530,7 @@ alert_notifier = SecurityAlertNotifier()
 
 
 def send_security_alert(
-    alert: "SecurityAlert",
-    channels: Optional[List[NotificationChannel]] = None
+    alert: "SecurityAlert", channels: Optional[List[NotificationChannel]] = None
 ) -> bool:
     """
     发送安全告警的便捷函数
@@ -604,6 +566,7 @@ def send_security_alert(
     ```
     """
     import asyncio
+
     return asyncio.run(alert_notifier.send_alert(alert, channels))
 
 

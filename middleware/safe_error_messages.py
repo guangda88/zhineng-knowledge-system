@@ -12,12 +12,13 @@ Security Error Message Handling Middleware
 
 import logging
 import traceback
-from typing import Optional, Callable
-from fastapi import Request, Response, HTTPException, status
+from typing import Callable, Optional
+
+from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -81,15 +82,9 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
         self.config = config or SafeErrorMessageConfig()
         self.config.DEBUG_MODE = debug
 
-        logger.info(
-            f"Safe Error Message Middleware initialized (debug={debug})"
-        )
+        logger.info(f"Safe Error Message Middleware initialized (debug={debug})")
 
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         处理请求并捕获异常
 
@@ -113,11 +108,7 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
             # 未处理的异常
             return self._handle_unexpected_error(e, request)
 
-    def _handle_http_exception(
-        self,
-        exception: HTTPException,
-        request: Request
-    ) -> JSONResponse:
+    def _handle_http_exception(self, exception: HTTPException, request: Request) -> JSONResponse:
         """
         处理HTTP异常
 
@@ -160,8 +151,8 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
                         "path": str(request.url.path),
                         "method": request.method,
                         "exception": str(exception),
-                    }
-                }
+                    },
+                },
             )
         else:
             # 生产环境使用通用消息
@@ -170,13 +161,11 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": message,
                     "status_code": status_code,
-                }
+                },
             )
 
     def _handle_validation_error(
-        self,
-        exception: ValidationError,
-        request: Request
+        self, exception: ValidationError, request: Request
     ) -> JSONResponse:
         """
         处理验证错误
@@ -190,8 +179,7 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
         """
         # 记录验证错误
         logger.warning(
-            f"Validation error for {request.url.path}: "
-            f"{len(exception.errors())} errors"
+            f"Validation error for {request.url.path}: " f"{len(exception.errors())} errors"
         )
 
         # 开发环境显示详细验证错误
@@ -202,7 +190,7 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
                     "error": self.config.VALIDATION_ERROR,
                     "detail": exception.errors(),
                     "status_code": 422,
-                }
+                },
             )
         else:
             # 生产环境隐藏具体字段错误
@@ -211,15 +199,11 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": self.config.VALIDATION_ERROR,
                     "status_code": 422,
-                    "hint": "Check your input data and try again"
-                }
+                    "hint": "Check your input data and try again",
+                },
             )
 
-    def _handle_unexpected_error(
-        self,
-        exception: Exception,
-        request: Request
-    ) -> JSONResponse:
+    def _handle_unexpected_error(self, exception: Exception, request: Request) -> JSONResponse:
         """
         处理未预期的异常
 
@@ -246,8 +230,8 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
                         "path": str(request.url.path),
                         "method": request.method,
                         "traceback": traceback.format_exc(),
-                    }
-                }
+                    },
+                },
             )
         else:
             # 生产环境返回通用消息
@@ -256,15 +240,11 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": self.config.SERVER_ERROR,
                     "status_code": 500,
-                }
+                },
             )
 
     def _log_error(
-        self,
-        exception: Exception,
-        request: Request,
-        message: str,
-        traceback: bool = False
+        self, exception: Exception, request: Request, message: str, traceback: bool = False
     ):
         """
         记录安全错误（过滤敏感信息）
@@ -319,12 +299,7 @@ class SafeErrorMessageMiddleware(BaseHTTPMiddleware):
 
         # 替换敏感信息为占位符
         for pattern in self.config.SENSITIVE_PATTERNS:
-            filtered_message = re.sub(
-                pattern,
-                "[REDACTED]",
-                filtered_message,
-                flags=re.IGNORECASE
-            )
+            filtered_message = re.sub(pattern, "[REDACTED]", filtered_message, flags=re.IGNORECASE)
 
         return filtered_message
 
@@ -355,12 +330,9 @@ def create_safe_error_middleware(
     app.add_middleware(create_safe_error_middleware, debug=False)
     ```
     """
+
     def middleware_factory(app: ASGIApp) -> SafeErrorMessageMiddleware:
-        return SafeErrorMessageMiddleware(
-            app=app,
-            config=config,
-            debug=debug
-        )
+        return SafeErrorMessageMiddleware(app=app, config=config, debug=debug)
 
     return middleware_factory
 

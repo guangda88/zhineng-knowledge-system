@@ -16,15 +16,16 @@
 4. 可复用：适用于不同教科书
 """
 
-import re
+import asyncio
 import json
 import logging
-import asyncio
-from pathlib import Path
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple, Set, Any
+import re
 from collections import defaultdict
+from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
 import httpx
 
 from backend.config import config
@@ -34,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class ProcessingStage(Enum):
     """处理阶段"""
+
     INIT = "initialization"
     TOC_EXTRACTION = "toc_extraction"
     TOC_EXPANSION = "toc_expansion"
@@ -47,6 +49,7 @@ class ProcessingStage(Enum):
 @dataclass
 class TocItem:
     """目录条目"""
+
     id: str  # 唯一标识
     title: str
     level: int  # 层级 1-6
@@ -71,13 +74,14 @@ class TocItem:
             "text_range": self.text_range,
             "generated": self.generated,
             "confidence": self.confidence,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class TextBlock:
     """文本块"""
+
     id: str
     toc_id: str  # 关联的TOC条目ID
     content: str
@@ -99,13 +103,14 @@ class TextBlock:
             "end_line": self.end_line,
             "char_count": self.char_count,
             "subsections": self.subsections,
-            "quality_score": self.quality_score
+            "quality_score": self.quality_score,
         }
 
 
 @dataclass
 class ProcessingResult:
     """处理结果"""
+
     textbook_id: str
     textbook_title: str
     stage: ProcessingStage
@@ -124,7 +129,7 @@ class ProcessingResult:
             "text_blocks": [block.to_dict() for block in self.text_blocks],
             "statistics": self.statistics,
             "issues": self.issues,
-            "quality_metrics": self.quality_metrics
+            "quality_metrics": self.quality_metrics,
         }
 
 
@@ -134,30 +139,36 @@ class AutonomousTocExtractor:
     # 目录模式 - 从粗到细
     PATTERNS = {
         # Level 1: 第X章 - 更宽松的匹配
-        "l1_chapter_cn": re.compile(r'^第\s*([一二三四五六七八九十百零\d]+)\s*章[、\s]*(.*)$', re.IGNORECASE),
-        "l1_chapter_cn_simple": re.compile(r'^第\s*([一二三四五六七八九十百零\d]+)\s*章\s*$', re.IGNORECASE),
-        "l1_chapter_ar": re.compile(r'^(\d+)\s*[、.．]\s*第?\s*[一二三四五六七八九十]*\s*章[、\s]*(.*)$', re.IGNORECASE),
-
+        "l1_chapter_cn": re.compile(
+            r"^第\s*([一二三四五六七八九十百零\d]+)\s*章[、\s]*(.*)$", re.IGNORECASE
+        ),
+        "l1_chapter_cn_simple": re.compile(
+            r"^第\s*([一二三四五六七八九十百零\d]+)\s*章\s*$", re.IGNORECASE
+        ),
+        "l1_chapter_ar": re.compile(
+            r"^(\d+)\s*[、.．]\s*第?\s*[一二三四五六七八九十]*\s*章[、\s]*(.*)$", re.IGNORECASE
+        ),
         # Level 1-2: 篇/编/部分
-        "l1_part": re.compile(r'^([第]?[一二三四五六七八九十\d]+)\s*[篇编部部分]\s+(.+)$', re.IGNORECASE),
-
+        "l1_part": re.compile(
+            r"^([第]?[一二三四五六七八九十\d]+)\s*[篇编部部分]\s+(.+)$", re.IGNORECASE
+        ),
         # Level 2: 第X节
-        "l2_section_cn": re.compile(r'^第\s*([一二三四五六七八九十百零\d]+)\s*节[、\s]*(.+)$', re.IGNORECASE),
-        "l2_section_ar": re.compile(r'^(\d+)[、.．]\s+(.+)$'),
-
+        "l2_section_cn": re.compile(
+            r"^第\s*([一二三四五六七八九十百零\d]+)\s*节[、\s]*(.+)$", re.IGNORECASE
+        ),
+        "l2_section_ar": re.compile(r"^(\d+)[、.．]\s+(.+)$"),
         # Level 2-3: 罗马数字
-        "l3_roman": re.compile(r'^([IVX]+)[、.．\s]+(.+)$'),
-
+        "l3_roman": re.compile(r"^([IVX]+)[、.．\s]+(.+)$"),
         # Level 3-4: 中文数字
-        "l3_chinese_num": re.compile(r'^([一二三四五六七八九十]+)[、.．]\s*(.+)$'),
-        "l4_chinese_num_paren": re.compile(r'^[（\(]([一二三四五六七八九十]+)[）\)][、.．]?\s*(.+)$'),
-
+        "l3_chinese_num": re.compile(r"^([一二三四五六七八九十]+)[、.．]\s*(.+)$"),
+        "l4_chinese_num_paren": re.compile(
+            r"^[（\(]([一二三四五六七八九十]+)[）\)][、.．]?\s*(.+)$"
+        ),
         # Level 4-5: 阿拉伯数字子项
-        "l4_arabic_sub": re.compile(r'^(\d+)[、.．]\s*(.+)$'),
-        "l5_arabic_paren": re.compile(r'^[（\(](\d+)[）\)][、.．]?\s*(.+)$'),
-
+        "l4_arabic_sub": re.compile(r"^(\d+)[、.．]\s*(.+)$"),
+        "l5_arabic_paren": re.compile(r"^[（\(](\d+)[）\)][、.．]?\s*(.+)$"),
         # Level 5-6: 带序号
-        "l6_ordinal": re.compile(r'^(第[一二三四五六七八九十]+[次次遍式])\s*(.+)$'),
+        "l6_ordinal": re.compile(r"^(第[一二三四五六七八九十]+[次次遍式])\s*(.+)$"),
     }
 
     def __init__(self):
@@ -197,7 +208,7 @@ class AutonomousTocExtractor:
 
     def _extract_from_full_text(self, content: str):
         """从全文中提取章节标题"""
-        lines = content.split('\n')
+        lines = content.split("\n")
         full_text_toc_items = []
 
         for idx, line in enumerate(lines):
@@ -207,7 +218,7 @@ class AutonomousTocExtractor:
             for pattern in [
                 self.PATTERNS["l1_chapter_cn"],
                 self.PATTERNS["l1_chapter_cn_simple"],
-                self.PATTERNS["l1_chapter_ar"]
+                self.PATTERNS["l1_chapter_ar"],
             ]:
                 match = pattern.match(line_stripped)
                 if match:
@@ -220,13 +231,15 @@ class AutonomousTocExtractor:
 
                     title = title.strip()
                     if len(title) >= 2 and len(title) <= 100:
-                        full_text_toc_items.append(TocItem(
-                            id=f"toc_full_{len(full_text_toc_items):04d}",
-                            title=title,
-                            level=1,
-                            line_number=idx,
-                            generated=False
-                        ))
+                        full_text_toc_items.append(
+                            TocItem(
+                                id=f"toc_full_{len(full_text_toc_items):04d}",
+                                title=title,
+                                level=1,
+                                line_number=idx,
+                                generated=False,
+                            )
+                        )
                     break
 
         # 如果从全文提取的更多，替换当前TOC
@@ -236,7 +249,7 @@ class AutonomousTocExtractor:
 
     def _locate_toc_area(self, content: str) -> List[str]:
         """定位目录区域"""
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # 查找目录开始 - 扩展搜索范围
         toc_start = -1
@@ -255,9 +268,11 @@ class AutonomousTocExtractor:
             chapter_matches = []
             for i, line in enumerate(lines):
                 line_stripped = line.strip()
-                if self.PATTERNS["l1_chapter_cn"].match(line_stripped) or \
-                   self.PATTERNS["l1_chapter_ar"].match(line_stripped) or \
-                   (line_stripped.startswith("第") and "章" in line_stripped):
+                if (
+                    self.PATTERNS["l1_chapter_cn"].match(line_stripped)
+                    or self.PATTERNS["l1_chapter_ar"].match(line_stripped)
+                    or (line_stripped.startswith("第") and "章" in line_stripped)
+                ):
                     chapter_matches.append(i)
 
             # 如果找到章节，使用前50行到第一个章节之间的区域
@@ -355,7 +370,7 @@ class AutonomousTocExtractor:
                     title=title,
                     level=level,
                     line_number=line_num,
-                    generated=False
+                    generated=False,
                 )
 
         return None
@@ -367,7 +382,10 @@ class AutonomousTocExtractor:
 
         for item in self.toc_items:
             # 清理父栈中级别>=当前级别的项目
-            while self.parent_stack and self.toc_items[self._find_item_by_id(self.parent_stack[-1])].level >= item.level:
+            while (
+                self.parent_stack
+                and self.toc_items[self._find_item_by_id(self.parent_stack[-1])].level >= item.level
+            ):
                 self.parent_stack.pop()
 
             # 设置父ID
@@ -403,7 +421,7 @@ class TocExpander:
         toc_items: List[TocItem],
         content: str,
         target_depth: int = 5,
-        max_subsections_per_level: int = 10
+        max_subsections_per_level: int = 10,
     ) -> List[TocItem]:
         """扩展TOC到目标深度
 
@@ -425,8 +443,7 @@ class TocExpander:
         for iteration in range(max_iterations):
             # 找到需要扩展的项目
             items_to_expand = [
-                item for item in expanded_items
-                if item.level < target_depth and not item.children
+                item for item in expanded_items if item.level < target_depth and not item.children
             ]
 
             if not items_to_expand:
@@ -442,14 +459,11 @@ class TocExpander:
                     text_range = self._find_text_range(item, content, expanded_items)
 
                     # 提取相关文本
-                    relevant_text = content[text_range[0]:text_range[1]]
+                    relevant_text = content[text_range[0] : text_range[1]]
 
                     # 调用AI生成子标题
                     subsections = await self._generate_subsections(
-                        item,
-                        relevant_text,
-                        target_depth,
-                        max_subsections_per_level
+                        item, relevant_text, target_depth, max_subsections_per_level
                     )
 
                     if not subsections:
@@ -458,9 +472,7 @@ class TocExpander:
 
                     # 添加新的子条目
                     new_items = self._create_subsection_items(
-                        item,
-                        subsections,
-                        len(expanded_items)
+                        item, subsections, len(expanded_items)
                     )
                     expanded_items.extend(new_items)
 
@@ -477,9 +489,11 @@ class TocExpander:
 
         return expanded_items
 
-    def _find_text_range(self, item: TocItem, content: str, all_items: List[TocItem]) -> Tuple[int, int]:
+    def _find_text_range(
+        self, item: TocItem, content: str, all_items: List[TocItem]
+    ) -> Tuple[int, int]:
         """查找项目的文本范围"""
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # 简单实现：查找标题所在行，到下一个同级或更高级标题
         start_line = item.line_number
@@ -500,11 +514,7 @@ class TocExpander:
         return (start_char, end_char)
 
     async def _generate_subsections(
-        self,
-        parent_item: TocItem,
-        text: str,
-        target_depth: int,
-        max_count: int
+        self, parent_item: TocItem, text: str, target_depth: int, max_count: int
     ) -> List[str]:
         """使用AI生成子标题，带重试机制"""
         if not self.api_key or self.api_key == "sk-dummy":
@@ -538,14 +548,14 @@ class TocExpander:
                     self.api_url,
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": self.model,
                         "messages": [{"role": "user", "content": prompt}],
                         "temperature": 0.7,
-                        "max_tokens": 500
-                    }
+                        "max_tokens": 500,
+                    },
                 )
 
                 response.raise_for_status()
@@ -553,7 +563,7 @@ class TocExpander:
 
                 # 解析结果
                 content_text = data["choices"][0]["message"]["content"].strip()
-                subsections = [line.strip() for line in content_text.split('\n') if line.strip()]
+                subsections = [line.strip() for line in content_text.split("\n") if line.strip()]
 
                 return subsections[:max_count]
 
@@ -561,8 +571,10 @@ class TocExpander:
                 if e.response.status_code in [429, 500, 502, 503, 504]:
                     # 可重试错误
                     if attempt < max_retries - 1:
-                        delay = base_delay * (2 ** attempt)
-                        logger.warning(f"API请求失败 (状态码: {e.response.status_code}), {delay}秒后重试...")
+                        delay = base_delay * (2**attempt)
+                        logger.warning(
+                            f"API请求失败 (状态码: {e.response.status_code}), {delay}秒后重试..."
+                        )
                         await asyncio.sleep(delay)
                         continue
                 logger.error(f"API请求失败: {e}")
@@ -575,10 +587,7 @@ class TocExpander:
         return []
 
     def _create_subsection_items(
-        self,
-        parent: TocItem,
-        subsections: List[str],
-        start_index: int
+        self, parent: TocItem, subsections: List[str], start_index: int
     ) -> List[TocItem]:
         """创建子节条目"""
         items = []
@@ -590,7 +599,7 @@ class TocExpander:
                 line_number=parent.line_number,  # 临时设置，后续会更新
                 parent_id=parent.id,
                 generated=True,
-                confidence=0.8
+                confidence=0.8,
             )
             items.append(item)
 
@@ -611,15 +620,11 @@ class SmartTextSegmenter:
 
         # 中英文句子分割模式
         self.sentence_patterns = [
-            re.compile(r'[.。!！?？;；:：]\s+'),  # 句号、问号、感叹号
-            re.compile(r'[，,]\s+'),  # 逗号（优先级低）
+            re.compile(r"[.。!！?？;；:：]\s+"),  # 句号、问号、感叹号
+            re.compile(r"[，,]\s+"),  # 逗号（优先级低）
         ]
 
-    def segment(
-        self,
-        content: str,
-        toc_items: List[TocItem]
-    ) -> List[TextBlock]:
+    def segment(self, content: str, toc_items: List[TocItem]) -> List[TextBlock]:
         """分割文本
 
         Args:
@@ -632,7 +637,7 @@ class SmartTextSegmenter:
         logger.info("开始智能文本分割")
 
         blocks = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # 只处理原始TOC（非AI生成的）
         original_items = [item for item in toc_items if not item.generated]
@@ -646,7 +651,7 @@ class SmartTextSegmenter:
                 continue
 
             # 提取文本
-            text = '\n'.join(lines[text_range[0]:text_range[1]])
+            text = "\n".join(lines[text_range[0] : text_range[1]])
 
             if not text.strip():
                 continue
@@ -658,7 +663,7 @@ class SmartTextSegmenter:
                     toc_id=toc_item.id,
                     content=text,
                     start_line=text_range[0],
-                    end_line=text_range[1]
+                    end_line=text_range[1],
                 )
                 blocks.append(block)
             else:
@@ -670,10 +675,7 @@ class SmartTextSegmenter:
         return blocks
 
     def _get_text_range(
-        self,
-        item: TocItem,
-        all_items: List[TocItem],
-        lines: List[str]
+        self, item: TocItem, all_items: List[TocItem], lines: List[str]
     ) -> Tuple[int, int]:
         """获取项目的文本行范围"""
         # 从标题行的下一行开始，跳过标题
@@ -690,15 +692,10 @@ class SmartTextSegmenter:
 
         return (start_line, end_line)
 
-    def _split_large_text(
-        self,
-        text: str,
-        toc_item: TocItem,
-        start_index: int
-    ) -> List[TextBlock]:
+    def _split_large_text(self, text: str, toc_item: TocItem, start_index: int) -> List[TextBlock]:
         """分割大文本"""
         blocks = []
-        paragraphs = text.split('\n\n')
+        paragraphs = text.split("\n\n")
 
         current_block = []
         current_length = 0
@@ -712,7 +709,9 @@ class SmartTextSegmenter:
             if len(para) > self.max_chars:
                 # 先保存当前块（如果有）
                 if current_block:
-                    blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
+                    blocks.append(
+                        self._create_block(current_block, toc_item, len(blocks) + start_index)
+                    )
                     current_block = []
                     current_length = 0
 
@@ -721,15 +720,17 @@ class SmartTextSegmenter:
                 for sentence in sentences:
                     if len(sentence) > self.max_chars:
                         # 如果句子仍然太长，强制分割
-                        chunks = [sentence[i:i+self.max_chars]
-                                  for i in range(0, len(sentence), self.max_chars)]
+                        chunks = [
+                            sentence[i : i + self.max_chars]
+                            for i in range(0, len(sentence), self.max_chars)
+                        ]
                         for chunk in chunks:
                             block = TextBlock(
                                 id=f"block_{len(blocks) + start_index:04d}",
                                 toc_id=toc_item.id,
                                 content=chunk,
                                 start_line=toc_item.line_number,
-                                end_line=toc_item.line_number
+                                end_line=toc_item.line_number,
                             )
                             blocks.append(block)
                     else:
@@ -739,7 +740,11 @@ class SmartTextSegmenter:
                         if new_length > self.max_chars:
                             # 超出限制，保存当前块并开始新块
                             if current_block:
-                                blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
+                                blocks.append(
+                                    self._create_block(
+                                        current_block, toc_item, len(blocks) + start_index
+                                    )
+                                )
                             current_block = [sentence]
                             current_length = len(sentence)
                         else:
@@ -753,7 +758,9 @@ class SmartTextSegmenter:
                 if new_length > self.max_chars:
                     # 超出限制，保存当前块并开始新块
                     if current_block:
-                        blocks.append(self._create_block(current_block, toc_item, len(blocks) + start_index))
+                        blocks.append(
+                            self._create_block(current_block, toc_item, len(blocks) + start_index)
+                        )
                     current_block = [para]
                     current_length = len(para)
                 else:
@@ -774,7 +781,7 @@ class SmartTextSegmenter:
 
         for char in paragraph:
             current += char
-            if char in '.。!！?？;；':
+            if char in ".。!！?？;；":
                 if current.strip():
                     sentences.append(current.strip())
                 current = ""
@@ -786,25 +793,20 @@ class SmartTextSegmenter:
 
     def _create_block(self, lines: List[str], toc_item: TocItem, index: int) -> TextBlock:
         """创建文本块"""
-        content = '\n\n'.join(lines)
+        content = "\n\n".join(lines)
         return TextBlock(
             id=f"block_{index:04d}",
             toc_id=toc_item.id,
             content=content,
             start_line=toc_item.line_number,
-            end_line=toc_item.line_number
+            end_line=toc_item.line_number,
         )
 
 
 class AutonomousTextbookProcessor:
     """自主教科书处理器 - 主类"""
 
-    def __init__(
-        self,
-        api_key: str = None,
-        max_block_chars: int = 300,
-        target_toc_depth: int = 3
-    ):
+    def __init__(self, api_key: str = None, max_block_chars: int = 300, target_toc_depth: int = 3):
         """
         Args:
             api_key: DeepSeek API密钥
@@ -820,11 +822,7 @@ class AutonomousTextbookProcessor:
         self.toc_expander = TocExpander(api_key)
         self.text_segmenter = SmartTextSegmenter(max_block_chars)
 
-    async def process(
-        self,
-        textbook_path: str,
-        textbook_title: str = None
-    ) -> ProcessingResult:
+    async def process(self, textbook_path: str, textbook_title: str = None) -> ProcessingResult:
         """处理教科书
 
         Args:
@@ -840,13 +838,13 @@ class AutonomousTextbookProcessor:
             raise FileNotFoundError(f"教科书文件不存在: {textbook_path}")
 
         # 尝试多种编码
-        encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
+        encodings = ["utf-8", "gbk", "gb2312", "gb18030"]
         content = None
         used_encoding = None
 
         for encoding in encodings:
             try:
-                with open(path, 'r', encoding=encoding) as f:
+                with open(path, "r", encoding=encoding) as f:
                     content = f.read()
                 used_encoding = encoding
                 logger.info(f"使用编码 {encoding} 读取文件: {textbook_path}")
@@ -862,16 +860,16 @@ class AutonomousTextbookProcessor:
 
         # 创建结果对象
         result = ProcessingResult(
-            textbook_id=path.stem,
-            textbook_title=textbook_title,
-            stage=ProcessingStage.INIT
+            textbook_id=path.stem, textbook_title=textbook_title, stage=ProcessingStage.INIT
         )
 
         # 阶段1: TOC提取
         result.stage = ProcessingStage.TOC_EXTRACTION
         result.toc_items = self.toc_extractor.extract(content)
         result.statistics["toc_items_extracted"] = len(result.toc_items)
-        result.statistics["toc_max_level"] = max((item.level for item in result.toc_items), default=0)
+        result.statistics["toc_max_level"] = max(
+            (item.level for item in result.toc_items), default=0
+        )
 
         logger.info(f"提取到 {len(result.toc_items)} 个TOC条目")
 
@@ -879,14 +877,16 @@ class AutonomousTextbookProcessor:
         if result.statistics["toc_max_level"] < self.target_toc_depth:
             result.stage = ProcessingStage.TOC_EXPANSION
             result.toc_items = await self.toc_expander.expand_toc(
-                result.toc_items,
-                content,
-                self.target_toc_depth
+                result.toc_items, content, self.target_toc_depth
             )
             result.statistics["toc_items_expanded"] = len(result.toc_items)
-            result.statistics["toc_max_level"] = max((item.level for item in result.toc_items), default=0)
+            result.statistics["toc_max_level"] = max(
+                (item.level for item in result.toc_items), default=0
+            )
 
-            logger.info(f"扩展后: {len(result.toc_items)} 个TOC条目，深度 {result.statistics['toc_max_level']}")
+            logger.info(
+                f"扩展后: {len(result.toc_items)} 个TOC条目，深度 {result.statistics['toc_max_level']}"
+            )
 
         # 阶段3: 文本分割
         result.stage = ProcessingStage.TEXT_SEGMENTATION
@@ -895,12 +895,18 @@ class AutonomousTextbookProcessor:
 
         # 统计文本块大小
         block_sizes = [block.char_count for block in result.text_blocks]
-        result.statistics["avg_block_size"] = sum(block_sizes) / len(block_sizes) if block_sizes else 0
+        result.statistics["avg_block_size"] = (
+            sum(block_sizes) / len(block_sizes) if block_sizes else 0
+        )
         result.statistics["max_block_size"] = max(block_sizes) if block_sizes else 0
         result.statistics["min_block_size"] = min(block_sizes) if block_sizes else 0
-        result.statistics["blocks_over_limit"] = sum(1 for size in block_sizes if size > self.max_block_chars)
+        result.statistics["blocks_over_limit"] = sum(
+            1 for size in block_sizes if size > self.max_block_chars
+        )
 
-        logger.info(f"分割完成: {len(result.text_blocks)} 个块，平均大小 {result.statistics['avg_block_size']:.1f}")
+        logger.info(
+            f"分割完成: {len(result.text_blocks)} 个块，平均大小 {result.statistics['avg_block_size']:.1f}"
+        )
 
         # 阶段4: 完成
         result.stage = ProcessingStage.COMPLETED
@@ -910,16 +916,11 @@ class AutonomousTextbookProcessor:
 
 # 便捷函数
 async def process_textbook(
-    textbook_path: str,
-    api_key: str = None,
-    max_block_chars: int = 300,
-    target_toc_depth: int = 5
+    textbook_path: str, api_key: str = None, max_block_chars: int = 300, target_toc_depth: int = 5
 ) -> ProcessingResult:
     """处理教科书的便捷函数"""
     processor = AutonomousTextbookProcessor(
-        api_key=api_key,
-        max_block_chars=max_block_chars,
-        target_toc_depth=target_toc_depth
+        api_key=api_key, max_block_chars=max_block_chars, target_toc_depth=target_toc_depth
     )
     return await processor.process(textbook_path)
 
@@ -939,9 +940,9 @@ if __name__ == "__main__":
         result = await process_textbook(textbook_path)
 
         # 输出结果
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("处理结果")
-        print("="*60)
+        print("=" * 60)
         print(f"教科书: {result.textbook_title}")
         print(f"阶段: {result.stage.value}")
         print(f"TOC条目: {result.statistics.get('toc_items_extracted', 0)}")
@@ -949,12 +950,15 @@ if __name__ == "__main__":
         print(f"文本块: {result.statistics.get('text_blocks_created', 0)}")
         print(f"平均块大小: {result.statistics.get('avg_block_size', 0):.1f}")
         print(f"超出限制的块: {result.statistics.get('blocks_over_limit', 0)}")
-        print("="*60)
+        print("=" * 60)
 
         # 保存结果
-        output_path = Path("backend/lingflow/data/processed/textbooks_v2") / f"{Path(textbook_path).stem}_processed.json"
+        output_path = (
+            Path("backend/lingflow/data/processed/textbooks_v2")
+            / f"{Path(textbook_path).stem}_processed.json"
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(result.to_dict(), f, ensure_ascii=False, indent=2)
 
         print(f"\n结果已保存到: {output_path}")

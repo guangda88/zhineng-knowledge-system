@@ -144,9 +144,7 @@ def test_convenience_functions():
 
         # Test external API call logging
         log_external_api_call("openai", "/embeddings", "POST", 200, 234.5)
-        log_external_api_call(
-            "elasticsearch", "/search", "POST", 503, 5000.0
-        )  # Slow/error
+        log_external_api_call("elasticsearch", "/search", "POST", 503, 5000.0)  # Slow/error
         print("  - log_external_api_call works")
 
         # Test error logging

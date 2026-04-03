@@ -5,6 +5,7 @@ Usage:
 
 The embedding service must be running at localhost:8001 (zhineng-embedding container).
 """
+
 import argparse
 import asyncio
 import logging
@@ -47,9 +48,7 @@ async def main():
     pool = await asyncpg.create_pool(db_url, min_size=2, max_size=4)
 
     try:
-        total = await pool.fetchval(
-            "SELECT count(*) FROM guji_documents WHERE embedding IS NULL"
-        )
+        total = await pool.fetchval("SELECT count(*) FROM guji_documents WHERE embedding IS NULL")
         if args.limit > 0:
             total = min(total, args.limit)
 

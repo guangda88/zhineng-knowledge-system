@@ -43,15 +43,17 @@ logger = logging.getLogger(__name__)
 
 class BackupType(str, Enum):
     """备份类型"""
-    FULL = "full"           # 全量备份
-    INCREMENTAL = "incremental" # 增量备份
-    DIFFERENTIAL = "differential" # 差异备份
-    LOGICAL = "logical"      # 逻辑备份（pg_dump）
-    PHYSICAL = "physical"     # 物理备份（pg_basebackup）
+
+    FULL = "full"  # 全量备份
+    INCREMENTAL = "incremental"  # 增量备份
+    DIFFERENTIAL = "differential"  # 差异备份
+    LOGICAL = "logical"  # 逻辑备份（pg_dump）
+    PHYSICAL = "physical"  # 物理备份（pg_basebackup）
 
 
 class BackupStatus(str, Enum):
     """备份状态"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -63,6 +65,7 @@ class BackupStatus(str, Enum):
 
 class RecoveryStatus(str, Enum):
     """恢复状态"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -94,12 +97,14 @@ class BackupConfig:
     checksum_algorithm: str = "sha256"
 
     # 保留策略
-    retention_policy: Dict[str, int] = field(default_factory=lambda: {
-        "daily": 7,    # 保留7天
-        "weekly": 4,   # 保留4周
-        "monthly": 12,  # 保留12月
-        "yearly": 3,    # 保留3年
-    })
+    retention_policy: Dict[str, int] = field(
+        default_factory=lambda: {
+            "daily": 7,  # 保留7天
+            "weekly": 4,  # 保留4周
+            "monthly": 12,  # 保留12月
+            "yearly": 3,  # 保留3年
+        }
+    )
 
     # 调度配置
     enable_scheduled_backups: bool = True
@@ -155,9 +160,7 @@ class BackupMetadata:
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat(),
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
             "file_size": self.file_size,
             "file_hash": self.file_hash,
             "checksum": self.checksum,
@@ -244,10 +247,7 @@ class BackupManager:
             备份元数据
         """
         # 确定是否压缩
-        should_compress = (
-            compress if compress is not None
-            else self.config.enable_compression
-        )
+        should_compress = compress if compress is not None else self.config.enable_compression
 
         # 生成备份ID
         backup_id = f"backup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
@@ -269,13 +269,9 @@ class BackupManager:
         try:
             # 执行备份
             if backup_type == BackupType.LOGICAL:
-                file_path = await self._create_logical_backup(
-                    metadata, should_compress
-                )
+                file_path = await self._create_logical_backup(metadata, should_compress)
             elif backup_type == BackupType.PHYSICAL:
-                file_path = await self._create_physical_backup(
-                    metadata, should_compress
-                )
+                file_path = await self._create_physical_backup(metadata, should_compress)
             else:
                 raise ValueError(f"Unsupported backup type: {backup_type}")
 
@@ -292,9 +288,7 @@ class BackupManager:
 
             # 上传到对象存储
             if self.storage:
-                backup_url = await self._upload_backup(
-                    file_path, metadata
-                )
+                backup_url = await self._upload_backup(file_path, metadata)
                 metadata.backup_url = backup_url
 
                 # 跨区域复制
@@ -303,9 +297,7 @@ class BackupManager:
 
             # 验证备份
             if self.storage:
-                metadata.validated = await self._validate_backup(
-                    metadata
-                )
+                metadata.validated = await self._validate_backup(metadata)
 
             # 更新统计
             duration = (metadata.completed_at - metadata.started_at).total_seconds()
@@ -325,10 +317,7 @@ class BackupManager:
             duration = (metadata.completed_at - metadata.started_at).total_seconds()
             self._update_backup_stats(duration, False, 0)
 
-            logger.error(
-                f"Backup failed: {backup_id} - {str(e)}",
-                exc_info=True
-            )
+            logger.error(f"Backup failed: {backup_id} - {str(e)}", exc_info=True)
 
         # 添加到历史
         self.backup_history.append(metadata)
@@ -351,7 +340,7 @@ class BackupManager:
             备份文件路径
         """
         # 生成文件名
-        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{metadata.backup_id}.sql"
         file_path = os.path.join(self.config.backup_dir, filename)
 
@@ -362,11 +351,16 @@ class BackupManager:
 
         pg_dump_cmd = [
             "pg_dump",
-            "-h", self.config.db_host,
-            "-p", str(self.config.db_port),
-            "-U", self.config.db_user,
-            "-d", self.config.db_name,
-            "-f", file_path,
+            "-h",
+            self.config.db_host,
+            "-p",
+            str(self.config.db_port),
+            "-U",
+            self.config.db_user,
+            "-d",
+            self.config.db_name,
+            "-f",
+            file_path,
             "--verbose",
         ]
 
@@ -374,10 +368,12 @@ class BackupManager:
         if compress:
             filename = f"{filename}.gz"
             file_path = os.path.join(self.config.backup_dir, filename)
-            pg_dump_cmd.extend([
-                "--format=custom",
-                f"--compress={self.config.compression_level}",
-            ])
+            pg_dump_cmd.extend(
+                [
+                    "--format=custom",
+                    f"--compress={self.config.compression_level}",
+                ]
+            )
 
         # 执行pg_dump
         process = await asyncio.create_subprocess_exec(
@@ -388,9 +384,7 @@ class BackupManager:
         stdout, stderr = await process.communicate()
 
         if process.returncode != 0:
-            raise RuntimeError(
-                f"pg_dump failed: {stderr.decode('utf-8')}"
-            )
+            raise RuntimeError(f"pg_dump failed: {stderr.decode('utf-8')}")
 
         # 获取数据库统计
         metadata.table_count = await self._get_table_count()
@@ -415,7 +409,7 @@ class BackupManager:
             备份目录路径
         """
         # 生成目录名
-        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         dir_name = f"{metadata.backup_id}"
         dir_path = os.path.join(self.config.backup_dir, dir_name)
 
@@ -426,10 +420,14 @@ class BackupManager:
 
         pg_basebackup_cmd = [
             "pg_basebackup",
-            "-h", self.config.db_host,
-            "-p", str(self.config.db_port),
-            "-U", self.config.db_user,
-            "-D", dir_path,
+            "-h",
+            self.config.db_host,
+            "-p",
+            str(self.config.db_port),
+            "-U",
+            self.config.db_user,
+            "-D",
+            dir_path,
             "--verbose",
         ]
 
@@ -442,9 +440,7 @@ class BackupManager:
         stdout, stderr = await process.communicate()
 
         if process.returncode != 0:
-            raise RuntimeError(
-                f"pg_basebackup failed: {stderr.decode('utf-8')}"
-            )
+            raise RuntimeError(f"pg_basebackup failed: {stderr.decode('utf-8')}")
 
         # 计算目录大小
         total_size = 0
@@ -474,7 +470,7 @@ class BackupManager:
             备份URL
         """
         # 构建对象键
-        timestamp = datetime.utcnow().strftime('%Y%m%d')
+        timestamp = datetime.utcnow().strftime("%Y%m%d")
         object_key = f"backups/{timestamp}/{metadata.backup_id}"
 
         # 上传文件
@@ -487,7 +483,7 @@ class BackupManager:
 
         logger.info(f"Backup uploaded: {metadata.backup_id} to {result['cdn_url']}")
 
-        return result['cdn_url']
+        return result["cdn_url"]
 
     async def _replicate_backup(
         self,
@@ -535,17 +531,13 @@ class BackupManager:
             if self.config.enable_checksum:
                 calculated_checksum = self._calculate_checksum(metadata.location)
                 if calculated_checksum != metadata.checksum:
-                    logger.error(
-                        f"Backup checksum mismatch: {metadata.backup_id}"
-                    )
+                    logger.error(f"Backup checksum mismatch: {metadata.backup_id}")
                     return False
 
             # 验证文件哈希
             calculated_hash = self._calculate_file_hash(metadata.location)
             if calculated_hash != metadata.file_hash:
-                logger.error(
-                    f"Backup file hash mismatch: {metadata.backup_id}"
-                )
+                logger.error(f"Backup file hash mismatch: {metadata.backup_id}")
                 return False
 
             # 恢复测试（如果启用）
@@ -555,9 +547,7 @@ class BackupManager:
                 metadata.recovery_test_passed = passed
 
                 if not passed:
-                    logger.warning(
-                        f"Backup recovery test failed: {metadata.backup_id}"
-                    )
+                    logger.warning(f"Backup recovery test failed: {metadata.backup_id}")
                     return False
 
             logger.info(f"Backup validated: {metadata.backup_id}")
@@ -565,8 +555,7 @@ class BackupManager:
 
         except Exception as e:
             logger.error(
-                f"Backup validation failed: {metadata.backup_id} - {str(e)}",
-                exc_info=True
+                f"Backup validation failed: {metadata.backup_id} - {str(e)}", exc_info=True
             )
             return False
 
@@ -612,13 +601,9 @@ class BackupManager:
 
             # 执行恢复
             if metadata.backup_type == BackupType.LOGICAL:
-                await self._restore_logical_backup(
-                    file_path, target_db, metadata
-                )
+                await self._restore_logical_backup(file_path, target_db, metadata)
             elif metadata.backup_type == BackupType.PHYSICAL:
-                await self._restore_physical_backup(
-                    file_path, target_db, metadata
-                )
+                await self._restore_physical_backup(file_path, target_db, metadata)
 
             # 验证恢复
             if validate:
@@ -649,10 +634,7 @@ class BackupManager:
             return result
 
         except Exception as e:
-            logger.error(
-                f"Backup restoration failed: {backup_id} - {str(e)}",
-                exc_info=True
-            )
+            logger.error(f"Backup restoration failed: {backup_id} - {str(e)}", exc_info=True)
 
             return {
                 "backup_id": backup_id,
@@ -675,17 +657,18 @@ class BackupManager:
             metadata: 备份元数据
         """
         # 如果是压缩文件，解压
-        if metadata.is_compressed and file_path.endswith('.gz'):
+        if metadata.is_compressed and file_path.endswith(".gz"):
             # 解压到临时文件
             import tempfile
+
             temp_file = tempfile.NamedTemporaryFile(
-                mode='wb',
-                suffix='.sql',
+                mode="wb",
+                suffix=".sql",
                 delete=False,
             )
             temp_path = temp_file.name
 
-            with gzip.open(file_path, 'rb') as f:
+            with gzip.open(file_path, "rb") as f:
                 temp_file.write(f.read())
             temp_file.close()
 
@@ -698,11 +681,16 @@ class BackupManager:
 
         psql_cmd = [
             "psql",
-            "-h", self.config.db_host,
-            "-p", str(self.config.db_port),
-            "-U", self.config.db_user,
-            "-d", "postgres",  # 连接到默认数据库
-            "-c", f"DROP DATABASE IF EXISTS {target_db};",
+            "-h",
+            self.config.db_host,
+            "-p",
+            str(self.config.db_port),
+            "-U",
+            self.config.db_user,
+            "-d",
+            "postgres",  # 连接到默认数据库
+            "-c",
+            f"DROP DATABASE IF EXISTS {target_db};",
         ]
 
         # 删除现有数据库
@@ -715,11 +703,16 @@ class BackupManager:
         # 创建数据库
         psql_cmd = [
             "psql",
-            "-h", self.config.db_host,
-            "-p", str(self.config.db_port),
-            "-U", self.config.db_user,
-            "-d", "postgres",
-            "-c", f"CREATE DATABASE {target_db};",
+            "-h",
+            self.config.db_host,
+            "-p",
+            str(self.config.db_port),
+            "-U",
+            self.config.db_user,
+            "-d",
+            "postgres",
+            "-c",
+            f"CREATE DATABASE {target_db};",
         ]
 
         process = await asyncio.create_subprocess_exec(
@@ -731,11 +724,16 @@ class BackupManager:
         # 恢复备份
         psql_cmd = [
             "psql",
-            "-h", self.config.db_host,
-            "-p", str(self.config.db_port),
-            "-U", self.config.db_user,
-            "-d", target_db,
-            "-f", file_path,
+            "-h",
+            self.config.db_host,
+            "-p",
+            str(self.config.db_port),
+            "-U",
+            self.config.db_user,
+            "-d",
+            target_db,
+            "-f",
+            file_path,
             "--verbose",
         ]
 
@@ -746,9 +744,7 @@ class BackupManager:
         stdout, stderr = await process.communicate()
 
         if process.returncode != 0:
-            raise RuntimeError(
-                f"psql restore failed: {stderr.decode('utf-8')}"
-            )
+            raise RuntimeError(f"psql restore failed: {stderr.decode('utf-8')}")
 
         logger.info(f"Logical backup restored to {target_db}")
 
@@ -771,9 +767,7 @@ class BackupManager:
 
         logger.info("Physical backup restore requires manual intervention")
         # TODO: 实现完整的物理恢复逻辑
-        raise NotImplementedError(
-            "Physical backup restore requires manual intervention"
-        )
+        raise NotImplementedError("Physical backup restore requires manual intervention")
 
     async def _test_recovery(
         self,
@@ -798,7 +792,7 @@ class BackupManager:
                 validate=False,
             )
 
-            if result['status'] != 'success':
+            if result["status"] != "success":
                 return False
 
             # 验证数据库
@@ -810,10 +804,7 @@ class BackupManager:
             return is_valid
 
         except Exception as e:
-            logger.error(
-                f"Recovery test failed: {metadata.backup_id} - {str(e)}",
-                exc_info=True
-            )
+            logger.error(f"Recovery test failed: {metadata.backup_id} - {str(e)}", exc_info=True)
             return False
 
     async def _validate_restore(self, db_name: str) -> bool:
@@ -856,10 +847,7 @@ class BackupManager:
             return True
 
         except Exception as e:
-            logger.error(
-                f"Restore validation failed for {db_name}: {str(e)}",
-                exc_info=True
-            )
+            logger.error(f"Restore validation failed for {db_name}: {str(e)}", exc_info=True)
             return False
 
     async def _cleanup_test_db(self, db_name: str):
@@ -875,11 +863,16 @@ class BackupManager:
 
         psql_cmd = [
             "psql",
-            "-h", self.config.db_host,
-            "-p", str(self.config.db_port),
-            "-U", self.config.db_user,
-            "-d", "postgres",
-            "-c", f"DROP DATABASE IF EXISTS {db_name};",
+            "-h",
+            self.config.db_host,
+            "-p",
+            str(self.config.db_port),
+            "-U",
+            self.config.db_user,
+            "-d",
+            "postgres",
+            "-c",
+            f"DROP DATABASE IF EXISTS {db_name};",
         ]
 
         process = await asyncio.create_subprocess_exec(
@@ -940,14 +933,14 @@ class BackupManager:
 
         if checksum == "sha256":
             sha256 = hashlib.sha256()
-            with open(file_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b''):
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
                     sha256.update(chunk)
             return sha256.hexdigest()
         elif checksum == "md5":
             md5 = hashlib.sha256()
-            with open(file_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b''):
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
                     md5.update(chunk)
             return md5.hexdigest()
         else:
@@ -956,8 +949,8 @@ class BackupManager:
     def _calculate_file_hash(self, file_path: str) -> str:
         """计算文件哈希（SHA256）"""
         sha256 = hashlib.sha256()
-        with open(file_path, 'rb') as f:
-            for chunk in iter(lambda: f.read(4096), b''):
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
                 sha256.update(chunk)
         return sha256.hexdigest()
 
@@ -993,8 +986,7 @@ class BackupManager:
             )
 
             count = await conn.fetchval(
-                "SELECT COUNT(*) FROM information_schema.tables "
-                "WHERE table_schema = 'public'"
+                "SELECT COUNT(*) FROM information_schema.tables " "WHERE table_schema = 'public'"
             )
             await conn.close()
 
@@ -1024,7 +1016,7 @@ class BackupManager:
                 "AND c.relkind = 'r'"
             )
 
-            total = sum(row['row_count'] for row in result)
+            total = sum(row["row_count"] for row in result)
             await conn.close()
 
             return total
@@ -1115,7 +1107,7 @@ class BackupManager:
                 # 删除对象存储中的备份
                 if self.storage and metadata.backup_url:
                     # 从URL提取对象键
-                    object_key = metadata.backup_url.split('/')[-1]
+                    object_key = metadata.backup_url.split("/")[-1]
                     await self.storage.delete_file(object_key)
 
                 # 从历史中移除
@@ -1124,9 +1116,7 @@ class BackupManager:
                 logger.info(f"Old backup removed: {metadata.backup_id}")
 
             except Exception as e:
-                logger.error(
-                    f"Failed to remove backup {metadata.backup_id}: {str(e)}"
-                )
+                logger.error(f"Failed to remove backup {metadata.backup_id}: {str(e)}")
 
     async def get_backup_stats(self) -> Dict[str, Any]:
         """
@@ -1146,24 +1136,17 @@ class BackupManager:
         return {
             "total_backups": len(self.backup_history),
             "backup_types": backup_type_counts,
-            "total_size_mb": (
-                sum(m.file_size for m in self.backup_history)
-                / (1024 * 1024)
-            ),
-            "total_size_gb": (
-                sum(m.file_size for m in self.backup_history)
-                / (1024 * 1024 * 1024)
-            ),
-            "recent_backups": [
-                m.to_dict() for m in reversed(self.backup_history[-10:])
-            ],
+            "total_size_mb": (sum(m.file_size for m in self.backup_history) / (1024 * 1024)),
+            "total_size_gb": (sum(m.file_size for m in self.backup_history) / (1024 * 1024 * 1024)),
+            "recent_backups": [m.to_dict() for m in reversed(self.backup_history[-10:])],
             "stats": self.stats,
             "next_scheduled_backup": (
-                datetime.utcnow() + timedelta(
-                    hours=self.config.full_backup_interval_hours
-                )
-            ).isoformat()
-            if self.config.enable_scheduled_backups else None,
+                (
+                    datetime.utcnow() + timedelta(hours=self.config.full_backup_interval_hours)
+                ).isoformat()
+                if self.config.enable_scheduled_backups
+                else None
+            ),
         }
 
 

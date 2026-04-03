@@ -55,9 +55,7 @@ class SecureSearchService:
     async def _get_pool(self) -> asyncpg.Pool:
         """获取连接池"""
         if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                self.db_url, min_size=2, max_size=10, timeout=10
-            )
+            self._pool = await asyncpg.create_pool(self.db_url, min_size=2, max_size=10, timeout=10)
         return self._pool
 
     async def close(self):

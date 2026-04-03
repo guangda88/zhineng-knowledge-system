@@ -6,15 +6,16 @@
 """
 
 import asyncio
-import aiohttp
+import re
 import sqlite3
 import subprocess
 import sys
-import re
+from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
-from datetime import datetime
-from collections import defaultdict
+
+import aiohttp
 
 # Openlist API
 OPENLIST_BASE = "http://100.66.1.8:2455"
@@ -35,26 +36,17 @@ async def fetch_directory(session: aiohttp.ClientSession, path: str, page: int =
     """获取目录内容"""
     await asyncio.sleep(API_DELAY)
 
-    payload = {
-        "path": path,
-        "password": "",
-        "page": page,
-        "per_page": 200,
-        "refresh": False
-    }
+    payload = {"path": path, "password": "", "page": page, "per_page": 200, "refresh": False}
 
     async with session.post(f"{OPENLIST_BASE}/api/fs/list", json=payload) as resp:
         data = await resp.json()
-        if data.get('code') == 200:
-            return data.get('data', {})
+        if data.get("code") == 200:
+            return data.get("data", {})
         return {}
 
 
 async def scan_files_recursive(
-    session: aiohttp.ClientSession,
-    base_path: str,
-    max_depth: int = 6,
-    depth: int = 0
+    session: aiohttp.ClientSession, base_path: str, max_depth: int = 6, depth: int = 0
 ) -> List[dict]:
     """递归扫描文件"""
     if depth >= max_depth:
@@ -68,27 +60,23 @@ async def scan_files_recursive(
     if not result:
         return []
 
-    items = result.get('content')
+    items = result.get("content")
     if not items:
         return []
 
     files = []
 
     for item in items:
-        name = item.get('name', '')
-        is_dir = item.get('is_dir', False)
-        path = item.get('path', f"{base_path}/{name}")
+        name = item.get("name", "")
+        is_dir = item.get("is_dir", False)
+        path = item.get("path", f"{base_path}/{name}")
 
         if is_dir:
             sub_files = await scan_files_recursive(session, path, max_depth, depth + 1)
             files.extend(sub_files)
         else:
-            ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
-            files.append({
-                'name': name,
-                'path': path,
-                'ext': ext
-            })
+            ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+            files.append({"name": name, "path": path, "ext": ext})
 
     return files
 
@@ -96,14 +84,20 @@ async def scan_files_recursive(
 def exec_sql(sql: str) -> bool:
     """通过 Docker 执行 SQL"""
     cmd = [
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb", "-c", sql
+        "docker",
+        "exec",
+        POSTGRES_CONTAINER,
+        "psql",
+        "-U",
+        "zhineng",
+        "-d",
+        "zhineng_kb",
+        "-c",
+        sql,
     ]
 
     try:
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=30
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         return result.returncode == 0
     except Exception:
         return False
@@ -128,9 +122,7 @@ async def main():
     conn = sqlite3.connect(str(sqlite_db))
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%'"
-    )
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%'")
     tables = [row[0] for row in cursor.fetchall()]
     print(f"  找到 {len(tables)} 个 wx 表")
 
@@ -141,14 +133,14 @@ async def main():
             cursor.execute(f"PRAGMA table_info({table})")
             cols = [col[1] for col in cursor.fetchall()]
 
-            if 'bid' not in cols:
+            if "bid" not in cols:
                 continue
 
             cursor.execute(f"SELECT MIN(bid), MAX(bid) FROM {table}")
             min_bid, max_bid = cursor.fetchone()
 
             if min_bid and max_bid:
-                table_num = re.search(r'\d+', table)
+                table_num = re.search(r"\d+", table)
                 if table_num:
                     num = int(table_num.group())
                     bid_ranges[num] = (min_bid, max_bid, table)
@@ -181,13 +173,13 @@ async def main():
     chinese_files = []  # 中文开头
 
     for f in all_files:
-        name = f['name']
+        name = f["name"]
 
         # 去除扩展名
-        base_name = name.rsplit('.', 1)[0] if '.' in name else name
+        base_name = name.rsplit(".", 1)[0] if "." in name else name
 
         # 检查数字开头
-        match = re.match(r'^0*(\d+)', base_name)
+        match = re.match(r"^0*(\d+)", base_name)
         if match:
             bid = int(match.group(1))
             numeric_files.append((bid, f))
@@ -220,8 +212,8 @@ async def main():
 
         if source_table:
             # 转义单引号
-            safe_name = f['name'].replace("'", "''")
-            safe_path = f['path'].replace("'", "''")
+            safe_name = f["name"].replace("'", "''")
+            safe_path = f["path"].replace("'", "''")
 
             batch_sql.append(
                 f"('{safe_name}', '{safe_path}', '{f['ext']}', {bid}, '{source_table}')"
@@ -257,10 +249,21 @@ async def main():
 
     # 获取统计信息
     result = subprocess.run(
-        ["docker", "exec", POSTGRES_CONTAINER,
-         "psql", "-U", "zhineng", "-d", "zhineng_kb",
-         "-t", "-c", "SELECT COUNT(*) FROM guji_scan_mapping"],
-        capture_output=True, text=True
+        [
+            "docker",
+            "exec",
+            POSTGRES_CONTAINER,
+            "psql",
+            "-U",
+            "zhineng",
+            "-d",
+            "zhineng_kb",
+            "-t",
+            "-c",
+            "SELECT COUNT(*) FROM guji_scan_mapping",
+        ],
+        capture_output=True,
+        text=True,
     )
 
     if result.returncode == 0:
@@ -268,30 +271,50 @@ async def main():
         print(f"  数据库记录数: {total}")
 
     result = subprocess.run(
-        ["docker", "exec", POSTGRES_CONTAINER,
-         "psql", "-U", "zhineng", "-d", "zhineng_kb",
-         "-c", "SELECT source_table, COUNT(*) as cnt FROM guji_scan_mapping GROUP BY source_table ORDER BY cnt DESC LIMIT 10"],
-        capture_output=True, text=True
+        [
+            "docker",
+            "exec",
+            POSTGRES_CONTAINER,
+            "psql",
+            "-U",
+            "zhineng",
+            "-d",
+            "zhineng_kb",
+            "-c",
+            "SELECT source_table, COUNT(*) as cnt FROM guji_scan_mapping GROUP BY source_table ORDER BY cnt DESC LIMIT 10",
+        ],
+        capture_output=True,
+        text=True,
     )
 
     if result.returncode == 0:
         print("\n  按来源表统计:")
-        for line in result.stdout.strip().split('\n'):
-            if line and not line.startswith('-') and 'source_table' not in line:
+        for line in result.stdout.strip().split("\n"):
+            if line and not line.startswith("-") and "source_table" not in line:
                 print(f"    {line}")
 
     # 示例映射
     result = subprocess.run(
-        ["docker", "exec", POSTGRES_CONTAINER,
-         "psql", "-U", "zhineng", "-d", "zhineng_kb",
-         "-c", "SELECT file_name, book_id, source_table FROM guji_scan_mapping LIMIT 10"],
-        capture_output=True, text=True
+        [
+            "docker",
+            "exec",
+            POSTGRES_CONTAINER,
+            "psql",
+            "-U",
+            "zhineng",
+            "-d",
+            "zhineng_kb",
+            "-c",
+            "SELECT file_name, book_id, source_table FROM guji_scan_mapping LIMIT 10",
+        ],
+        capture_output=True,
+        text=True,
     )
 
     if result.returncode == 0:
         print("\n  映射示例:")
-        for line in result.stdout.strip().split('\n'):
-            if line and not line.startswith('-') and 'file_name' not in line:
+        for line in result.stdout.strip().split("\n"):
+            if line and not line.startswith("-") and "file_name" not in line:
                 print(f"    {line}")
 
     print()

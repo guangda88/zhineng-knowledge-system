@@ -12,7 +12,9 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DB_URL = os.environ.get("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+DB_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+)
 
 
 @pytest.fixture
@@ -25,6 +27,7 @@ async def db_pool():
 @pytest.fixture
 def svc(db_pool):
     from backend.services.lingmessage.service import LingMessageService
+
     service = LingMessageService()
 
     async def _get_pool():

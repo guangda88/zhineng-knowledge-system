@@ -5,13 +5,14 @@ Sys_books.db → PostgreSQL sys_books 表导入脚本
 """
 
 import asyncio
-import sqlite3
-import asyncpg
-import os
-import time
 import logging
+import os
+import sqlite3
+import time
 from datetime import datetime
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
+
+import asyncpg
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,7 +29,8 @@ BATCH_SIZE = 5000
 
 
 async def create_table(conn: asyncpg.Connection) -> None:
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS sys_books (
             id SERIAL PRIMARY KEY,
             source TEXT NOT NULL,
@@ -46,7 +48,8 @@ async def create_table(conn: asyncpg.Connection) -> None:
             domain TEXT,
             subcategory TEXT
         )
-    """)
+    """
+    )
 
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_sys_books_domain ON sys_books(domain)",
@@ -102,11 +105,24 @@ def iter_sqlite_batches(batch_size: int):
 
             domain, subcategory = extract_domain(path, category, filename)
 
-            batch.append((
-                source, path, filename, category, author, year_val,
-                book_number, file_type, size, extension, created_date,
-                publisher, domain, subcategory,
-            ))
+            batch.append(
+                (
+                    source,
+                    path,
+                    filename,
+                    category,
+                    author,
+                    year_val,
+                    book_number,
+                    file_type,
+                    size,
+                    extension,
+                    created_date,
+                    publisher,
+                    domain,
+                    subcategory,
+                )
+            )
             total += 1
 
         yield batch
@@ -122,7 +138,9 @@ def extract_domain(path: str, category: str, filename: str) -> Tuple[Optional[st
 
     if any(k in p or k in c for k in ["znqg", "智能气功", "智能功"]):
         return "智能气功", _qigong_sub(p, c)
-    if any(k in p or k in c for k in ["气功", "八段锦", "五禽戏", "六字诀", "易筋经", "太极拳", "太极"]):
+    if any(
+        k in p or k in c for k in ["气功", "八段锦", "五禽戏", "六字诀", "易筋经", "太极拳", "太极"]
+    ):
         if "智能" in c or "znqg" in p:
             return "智能气功", _qigong_sub(p, c)
         return "气功", "其他气功"
@@ -231,7 +249,7 @@ async def main():
             "AND indexname != 'sys_books_pkey'"
         )
         for idx_row in indexes:
-            idx_name = idx_row['indexname']
+            idx_name = idx_row["indexname"]
             logger.info(f"Dropping index {idx_name} for faster import...")
             await conn.execute(f"DROP INDEX IF EXISTS {idx_name}")
 
@@ -260,7 +278,9 @@ async def main():
                 )
 
     elapsed = time.time() - start
-    logger.info(f"\nImport complete: {total_imported:,} rows in {elapsed:.1f}s ({total_imported/elapsed:,.0f} rows/s)")
+    logger.info(
+        f"\nImport complete: {total_imported:,} rows in {elapsed:.1f}s ({total_imported/elapsed:,.0f} rows/s)"
+    )
 
     # Create ALL indexes after all data is loaded (much faster)
     logger.info("Creating indexes on sys_books...")

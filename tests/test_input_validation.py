@@ -49,7 +49,7 @@ class TestInputValidator:
             v.validate_string("<a href='javascript:alert(1)'>link</a>")
 
     def test_xss_detection_event_handler(self):
-        """检测事件处理器 on*= """
+        """检测事件处理器 on*="""
         v = InputValidator()
         with pytest.raises(Exception):
             v.validate_string("<img onerror='alert(1)' src='x'>")
@@ -465,13 +465,13 @@ class TestInputValidator:
         """测试无效 JSON"""
         v = InputValidator()
         with pytest.raises(Exception) as exc_info:
-            v.validate_json_string('{invalid json}')
+            v.validate_json_string("{invalid json}")
         assert "invalid" in str(exc_info.value).lower()
 
     def test_validate_json_string_empty(self):
         """测试空 JSON 对象"""
         v = InputValidator()
-        result = v.validate_json_string('{}')
+        result = v.validate_json_string("{}")
         assert result == {}
 
     # === check_sql_keywords 测试 ===
@@ -508,6 +508,7 @@ class TestInputValidator:
 
 # === 全局验证器测试 ===
 
+
 def test_global_validator_exists():
     """测试全局验证器实例"""
     assert validator is not None
@@ -515,6 +516,7 @@ def test_global_validator_exists():
 
 
 # === Pydantic 验证器测试 ===
+
 
 def test_validate_question_function():
     """测试 validate_question 函数"""
@@ -536,6 +538,7 @@ def test_sanitize_search_query_function():
 
 
 # === 性能测试 ===
+
 
 def test_validate_long_string_performance():
     """测试长字符串处理性能"""

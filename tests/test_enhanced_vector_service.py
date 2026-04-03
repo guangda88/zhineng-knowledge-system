@@ -4,16 +4,18 @@
 文字处理工程流A-2的测试套件
 """
 
-import pytest
 import asyncio
+
 import numpy as np
+import pytest
+
 from backend.services.enhanced_vector_service import (
+    BatchEmbeddingResult,
     EmbeddingProvider,
     EmbeddingResult,
-    BatchEmbeddingResult,
-    VectorQualityAssessor,
     EnhancedEmbeddingService,
-    TextVectorizer
+    TextVectorizer,
+    VectorQualityAssessor,
 )
 
 
@@ -36,7 +38,7 @@ class TestVectorQualityAssessor:
 
     def test_assess_vector_with_nan(self):
         """测试评估包含NaN的向量"""
-        vector = [0.5, float('nan'), 0.5, 0.5]
+        vector = [0.5, float("nan"), 0.5, 0.5]
         score = VectorQualityAssessor.assess(vector)
         assert score == 0.0  # NaN应该得0分
 
@@ -62,8 +64,7 @@ class TestEnhancedEmbeddingService:
     def service(self):
         """创建服务实例"""
         return EnhancedEmbeddingService(
-            preferred_provider=EmbeddingProvider.LOCAL,
-            auto_fallback=True
+            preferred_provider=EmbeddingProvider.LOCAL, auto_fallback=True
         )
 
     def test_embed_single_text(self, service):
@@ -88,7 +89,7 @@ class TestEnhancedEmbeddingService:
         texts = [
             "混元灵通是智能气功的核心理论",
             "组场是智能气功的练习方法",
-            "通过意念引导达到强身健体"
+            "通过意念引导达到强身健体",
         ]
 
         result = asyncio.run(service.embed_batch(texts, batch_size=2))
@@ -111,7 +112,7 @@ class TestEnhancedEmbeddingService:
             "混元灵通是智能气功的核心理论",
             "",  # 空文本
             "   ",  # 只有空白
-            "组场是智能气功的练习方法"
+            "组场是智能气功的练习方法",
         ]
 
         result = asyncio.run(service.embed_batch(texts))
@@ -132,21 +133,17 @@ class TestTextVectorizer:
     @pytest.fixture
     def vectorizer(self):
         """创建向量化器实例"""
-        return TextVectorizer(
-            preferred_provider=EmbeddingProvider.LOCAL
-        )
+        return TextVectorizer(preferred_provider=EmbeddingProvider.LOCAL)
 
     def test_vectorize_text_blocks(self, vectorizer):
         """测试向量化文本块"""
         text_blocks = [
             "混元灵通是智能气功的核心理论。",
             "组场是智能气功的重要练习方法。",
-            "通过意念引导可以增强人体功能。"
+            "通过意念引导可以增强人体功能。",
         ]
 
-        vectors, stats = asyncio.run(
-            vectorizer.vectorize_text_blocks(text_blocks, batch_size=2)
-        )
+        vectors, stats = asyncio.run(vectorizer.vectorize_text_blocks(text_blocks, batch_size=2))
 
         assert len(vectors) == 3
         assert all(isinstance(v, list) for v in vectors)
@@ -166,9 +163,7 @@ class TestTextVectorizer:
 
     def test_vectorize_empty_list(self, vectorizer):
         """测试向量化空列表"""
-        vectors, stats = asyncio.run(
-            vectorizer.vectorize_text_blocks([])
-        )
+        vectors, stats = asyncio.run(vectorizer.vectorize_text_blocks([]))
 
         assert vectors == []
         assert stats == {}
@@ -181,15 +176,14 @@ class TestEmbeddingPerformance:
 
     @pytest.fixture
     def service(self):
-        return EnhancedEmbeddingService(
-            preferred_provider=EmbeddingProvider.LOCAL
-        )
+        return EnhancedEmbeddingService(preferred_provider=EmbeddingProvider.LOCAL)
 
     def test_single_embedding_performance(self, service):
         """测试单个嵌入性能"""
         text = "混元灵通是智能气功的核心理论" * 10  # 较长文本
 
         import time
+
         start = time.time()
         result = asyncio.run(service.embed(text))
         elapsed = time.time() - start
@@ -202,6 +196,7 @@ class TestEmbeddingPerformance:
         texts = [f"这是第{i}段文本内容。" * 10 for i in range(100)]
 
         import time
+
         start = time.time()
         result = asyncio.run(service.embed_batch(texts, batch_size=32))
         elapsed = time.time() - start
@@ -222,13 +217,11 @@ class TestEmbeddingIntegration:
         text_blocks = [
             "第一章 混元灵通理论\n\n混元灵通是智能气功的核心理论，强调通过意念来统一身心。",
             "第二章 组场方法\n\n组场是智能气功的重要练习方法，通过集体意念形成气场。",
-            "第三章 实践应用\n\n智能气功可以应用于康复、保健等多个领域。"
+            "第三章 实践应用\n\n智能气功可以应用于康复、保健等多个领域。",
         ]
 
         vectorizer = TextVectorizer()
-        vectors, stats = asyncio.run(
-            vectorizer.vectorize_text_blocks(text_blocks)
-        )
+        vectors, stats = asyncio.run(vectorizer.vectorize_text_blocks(text_blocks))
 
         # 验证结果
         assert len(vectors) == 3

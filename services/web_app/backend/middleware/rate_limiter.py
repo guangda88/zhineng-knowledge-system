@@ -8,17 +8,17 @@ Supports sliding window, fixed window, and token bucket algorithms.
 """
 
 import asyncio
-import time
 import logging
-from typing import Optional, Dict, Any, Tuple, List
+import time
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import deque
+from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import Request, Response, HTTPException, status
+from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.datastructures import Headers
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .tcm_exceptions import RateLimitError
 
@@ -152,9 +152,7 @@ class InMemoryRateLimiter(RateLimiterBackend):
 
             return is_allowed, {
                 "limit": limit,
-                "remaining": max(
-                    0, limit - request_count - (1 if not is_allowed else 0)
-                ),
+                "remaining": max(0, limit - request_count - (1 if not is_allowed else 0)),
                 "reset": reset_time,
                 "window": window,
             }
@@ -217,9 +215,7 @@ class TokenBucketRateLimiter(RateLimiterBackend):
 
             # Calculate when bucket will be full
             tokens_needed = bucket["burst"] - bucket["tokens"]
-            time_to_full = (
-                tokens_needed / bucket["refill_rate"] if tokens_needed > 0 else 0
-            )
+            time_to_full = tokens_needed / bucket["refill_rate"] if tokens_needed > 0 else 0
 
             return is_allowed, {
                 "limit": int(burst),
@@ -280,9 +276,7 @@ class RedisRateLimiter(RateLimiterBackend):
 
             return is_allowed, {
                 "limit": limit,
-                "remaining": max(
-                    0, limit - request_count - (1 if not is_allowed else 0)
-                ),
+                "remaining": max(0, limit - request_count - (1 if not is_allowed else 0)),
                 "reset": reset_time,
                 "window": window,
             }
@@ -413,9 +407,7 @@ class RateLimiter:
                 is_allowed = False
                 limit_info = check_info
                 break
-            elif (
-                limit_info is None or check_info["remaining"] < limit_info["remaining"]
-            ):
+            elif limit_info is None or check_info["remaining"] < limit_info["remaining"]:
                 limit_info = check_info
 
         if limit_info:
@@ -472,9 +464,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             )
             response.headers["X-RateLimit-Limit"] = str(info.get("limit", ""))
             response.headers["X-RateLimit-Remaining"] = "0"
-            response.headers["X-RateLimit-Reset"] = str(
-                int(info.get("reset", time.time()))
-            )
+            response.headers["X-RateLimit-Reset"] = str(int(info.get("reset", time.time())))
             response.headers["Retry-After"] = str(retry_after)
             return response
 
@@ -485,9 +475,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if info:
             response.headers["X-RateLimit-Limit"] = str(info.get("limit", ""))
             response.headers["X-RateLimit-Remaining"] = str(info.get("remaining", ""))
-            response.headers["X-RateLimit-Reset"] = str(
-                int(info.get("reset", time.time()))
-            )
+            response.headers["X-RateLimit-Reset"] = str(int(info.get("reset", time.time())))
 
         return response
 
@@ -560,9 +548,7 @@ def rate_limit(
                     message=f"Rate limit exceeded for {func.__name__}",
                     limit=requests,
                     window=f"{window}s",
-                    retry_after=int(
-                        info.get("reset", time.time() + window) - time.time()
-                    ),
+                    retry_after=int(info.get("reset", time.time() + window) - time.time()),
                 )
 
             return (
@@ -609,9 +595,7 @@ class RateLimitDependency:
         else:
             self.backend = InMemoryRateLimiter()
 
-    async def __call__(
-        self, request: Request
-    ) -> tuple[bool, dict]:
+    async def __call__(self, request: Request) -> tuple[bool, dict]:
         """
         验证请求速率限制
 
@@ -629,9 +613,7 @@ class RateLimitDependency:
         key = f"{self.key_prefix}:{client_ip}:{request.url.path}"
 
         # 检查是否允许
-        is_allowed, info = await self.backend.is_allowed(
-            key, self.requests, self.window
-        )
+        is_allowed, info = await self.backend.is_allowed(key, self.requests, self.window)
 
         # 添加速率限制响应头
         request.state.rate_limit_info = {
@@ -650,18 +632,16 @@ class RateLimitDependency:
                     "error": "Rate limit exceeded",
                     "limit": info["limit"],
                     "window": f"{self.window}s",
-                    "retry_after": int(
-                        info["reset"] - time.time()
-                    ) if info["reset"] > time.time() else 1
+                    "retry_after": (
+                        int(info["reset"] - time.time()) if info["reset"] > time.time() else 1
+                    ),
                 },
                 headers={
                     "X-RateLimit-Limit": str(info["limit"]),
                     "X-RateLimit-Remaining": str(info["remaining"]),
                     "X-RateLimit-Reset": str(info["reset"]),
-                    "Retry-After": str(
-                        max(1, int(info["reset"] - time.time()))
-                    ),
-                }
+                    "Retry-After": str(max(1, int(info["reset"] - time.time()))),
+                },
             )
 
         return True, info

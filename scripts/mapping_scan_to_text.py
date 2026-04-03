@@ -8,12 +8,12 @@
 3. 建立 guji_scan_mapping 与 guji_documents 的关联
 """
 
-import subprocess
 import re
 import sqlite3
+import subprocess
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
-from collections import defaultdict
 
 # 配置
 POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
@@ -34,7 +34,6 @@ BOOK_NAME_MAPPING = {
     "孝经": ["孝經"],
     "尔雅": ["爾雅", "尔雅"],
     "仪礼疏": ["儀禮", "仪礼"],
-
     # 史部
     "史记": ["史記"],
     "汉书": ["漢書", "前漢書"],
@@ -61,7 +60,6 @@ BOOK_NAME_MAPPING = {
     "资治通鉴": ["資治通鑑", "资治通鉴", "通鉴"],
     "通志": ["通志"],
     "文献通考": ["文獻通考"],
-
     # 子部
     "老子": ["老子", "道德經"],
     "庄子": ["莊子"],
@@ -79,7 +77,6 @@ BOOK_NAME_MAPPING = {
     "法言": ["法言"],
     "论衡": ["論衡"],
     "颜氏家训": ["顔氏家訓"],
-
     # 集部
     "文选": ["文選", "昭明文選"],
     "李太白集": ["李太白", "李白"],
@@ -88,7 +85,6 @@ BOOK_NAME_MAPPING = {
     "稼轩词": ["稼軒詞", "辛弃疾"],
     "放翁词": ["放翁詞", "陆游"],
     "漱玉词": ["漱玉詞", "李清照"],
-
     # 其他常见
     "北溪字义": ["北溪字義", "北溪"],
     "四书章句集注": ["四書章句集注", "四书"],
@@ -99,26 +95,26 @@ BOOK_NAME_MAPPING = {
 def extract_book_name(filename: str) -> str:
     """从文件名提取书名"""
     # 去除扩展名
-    name = filename.rsplit('.', 1)[0] if '.' in filename else filename
+    name = filename.rsplit(".", 1)[0] if "." in filename else filename
 
     # 去除数字前缀
-    name = re.sub(r'^\d+', '', name)
+    name = re.sub(r"^\d+", "", name)
 
     # 特殊处理：去除 "正義"、"疏"、"注" 等版本标识
-    name = re.sub(r'[正义疏注]+[一二三四五六七八九十百千万]*$', '', name)
+    name = re.sub(r"[正义疏注]+[一二三四五六七八九十百千万]*$", "", name)
 
     # 去除卷号标识（如 "一", "二", "上", "下", "卷一" 等）
-    name = re.sub(r'[一二三四五六七八九十百千万上下卷部種編]+$[、\s]*', '', name)
-    name = re.sub(r'卷[一二三四五六七八九十百千万]+', '', name)
+    name = re.sub(r"[一二三四五六七八九十百千万上下卷部種編]+$[、\s]*", "", name)
+    name = re.sub(r"卷[一二三四五六七八九十百千万]+", "", name)
 
     # 去除版本说明（如 "宋刊本", "明刻本" 等）
-    name = re.sub(r'\s*[宋元明清明][刊刻校本]*本.*$', '', name)
+    name = re.sub(r"\s*[宋元明清明][刊刻校本]*本.*$", "", name)
 
     # 去除括号内容
-    name = re.sub(r'[（(].*?[）)]', '', name)
+    name = re.sub(r"[（(].*?[）)]", "", name)
 
     # 去除特殊字符
-    name = name.strip(' ._-、（）')
+    name = name.strip(" ._-、（）")
 
     return name
 
@@ -126,14 +122,14 @@ def extract_book_name(filename: str) -> str:
 def normalize_book_name(name: str) -> str:
     """标准化书名用于匹配"""
     # 繁简转换（这里只处理常见情况）
-    name = name.replace('周易', '周易')
-    name = name.replace('尚書', '尚书')
-    name = name.replace('毛詩', '毛诗')
-    name = name.replace('周禮', '周礼')
-    name = name.replace('儀禮', '仪礼')
-    name = name.replace('禮記', '礼记')
-    name = name.replace('論語', '论语')
-    name = name.replace('孟子', '孟子')
+    name = name.replace("周易", "周易")
+    name = name.replace("尚書", "尚书")
+    name = name.replace("毛詩", "毛诗")
+    name = name.replace("周禮", "周礼")
+    name = name.replace("儀禮", "仪礼")
+    name = name.replace("禮記", "礼记")
+    name = name.replace("論語", "论语")
+    name = name.replace("孟子", "孟子")
 
     return name
 
@@ -158,7 +154,7 @@ def find_content_in_sqlite(book_name: str, conn: sqlite3.Connection) -> List[Tup
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, bid, substr(body, 1, 100) as preview FROM wx200 WHERE body LIKE ? LIMIT 5",
-            (f'%{variant}%',)
+            (f"%{variant}%",),
         )
 
         for row in cursor.fetchall():
@@ -174,8 +170,16 @@ def find_content_in_sqlite(book_name: str, conn: sqlite3.Connection) -> List[Tup
 def exec_sql(sql: str) -> bool:
     """通过 Docker 执行 SQL"""
     cmd = [
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb", "-c", sql
+        "docker",
+        "exec",
+        POSTGRES_CONTAINER,
+        "psql",
+        "-U",
+        "zhineng",
+        "-d",
+        "zhineng_kb",
+        "-c",
+        sql,
     ]
 
     try:
@@ -195,16 +199,28 @@ def main():
     # 1. 获取当前扫描文档映射
     print("📁 读取扫描文档映射...")
 
-    result = subprocess.run([
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb",
-        "-t", "-c", "SELECT file_name, book_id, file_path FROM guji_scan_mapping ORDER BY book_id"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            "docker",
+            "exec",
+            POSTGRES_CONTAINER,
+            "psql",
+            "-U",
+            "zhineng",
+            "-d",
+            "zhineng_kb",
+            "-t",
+            "-c",
+            "SELECT file_name, book_id, file_path FROM guji_scan_mapping ORDER BY book_id",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
     scan_files = []
-    for line in result.stdout.strip().split('\n'):
-        if line and '|' in line and not line.startswith('-'):
-            parts = [p.strip() for p in line.split('|')]
+    for line in result.stdout.strip().split("\n"):
+        if line and "|" in line and not line.startswith("-"):
+            parts = [p.strip() for p in line.split("|")]
             if len(parts) >= 2:
                 filename = parts[0]
                 try:
@@ -231,7 +247,8 @@ def main():
     print("🔍 匹配扫描文档与文本内容...")
 
     # 创建新的映射表
-    exec_sql("""
+    exec_sql(
+        """
         CREATE TABLE IF NOT EXISTS guji_content_mapping (
             id SERIAL PRIMARY KEY,
             scan_file_name VARCHAR(255),
@@ -242,7 +259,8 @@ def main():
             content_preview TEXT,
             created_at TIMESTAMP DEFAULT NOW()
         );
-    """)
+    """
+    )
 
     # 清空旧映射
     exec_sql("TRUNCATE TABLE guji_content_mapping")
@@ -263,13 +281,15 @@ def main():
             for source_id, bid, preview in contents[:3]:  # 最多3条
                 safe_preview = preview.replace("'", "''")[:200]
 
-                exec_sql(f"""
+                exec_sql(
+                    f"""
                     INSERT INTO guji_content_mapping
                     (scan_file_name, scan_book_id, content_book_name,
                      content_source_id, content_source_table, content_preview)
                     VALUES ('{filename}', {scan_book_id}, '{book_name}',
                             {source_id}, 'wx200', '{safe_preview}')
-                """)
+                """
+                )
 
                 matched += 1
 
@@ -285,11 +305,23 @@ def main():
     print("=" * 70)
 
     # 统计
-    result = subprocess.run([
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb",
-        "-t", "-c", "SELECT COUNT(*) FROM guji_content_mapping"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            "docker",
+            "exec",
+            POSTGRES_CONTAINER,
+            "psql",
+            "-U",
+            "zhineng",
+            "-d",
+            "zhineng_kb",
+            "-t",
+            "-c",
+            "SELECT COUNT(*) FROM guji_content_mapping",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
     if result.returncode == 0:
         total = result.stdout.strip()

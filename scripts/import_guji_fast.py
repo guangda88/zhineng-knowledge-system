@@ -14,10 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import asyncpg
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +23,8 @@ SOURCE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guox
 
 async def create_guji_tables(conn: asyncpg.Connection) -> None:
     """创建古籍数据表"""
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS guji_documents (
             id SERIAL PRIMARY KEY,
             source_table VARCHAR(50) NOT NULL,
@@ -40,32 +38,38 @@ async def create_guji_tables(conn: asyncpg.Connection) -> None:
             created_at TIMESTAMP DEFAULT NOW(),
             UNIQUE(source_table, source_id)
         );
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_source ON guji_documents(source_table, source_id);
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_title ON guji_documents USING gin(to_tsvector('simple', title));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_guji_content ON guji_documents USING gin(to_tsvector('simple', content));
-    """)
+    """
+    )
 
-    await conn.execute("""
+    await conn.execute(
+        """
         TRUNCATE guji_documents;
-    """)
+    """
+    )
 
     logger.info("古籍数据表创建完成")
 
 
 async def import_table_data(
-    conn: asyncpg.Connection,
-    source_db: str,
-    table: str,
-    batch_size: int = 50000
+    conn: asyncpg.Connection, source_db: str, table: str, batch_size: int = 50000
 ) -> int:
     """导入单个表的数据"""
     sqlite_conn = sqlite3.connect(source_db)
@@ -90,17 +94,17 @@ async def import_table_data(
         data = []
         for row in rows:
             # wx表结构: id, body, bid (或其他)
-            row_id = row['id'] if 'id' in row.keys() else row[0]
+            row_id = row["id"] if "id" in row.keys() else row[0]
             title = None
             content = None
 
-            if 'body' in row.keys() and row['body']:
-                content = row['body']
+            if "body" in row.keys() and row["body"]:
+                content = row["body"]
                 # 从内容开头提取标题（前20字）
                 if content and len(content) > 20:
-                    title = content[:30].split('\n')[0][:50]
-            elif 'd' in row.keys() and row['d']:
-                content = row['d']
+                    title = content[:30].split("\n")[0][:50]
+            elif "d" in row.keys() and row["d"]:
+                content = row["d"]
 
             content_length = len(content) if content else 0
 
@@ -108,16 +112,18 @@ async def import_table_data(
             if content_length < 10:
                 continue
 
-            data.append([
-                table,
-                row_id,
-                title,
-                content,
-                content_length,
-                None,  # dynasty
-                '古籍',
-                '{}',  # tags
-            ])
+            data.append(
+                [
+                    table,
+                    row_id,
+                    title,
+                    content,
+                    content_length,
+                    None,  # dynasty
+                    "古籍",
+                    "{}",  # tags
+                ]
+            )
 
         if data:
             async with conn.transaction():
@@ -127,7 +133,7 @@ async def import_table_data(
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
                     ON CONFLICT (source_table, source_id) DO NOTHING
                     """,
-                    data
+                    data,
                 )
             imported += len(data)
             logger.info(f"  {table}: {imported:,}/{total:,}")
@@ -142,7 +148,9 @@ async def import_table_data(
 async def main():
     import os
 
-    database_url = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+    database_url = os.getenv(
+        "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    )
 
     if not SOURCE_DB.exists():
         logger.error(f"源数据库不存在: {SOURCE_DB}")
@@ -186,13 +194,15 @@ async def main():
                 logger.error(f"导入表 {table} 失败: {e}")
 
         # 获取统计
-        stats = await pg_conn.fetchrow("""
+        stats = await pg_conn.fetchrow(
+            """
             SELECT
                 COUNT(*) as total_documents,
                 COUNT(DISTINCT source_table) as total_tables,
                 SUM(content_length) as total_content
             FROM guji_documents
-        """)
+        """
+        )
 
         await pg_conn.close()
 

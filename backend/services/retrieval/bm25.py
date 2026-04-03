@@ -193,8 +193,10 @@ class BM25Retriever:
                     category,
                 )
             else:
-                rows = await conn.fetch("""SELECT id, title, content, category
-                       FROM documents""")
+                rows = await conn.fetch(
+                    """SELECT id, title, content, category
+                       FROM documents"""
+                )
 
         scores = []
         for row in rows:

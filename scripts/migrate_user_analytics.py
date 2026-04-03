@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
+
 from backend.core.database import init_db_pool
 
 
@@ -19,7 +20,7 @@ async def run_migration():
 
     # 读取迁移SQL
     migration_file = Path(__file__).parent / "migrations" / "add_user_analytics.sql"
-    with open(migration_file, 'r') as f:
+    with open(migration_file, "r") as f:
         sql_content = f.read()
 
     print("🚀 Starting user analytics migration...")
@@ -35,9 +36,9 @@ async def run_migration():
             current_statement = []
             in_comment = False
 
-            for line in sql_content.split('\n'):
+            for line in sql_content.split("\n"):
                 # 跳过注释块
-                if line.strip().startswith('--'):
+                if line.strip().startswith("--"):
                     continue
 
                 # 累积语句
@@ -45,15 +46,15 @@ async def run_migration():
                     current_statement.append(line)
                 elif current_statement:
                     # 空行，结束当前语句
-                    stmt = '\n'.join(current_statement).strip()
-                    if stmt and not stmt.startswith('--'):
+                    stmt = "\n".join(current_statement).strip()
+                    if stmt and not stmt.startswith("--"):
                         statements.append(stmt)
                     current_statement = []
 
             # 添加最后一个语句
             if current_statement:
-                stmt = '\n'.join(current_statement).strip()
-                if stmt and not stmt.startswith('--'):
+                stmt = "\n".join(current_statement).strip()
+                if stmt and not stmt.startswith("--"):
                     statements.append(stmt)
 
             # 执行语句
@@ -62,7 +63,7 @@ async def run_migration():
 
             for i, statement in enumerate(statements, 1):
                 # 跳过纯注释和空语句
-                if not statement or statement.startswith('--'):
+                if not statement or statement.startswith("--"):
                     continue
 
                 try:
@@ -93,17 +94,15 @@ async def run_migration():
             print("📊 Verifying tables...")
 
             tables_to_check = [
-                'user_activity_log',
-                'user_feedback',
-                'user_profile',
-                'data_deletion_requests'
+                "user_activity_log",
+                "user_feedback",
+                "user_profile",
+                "data_deletion_requests",
             ]
 
             for table in tables_to_check:
                 try:
-                    result = await conn.execute(
-                        text(f"SELECT COUNT(*) FROM {table}")
-                    )
+                    result = await conn.execute(text(f"SELECT COUNT(*) FROM {table}"))
                     count = result.scalar()
                     print(f"✓ Table '{table}' exists (count: {count})")
                 except Exception as e:
@@ -115,6 +114,7 @@ async def run_migration():
     except Exception as e:
         print(f"\n❌ Migration failed: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

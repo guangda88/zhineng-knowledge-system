@@ -2,6 +2,7 @@
 
 直接使用asyncpg导入数据，避免复杂的导入问题
 """
+
 import asyncio
 import os
 
@@ -18,14 +19,12 @@ async def import_sample_books():
     try:
         async with pool.acquire() as conn:
             # 获取本地数据源ID
-            source_row = await conn.fetchrow(
-                "SELECT id FROM data_sources WHERE code = 'local'"
-            )
+            source_row = await conn.fetchrow("SELECT id FROM data_sources WHERE code = 'local'")
             if not source_row:
                 print("❌ 未找到本地数据源")
                 return
 
-            source_id = source_row['id']
+            source_id = source_row["id"]
             print(f"✅ 使用数据源ID: {source_id}")
 
             # 示例书籍数据
@@ -93,7 +92,7 @@ async def import_sample_books():
                     "dynasty": "东汉",
                     "year": "公元1-2世纪",
                     "description": "《神农本草经》是中国最早的药物学经典。",
-                }
+                },
             ]
 
             # 插入书籍
@@ -106,16 +105,16 @@ async def import_sample_books():
                     ON CONFLICT (title) DO UPDATE SET author = EXCLUDED.author
                     RETURNING id
                     """,
-                    book_data['title'],
-                    book_data['author'],
-                    book_data['category'],
-                    book_data['dynasty'],
-                    book_data['year'],
-                    book_data['description'],
-                    'zh',
+                    book_data["title"],
+                    book_data["author"],
+                    book_data["category"],
+                    book_data["dynasty"],
+                    book_data["year"],
+                    book_data["description"],
+                    "zh",
                     True,
                     50000,
-                    source_id
+                    source_id,
                 )
                 book_ids.append(book_id)
                 print(f"✅ 插入书籍: {book_data['title']} (ID: {book_id})")
@@ -145,7 +144,12 @@ async def import_sample_books():
                         ON CONFLICT DO NOTHING
                         RETURNING id
                         """,
-                        book_id, j, chapter_title, chapter_content, len(chapter_content), j
+                        book_id,
+                        j,
+                        chapter_title,
+                        chapter_content,
+                        len(chapter_content),
+                        j,
                     )
                     print(f"  ✅ 书籍 {book_id}: 添加章节 '{chapter_title}' (ID: {chapter_id})")
 
@@ -160,6 +164,7 @@ async def import_sample_books():
     except Exception as e:
         print(f"❌ 导入失败: {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         await pool.close()
@@ -168,7 +173,7 @@ async def import_sample_books():
 async def generate_embeddings():
     """为书籍生成向量嵌入"""
     from backend.core.database import init_db_pool
-    from backend.services.retrieval.vector import _get_model, _MODEL_DIM
+    from backend.services.retrieval.vector import _MODEL_DIM, _get_model
 
     print("\n=== 生成向量嵌入 ===")
 
@@ -195,6 +200,7 @@ async def generate_embeddings():
 
         # 生成向量
         import asyncio
+
         loop = asyncio.get_event_loop()
 
         updated = 0
@@ -214,7 +220,8 @@ async def generate_embeddings():
                 async with pool.acquire() as conn:
                     await conn.execute(
                         "UPDATE books SET embedding = $1::vector WHERE id = $2",
-                        vector_str, row['id']
+                        vector_str,
+                        row["id"],
                     )
                 updated += 1
                 print(f"✅ [{updated}/{total}] {row['title']}")
@@ -223,7 +230,9 @@ async def generate_embeddings():
                 print(f"❌ {row['title']}: {e}")
 
         async with pool.acquire() as conn:
-            with_embedding = await conn.fetchval("SELECT COUNT(*) FROM books WHERE embedding IS NOT NULL")
+            with_embedding = await conn.fetchval(
+                "SELECT COUNT(*) FROM books WHERE embedding IS NOT NULL"
+            )
 
         print(f"\n向量生成完成: {updated}/{total}")
         print(f"总计有向量的书籍: {with_embedding}")
@@ -231,6 +240,7 @@ async def generate_embeddings():
     except Exception as e:
         print(f"❌ 生成向量失败: {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         await pool.close()

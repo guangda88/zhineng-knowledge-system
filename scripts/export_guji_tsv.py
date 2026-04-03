@@ -39,7 +39,9 @@ def main():
     cur = conn.cursor()
 
     # Get tables
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name")
+    cur.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name"
+    )
     tables = []
     for (name,) in cur.fetchall():
         cur.execute(f"SELECT COUNT(*) FROM [{name}]")
@@ -80,7 +82,9 @@ def main():
                         continue
 
                     title = content[:50].split("\n")[0][:50]
-                    f.write(f"{esc(table)}\t{esc(row_id)}\t{esc(title)}\t{esc(content)}\t{esc(len(content))}\t\\N\t古籍\t{{}}\n")
+                    f.write(
+                        f"{esc(table)}\t{esc(row_id)}\t{esc(title)}\t{esc(content)}\t{esc(len(content))}\t\\N\t古籍\t{{}}\n"
+                    )
                     table_count += 1
 
                 last_id = rows[-1]["id"] if "id" in rows[-1].keys() else rows[-1][0]
@@ -88,7 +92,9 @@ def main():
             total += table_count
             elapsed = time.time() - t0
             rate = total / elapsed if elapsed > 0 else 0
-            logger.info(f"  => {table}: {table_count:,} in {time.time()-t_table:.0f}s, total: {total:,} ({rate:.0f}/s)")
+            logger.info(
+                f"  => {table}: {table_count:,} in {time.time()-t_table:.0f}s, total: {total:,} ({rate:.0f}/s)"
+            )
 
     conn.close()
     elapsed = time.time() - t0

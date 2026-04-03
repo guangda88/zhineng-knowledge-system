@@ -9,27 +9,28 @@
 - 性能测试（响应时间）
 """
 
-import pytest
 import asyncio
 import json
-from pathlib import Path
-from typing import List
 
 # 导入待测试的模块
 import sys
+from pathlib import Path
+from typing import List
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from autonomous_processor import (
-    AutonomousTocExtractor,
-    TocExpander,
-    SmartTextSegmenter,
     AutonomousTextbookProcessor,
+    AutonomousTocExtractor,
     ProcessingResult,
-    TocItem,
+    ProcessingStage,
+    SmartTextSegmenter,
     TextBlock,
-    ProcessingStage
+    TocExpander,
+    TocItem,
 )
-
 
 # ============================================================================
 # 测试数据
@@ -114,6 +115,7 @@ REAL_TEXTBOOK_SAMPLE = """气功与人类文化
 # AutonomousTocExtractor 测试
 # ============================================================================
 
+
 class TestAutonomousTocExtractor:
     """TOC提取器测试"""
 
@@ -151,7 +153,14 @@ class TestAutonomousTocExtractor:
         assert len(levels) >= 1, "至少应该有一个层级"
 
         # 验证第一章存在
-        chapter_1 = next((item for item in items if "第一章" in item.title or "气功与人类文化的源起" in item.title), None)
+        chapter_1 = next(
+            (
+                item
+                for item in items
+                if "第一章" in item.title or "气功与人类文化的源起" in item.title
+            ),
+            None,
+        )
         assert chapter_1 is not None, "应该找到第一章"
 
     def test_extract_real_textbook_sample(self, extractor):
@@ -177,7 +186,9 @@ class TestAutonomousTocExtractor:
                 # 找到父节点
                 parent = next((p for p in items if p.id == item.parent_id), None)
                 assert parent is not None, f"找不到父节点: {item.parent_id}"
-                assert parent.level < item.level, f"父节点级别应该小于子节点: {parent.level} vs {item.level}"
+                assert (
+                    parent.level < item.level
+                ), f"父节点级别应该小于子节点: {parent.level} vs {item.level}"
                 assert item.id in parent.children, f"子节点应该在父节点的children列表中"
 
     def test_empty_content(self, extractor):
@@ -213,7 +224,7 @@ class TestAutonomousTocExtractor:
     def test_line_numbers(self, extractor):
         """测试行号准确性"""
         content = REAL_TEXTBOOK_SAMPLE
-        lines = content.split('\n')
+        lines = content.split("\n")
         items = extractor.extract(content)
 
         for item in items:
@@ -222,13 +233,15 @@ class TestAutonomousTocExtractor:
             if item.line_number < len(lines):
                 line = lines[item.line_number]
                 # 标题或其附近应该包含关键词
-                assert any(keyword in line or keyword in content for keyword in ["章", "节", "第"]), \
-                    f"行{item.line_number}内容不匹配: {line}"
+                assert any(
+                    keyword in line or keyword in content for keyword in ["章", "节", "第"]
+                ), f"行{item.line_number}内容不匹配: {line}"
 
 
 # ============================================================================
 # SmartTextSegmenter 测试
 # ============================================================================
+
 
 class TestSmartTextSegmenter:
     """智能文本分割器测试"""
@@ -240,9 +253,7 @@ class TestSmartTextSegmenter:
     def test_segment_simple_text(self, segmenter):
         """测试简单文本分割"""
         content = "第一章 概述\n\n这是第一章的内容。\n\n包含多个段落。\n\n最后一段。"
-        toc_items = [
-            TocItem(id="toc_0000", title="概述", level=1, line_number=0)
-        ]
+        toc_items = [TocItem(id="toc_0000", title="概述", level=1, line_number=0)]
         blocks = segmenter.segment(content, toc_items)
 
         assert len(blocks) >= 1, "应该至少有一个文本块"
@@ -269,9 +280,7 @@ class TestSmartTextSegmenter:
         # 创建一个大段落
         long_paragraph = "这是一个很长的段落。" * 100  # 约1000字符
         content = f"第一章 概述\n\n{long_paragraph}"
-        toc_items = [
-            TocItem(id="toc_0000", title="概述", level=1, line_number=0)
-        ]
+        toc_items = [TocItem(id="toc_0000", title="概述", level=1, line_number=0)]
         blocks = segmenter.segment(content, toc_items)
 
         # 所有块应该接近或小于最大限制
@@ -282,9 +291,7 @@ class TestSmartTextSegmenter:
     def test_empty_blocks(self, segmenter):
         """测试空块处理"""
         content = "第一章 概述\n\n\n\n\n"
-        toc_items = [
-            TocItem(id="toc_0000", title="概述", level=1, line_number=0)
-        ]
+        toc_items = [TocItem(id="toc_0000", title="概述", level=1, line_number=0)]
         blocks = segmenter.segment(content, toc_items)
 
         # 不应该有纯空内容的块
@@ -302,9 +309,7 @@ class TestSmartTextSegmenter:
 这是第三个段落。
 
 这是第四个段落，应该被正确分割。"""
-        toc_items = [
-            TocItem(id="toc_0000", title="概述", level=1, line_number=0)
-        ]
+        toc_items = [TocItem(id="toc_0000", title="概述", level=1, line_number=0)]
         blocks = segmenter.segment(content, toc_items)
 
         # 验证段落没有被错误分割
@@ -322,17 +327,15 @@ class TestSmartTextSegmenter:
 第一句。第二句。第三句。第四句。第五句。
 
 另一个段落的第一句。第二句。第三句。"""
-        toc_items = [
-            TocItem(id="toc_0000", title="概述", level=1, line_number=0)
-        ]
+        toc_items = [TocItem(id="toc_0000", title="概述", level=1, line_number=0)]
         blocks = segmenter.segment(content, toc_items)
 
         # 检查句子完整性
         for block in blocks:
             # 不应该有以逗号结尾的行（除非是特殊标点）
-            lines = block.content.split('\n')
+            lines = block.content.split("\n")
             for line in lines:
-                if line.strip() and line.strip()[-1] in '，。！？；':
+                if line.strip() and line.strip()[-1] in "，。！？；":
                     pass  # 中文标点是正常的
                 elif line.strip():
                     # 英文标点或其他情况
@@ -351,13 +354,14 @@ class TestSmartTextSegmenter:
         for block in blocks:
             assert block.start_line >= 0, "start_line应该>=0"
             assert block.end_line > block.start_line, "end_line应该>start_line"
-            assert 0 <= block.toc_id in [t.id for t in toc_items] or block.toc_id is None, \
-                "toc_id应该是有效的"
+            assert (
+                0 <= block.toc_id in [t.id for t in toc_items] or block.toc_id is None
+            ), "toc_id应该是有效的"
 
     def test_line_number_accuracy(self, segmenter):
         """测试行号准确性"""
         content = REAL_TEXTBOOK_SAMPLE
-        lines = content.split('\n')
+        lines = content.split("\n")
         toc_items = [
             TocItem(id="toc_0000", title="第一章", level=1, line_number=33),
         ]
@@ -372,15 +376,14 @@ class TestSmartTextSegmenter:
 # AutonomousTextbookProcessor 测试
 # ============================================================================
 
+
 class TestAutonomousTextbookProcessor:
     """主处理器测试"""
 
     @pytest.fixture
     def processor(self):
         return AutonomousTextbookProcessor(
-            api_key=None,  # 使用模拟模式
-            max_block_chars=300,
-            target_toc_depth=5
+            api_key=None, max_block_chars=300, target_toc_depth=5  # 使用模拟模式
         )
 
     @pytest.mark.asyncio
@@ -388,7 +391,10 @@ class TestAutonomousTextbookProcessor:
         """测试处理简单教科书"""
         # 创建临时文件
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
             f.write(SIMPLE_TEXTBOOK)
             temp_file = f.name
 
@@ -410,7 +416,10 @@ class TestAutonomousTextbookProcessor:
         """测试处理真实样本"""
         # 创建临时文件
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
             f.write(REAL_TEXTBOOK_SAMPLE)
             temp_file = f.name
 
@@ -418,13 +427,17 @@ class TestAutonomousTextbookProcessor:
             result = await processor.process(temp_file)
 
             assert result.stage == ProcessingStage.COMPLETED, "处理应该完成"
-            assert len(result.toc_items) >= 2, f"应该提取到至少2个章节，实际{len(result.toc_items)}个"
+            assert (
+                len(result.toc_items) >= 2
+            ), f"应该提取到至少2个章节，实际{len(result.toc_items)}个"
 
             # 验证统计数据
             # toc_items_extracted是初始提取的，toc_items_expanded是扩展后的总数
             assert result.statistics["toc_items_extracted"] >= 2, "应该至少提取2个章节"
             if "toc_items_expanded" in result.statistics:
-                assert result.statistics["toc_items_expanded"] == len(result.toc_items), "扩展后的数量应该匹配"
+                assert result.statistics["toc_items_expanded"] == len(
+                    result.toc_items
+                ), "扩展后的数量应该匹配"
             assert result.statistics["text_blocks_created"] == len(result.text_blocks)
         finally:
             Path(temp_file).unlink()
@@ -439,7 +452,10 @@ class TestAutonomousTextbookProcessor:
     async def test_empty_file(self, processor):
         """测试空文件"""
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
             f.write("")
             temp_file = f.name
 
@@ -456,7 +472,10 @@ class TestAutonomousTextbookProcessor:
     async def test_result_serialization(self, processor):
         """测试结果序列化"""
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
             f.write(SIMPLE_TEXTBOOK)
             temp_file = f.name
 
@@ -481,7 +500,10 @@ class TestAutonomousTextbookProcessor:
     async def test_statistics_accuracy(self, processor):
         """测试统计信息准确性"""
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
             f.write(REAL_TEXTBOOK_SAMPLE)
             temp_file = f.name
 
@@ -491,15 +513,19 @@ class TestAutonomousTextbookProcessor:
             # 验证TOC统计
             # toc_items_extracted是初始提取的数量，toc_items可能包含扩展的子项
             assert result.statistics["toc_items_extracted"] >= 0
-            assert result.statistics["toc_max_level"] == max((item.level for item in result.toc_items), default=0)
+            assert result.statistics["toc_max_level"] == max(
+                (item.level for item in result.toc_items), default=0
+            )
 
             # 验证文本块统计
             assert result.statistics["text_blocks_created"] == len(result.text_blocks)
 
             if result.text_blocks:
                 block_sizes = [b.char_count for b in result.text_blocks]
-                assert abs(result.statistics["avg_block_size"] - sum(block_sizes)/len(block_sizes)) < 0.1, \
-                    "平均块大小计算错误"
+                assert (
+                    abs(result.statistics["avg_block_size"] - sum(block_sizes) / len(block_sizes))
+                    < 0.1
+                ), "平均块大小计算错误"
                 assert result.statistics["max_block_size"] == max(block_sizes)
                 assert result.statistics["min_block_size"] == min(block_sizes)
 
@@ -512,6 +538,7 @@ class TestAutonomousTextbookProcessor:
 # ============================================================================
 # 数据结构测试
 # ============================================================================
+
 
 class TestDataStructures:
     """数据结构测试"""
@@ -528,7 +555,7 @@ class TestDataStructures:
             children=["toc_0001", "toc_0002"],
             text_range=(10, 100),
             generated=False,
-            confidence=1.0
+            confidence=1.0,
         )
         item_dict = item.to_dict()
 
@@ -552,7 +579,7 @@ class TestDataStructures:
             start_line=10,
             end_line=20,
             subsections=["第一节", "第二节"],
-            quality_score=0.9
+            quality_score=0.9,
         )
         block_dict = block.to_dict()
 
@@ -569,11 +596,7 @@ class TestDataStructures:
         """测试TextBlock自动计算字符数"""
         content = "这是一段测试内容，共20个字符。"
         block = TextBlock(
-            id="block_0000",
-            toc_id="toc_0000",
-            content=content,
-            start_line=0,
-            end_line=1
+            id="block_0000", toc_id="toc_0000", content=content, start_line=0, end_line=1
         )
 
         assert block.char_count == len(content)
@@ -588,7 +611,7 @@ class TestDataStructures:
             text_blocks=[],
             statistics={"test": 123},
             issues=["警告信息"],
-            quality_metrics={"quality": 0.9}
+            quality_metrics={"quality": 0.9},
         )
         result_dict = result.to_dict()
 
@@ -605,6 +628,7 @@ class TestDataStructures:
 # ============================================================================
 # 边界和异常测试
 # ============================================================================
+
 
 class TestEdgeCasesAndExceptions:
     """边界和异常测试"""
@@ -672,6 +696,7 @@ class TestEdgeCasesAndExceptions:
 # 性能测试
 # ============================================================================
 
+
 class TestPerformance:
     """性能测试"""
 
@@ -688,6 +713,7 @@ class TestPerformance:
             content += f"这是第{i}章的内容。" * 100 + "\n\n"
 
         import time
+
         start = time.time()
         items = extractor.extract(content)
         elapsed = time.time() - start
@@ -699,6 +725,7 @@ class TestPerformance:
     def test_memory_usage(self, extractor):
         """测试内存使用"""
         import tracemalloc
+
         tracemalloc.start()
 
         content = REAL_TEXTBOOK_SAMPLE * 10  # 重复10次
@@ -718,4 +745,5 @@ class TestPerformance:
 if __name__ == "__main__":
     # 运行测试
     import sys
+
     sys.exit(pytest.main([__file__, "-v", "--tb=short"]))

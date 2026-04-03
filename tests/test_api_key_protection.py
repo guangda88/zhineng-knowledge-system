@@ -8,8 +8,9 @@
 """
 
 import os
+
 import pytest
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from starlette.testclient import TestClient
 
 from backend.core.dependency_injection import require_admin_api_key
@@ -32,6 +33,7 @@ class TestNoKeysConfigured:
         os.environ.pop("ADMIN_API_KEYS", None)
         # 需要重新创建 config 单例以反映环境变化
         import backend.config
+
         backend.config._config = None
 
         app = _make_app()
@@ -48,11 +50,13 @@ class TestKeysConfigured:
     def _setup_keys(self, keys):
         os.environ["ADMIN_API_KEYS"] = keys
         import backend.config
+
         backend.config._config = None
 
     def _cleanup(self):
         os.environ.pop("ADMIN_API_KEYS", None)
         import backend.config
+
         backend.config._config = None
 
     def test_rejects_without_key(self):
@@ -70,10 +74,7 @@ class TestKeysConfigured:
         try:
             app = _make_app()
             client = TestClient(app)
-            resp = client.get(
-                "/protected",
-                headers={"X-Admin-API-Key": "wrong-key"}
-            )
+            resp = client.get("/protected", headers={"X-Admin-API-Key": "wrong-key"})
             assert resp.status_code == 403
         finally:
             self._cleanup()
@@ -83,10 +84,7 @@ class TestKeysConfigured:
         try:
             app = _make_app()
             client = TestClient(app)
-            resp = client.get(
-                "/protected",
-                headers={"X-Admin-API-Key": "valid-key-123"}
-            )
+            resp = client.get("/protected", headers={"X-Admin-API-Key": "valid-key-123"})
             assert resp.status_code == 200
         finally:
             self._cleanup()
@@ -106,22 +104,13 @@ class TestKeysConfigured:
         try:
             app = _make_app()
             client = TestClient(app)
-            resp1 = client.get(
-                "/protected",
-                headers={"X-Admin-API-Key": "key-two"}
-            )
+            resp1 = client.get("/protected", headers={"X-Admin-API-Key": "key-two"})
             assert resp1.status_code == 200
 
-            resp2 = client.get(
-                "/protected",
-                headers={"X-Admin-API-Key": "key-one"}
-            )
+            resp2 = client.get("/protected", headers={"X-Admin-API-Key": "key-one"})
             assert resp2.status_code == 200
 
-            resp3 = client.get(
-                "/protected",
-                headers={"X-Admin-API-Key": "key-four"}
-            )
+            resp3 = client.get("/protected", headers={"X-Admin-API-Key": "key-four"})
             assert resp3.status_code == 403
         finally:
             self._cleanup()
@@ -132,8 +121,7 @@ class TestKeysConfigured:
             app = _make_app()
             client = TestClient(app)
             resp = client.get(
-                "/protected?admin_api_key=valid-key",
-                headers={"X-Admin-API-Key": "valid-key"}
+                "/protected?admin_api_key=valid-key", headers={"X-Admin-API-Key": "valid-key"}
             )
             assert resp.status_code == 200
         finally:

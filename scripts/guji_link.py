@@ -5,12 +5,12 @@
 直接查询 SQLite 数据库，建立映射索引
 """
 
+import json
+import re
 import sqlite3
 import subprocess
-import re
 from pathlib import Path
 from typing import Dict, List, Tuple
-import json
 
 # 配置
 SQLITE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guoxue.db"
@@ -19,31 +19,31 @@ POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
 
 def extract_book_key(filename: str) -> str:
     """从文件名提取书籍关键词"""
-    name = filename.rsplit('.', 1)[0] if '.' in filename else filename
+    name = filename.rsplit(".", 1)[0] if "." in filename else filename
 
     # 去除数字前缀
-    name = re.sub(r'^\d+', '', name)
+    name = re.sub(r"^\d+", "", name)
 
     # 提取核心书名（去除卷号、版本说明等）
     patterns_to_remove = [
-        r'[一二三四五六七八九十百千万上下卷部種編]+[、\s]*$',
-        r'卷[一二三四五六七八九十百千万]+',
-        r'[正义疏注]*[一二三四五六七八九十百千万]*$',
-        r'\s*[宋元明清明][刊刻校本]*本.*$',
-        r'[（(].*?[）)]',
-        r'\s*[左海文集本]*$',
-        r'\s*[嘉業堂藏宋刊本]*$',
-        r'\s*[觀古堂藏明翻宋岳氏相台本]*$',
-        r'\s*[明徐氏刊仿宋本]*$',
-        r'\s*[宋本]*$',
-        r'\s*[玉田蔣氏藏宋刊巾箱本]*$',
-        r'\s*[汉上易传]*$',
+        r"[一二三四五六七八九十百千万上下卷部種編]+[、\s]*$",
+        r"卷[一二三四五六七八九十百千万]+",
+        r"[正义疏注]*[一二三四五六七八九十百千万]*$",
+        r"\s*[宋元明清明][刊刻校本]*本.*$",
+        r"[（(].*?[）)]",
+        r"\s*[左海文集本]*$",
+        r"\s*[嘉業堂藏宋刊本]*$",
+        r"\s*[觀古堂藏明翻宋岳氏相台本]*$",
+        r"\s*[明徐氏刊仿宋本]*$",
+        r"\s*[宋本]*$",
+        r"\s*[玉田蔣氏藏宋刊巾箱本]*$",
+        r"\s*[汉上易传]*$",
     ]
 
     for pattern in patterns_to_remove:
-        name = re.sub(pattern, '', name)
+        name = re.sub(pattern, "", name)
 
-    return name.strip(' ._-、（）')
+    return name.strip(" ._-、（）")
 
 
 def search_book_in_sqlite(book_name: str, conn: sqlite3.Connection) -> List[dict]:
@@ -53,33 +53,27 @@ def search_book_in_sqlite(book_name: str, conn: sqlite3.Connection) -> List[dict
     # 先尝试精确匹配
     cursor.execute(
         "SELECT id, bid, substr(body, 1, 200) as preview FROM wx200 WHERE body LIKE ? LIMIT 5",
-        (f'%{book_name}%',)
+        (f"%{book_name}%",),
     )
 
     results = []
     for row in cursor.fetchall():
-        results.append({
-            'source_table': 'wx200',
-            'source_id': row[0],
-            'bid': row[1],
-            'preview': row[2]
-        })
+        results.append(
+            {"source_table": "wx200", "source_id": row[0], "bid": row[1], "preview": row[2]}
+        )
 
     # 如果没找到，尝试在 wx201 搜索
     if not results:
         try:
             cursor.execute(
                 "SELECT id, bid, substr(body, 1, 200) as preview FROM wx201 WHERE body LIKE ? LIMIT 5",
-                (f'%{book_name}%',)
+                (f"%{book_name}%",),
             )
 
             for row in cursor.fetchall():
-                results.append({
-                    'source_table': 'wx201',
-                    'source_id': row[0],
-                    'bid': row[1],
-                    'preview': row[2]
-                })
+                results.append(
+                    {"source_table": "wx201", "source_id": row[0], "bid": row[1], "preview": row[2]}
+                )
         except Exception:
             pass
 
@@ -104,16 +98,28 @@ def main():
 
     # 2. 获取扫描文档列表
     print("📁 读取扫描文档列表...")
-    result = subprocess.run([
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb",
-        "-t", "-c", "SELECT file_name, book_id FROM guji_scan_mapping ORDER BY book_id"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            "docker",
+            "exec",
+            POSTGRES_CONTAINER,
+            "psql",
+            "-U",
+            "zhineng",
+            "-d",
+            "zhineng_kb",
+            "-t",
+            "-c",
+            "SELECT file_name, book_id FROM guji_scan_mapping ORDER BY book_id",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
     scan_files = []
-    for line in result.stdout.strip().split('\n'):
-        if line and '|' in line and not line.startswith('-'):
-            parts = [p.strip() for p in line.split('|')]
+    for line in result.stdout.strip().split("\n"):
+        if line and "|" in line and not line.startswith("-"):
+            parts = [p.strip() for p in line.split("|")]
             if len(parts) >= 2:
                 try:
                     filename = parts[0]
@@ -156,8 +162,8 @@ def main():
             print()
 
             mapping_results[book_name] = {
-                'files': [f[0] for f in files],
-                'content_sources': results
+                "files": [f[0] for f in files],
+                "content_sources": results,
             }
         else:
             unmatched.append((book_name, files[0][0]))
@@ -182,7 +188,7 @@ def main():
     output_file = Path(__file__).parent.parent / "data" / "guji_mapping.json"
     output_file.parent.mkdir(exist_ok=True)
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(mapping_results, f, ensure_ascii=False, indent=2)
 
     print()
@@ -190,16 +196,20 @@ def main():
 
     # 6. 生成 SQL 导入脚本
     sql_file = Path(__file__).parent.parent / "data" / "import_mapping.sql"
-    with open(sql_file, 'w', encoding='utf-8') as f:
+    with open(sql_file, "w", encoding="utf-8") as f:
         f.write("-- 古籍扫描文档与文本内容映射 SQL\n")
         f.write("-- 自动生成\n\n")
 
         for book_name, data in mapping_results.items():
-            for content in data['content_sources']:
-                safe_preview = content['preview'].replace("'", "''").replace('\n', '\\n')[:100]
+            for content in data["content_sources"]:
+                safe_preview = content["preview"].replace("'", "''").replace("\n", "\\n")[:100]
                 f.write(f"-- {book_name}\n")
-                f.write(f"INSERT INTO guji_content_mapping (book_name, source_table, source_id, content_preview)\n")
-                f.write(f"VALUES ('{book_name}', '{content['source_table']}', {content['source_id']}, '{safe_preview}');\n\n")
+                f.write(
+                    f"INSERT INTO guji_content_mapping (book_name, source_table, source_id, content_preview)\n"
+                )
+                f.write(
+                    f"VALUES ('{book_name}', '{content['source_table']}', {content['source_id']}, '{safe_preview}');\n\n"
+                )
 
     print(f"✅ SQL 脚本已生成: {sql_file}")
 

@@ -5,30 +5,21 @@ Test CLIProxyAPI Integration
 This script tests the CLIProxyAPI integration with the ZhiNeng system.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openai import AsyncOpenAI
-from backend.services.ai_service_adapter import (
-    AIServiceAdapter,
-    UnifiedAIService,
-    TaskType
-)
+
+from backend.services.ai_service_adapter import AIServiceAdapter, TaskType, UnifiedAIService
 
 # Test configuration
-CLIPROXYAPI_BASE_URL = os.getenv(
-    "CLIPROXYAPI_BASE_URL",
-    "http://localhost:8317/v1"
-)
-CLIPROXYAPI_API_KEY = os.getenv(
-    "CLIPROXYAPI_API_KEY",
-    "lingzhi-api-key-001"
-)
+CLIPROXYAPI_BASE_URL = os.getenv("CLIPROXYAPI_BASE_URL", "http://localhost:8317/v1")
+CLIPROXYAPI_API_KEY = os.getenv("CLIPROXYAPI_API_KEY", "lingzhi-api-key-001")
 
 
 async def test_health_check():
@@ -61,22 +52,15 @@ async def test_basic_chat():
     print("Test 2: Basic Chat Completion")
     print("=" * 60)
 
-    adapter = AIServiceAdapter(
-        base_url=CLIPROXYAPI_BASE_URL,
-        api_key=CLIPROXYAPI_API_KEY
-    )
+    adapter = AIServiceAdapter(base_url=CLIPROXYAPI_BASE_URL, api_key=CLIPROXYAPI_API_KEY)
 
     messages = [
         {"role": "system", "content": "你是一个友好的助手。"},
-        {"role": "user", "content": "你好！请用一句话介绍你自己。"}
+        {"role": "user", "content": "你好！请用一句话介绍你自己。"},
     ]
 
     try:
-        response = await adapter.chat(
-            messages=messages,
-            task_type=TaskType.CHAT,
-            max_tokens=100
-        )
+        response = await adapter.chat(messages=messages, task_type=TaskType.CHAT, max_tokens=100)
 
         print("✅ Chat completion successful")
         print(f"   Model: {response['model']}")
@@ -109,16 +93,10 @@ async def test_task_based_model_selection():
     for task_type, prompt in test_cases:
         print(f"\n   Testing task: {task_type.value}")
 
-        messages = [
-            {"role": "user", "content": prompt}
-        ]
+        messages = [{"role": "user", "content": prompt}]
 
         try:
-            response = await adapter.chat(
-                messages=messages,
-                task_type=task_type,
-                max_tokens=50
-            )
+            response = await adapter.chat(messages=messages, task_type=task_type, max_tokens=50)
 
             print(f"   ✅ {task_type.value}: {response['model']}")
 
@@ -141,20 +119,16 @@ async def test_rag_query():
     context = [
         {
             "title": "智能气功基础理论",
-            "content": "混元灵通是智能气功的核心理论，强调通过意念来统一身心，达到与自然界的混元状态。"
+            "content": "混元灵通是智能气功的核心理论，强调通过意念来统一身心，达到与自然界的混元状态。",
         },
         {
             "title": "组场方法",
-            "content": "组场是智能气功的重要练习方法，通过集体意念形成气场，增强练习效果。"
-        }
+            "content": "组场是智能气功的重要练习方法，通过集体意念形成气场，增强练习效果。",
+        },
     ]
 
     try:
-        answer = await service.rag_query(
-            query=query,
-            context=context,
-            max_tokens=500
-        )
+        answer = await service.rag_query(query=query, context=context, max_tokens=500)
 
         print("✅ RAG query successful")
         print(f"   Query: {query}")
@@ -183,18 +157,12 @@ async def test_audio_analysis():
     try:
         # Test summarization
         print("\n   Testing summarization...")
-        summary = await service.summarize_audio_transcript(
-            transcript=transcript,
-            max_length=100
-        )
+        summary = await service.summarize_audio_transcript(transcript=transcript, max_length=100)
         print(f"   ✅ Summary: {summary}")
 
         # Test ASR correction
         print("\n   Testing ASR error correction...")
-        corrected = await service.correct_asr_errors(
-            transcript=transcript,
-            domain="qigong"
-        )
+        corrected = await service.correct_asr_errors(transcript=transcript, domain="qigong")
         print(f"   ✅ Corrected: {corrected[:100]}...")
 
         return True
@@ -212,16 +180,11 @@ async def test_streaming():
 
     adapter = AIServiceAdapter()
 
-    messages = [
-        {"role": "user", "content": "请数到5，每个数字单独输出"}
-    ]
+    messages = [{"role": "user", "content": "请数到5，每个数字单独输出"}]
 
     try:
         print("   Streaming response:")
-        async for chunk in adapter.stream_chat(
-            messages=messages,
-            task_type=TaskType.CHAT
-        ):
+        async for chunk in adapter.stream_chat(messages=messages, task_type=TaskType.CHAT):
             print(f"   {chunk}", end="", flush=True)
 
         print("\n   ✅ Streaming successful")

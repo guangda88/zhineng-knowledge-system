@@ -18,8 +18,7 @@ import asyncpg
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
 )
 
 
@@ -50,7 +49,7 @@ async def check_file_locks() -> list:
     for lock_file in lock_dir.glob("*.lock"):
         try:
             content = lock_file.read_text().strip()
-            lines = content.split('\n')
+            lines = content.split("\n")
             pid = int(lines[0]) if lines else None
 
             if pid and is_process_running(pid):
@@ -70,7 +69,8 @@ async def check_database_locks(conn: asyncpg.Connection) -> list:
     issues = []
 
     # 确保表存在
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS import_locks (
             id SERIAL PRIMARY KEY,
             task_name VARCHAR(100) UNIQUE NOT NULL,
@@ -80,32 +80,35 @@ async def check_database_locks(conn: asyncpg.Connection) -> list:
             completed_at TIMESTAMP,
             error_message TEXT
         );
-    """)
+    """
+    )
 
     # 查询运行中的锁
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT task_name, status, pid, started_at,
                EXTRACT(EPOCH FROM (NOW() - started_at))/60 as minutes_ago
         FROM import_locks
         WHERE status = 'running'
         ORDER BY started_at DESC
-    """)
+    """
+    )
 
     if not rows:
         print("  ✅ 无运行中的导入任务")
         return issues
 
     for row in rows:
-        pid = row['pid']
+        pid = row["pid"]
         is_running = pid is not None and is_process_running(pid)
-        is_expired = row['minutes_ago'] > 60
+        is_expired = row["minutes_ago"] > 60
 
         if is_expired:
             print(f"  ⏰ {row['task_name']}: 运行 {row['minutes_ago']:.1f} 分钟 (已过期)")
-            issues.append(("db_lock_expired", row['task_name'], pid))
+            issues.append(("db_lock_expired", row["task_name"], pid))
         elif not is_running:
             print(f"  🔴 {row['task_name']}: PID {pid} 已死 (需要清理)")
-            issues.append(("db_lock_dead", row['task_name'], pid))
+            issues.append(("db_lock_dead", row["task_name"], pid))
         else:
             print(f"  🟢 {row['task_name']}: PID {pid} 运行中 ({row['minutes_ago']:.1f} 分钟)")
 
@@ -117,7 +120,8 @@ async def check_blocked_queries(conn: asyncpg.Connection) -> list:
 
     issues = []
 
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT
             blocked.pid as blocked_pid,
             blocked.usename as blocked_user,
@@ -131,21 +135,30 @@ async def check_blocked_queries(conn: asyncpg.Connection) -> list:
             ON blocking.pid = ANY(pg_blocking_pids(blocked.pid))
         WHERE blocked.datname = current_database()
         ORDER BY blocked.query_start
-    """)
+    """
+    )
 
     if not rows:
         print("  ✅ 无阻塞查询")
         return issues
 
     for row in rows:
-        blocked_query = (row['blocked_query'][:50] + '...') if row['blocked_query'] and len(row['blocked_query']) > 50 else row['blocked_query']
-        blocking_query = (row['blocking_query'][:50] + '...') if row['blocking_query'] and len(row['blocking_query']) > 50 else row['blocking_query']
+        blocked_query = (
+            (row["blocked_query"][:50] + "...")
+            if row["blocked_query"] and len(row["blocked_query"]) > 50
+            else row["blocked_query"]
+        )
+        blocking_query = (
+            (row["blocking_query"][:50] + "...")
+            if row["blocking_query"] and len(row["blocking_query"]) > 50
+            else row["blocking_query"]
+        )
 
         print(f"  🔒 PID {row['blocked_pid']} 被 PID {row['blocking_pid']} 阻塞")
         print(f"     等待: {row['blocked_minutes']:.1f} 分钟")
         print(f"     被阻塞: {blocked_query}")
         print(f"     阻塞者: {blocking_query}")
-        issues.append(("blocked_query", row['blocked_pid'], row['blocking_pid']))
+        issues.append(("blocked_query", row["blocked_pid"], row["blocking_pid"]))
 
     return issues
 
@@ -155,7 +168,8 @@ async def check_long_transactions(conn: asyncpg.Connection) -> list:
 
     issues = []
 
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT
             pid,
             usename,
@@ -169,18 +183,21 @@ async def check_long_transactions(conn: asyncpg.Connection) -> list:
           AND pid != pg_backend_pid()
           AND EXTRACT(EPOCH FROM (NOW() - query_start)) > 300  -- 5分钟
         ORDER BY query_start DESC
-    """)
+    """
+    )
 
     if not rows:
         print("  ✅ 无长事务")
         return issues
 
     for row in rows:
-        query_preview = (row['query'][:50] + '...') if row['query'] and len(row['query']) > 50 else row['query']
+        query_preview = (
+            (row["query"][:50] + "...") if row["query"] and len(row["query"]) > 50 else row["query"]
+        )
         print(f"  ⏱️  PID {row['pid']}: 运行 {row['minutes_running']:.1f} 分钟")
         print(f"     应用: {row['application_name'] or 'unknown'}")
         print(f"     查询: {query_preview}")
-        issues.append(("long_transaction", row['pid'], row['minutes_running']))
+        issues.append(("long_transaction", row["pid"], row["minutes_running"]))
 
     return issues
 
@@ -203,13 +220,16 @@ async def fix_issues(issues: list, conn: asyncpg.Connection):
         elif issue_type in ("db_lock_dead", "db_lock_expired"):
             task_name = args[0]
             try:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     UPDATE import_locks
                     SET status = 'cleaned',
                         completed_at = NOW(),
                         error_message = '自动诊断清理'
                     WHERE task_name = $1
-                """, task_name)
+                """,
+                    task_name,
+                )
                 print(f"  ✅ 清理数据库锁: {task_name}")
                 fixed += 1
             except Exception as e:

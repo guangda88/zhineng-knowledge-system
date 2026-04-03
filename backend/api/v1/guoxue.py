@@ -258,12 +258,14 @@ async def get_stats():
 
         total_chars = await pool.fetchval("SELECT SUM(total_chars) FROM guoxue_books")
 
-        top_books = await pool.fetch("""
+        top_books = await pool.fetch(
+            """
             SELECT book_id, title, content_count, total_chars
             FROM guoxue_books
             ORDER BY content_count DESC
             LIMIT 20
-            """)
+            """
+        )
 
         return {
             "status": "ok",

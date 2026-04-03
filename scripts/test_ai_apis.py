@@ -28,17 +28,12 @@ async def test_hunyuan():
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                },
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json={
                     "model": "hunyuan-lite",
-                    "messages": [
-                        {"role": "user", "content": "你好，请用一句话介绍你自己。"}
-                    ],
-                    "max_tokens": 100
-                }
+                    "messages": [{"role": "user", "content": "你好，请用一句话介绍你自己。"}],
+                    "max_tokens": 100,
+                },
             )
             response.raise_for_status()
             result = response.json()
@@ -67,17 +62,12 @@ async def test_deepseek():
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                },
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json={
                     "model": "deepseek-chat",
-                    "messages": [
-                        {"role": "user", "content": "你好，请用一句话介绍你自己。"}
-                    ],
-                    "max_tokens": 100
-                }
+                    "messages": [{"role": "user", "content": "你好，请用一句话介绍你自己。"}],
+                    "max_tokens": 100,
+                },
             )
             response.raise_for_status()
             result = response.json()
@@ -102,10 +92,7 @@ async def test_mock_response():
     adapter = get_multi_ai_adapter()
 
     # 测试mock响应
-    result = await adapter._adapters["lingzhi"].generate(
-        prompt="测试",
-        request_type="qa"
-    )
+    result = await adapter._adapters["lingzhi"].generate(prompt="测试", request_type="qa")
 
     print("✅ Mock响应测试成功！")
     print(f"   Lingzhi响应: {result['content'][:50]}...")

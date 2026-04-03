@@ -18,7 +18,6 @@ from backend.services.audio.tingwu_client import (
     TranscriptionSegment,
 )
 
-
 # ==================== TingwuClient Tests ====================
 
 
@@ -40,6 +39,7 @@ class TestTingwuClient:
         client = TingwuClient(access_key_id=None, access_key_secret=None)
         with pytest.raises(RuntimeError, match="not enabled"):
             import asyncio
+
             asyncio.run(client.create_transcription_task("http://example.com/a.mp3"))
 
     def test_get_status_raises_when_disabled(self):
@@ -47,6 +47,7 @@ class TestTingwuClient:
         client = TingwuClient(access_key_id=None, access_key_secret=None)
         with pytest.raises(RuntimeError, match="not enabled"):
             import asyncio
+
             asyncio.run(client.get_task_status("task123"))
 
     def test_get_result_raises_when_disabled(self):
@@ -54,6 +55,7 @@ class TestTingwuClient:
         client = TingwuClient(access_key_id=None, access_key_secret=None)
         with pytest.raises(RuntimeError, match="not enabled"):
             import asyncio
+
             asyncio.run(client.get_transcription_result("task123"))
 
 
@@ -73,9 +75,7 @@ class TestTranscriptionResult:
         assert result.error_message is None
 
     def test_with_segments(self):
-        seg = TranscriptionSegment(
-            start_time=1.0, end_time=5.0, text="测试", speaker="S1"
-        )
+        seg = TranscriptionSegment(start_time=1.0, end_time=5.0, text="测试", speaker="S1")
         result = TranscriptionResult(
             task_id="t1",
             status=TaskStatus.SUCCEEDED,
@@ -236,8 +236,9 @@ class TestAudioAPIModels:
     """API请求/响应模型测试"""
 
     def test_annotation_create_model(self):
-        from pydantic import BaseModel
         from typing import Any, Dict, List, Optional
+
+        from pydantic import BaseModel
 
         class AnnotationCreate(BaseModel):
             audio_file_id: int
@@ -262,8 +263,9 @@ class TestAudioAPIModels:
         assert ann.metadata == {}
 
     def test_annotation_update_model(self):
-        from pydantic import BaseModel
         from typing import Any, Dict, Optional
+
+        from pydantic import BaseModel
 
         class AnnotationUpdate(BaseModel):
             content: Optional[str] = None
@@ -275,8 +277,9 @@ class TestAudioAPIModels:
         assert update.status == "active"
 
     def test_import_request_model(self):
-        from pydantic import BaseModel, Field
         from typing import List, Optional
+
+        from pydantic import BaseModel, Field
 
         class ImportRequest(BaseModel):
             audio_path: str

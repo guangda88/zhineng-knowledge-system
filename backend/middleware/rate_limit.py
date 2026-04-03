@@ -77,7 +77,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 },
                 headers={
                     "Retry-After": str(info.get("retry_after", 60)),
-                    "X-RateLimit-Limit": str(limit_info.get("requests", 60) if isinstance(limit_info, dict) else 60),
+                    "X-RateLimit-Limit": str(
+                        limit_info.get("requests", 60) if isinstance(limit_info, dict) else 60
+                    ),
                     "X-RateLimit-Reset": str(int(info.get("reset_at", 0))),
                 },
             )

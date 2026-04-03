@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class SecurityEventSeverity(Enum):
     """安全事件严重性"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -33,6 +34,7 @@ class SecurityEventSeverity(Enum):
 
 class SecurityEventType(Enum):
     """安全事件类型"""
+
     # 认证事件
     LOGIN_SUCCESS = "login_success"
     LOGIN_FAILURE = "login_failure"
@@ -68,6 +70,7 @@ class SecurityEventType(Enum):
 @dataclass
 class SecurityEvent:
     """安全事件数据类"""
+
     event_type: SecurityEventType
     severity: SecurityEventSeverity
     user_id: Optional[int] = None
@@ -120,6 +123,7 @@ class SecurityAlertConfig:
 @dataclass
 class SecurityAlert:
     """安全告警"""
+
     alert_id: str
     event_type: SecurityEventType
     severity: SecurityEventSeverity
@@ -243,9 +247,7 @@ class SecurityMonitor:
 
         return new_alerts
 
-    def _check_brute_force_attack(
-        self, now: float
-    ) -> Optional[SecurityAlert]:
+    def _check_brute_force_attack(self, now: float) -> Optional[SecurityAlert]:
         """检查暴力破解攻击"""
         # 统计每个IP的失败登录
         ip_failures: Dict[str, List[SecurityEvent]] = defaultdict(list)
@@ -277,16 +279,15 @@ class SecurityMonitor:
 
         return None
 
-    def _check_suspicious_ip_activity(
-        self, now: float
-    ) -> Optional[SecurityAlert]:
+    def _check_suspicious_ip_activity(self, now: float) -> Optional[SecurityAlert]:
         """检查可疑IP活动"""
         window_start = now - self.config.RATE_LIMIT_WINDOW
 
         for ip, events in self.ip_events.items():
             # 检查速率限制事件
             rate_limit_events = [
-                e for e in events
+                e
+                for e in events
                 if e.timestamp >= window_start
                 and e.event_type == SecurityEventType.RATE_LIMIT_EXCEEDED
             ]
@@ -308,16 +309,15 @@ class SecurityMonitor:
 
         return None
 
-    def _check_anomalous_user_behavior(
-        self, now: float
-    ) -> Optional[SecurityAlert]:
+    def _check_anomalous_user_behavior(self, now: float) -> Optional[SecurityAlert]:
         """检查异常用户行为"""
         window_start = now - self.config.SUSPICIOUS_PATTERN_WINDOW
 
         for user_id, events in self.user_events.items():
             # 检查特权提升尝试
             privilege_events = [
-                e for e in events
+                e
+                for e in events
                 if e.timestamp >= window_start
                 and e.event_type == SecurityEventType.PRIVILEGE_ESCALATION_ATTEMPT
             ]
@@ -339,14 +339,13 @@ class SecurityMonitor:
 
         return None
 
-    def _check_sql_injection_attempts(
-        self, now: float
-    ) -> Optional[SecurityAlert]:
+    def _check_sql_injection_attempts(self, now: float) -> Optional[SecurityAlert]:
         """检查SQL注入尝试"""
         window_start = now - 600  # 10分钟
 
         sql_events = [
-            e for e in self.events
+            e
+            for e in self.events
             if e.timestamp >= window_start
             and e.event_type == SecurityEventType.SQL_INJECTION_ATTEMPT
         ]
@@ -376,16 +375,14 @@ class SecurityMonitor:
 
         return None
 
-    def _check_xss_attempts(
-        self, now: float
-    ) -> Optional[SecurityAlert]:
+    def _check_xss_attempts(self, now: float) -> Optional[SecurityAlert]:
         """检查XSS尝试"""
         window_start = now - 600  # 10分钟
 
         xss_events = [
-            e for e in self.events
-            if e.timestamp >= window_start
-            and e.event_type == SecurityEventType.XSS_ATTEMPT
+            e
+            for e in self.events
+            if e.timestamp >= window_start and e.event_type == SecurityEventType.XSS_ATTEMPT
         ]
 
         if len(xss_events) >= 5:
@@ -421,10 +418,7 @@ class SecurityMonitor:
         events_last_day = [e for e in self.events if e.timestamp >= last_day]
 
         # 统计告警
-        active_alerts = [
-            a for a in self.alerts
-            if not a.resolved
-        ]
+        active_alerts = [a for a in self.alerts if not a.resolved]
 
         return {
             "total_events": len(self.events),
@@ -433,20 +427,16 @@ class SecurityMonitor:
             "events_last_hour": len(events_last_hour),
             "events_last_day": len(events_last_day),
             "event_type_counts": {
-                event_type.value: count
-                for event_type, count in self.event_counts.items()
+                event_type.value: count for event_type, count in self.event_counts.items()
             },
-            "critical_events": len([
-                e for e in self.events
-                if e.severity == SecurityEventSeverity.CRITICAL
-            ]),
-            "high_events": len([
-                e for e in self.events
-                if e.severity == SecurityEventSeverity.HIGH
-            ]),
+            "critical_events": len(
+                [e for e in self.events if e.severity == SecurityEventSeverity.CRITICAL]
+            ),
+            "high_events": len(
+                [e for e in self.events if e.severity == SecurityEventSeverity.HIGH]
+            ),
             "recent_critical_alerts": [
-                a.to_dict() for a in active_alerts
-                if a.severity == SecurityEventSeverity.CRITICAL
+                a.to_dict() for a in active_alerts if a.severity == SecurityEventSeverity.CRITICAL
             ],
         }
 
@@ -471,6 +461,7 @@ class SecurityMonitor:
     def _generate_alert_id(self) -> str:
         """生成告警ID"""
         import uuid
+
         return f"alert_{uuid.uuid4().hex[:12]}"
 
 
@@ -481,7 +472,7 @@ security_monitor = SecurityMonitor()
 def log_security_event(
     event_type: SecurityEventType,
     severity: SecurityEventSeverity = SecurityEventSeverity.LOW,
-    **kwargs
+    **kwargs,
 ):
     """
     记录安全事件的便捷函数
@@ -491,11 +482,7 @@ def log_security_event(
         severity: 事件严重性
         **kwargs: 事件属性
     """
-    event = SecurityEvent(
-        event_type=event_type,
-        severity=severity,
-        **kwargs
-    )
+    event = SecurityEvent(event_type=event_type, severity=severity, **kwargs)
     security_monitor.log_event(event)
 
 

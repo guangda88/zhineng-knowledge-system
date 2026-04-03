@@ -359,7 +359,8 @@ class SysBooksDimensionTagger:
                 "SELECT COUNT(*) FROM sys_books WHERE qigong_dims != '{}'::jsonb"
             )
 
-            by_domain = await conn.fetch("""
+            by_domain = await conn.fetch(
+                """
                 SELECT domain,
                        COUNT(*) as total,
                        COUNT(*) FILTER (WHERE qigong_dims != '{}'::jsonb) as tagged
@@ -368,7 +369,8 @@ class SysBooksDimensionTagger:
                 GROUP BY domain
                 ORDER BY total DESC
                 LIMIT 15
-            """)
+            """
+            )
 
             return {
                 "total": total,

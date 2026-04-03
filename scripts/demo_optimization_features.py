@@ -5,21 +5,22 @@
 """
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from backend.services.evolution.optimized_ai_client import (
-    optimized_chat,
-    optimized_code_development,
     batch_chat,
     batch_code_development,
-    show_optimization_stats
+    optimized_chat,
+    optimized_code_development,
+    show_optimization_stats,
 )
 
 
@@ -65,11 +66,7 @@ async def demo_batch_processing():
     print(f"\n📝 待处理: {len(prompts)}个问题")
 
     print("\n🔄 开始批量处理...")
-    results = await batch_chat(
-        prompts,
-        batch_size=3,
-        delay_between_batches=3
-    )
+    results = await batch_chat(prompts, batch_size=3, delay_between_batches=3)
 
     print(f"\n✅ 完成! 收到 {len(results)}个响应")
 
@@ -87,10 +84,7 @@ async def demo_rate_limiting():
 
     print("\n📝 快速连续调用5次...")
 
-    prompts = [
-        f"问题{i+1}: 你好"
-        for i in range(5)
-    ]
+    prompts = [f"问题{i+1}: 你好" for i in range(5)]
 
     results = []
     for i, prompt in enumerate(prompts):
@@ -146,7 +140,8 @@ async def demo_all_optimizations():
     print()
 
     print("📖 快速开始:")
-    print("""
+    print(
+        """
 from backend.services.evolution.optimized_ai_client import (
     optimized_chat,
     optimized_code_development,
@@ -163,7 +158,8 @@ results = await batch_chat([
 
 # 查看统计
 show_optimization_stats()
-    """)
+    """
+    )
 
 
 async def test_code_development():

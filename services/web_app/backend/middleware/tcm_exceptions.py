@@ -7,8 +7,8 @@ Defines a comprehensive exception hierarchy for the TCM Knowledge Base applicati
 All exceptions inherit from TCMBaseException for consistent error handling.
 """
 
-from typing import Any, Dict, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 
 class TCMBaseException(Exception):
@@ -145,9 +145,7 @@ class ValidationError(TCMBaseException):
         if field:
             details["field"] = field
         if value is not None:
-            details["value"] = (
-                str(value) if len(str(value)) < 100 else str(value)[:100] + "..."
-            )
+            details["value"] = str(value) if len(str(value)) < 100 else str(value)[:100] + "..."
 
         super().__init__(message, code, http_status, details, request_id)
 

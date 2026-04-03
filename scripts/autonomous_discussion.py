@@ -17,10 +17,11 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+os.environ.setdefault(
+    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+)
 
-from backend.core.database import init_db_pool, get_db_pool
-
+from backend.core.database import get_db_pool, init_db_pool
 
 AGENT_PERSONAS = {
     "lingzhi": {
@@ -243,7 +244,9 @@ async def run_discussion(
         detected_consensus = await _detect_consensus(svc, thread_id, round_messages)
         all_consensus.extend(detected_consensus)
 
-        print(f"\n  📊 第{current_round}轮完成 | 消息数: {len(round_messages)} | 新共识: {len(detected_consensus)}")
+        print(
+            f"\n  📊 第{current_round}轮完成 | 消息数: {len(round_messages)} | 新共识: {len(detected_consensus)}"
+        )
 
     summary_data = await svc.get_thread_summary(thread_id)
 

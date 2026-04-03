@@ -267,21 +267,25 @@ class BatchExtractionService:
         """获取提取统计"""
         pool = await self._get_pool()
         async with pool.acquire() as conn:
-            status_counts = await conn.fetch("""
+            status_counts = await conn.fetch(
+                """
                 SELECT extraction_status, COUNT(*) as cnt
                 FROM sys_books
                 GROUP BY extraction_status
                 ORDER BY cnt DESC
-            """)
+            """
+            )
 
-            by_extension = await conn.fetch("""
+            by_extension = await conn.fetch(
+                """
                 SELECT extension, extraction_status, COUNT(*) as cnt
                 FROM sys_books
                 WHERE extraction_status != 'pending'
                 GROUP BY extension, extraction_status
                 ORDER BY cnt DESC
                 LIMIT 20
-            """)
+            """
+            )
 
             contents_count = await conn.fetchval("SELECT COUNT(*) FROM sys_book_contents")
 

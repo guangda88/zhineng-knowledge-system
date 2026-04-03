@@ -3,9 +3,8 @@
 提供自学习、自主搜索、创新管理等功能
 """
 
-from typing import List
-
 import logging
+from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel

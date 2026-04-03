@@ -11,13 +11,14 @@ data.db ↔ Sys_books.db 对账脚本
 """
 
 import asyncio
-import sqlite3
-import asyncpg
-import time
 import logging
 import os
-from typing import List, Dict, Tuple, Optional
+import sqlite3
+import time
 from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
+
+import asyncpg
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,11 +43,13 @@ def load_cloud_files(db_path: str) -> Dict[str, Dict]:
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT parent, name, is_dir, size
         FROM x_search_nodes
         WHERE is_dir = 0
-    """)
+    """
+    )
 
     file_index: Dict[str, List[Dict]] = defaultdict(list)
     total = 0
@@ -55,11 +58,13 @@ def load_cloud_files(db_path: str) -> Dict[str, Dict]:
         full_path = f"{parent}/{name}"
         normalized = normalize_filename(name)
         if normalized and len(normalized) >= 2:
-            file_index[normalized].append({
-                "cloud_path": full_path,
-                "name": name,
-                "size": size or 0,
-            })
+            file_index[normalized].append(
+                {
+                    "cloud_path": full_path,
+                    "name": name,
+                    "size": size or 0,
+                }
+            )
             total += 1
 
     conn.close()
@@ -76,22 +81,42 @@ def normalize_filename(filename: str) -> str:
     - 移除方括号内容
     """
     import re
+
     name = filename.lower().strip()
 
     # Remove extension
-    for ext in ['.pdf', '.txt', '.doc', '.docx', '.djvu', '.mobi', '.epub',
-                '.mp3', '.wav', '.mp4', '.avi', '.rmvb', '.rm', '.mkv',
-                '.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.pdg']:
+    for ext in [
+        ".pdf",
+        ".txt",
+        ".doc",
+        ".docx",
+        ".djvu",
+        ".mobi",
+        ".epub",
+        ".mp3",
+        ".wav",
+        ".mp4",
+        ".avi",
+        ".rmvb",
+        ".rm",
+        ".mkv",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".bmp",
+        ".tiff",
+        ".pdg",
+    ]:
         if name.endswith(ext):
-            name = name[:-len(ext)]
+            name = name[: -len(ext)]
             break
 
     # Remove bracketed content like [作者], (年份)
-    name = re.sub(r'[\[【\[〈《].*?[\]】\]〉》]', '', name)
-    name = re.sub(r'[（(][^）)]*[）)]', '', name)
+    name = re.sub(r"[\[【\[〈《].*?[\]】\]〉》]", "", name)
+    name = re.sub(r"[（(][^）)]*[）)]", "", name)
 
     # Remove extra whitespace and punctuation
-    name = re.sub(r'[\s\-_\.]+', '', name)
+    name = re.sub(r"[\s\-_\.]+", "", name)
     name = name.strip()
 
     return name
@@ -109,9 +134,12 @@ async def cross_reference(file_index: Dict[str, List[Dict]]):
 
     try:
         # Get total unmatched count (use pg_class for fast estimate)
-        total_unmatched = await pool.fetchval(
-            "SELECT reltuples::bigint FROM pg_class WHERE relname = 'sys_books'"
-        ) or 3024428
+        total_unmatched = (
+            await pool.fetchval(
+                "SELECT reltuples::bigint FROM pg_class WHERE relname = 'sys_books'"
+            )
+            or 3024428
+        )
         logger.info(f"Total sys_books records (estimate): {total_unmatched:,}")
 
         # Phase 1: Batch match by normalized filename
@@ -148,7 +176,8 @@ async def phase1_exact_match(pool: asyncpg.Pool, file_index: Dict[str, List[Dict
                 ORDER BY id
                 LIMIT $2
                 """,
-                last_id, BATCH_SIZE,
+                last_id,
+                BATCH_SIZE,
             )
 
         if not rows:
@@ -169,10 +198,12 @@ async def phase1_exact_match(pool: asyncpg.Pool, file_index: Dict[str, List[Dict
                             best = c
                             break
 
-                batch_updates.append((
-                    best["cloud_path"],
-                    row["id"],
-                ))
+                batch_updates.append(
+                    (
+                        best["cloud_path"],
+                        row["id"],
+                    )
+                )
 
         if batch_updates:
             async with pool.acquire() as conn:
@@ -193,7 +224,8 @@ async def phase2_size_dedup(pool: asyncpg.Pool):
     logger.info("Phase 2: Size-based deduplication...")
 
     async with pool.acquire() as conn:
-        result = await conn.execute("""
+        result = await conn.execute(
+            """
             UPDATE sys_books
             SET cross_ref_status = 'deduplicated'
             WHERE cross_ref_status = 'matched'
@@ -206,7 +238,8 @@ async def phase2_size_dedup(pool: asyncpg.Pool):
                 ORDER BY filename, size, id
               )
               AND filename IS NOT NULL AND size > 0
-        """)
+        """
+        )
         count = int(result.split()[-1]) if result else 0
         logger.info(f"Phase 2 complete: {count:,} deduplicated")
 
@@ -215,21 +248,35 @@ async def phase3_path_match(pool: asyncpg.Pool, file_index: Dict[str, List[Dict]
     """Phase 3: 高价值领域的路径子串匹配"""
     logger.info("Phase 3: Path substring matching for key domains...")
 
-    key_terms = ["智能气功", "八段锦", "五禽戏", "六字诀", "易筋经", "形神庄",
-                 "捧气贯顶", "黄帝内经", "伤寒论", "论语", "道德经"]
+    key_terms = [
+        "智能气功",
+        "八段锦",
+        "五禽戏",
+        "六字诀",
+        "易筋经",
+        "形神庄",
+        "捧气贯顶",
+        "黄帝内经",
+        "伤寒论",
+        "论语",
+        "道德经",
+    ]
 
     async with pool.acquire() as conn:
         total_matched = 0
 
         for term in key_terms:
             # Find sys_books with this term in filename but still unmatched
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT id, filename
                 FROM sys_books
                 WHERE cross_ref_status = 'unmatched'
                   AND (filename LIKE $1 OR path LIKE $1)
                 LIMIT 1000
-            """, f"%{term}%")
+            """,
+                f"%{term}%",
+            )
 
             if not rows:
                 continue
@@ -265,7 +312,8 @@ async def phase3_path_match(pool: asyncpg.Pool, file_index: Dict[str, List[Dict]
                         SET cloud_path = $1, cross_ref_status = 'matched'
                         WHERE id = $2
                         """,
-                        best_path, row["id"],
+                        best_path,
+                        row["id"],
                     )
                     total_matched += 1
 
@@ -278,9 +326,9 @@ def compute_name_similarity(name1: str, name2: str) -> float:
         return 0.0
 
     # Remove common suffixes and extensions
-    for s in ['.', '_', '-', ' ']:
-        name1 = name1.replace(s, '')
-        name2 = name2.replace(s, '')
+    for s in [".", "_", "-", " "]:
+        name1 = name1.replace(s, "")
+        name2 = name2.replace(s, "")
 
     if name1 == name2:
         return 1.0
@@ -304,18 +352,20 @@ async def generate_report(pool: asyncpg.Pool):
     logger.info("Generating cross-reference report...")
 
     async with pool.acquire() as conn:
-        status_counts = await conn.fetch("""
+        status_counts = await conn.fetch(
+            """
             SELECT cross_ref_status, COUNT(*) as cnt
             FROM sys_books
             GROUP BY cross_ref_status
             ORDER BY cnt DESC
-        """)
+        """
+        )
 
         logger.info("\n=== Cross-Reference Report ===")
         total = 0
         for r in status_counts:
             logger.info(f"  {r['cross_ref_status']}: {r['cnt']:>10,}")
-            total += r['cnt']
+            total += r["cnt"]
         logger.info(f"  {'TOTAL':>14}: {total:>10,}")
 
         matched_with_cloud = await conn.fetchval(
@@ -323,14 +373,16 @@ async def generate_report(pool: asyncpg.Pool):
         )
         logger.info(f"\n  Matched with cloud_path: {matched_with_cloud:,}")
 
-        by_domain = await conn.fetch("""
+        by_domain = await conn.fetch(
+            """
             SELECT domain, cross_ref_status, COUNT(*) as cnt
             FROM sys_books
             WHERE cross_ref_status = 'matched'
             GROUP BY domain, cross_ref_status
             ORDER BY cnt DESC
             LIMIT 10
-        """)
+        """
+        )
 
         if by_domain:
             logger.info("\n  Top matched domains:")

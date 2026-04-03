@@ -7,8 +7,8 @@ Error Handler Middleware - Backend Module
 提供backend服务使用的统一错误处理接口
 """
 
-import sys
 import os
+import sys
 
 # 添加项目根目录到路径
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -18,14 +18,14 @@ if project_root not in sys.path:
 # 从顶层middleware导入所有错误处理函数和类
 try:
     from middleware.error_handler import (
-        create_error_response,
-        create_success_response,
-        log_exception,
-        get_status_code_for_exception,
-        get_error_code_for_exception,
         ErrorDetails,
         SafeErrorHandler,
+        create_error_response,
+        create_success_response,
+        get_error_code_for_exception,
+        get_status_code_for_exception,
         init_error_handling,
+        log_exception,
     )
 
     __all__ = [
@@ -42,10 +42,11 @@ try:
 except ImportError as e:
     # 如果顶层middleware不可用，提供基本的实现
     import logging
+    from datetime import datetime
     from typing import Any, Dict, Optional, Union
+
     from fastapi import Request, Response
     from fastapi.responses import JSONResponse
-    from datetime import datetime
 
     logger = logging.getLogger(__name__)
 

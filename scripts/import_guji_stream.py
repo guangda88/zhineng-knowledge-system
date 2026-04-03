@@ -25,7 +25,9 @@ def get_wx_tables(db_path: str) -> list[tuple[str, int]]:
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA cache_size = -256000")  # 256MB cache
     cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name")
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'wx%' ORDER BY name"
+    )
     tables = []
     for (name,) in cursor.fetchall():
         cursor.execute(f"SELECT COUNT(*) FROM [{name}]")
@@ -48,7 +50,9 @@ async def import_table(pg: asyncpg.Connection, db_path: str, table: str) -> int:
     t0 = time.time()
 
     while True:
-        cursor.execute(f"SELECT * FROM [{table}] WHERE rowid > ? ORDER BY rowid LIMIT {BATCH_SIZE}", (last_id,))
+        cursor.execute(
+            f"SELECT * FROM [{table}] WHERE rowid > ? ORDER BY rowid LIMIT {BATCH_SIZE}", (last_id,)
+        )
         rows = cursor.fetchall()
 
         if not rows:
@@ -56,18 +60,18 @@ async def import_table(pg: asyncpg.Connection, db_path: str, table: str) -> int:
 
         data = []
         for row in rows:
-            row_id = row['id'] if 'id' in row.keys() else row[0]
+            row_id = row["id"] if "id" in row.keys() else row[0]
             content = None
-            if 'body' in row.keys() and row['body']:
-                content = row['body']
-            elif 'd' in row.keys() and row['d']:
-                content = row['d']
+            if "body" in row.keys() and row["body"]:
+                content = row["body"]
+            elif "d" in row.keys() and row["d"]:
+                content = row["d"]
 
             if not content or len(content) < 10:
                 continue
 
-            title = content[:50].split('\n')[0][:50]
-            data.append((table, row_id, title, content, len(content), None, '古籍', '{}'))
+            title = content[:50].split("\n")[0][:50]
+            data.append((table, row_id, title, content, len(content), None, "古籍", "{}"))
 
         if data:
             async with pg.transaction():
@@ -79,7 +83,7 @@ async def import_table(pg: asyncpg.Connection, db_path: str, table: str) -> int:
                 )
             imported += len(data)
 
-        last_id = rows[-1]['id'] if 'id' in rows[-1].keys() else rows[-1][0]
+        last_id = rows[-1]["id"] if "id" in rows[-1].keys() else rows[-1][0]
         elapsed = time.time() - t0
         rate = imported / elapsed if elapsed > 0 else 0
         logger.info(f"  {table}: {imported:,} rows ({rate:.0f}/s, last_id={last_id})")

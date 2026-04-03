@@ -8,17 +8,18 @@ LingFlow Agents API - AI agents 工作流接口
 - 导出处理结果
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel, Field
 
 from backend.services.lingflow_agents import (
     LINGFLOW_AGENTS_AVAILABLE,
-    get_agents_service,
     AgentTaskConfig,
-    AgentTaskResult
+    AgentTaskResult,
+    get_agents_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ router = APIRouter(prefix="/lingflow", tags=["LingFlow Agents"])
 # 请求模型
 class TextbookProcessRequest(BaseModel):
     """教材处理请求"""
+
     path: str = Field(..., description="教材文件路径")
     id: Optional[str] = Field(None, description="教材ID")
     title: Optional[str] = Field(None, description="教材标题")
@@ -40,10 +42,8 @@ class TextbookProcessRequest(BaseModel):
 
 class BatchProcessRequest(BaseModel):
     """批量处理请求"""
-    textbooks: List[Dict[str, str]] = Field(
-        ...,
-        description="教材列表，每项包含 path, id, title"
-    )
+
+    textbooks: List[Dict[str, str]] = Field(..., description="教材列表，每项包含 path, id, title")
     target_toc_depth: int = Field(5, ge=1, le=6, description="目标TOC深度")
     max_block_chars: int = Field(300, ge=100, le=1000, description="最大文本块字符数")
     enable_toc_expansion: bool = Field(True, description="是否启用TOC扩展")
@@ -53,6 +53,7 @@ class BatchProcessRequest(BaseModel):
 # 响应模型
 class ProcessResponse(BaseModel):
     """处理响应"""
+
     task_id: str
     status: str
     message: str
@@ -61,6 +62,7 @@ class ProcessResponse(BaseModel):
 
 class TaskStatusResponse(BaseModel):
     """任务状态响应"""
+
     task_id: str
     textbook_id: str
     textbook_title: str
@@ -78,6 +80,7 @@ class TaskStatusResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """健康检查响应"""
+
     available: bool
     message: str
     api_key_configured: bool
@@ -86,6 +89,7 @@ class HealthResponse(BaseModel):
 # ============================================
 # 端点
 # ============================================
+
 
 @router.get("/health", response_model=HealthResponse)
 async def check_health():
@@ -96,13 +100,13 @@ async def check_health():
         return HealthResponse(
             available=False,
             message="LingFlow agents module not available",
-            api_key_configured=config.DEEPSEEK_API_KEY is not None
+            api_key_configured=config.DEEPSEEK_API_KEY is not None,
         )
 
     return HealthResponse(
         available=True,
         message="LingFlow agents service is ready",
-        api_key_configured=config.DEEPSEEK_API_KEY is not None
+        api_key_configured=config.DEEPSEEK_API_KEY is not None,
     )
 
 
@@ -113,25 +117,19 @@ async def process_textbook(request: TextbookProcessRequest, background_tasks: Ba
     使用LingFlow agents自主处理教材，包括TOC提取、文本分割和质量评估。
     """
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="LingFlow agents service is not available"
-        )
+        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
 
     # 验证文件路径
     textbook_path = Path(request.path)
     if not textbook_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail=f"Textbook file not found: {request.path}"
-        )
+        raise HTTPException(status_code=404, detail=f"Textbook file not found: {request.path}")
 
     # 创建配置
     config = AgentTaskConfig(
         target_toc_depth=request.target_toc_depth,
         max_block_chars=request.max_block_chars,
         enable_toc_expansion=request.enable_toc_expansion,
-        enable_quality_assessment=request.enable_quality_assessment
+        enable_quality_assessment=request.enable_quality_assessment,
     )
 
     # 获取服务并处理
@@ -144,7 +142,7 @@ async def process_textbook(request: TextbookProcessRequest, background_tasks: Ba
                 textbook_path=request.path,
                 config=config,
                 textbook_id=request.id,
-                textbook_title=request.title
+                textbook_title=request.title,
             )
         except Exception as e:
             logger.error(f"Background processing failed: {e}", exc_info=True)
@@ -153,17 +151,14 @@ async def process_textbook(request: TextbookProcessRequest, background_tasks: Ba
 
     # 生成预任务ID（实际任务ID在处理开始时生成）
     from datetime import datetime
+
     task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     return ProcessResponse(
         task_id=task_id,
         status="accepted",
         message=f"Processing task started for: {request.title or Path(request.path).stem}",
-        data={
-            "path": request.path,
-            "title": request.title,
-            "config": config.to_dict()
-        }
+        data={"path": request.path, "title": request.title, "config": config.to_dict()},
     )
 
 
@@ -174,23 +169,16 @@ async def batch_process_textbooks(request: BatchProcessRequest, background_tasks
     使用LingFlow agents批量处理多个教材。
     """
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="LingFlow agents service is not available"
-        )
+        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
 
     # 验证教材文件
     for textbook in request.textbooks:
         if "path" not in textbook:
-            raise HTTPException(
-                status_code=400,
-                detail="Each textbook must have a 'path' field"
-            )
+            raise HTTPException(status_code=400, detail="Each textbook must have a 'path' field")
         textbook_path = Path(textbook["path"])
         if not textbook_path.exists():
             raise HTTPException(
-                status_code=404,
-                detail=f"Textbook file not found: {textbook['path']}"
+                status_code=404, detail=f"Textbook file not found: {textbook['path']}"
             )
 
     # 创建配置
@@ -198,7 +186,7 @@ async def batch_process_textbooks(request: BatchProcessRequest, background_tasks
         target_toc_depth=request.target_toc_depth,
         max_block_chars=request.max_block_chars,
         enable_toc_expansion=request.enable_toc_expansion,
-        enable_quality_assessment=request.enable_quality_assessment
+        enable_quality_assessment=request.enable_quality_assessment,
     )
 
     # 获取服务
@@ -207,26 +195,21 @@ async def batch_process_textbooks(request: BatchProcessRequest, background_tasks
     # 在后台执行批量处理
     async def run_batch_processing():
         try:
-            await service.batch_process_textbooks(
-                textbooks=request.textbooks,
-                config=config
-            )
+            await service.batch_process_textbooks(textbooks=request.textbooks, config=config)
         except Exception as e:
             logger.error(f"Background batch processing failed: {e}", exc_info=True)
 
     background_tasks.add_task(run_batch_processing)
 
     from datetime import datetime
+
     task_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     return ProcessResponse(
         task_id=task_id,
         status="accepted",
         message=f"Batch processing started for {len(request.textbooks)} textbooks",
-        data={
-            "count": len(request.textbooks),
-            "config": config.to_dict()
-        }
+        data={"count": len(request.textbooks), "config": config.to_dict()},
     )
 
 
@@ -237,19 +220,13 @@ async def get_task_status(task_id: str):
     根据任务ID查询处理任务的当前状态和结果。
     """
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="LingFlow agents service is not available"
-        )
+        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
 
     service = get_agents_service()
     task = service.get_task_status(task_id)
 
     if task is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Task not found: {task_id}"
-        )
+        raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
     return TaskStatusResponse(
         task_id=task.task_id,
@@ -264,7 +241,7 @@ async def get_task_status(task_id: str):
         quality_score=task.quality_score,
         statistics=task.statistics,
         issues=task.issues,
-        error=task.error
+        error=task.error,
     )
 
 
@@ -275,10 +252,7 @@ async def list_all_tasks():
     获取所有已执行或正在执行的任务列表。
     """
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="LingFlow agents service is not available"
-        )
+        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
 
     service = get_agents_service()
     tasks = service.get_all_tasks()
@@ -297,7 +271,7 @@ async def list_all_tasks():
             quality_score=task.quality_score,
             statistics=task.statistics,
             issues=task.issues,
-            error=task.error
+            error=task.error,
         )
         for task in tasks
     ]

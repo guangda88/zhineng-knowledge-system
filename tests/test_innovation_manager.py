@@ -2,7 +2,9 @@
 
 测试命令注入防护措施
 """
+
 import pytest
+
 from backend.services.learning.innovation_manager import InnovationManager
 
 
@@ -21,7 +23,7 @@ class TestCommandValidation:
             "python -m pytest",
             "make build",
             "cargo test",
-            "mvn test"
+            "mvn test",
         ]
 
         for cmd in safe_commands:

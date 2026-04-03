@@ -2,13 +2,15 @@
 
 测试services/generation/base.py的基础功能
 """
+
 import pytest
+
 from backend.services.generation.base import (
     BaseGenerator,
     GenerationRequest,
     GenerationResult,
-    OutputFormat,
     GenerationStatus,
+    OutputFormat,
 )
 
 
@@ -100,6 +102,7 @@ class TestBaseGenerator:
         """测试基类是抽象类"""
         # BaseGenerator是抽象类，不能直接实例化
         from abc import ABC
+
         from backend.services.generation.base import BaseGenerator
 
         assert issubclass(BaseGenerator, ABC)

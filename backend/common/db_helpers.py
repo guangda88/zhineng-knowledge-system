@@ -259,8 +259,10 @@ async def get_document_stats(
     """
     doc_count, category_stats = await asyncio.gather(
         pool.fetchval("SELECT COUNT(*) FROM documents"),
-        pool.fetch("""SELECT category, COUNT(*) as count
-               FROM documents GROUP BY category"""),
+        pool.fetch(
+            """SELECT category, COUNT(*) as count
+               FROM documents GROUP BY category"""
+        ),
     )
 
     return {

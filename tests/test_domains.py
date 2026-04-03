@@ -1,24 +1,28 @@
 """Tests for backend.domains modules — domain creation and dead code removal verification"""
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock
 
-from backend.domains.qigong import QigongDomain
-from backend.domains.tcm import TcmDomain
+import pytest
+
+from backend.domains.base import BaseDomain, DomainConfig, DomainType
 from backend.domains.confucian import ConfucianDomain
 from backend.domains.general import GeneralDomain
-from backend.domains.base import BaseDomain, DomainConfig, DomainType
+from backend.domains.qigong import QigongDomain
+from backend.domains.tcm import TcmDomain
 
 
 class TestQigongDomainDeadCodeRemoved:
     """Verify dead methods were removed from QigongDomain"""
 
     def test_no_get_practice_tips(self):
-        assert not hasattr(QigongDomain, "get_practice_tips"), \
-            "get_practice_tips should have been removed (dead code)"
+        assert not hasattr(
+            QigongDomain, "get_practice_tips"
+        ), "get_practice_tips should have been removed (dead code)"
 
     def test_no_get_related_exercises(self):
-        assert not hasattr(QigongDomain, "get_related_exercises"), \
-            "get_related_exercises should have been removed (dead code)"
+        assert not hasattr(
+            QigongDomain, "get_related_exercises"
+        ), "get_related_exercises should have been removed (dead code)"
 
     def test_has_required_methods(self):
         assert hasattr(QigongDomain, "query")

@@ -1,11 +1,12 @@
 """Tests for backend.common.singleton — async_singleton decorator and sentinel fix"""
+
 import asyncio
 import sys
 import types
 
 import pytest
 
-from backend.common.singleton import async_singleton, _INIT_FAILED_SENTINEL
+from backend.common.singleton import _INIT_FAILED_SENTINEL, async_singleton
 
 
 def _make_module(name: str, var_name: str):

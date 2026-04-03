@@ -67,9 +67,7 @@ class LogConfig:
     DEFAULT_LEVEL = logging.INFO
     LOG_LEVEL = logging.getLevelName(
         logging._nameToLevel.get(
-            logging._levelToName.get(
-                int(__import__("os").getenv("LOG_LEVEL", str(DEFAULT_LEVEL)))
-            ),
+            logging._levelToName.get(int(__import__("os").getenv("LOG_LEVEL", str(DEFAULT_LEVEL)))),
             DEFAULT_LEVEL,
         )
     )
@@ -106,11 +104,7 @@ class SensitiveDataProcessor:
                     (
                         self.filter.filter_dict(item)
                         if isinstance(item, dict)
-                        else (
-                            self.filter._mask_string(item)
-                            if isinstance(item, str)
-                            else item
-                        )
+                        else (self.filter._mask_string(item) if isinstance(item, str) else item)
                     )
                     for item in value
                 ]
@@ -462,9 +456,7 @@ def clear_context() -> structlog.stdlib.BoundLogger:
 
 
 # Convenience functions for common logging scenarios
-def log_request(
-    method: str, path: str, status_code: int, duration_ms: float, **kwargs
-) -> None:
+def log_request(method: str, path: str, status_code: int, duration_ms: float, **kwargs) -> None:
     """Log HTTP request with standard fields"""
     logger = get_logger("api.request")
     log_data = {
@@ -579,9 +571,7 @@ def log_authentication_event(
         logger.info("auth_event", **log_data)
 
 
-def log_error(
-    error: Exception, context: Optional[Dict[str, Any]] = None, **kwargs
-) -> None:
+def log_error(error: Exception, context: Optional[Dict[str, Any]] = None, **kwargs) -> None:
     """Log error with context"""
     logger = get_logger("error")
     log_data = {

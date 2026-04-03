@@ -8,8 +8,8 @@
 - 维度验证
 - 打标报告生成
 """
-import asyncio
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 
@@ -39,14 +39,12 @@ async def main():
 
   # 解析单个文件路径
   python scripts/tag_qigong_docs.py parse "/大专班/精义/34/285明了调息的目的和作用C.mpg"
-        """
+        """,
     )
 
     # 数据库连接
     parser.add_argument(
-        "--db-url",
-        default="postgresql://user:password@localhost/dbname",
-        help="PostgreSQL连接URL"
+        "--db-url", default="postgresql://user:password@localhost/dbname", help="PostgreSQL连接URL"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="可用命令")
@@ -56,16 +54,8 @@ async def main():
 
     # tag 命令
     tag_parser = subparsers.add_parser("tag", help="执行批量打标")
-    tag_parser.add_argument(
-        "--pattern",
-        default="%",
-        help="文件路径匹配模式 (LIKE语法，默认全部)"
-    )
-    tag_parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="只测试不实际写入"
-    )
+    tag_parser.add_argument("--pattern", default="%", help="文件路径匹配模式 (LIKE语法，默认全部)")
+    tag_parser.add_argument("--dry-run", action="store_true", help="只测试不实际写入")
 
     # validate 命令
     validate_parser = subparsers.add_parser("validate", help="验证维度数据")
@@ -107,7 +97,7 @@ async def cmd_stats(args):
 
         print("\n各维度覆盖情况:")
         print("-" * 60)
-        for dim, data in stats['dimensions'].items():
+        for dim, data in stats["dimensions"].items():
             print(f"  {dim:20s}: {data['count']:5d} ({data['coverage_percent']:5.1f}%)")
 
         print("\n功法类型分布:")
@@ -169,9 +159,9 @@ async def cmd_validate(args):
         print(f"无效维度数: {len(result['invalid_dimensions'])}")
         print(f"验证状态: {'✓ 通过' if result['is_valid'] else '✗ 失败'}")
 
-        if result['invalid_dimensions']:
+        if result["invalid_dimensions"]:
             print("\n无效维度:")
-            for dim in result['invalid_dimensions']:
+            for dim in result["invalid_dimensions"]:
                 print(f"  - {dim}")
 
     finally:

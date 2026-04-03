@@ -30,13 +30,13 @@ class ApprovalToken:
             "operation": operation,
             "created_at": datetime.now().isoformat(),
             "expires_at": (datetime.now() + timedelta(minutes=duration_minutes)).isoformat(),
-            "approved": True
+            "approved": True,
         }
 
         # 确保目录存在
         os.makedirs(os.path.dirname(cls.TOKEN_FILE), exist_ok=True)
 
-        with open(cls.TOKEN_FILE, 'w') as f:
+        with open(cls.TOKEN_FILE, "w") as f:
             json.dump(token, f, indent=2)
 
         return token
@@ -63,7 +63,10 @@ class ApprovalToken:
 
         # 检查操作类型
         if token.get("operation") != operation:
-            return False, f"❌ 令牌类型不匹配: 需要 '{operation}', 但令牌是 '{token.get('operation')}'"
+            return (
+                False,
+                f"❌ 令牌类型不匹配: 需要 '{operation}', 但令牌是 '{token.get('operation')}'",
+            )
 
         # 检查是否批准
         if not token.get("approved", False):
@@ -119,12 +122,13 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="批准令牌管理工具")
-    parser.add_argument("action", choices=["create", "validate", "clear", "info"],
-                       help="操作: create=创建, validate=验证, clear=清除, info=查看信息")
-    parser.add_argument("--operation", default="db_write",
-                       help="操作类型 (默认: db_write)")
-    parser.add_argument("--duration", type=int, default=30,
-                       help="有效期（分钟，默认: 30）")
+    parser.add_argument(
+        "action",
+        choices=["create", "validate", "clear", "info"],
+        help="操作: create=创建, validate=验证, clear=清除, info=查看信息",
+    )
+    parser.add_argument("--operation", default="db_write", help="操作类型 (默认: db_write)")
+    parser.add_argument("--duration", type=int, default=30, help="有效期（分钟，默认: 30）")
 
     args = parser.parse_args()
 

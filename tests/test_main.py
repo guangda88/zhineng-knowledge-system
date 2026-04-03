@@ -85,10 +85,7 @@ class TestReasoningAPI:
     def test_api_v1_reasoning_with_question(self, client, mock_llm_api):
         """测试带问题的推理请求"""
         # 使用mock的LLM API
-        response = client.post(
-            "/api/v1/reason",
-            json={"question": "什么是气功?", "mode": "cot"}
-        )
+        response = client.post("/api/v1/reason", json={"question": "什么是气功?", "mode": "cot"})
         # 应该返回200或422
         assert response.status_code in [200, 422, 503]
 
@@ -132,10 +129,7 @@ class TestGZipCompression:
 
     def test_gzip_support(self, client):
         """测试GZip压缩支持"""
-        response = client.get(
-            "/health",
-            headers={"Accept-Encoding": "gzip"}
-        )
+        response = client.get("/health", headers={"Accept-Encoding": "gzip"})
         assert response.status_code == 200
         # 检查响应是否被压缩
         assert response.headers.get("content-encoding") in [None, "gzip"]
@@ -148,10 +142,7 @@ class TestCORS:
         """测试CORS头"""
         response = client.options(
             "/api/v1/documents",
-            headers={
-                "Origin": "http://localhost:3000",
-                "Access-Control-Request-Method": "GET"
-            }
+            headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "GET"},
         )
         # OPTIONS请求可能返回200或其他状态
         assert response.status_code in [200, 404, 405]

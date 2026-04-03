@@ -240,10 +240,12 @@ class VectorRetriever:
             统计信息
         """
         async with self.db_pool.acquire() as conn:
-            rows = await conn.fetch("""SELECT id, title, content
+            rows = await conn.fetch(
+                """SELECT id, title, content
                    FROM documents
                    WHERE embedding IS NULL
-                   ORDER BY id""")
+                   ORDER BY id"""
+            )
 
         total = len(rows)
         updated = 0

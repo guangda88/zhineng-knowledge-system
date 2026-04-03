@@ -6,9 +6,10 @@
 import asyncio
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any
+from pathlib import Path
+from typing import Any, Dict, List
+
 import httpx
 from dotenv import load_dotenv
 
@@ -30,46 +31,35 @@ class FreeTokenPoolTester:
         name: str,
         api_key_env: str,
         api_url: str,
-        test_prompt: str = "你好，请用一句话介绍自己。"
+        test_prompt: str = "你好，请用一句话介绍自己。",
     ) -> Dict[str, Any]:
         """测试单个provider"""
 
         print(f"\n{'='*60}")
         print(f"🧪 测试 {name.upper()}")
-        print('='*60)
+        print("=" * 60)
 
         api_key = os.getenv(api_key_env)
 
         if not api_key:
             print(f"⚠️  未配置 {api_key_env}")
-            return {
-                "name": name,
-                "success": False,
-                "error": "未配置API密钥"
-            }
+            return {"name": name, "success": False, "error": "未配置API密钥"}
 
         print(f"✅ 已配置 {api_key_env}")
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                }
+                headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
                 payload = {
                     "model": self.get_model_name(name),
                     "messages": [{"role": "user", "content": test_prompt}],
-                    "max_tokens": 100
+                    "max_tokens": 100,
                 }
 
                 start_time = datetime.now()
 
-                response = await client.post(
-                    api_url,
-                    headers=headers,
-                    json=payload
-                )
+                response = await client.post(api_url, headers=headers, json=payload)
 
                 latency = int((datetime.now() - start_time).total_seconds() * 1000)
 
@@ -85,25 +75,17 @@ class FreeTokenPoolTester:
                         "name": name,
                         "success": True,
                         "latency_ms": latency,
-                        "response_preview": content[:100]
+                        "response_preview": content[:100],
                     }
                 else:
                     print(f"❌ HTTP {response.status_code}")
                     print(f"错误: {response.text[:200]}")
 
-                    return {
-                        "name": name,
-                        "success": False,
-                        "error": f"HTTP {response.status_code}"
-                    }
+                    return {"name": name, "success": False, "error": f"HTTP {response.status_code}"}
 
         except Exception as e:
             print(f"❌ 测试失败: {e}")
-            return {
-                "name": name,
-                "success": False,
-                "error": str(e)
-            }
+            return {"name": name, "success": False, "error": str(e)}
 
     def get_model_name(self, provider: str) -> str:
         """获取provider的默认模型"""
@@ -128,20 +110,70 @@ class FreeTokenPoolTester:
 
         # 永久免费/月
         permanent_free = [
-            ("GLM", "GLM_API_KEY", "https://open.bigmodel.cn/api/paas/v4/chat/completions", "智谱AI - 100万tokens/月"),
-            ("千帆", "QWEN_API_KEY", "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions", "百度千帆 - 100万tokens/月"),
-            ("通义千问", "QWEN_DASHSCOPE_API_KEY", "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", "阿里通义 - 100万tokens/月"),
-            ("360智脑", "ZHIHU_API_KEY", "https://api.360.cn/v1/chat/completions", "360智脑 - 100万tokens/月"),
-            ("讯飞星火", "SPARK_API_KEY", "https://spark-api.xf-yun.com/v1/chat/completions", "讯飞星火 - 50万tokens/月"),
+            (
+                "GLM",
+                "GLM_API_KEY",
+                "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+                "智谱AI - 100万tokens/月",
+            ),
+            (
+                "千帆",
+                "QWEN_API_KEY",
+                "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions",
+                "百度千帆 - 100万tokens/月",
+            ),
+            (
+                "通义千问",
+                "QWEN_DASHSCOPE_API_KEY",
+                "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+                "阿里通义 - 100万tokens/月",
+            ),
+            (
+                "360智脑",
+                "ZHIHU_API_KEY",
+                "https://api.360.cn/v1/chat/completions",
+                "360智脑 - 100万tokens/月",
+            ),
+            (
+                "讯飞星火",
+                "SPARK_API_KEY",
+                "https://spark-api.xf-yun.com/v1/chat/completions",
+                "讯飞星火 - 50万tokens/月",
+            ),
         ]
 
         # 新用户试用
         new_user_trials = [
-            ("DeepSeek", "DEEPSEEK_API_KEY", "https://api.deepseek.com/v1/chat/completions", "DeepSeek - 500万tokens 30天"),
-            ("混元", "HUNYUAN_API_KEY", "https://api.hunyuan.cloud.tencent.com/v1/chat/completions", "腾讯混元 - 100万tokens 30天"),
-            ("豆包", "DOUBAO_API_KEY", "https://ark.cn-beijing.volces.com/api/v3/chat/completions", "字节豆包 - 200万tokens 30天"),
-            ("Moonshot", "MOONSHOT_API_KEY", "https://api.moonshot.cn/v1/chat/completions", "Kimi月之暗面 - 300万tokens 30天"),
-            ("Minimax", "MINIMAX_API_KEY", "https://api.minimax.chat/v1/text/chatcompletion_v2", "Minimax - 100万tokens 60天"),
+            (
+                "DeepSeek",
+                "DEEPSEEK_API_KEY",
+                "https://api.deepseek.com/v1/chat/completions",
+                "DeepSeek - 500万tokens 30天",
+            ),
+            (
+                "混元",
+                "HUNYUAN_API_KEY",
+                "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+                "腾讯混元 - 100万tokens 30天",
+            ),
+            (
+                "豆包",
+                "DOUBAO_API_KEY",
+                "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+                "字节豆包 - 200万tokens 30天",
+            ),
+            (
+                "Moonshot",
+                "MOONSHOT_API_KEY",
+                "https://api.moonshot.cn/v1/chat/completions",
+                "Kimi月之暗面 - 300万tokens 30天",
+            ),
+            (
+                "Minimax",
+                "MINIMAX_API_KEY",
+                "https://api.minimax.chat/v1/text/chatcompletion_v2",
+                "Minimax - 100万tokens 60天",
+            ),
         ]
 
         all_providers = permanent_free + new_user_trials
@@ -165,7 +197,7 @@ class FreeTokenPoolTester:
 
         print(f"\n{'='*60}")
         print("📊 免费Token池测试总结")
-        print('='*60)
+        print("=" * 60)
 
         total = len(self.results)
         success = sum(1 for r in self.results.values() if r.get("success"))
@@ -211,7 +243,7 @@ class FreeTokenPoolTester:
 
         print(f"\n{'='*60}")
         print("📊 额度状态检查")
-        print('='*60)
+        print("=" * 60)
 
         # 这里可以添加实际的额度查询逻辑
         # 目前只显示配置的provider
@@ -239,9 +271,9 @@ class FreeTokenPoolTester:
 async def main():
     """主函数"""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🚀 免费Token池测试脚本")
-    print("="*60)
+    print("=" * 60)
     print(f"⏰ 测试时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     tester = FreeTokenPoolTester()

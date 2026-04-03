@@ -4,20 +4,19 @@
 使用 BGE-M3 嵌入服务为所有文档生成真实的语义向量
 """
 import asyncio
-import sys
-import os
 import logging
+import os
+import sys
 
 # 添加后端路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
-from services.retrieval.vector import VectorRetriever
 import asyncpg
+from services.retrieval.vector import VectorRetriever
 
 # 配置日志
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -25,14 +24,8 @@ logger = logging.getLogger(__name__)
 async def main():
     """主函数"""
     # 数据库连接配置
-    db_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
-    )
-    embedding_service_url = os.getenv(
-        "EMBEDDING_SERVICE_URL",
-        "http://localhost:8001"
-    )
+    db_url = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb")
+    embedding_service_url = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
 
     logger.info("=== 文档向量重建脚本 ===")
     logger.info(f"数据库: {db_url}")
@@ -40,6 +33,7 @@ async def main():
 
     # 检查嵌入服务
     import httpx
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{embedding_service_url}/health", timeout=5.0)
@@ -61,9 +55,7 @@ async def main():
     try:
         # 统计需要更新的文档
         async with pool.acquire() as conn:
-            total = await conn.fetchval(
-                "SELECT COUNT(*) FROM documents WHERE embedding IS NULL"
-            )
+            total = await conn.fetchval("SELECT COUNT(*) FROM documents WHERE embedding IS NULL")
             all_docs = await conn.fetchval("SELECT COUNT(*) FROM documents")
 
         logger.info(f"文档总数: {all_docs}")
@@ -75,7 +67,7 @@ async def main():
 
         # 确认
         confirm = input(f"\n是否开始更新 {total} 个文档的向量? (yes/no): ")
-        if confirm.lower() not in ['yes', 'y']:
+        if confirm.lower() not in ["yes", "y"]:
             logger.info("已取消")
             return 0
 
@@ -89,7 +81,7 @@ async def main():
         logger.info(f"成功: {stats['updated']}")
         logger.info(f"失败: {stats['failed']}")
 
-        if stats['failed'] > 0:
+        if stats["failed"] > 0:
             logger.warning(f"⚠️  {stats['failed']} 个文档更新失败，请查看日志")
             return 1
         else:

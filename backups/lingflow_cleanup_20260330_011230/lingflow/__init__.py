@@ -5,11 +5,11 @@
 
 from .compression import (
     AdvancedContextCompressor,
-    CompressionStrategy,
     CompressionResult,
+    CompressionStrategy,
     compress_context,
+    compress_messages,
     compress_text,
-    compress_messages
 )
 
 __version__ = "0.1.0"

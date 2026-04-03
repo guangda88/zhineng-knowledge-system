@@ -249,9 +249,7 @@ async def generate_report():
     print("-" * 70)
 
     for i in range(12):
-        allowed, remaining = await cache.check_rate_limit(
-            "test_user", "api", limit=10, window=60
-        )
+        allowed, remaining = await cache.check_rate_limit("test_user", "api", limit=10, window=60)
 
     if not allowed:
         print("   [OK] 速率限制 - 超过限制后请求被拒绝")

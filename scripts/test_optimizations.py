@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 print("=" * 70)
@@ -66,11 +67,7 @@ async def test_batch_processor():
 
     print(f"📝 待处理: {len(prompts)}个任务")
 
-    results = await processor.batch_process(
-        prompts,
-        mock_process,
-        show_progress=True
-    )
+    results = await processor.batch_process(prompts, mock_process, show_progress=True)
 
     print(f"✅ 完成: {len(results)}个结果")
 
@@ -91,8 +88,7 @@ async def test_rate_limiter():
     from backend.services.evolution.rate_limiter import AdaptiveRateLimiter
 
     limiter = AdaptiveRateLimiter(
-        max_requests_per_minute=10,  # 测试用，实际设为80
-        max_requests_per_5min=40
+        max_requests_per_minute=10, max_requests_per_5min=40  # 测试用，实际设为80
     )
 
     print("📝 快速调用5次（测试限流）...")
@@ -121,19 +117,14 @@ async def test_optimized_client():
     from backend.services.evolution.optimized_ai_client import get_optimized_client
 
     client = get_optimized_client(
-        enable_cache=True,
-        enable_rate_limit=False  # 测试时关闭限流以加快速度
+        enable_cache=True, enable_rate_limit=False  # 测试时关闭限流以加快速度
     )
 
     # 测试缓存功能
     print("测试1: 第一次调用（无缓存）")
     mock_func = lambda x: asyncio.sleep(0.1) or "响应内容"
 
-    result1 = await client.call_with_optimization(
-        "测试提示词",
-        mock_func,
-        use_cache=True
-    )
+    result1 = await client.call_with_optimization("测试提示词", mock_func, use_cache=True)
 
     if result1:
         print(f"✅ 成功: {result1}")
@@ -141,11 +132,7 @@ async def test_optimized_client():
     await asyncio.sleep(0.5)
 
     print("\n测试2: 第二次调用（应该命中缓存）")
-    result2 = await client.call_with_optimization(
-        "测试提示词",
-        mock_func,
-        use_cache=True
-    )
+    result2 = await client.call_with_optimization("测试提示词", mock_func, use_cache=True)
 
     if result2:
         print(f"✅ 成功（从缓存）: {result2}")

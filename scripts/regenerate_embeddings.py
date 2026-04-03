@@ -5,6 +5,7 @@ Usage:
 
 The embedding service must be running at localhost:8001 (zhineng-embedding container).
 """
+
 import argparse
 import asyncio
 import logging
@@ -38,15 +39,15 @@ async def fetch_embeddings(client: httpx.AsyncClient, texts: list[str]) -> list[
     return resp.json()["embeddings"]
 
 
-async def regenerate_table(pool, client: httpx.AsyncClient, table: dict, batch_size: int, limit: int):
+async def regenerate_table(
+    pool, client: httpx.AsyncClient, table: dict, batch_size: int, limit: int
+):
     table_name = table["name"]
     text_cols = table["text_columns"]
     label = table["label"]
     col_expr = ", ".join(text_cols)
 
-    total = await pool.fetchval(
-        f"SELECT count(*) FROM {table_name} WHERE embedding IS NULL"
-    )
+    total = await pool.fetchval(f"SELECT count(*) FROM {table_name} WHERE embedding IS NULL")
     if limit > 0:
         total = min(total, limit)
 
@@ -112,7 +113,9 @@ async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--limit", type=int, default=0, help="Max rows per table (0=all)")
-    parser.add_argument("--tables", type=str, default="", help="Comma-separated table names to process")
+    parser.add_argument(
+        "--tables", type=str, default="", help="Comma-separated table names to process"
+    )
     args = parser.parse_args()
 
     target_tables = TABLES

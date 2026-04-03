@@ -147,7 +147,12 @@ class LingMessageService:
             limit,
             offset,
         )
-        return {"threads": [dict(r) for r in rows], "total": total, "limit": limit, "offset": offset}
+        return {
+            "threads": [dict(r) for r in rows],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
 
     async def post_message(
         self,

@@ -3,8 +3,8 @@
 数据库写操作检查Hook
 检查数据库破坏性操作是否已获批准
 """
-import sys
 import os
+import sys
 
 # 添加父目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -46,9 +46,9 @@ except ImportError:
 
 def print_header():
     """打印Hook头部信息"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🔒 数据库写操作检查Hook")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def print_help():
@@ -56,16 +56,18 @@ def print_help():
     print("\n💡 如何获得批准:")
     print("1. 使用 AskUserQuestion 向用户说明操作方案和风险")
     print("2. 获得用户批准后，运行以下命令创建批准令牌:")
-    print("   python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/approval_token.py create --operation db_write")
+    print(
+        "   python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/approval_token.py create --operation db_write"
+    )
     print("")
     print("   或使用 Python 代码:")
-    print('   from scripts.hooks.claude_code.approval_token import create_approval_token')
+    print("   from scripts.hooks.claude_code.approval_token import create_approval_token")
     print('   create_approval_token("db_write")')
     print("")
     print("3. 然后重新执行您的操作")
     print("")
     print("⚠️  注意: 批准令牌默认有效期为30分钟")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():

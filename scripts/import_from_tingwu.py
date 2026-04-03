@@ -43,9 +43,7 @@ AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "flac", "ogg", "wma", "aac"}
 TRANSCRIPT_EXTENSIONS = {"txt", "srt"}
 
 
-def find_matching_pairs(
-    audio_dir: Path, transcript_dir: Path
-) -> list[tuple[Path, Path]]:
+def find_matching_pairs(audio_dir: Path, transcript_dir: Path) -> list[tuple[Path, Path]]:
     """匹配音频和转写文件对"""
     audio_files = {}
     for f in sorted(audio_dir.iterdir()):
@@ -77,8 +75,8 @@ async def import_one(
     service = AudioService()
 
     transcript_text = transcript_path.read_text(encoding="utf-8")
-    detected_fmt = fmt if fmt != "auto" else (
-        "srt" if transcript_path.suffix.lower() == ".srt" else "auto"
+    detected_fmt = (
+        fmt if fmt != "auto" else ("srt" if transcript_path.suffix.lower() == ".srt" else "auto")
     )
 
     result = await service.import_with_transcript(
@@ -98,26 +96,18 @@ async def import_one(
 
 async def main():
     parser = argparse.ArgumentParser(description="从听悟导出数据批量导入")
-    parser.add_argument(
-        "--audio-dir", required=True, help="音频文件目录"
-    )
-    parser.add_argument(
-        "--transcript-dir", required=True, help="转写文件目录"
-    )
+    parser.add_argument("--audio-dir", required=True, help="音频文件目录")
+    parser.add_argument("--transcript-dir", required=True, help="转写文件目录")
     parser.add_argument("--category", default=None, help="分类 (气功/中医/儒家)")
     parser.add_argument("--tags", default=None, help="标签，逗号分隔")
     parser.add_argument(
-        "--format", default="auto", choices=["auto", "srt", "txt"],
-        help="转写格式 (默认auto自动检测)"
+        "--format",
+        default="auto",
+        choices=["auto", "srt", "txt"],
+        help="转写格式 (默认auto自动检测)",
     )
-    parser.add_argument(
-        "--vectorize", action="store_true",
-        help="导入后自动向量化分段"
-    )
-    parser.add_argument(
-        "--dry-run", action="store_true",
-        help="仅显示匹配结果，不实际导入"
-    )
+    parser.add_argument("--vectorize", action="store_true", help="导入后自动向量化分段")
+    parser.add_argument("--dry-run", action="store_true", help="仅显示匹配结果，不实际导入")
     args = parser.parse_args()
 
     audio_dir = Path(args.audio_dir)
@@ -156,8 +146,12 @@ async def main():
         print(f"\n[{i}/{len(pairs)}] 导入: {audio_path.name}")
         try:
             result = await import_one(
-                audio_path, transcript_path,
-                args.category, tags, args.format, args.vectorize,
+                audio_path,
+                transcript_path,
+                args.category,
+                tags,
+                args.format,
+                args.vectorize,
             )
             success += 1
             total_segs += result["segments_count"]

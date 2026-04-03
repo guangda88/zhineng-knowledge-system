@@ -126,26 +126,30 @@ async def get_stats():
             "SELECT domain, COUNT(*) as cnt FROM sys_books GROUP BY domain ORDER BY cnt DESC"
         )
 
-        ext_rows = await pool.fetch("""
+        ext_rows = await pool.fetch(
+            """
             SELECT extension, COUNT(*) as cnt
             FROM sys_books
             WHERE extension IS NOT NULL
             GROUP BY extension
             ORDER BY cnt DESC
             LIMIT 20
-            """)
+            """
+        )
 
         source_rows = await pool.fetch(
             "SELECT source, COUNT(*) as cnt FROM sys_books GROUP BY source ORDER BY cnt DESC"
         )
 
-        file_type_rows = await pool.fetch("""
+        file_type_rows = await pool.fetch(
+            """
             SELECT file_type, COUNT(*) as cnt
             FROM sys_books
             WHERE file_type IS NOT NULL
             GROUP BY file_type
             ORDER BY cnt DESC
-            """)
+            """
+        )
 
         return {
             "status": "ok",
@@ -177,13 +181,15 @@ async def get_domains():
     try:
         pool = _pool()
 
-        rows = await pool.fetch("""
+        rows = await pool.fetch(
+            """
             SELECT domain, subcategory, COUNT(*) as cnt
             FROM sys_books
             WHERE domain IS NOT NULL
             GROUP BY domain, subcategory
             ORDER BY domain, cnt DESC
-            """)
+            """
+        )
 
         tree: Dict[str, Any] = {}
         for r in rows:

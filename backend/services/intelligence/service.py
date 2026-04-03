@@ -307,7 +307,8 @@ class IntelligenceService:
         pool = await get_db_pool()
 
         # 总体统计
-        stats_row = await pool.fetchrow("""
+        stats_row = await pool.fetchrow(
+            """
             SELECT
                 COUNT(*) AS total,
                 COUNT(*) FILTER (WHERE NOT is_read) AS unread,
@@ -317,10 +318,12 @@ class IntelligenceService:
                 COUNT(*) FILTER (WHERE relevance_category = 'monitoring') AS monitoring,
                 ROUND(AVG(relevance_score), 1) AS avg_score
             FROM intelligence_items
-        """)
+        """
+        )
 
         # 各来源统计
-        source_rows = await pool.fetch("""
+        source_rows = await pool.fetch(
+            """
             SELECT
                 source,
                 COUNT(*) AS total,
@@ -331,26 +334,31 @@ class IntelligenceService:
             FROM intelligence_items
             GROUP BY source
             ORDER BY source
-        """)
+        """
+        )
 
         # 最近采集任务
-        recent_collections = await pool.fetch("""
+        recent_collections = await pool.fetch(
+            """
             SELECT id, source, status, items_found, items_new, items_updated,
                    duration_ms, started_at, completed_at, error_message
             FROM intelligence_collections
             ORDER BY started_at DESC
             LIMIT 10
-        """)
+        """
+        )
 
         # 最近高价值条目
-        recent_high_value = await pool.fetch("""
+        recent_high_value = await pool.fetch(
+            """
             SELECT id, source, source_id, name, description, url,
                    relevance_score, relevance_category, collected_at
             FROM intelligence_items
             WHERE relevance_category = 'high_value'
             ORDER BY collected_at DESC
             LIMIT 5
-        """)
+        """
+        )
 
         return {
             "summary": {

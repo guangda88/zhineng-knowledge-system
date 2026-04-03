@@ -25,7 +25,7 @@ from pathlib import Path
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backend.services.import_manager import ImportManager, ImportLockError
+from backend.services.import_manager import ImportLockError, ImportManager
 
 # 导入任务配置
 IMPORT_TASKS = {
@@ -78,25 +78,27 @@ def print_status():
     # 数据库锁状态
     async def check_db_status():
         import asyncpg
+
         database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+            "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
         )
         try:
             conn = await asyncpg.connect(database_url)
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT task_name, status, pid, started_at,
                        EXTRACT(EPOCH FROM (NOW() - started_at))/60 as minutes_ago
                 FROM import_locks
                 ORDER BY started_at DESC
                 LIMIT 10
-            """)
+            """
+            )
             await conn.close()
 
             if rows:
                 print("\n数据库锁:")
                 for row in rows:
-                    status_icon = "🟢" if row['status'] == 'running' else "✅"
+                    status_icon = "🟢" if row["status"] == "running" else "✅"
                     print(f"  {status_icon} {row['task_name']}:")
                     print(f"     状态: {row['status']}, PID: {row['pid']}")
                     print(f"     运行: {row['minutes_ago']:.1f} 分钟")
@@ -128,19 +130,22 @@ def force_unlock(task_name: str):
     # 更新数据库状态
     async def update_db():
         import asyncpg
+
         database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+            "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
         )
         conn = await asyncpg.connect(database_url)
         try:
-            result = await conn.execute("""
+            result = await conn.execute(
+                """
                 UPDATE import_locks
                 SET status = 'unlocked',
                     completed_at = NOW(),
                     error_message = '手动解锁'
                 WHERE task_name = $1 AND status = 'running'
-            """, task_name)
+            """,
+                task_name,
+            )
             print(f"  ✅ 数据库状态已更新")
         except Exception as e:
             print(f"  ⚠️  数据库更新失败: {e}")
@@ -166,8 +171,8 @@ async def run_import(task_name: str, *args):
         # 使用 ImportManager 确保独占运行
         async with ImportManager(task_name) as mgr:
             # 导入并执行任务
-            module = __import__(task['module'], fromlist=[task['function']])
-            func = getattr(module, task['function'])
+            module = __import__(task["module"], fromlist=[task["function"]])
+            func = getattr(module, task["function"])
 
             # 如果是协程函数，直接运行
             if asyncio.iscoroutinefunction(func):
@@ -189,6 +194,7 @@ async def run_import(task_name: str, *args):
     except Exception as e:
         print(f"\n❌ 导入失败: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -205,29 +211,13 @@ def main():
   python scripts/import_guard.py textbooks --limit 10
   python scripts/import_guard.py --status          # 查看状态
   python scripts/import_guard.py --unlock guji     # 强制解锁
-        """
+        """,
     )
 
-    parser.add_argument(
-        "task",
-        nargs="?",
-        help="任务名称 (guji, textbooks, sys_books, ...)"
-    )
-    parser.add_argument(
-        "--status",
-        action="store_true",
-        help="查看所有任务状态"
-    )
-    parser.add_argument(
-        "--unlock",
-        metavar="TASK",
-        help="强制解锁指定任务"
-    )
-    parser.add_argument(
-        "args",
-        nargs=argparse.REMAINDER,
-        help="传递给导入脚本的额外参数"
-    )
+    parser.add_argument("task", nargs="?", help="任务名称 (guji, textbooks, sys_books, ...)")
+    parser.add_argument("--status", action="store_true", help="查看所有任务状态")
+    parser.add_argument("--unlock", metavar="TASK", help="强制解锁指定任务")
+    parser.add_argument("args", nargs=argparse.REMAINDER, help="传递给导入脚本的额外参数")
 
     args = parser.parse_args()
 

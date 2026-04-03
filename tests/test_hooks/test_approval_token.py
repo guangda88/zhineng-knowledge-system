@@ -1,9 +1,10 @@
 """
 测试批准令牌功能
 """
+
+import json
 import os
 import sys
-import json
 import time
 import unittest
 from datetime import datetime, timedelta

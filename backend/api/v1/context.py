@@ -113,9 +113,6 @@ class SnapshotResponse(BaseModel):
 # ===== API 端点 =====
 
 
-
-
-
 @router.post("/messages/score", response_model=MessageScoreResponse)
 async def score_messages(request: MessageScoreRequest) -> MessageScoreResponse:
     """评分消息列表

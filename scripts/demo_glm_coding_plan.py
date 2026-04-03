@@ -11,13 +11,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from backend.services.ai_service import (
     code_development,
-    debug_code,
     code_review,
-    format_pool_status
+    debug_code,
+    format_pool_status,
 )
 
 
@@ -137,7 +138,8 @@ def process_data(data):
     print()
 
     print("📖 快速开始:")
-    print("""
+    print(
+        """
 from backend.services.ai_service import code_development, debug_code, code_review
 
 # 代码生成
@@ -148,7 +150,8 @@ fix = await debug_code(buggy_code, error_msg)
 
 # 代码审查
 review = await code_review(my_code, focus="性能")
-    """)
+    """
+    )
 
 
 async def show_stats():

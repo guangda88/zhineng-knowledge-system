@@ -6,19 +6,19 @@
 import asyncio
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.services.evolution.multi_ai_adapter import (
-    MultiAIAdapter,
-    LingzhiAdapter,
-    HunyuanAdapter,
-    DoubaoAdapter,
     DeepSeekAdapter,
-    GLMAdapter
+    DoubaoAdapter,
+    GLMAdapter,
+    HunyuanAdapter,
+    LingzhiAdapter,
+    MultiAIAdapter,
 )
 
 
@@ -26,13 +26,10 @@ async def test_single_adapter(adapter_name: str, adapter, test_prompt: str):
     """测试单个适配器"""
     print(f"\n{'='*60}")
     print(f"🧪 测试 {adapter_name.upper()}")
-    print('='*60)
+    print("=" * 60)
 
     try:
-        result = await adapter.generate(
-            prompt=test_prompt,
-            request_type="qa"
-        )
+        result = await adapter.generate(prompt=test_prompt, request_type="qa")
 
         success = result.get("success", False)
         content = result.get("content", "")
@@ -60,9 +57,9 @@ async def test_single_adapter(adapter_name: str, adapter, test_prompt: str):
 async def main():
     """主测试函数"""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🚀 免费API测试脚本")
-    print("="*60)
+    print("=" * 60)
     print(f"⏰ 测试时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # 测试问题
@@ -99,7 +96,7 @@ async def main():
     # 总结
     print(f"\n{'='*60}")
     print("📊 测试总结")
-    print('='*60)
+    print("=" * 60)
 
     total = len(results)
     success_count = sum(1 for v in results.values() if v)

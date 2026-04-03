@@ -8,7 +8,7 @@
 import ast
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 def check_imports(file_path: str) -> List[Dict[str, Any]]:
@@ -21,31 +21,33 @@ def check_imports(file_path: str) -> List[Dict[str, Any]]:
         问题列表，每个问题包含line, module, message
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             source = f.read()
     except FileNotFoundError:
-        return [{
-            'line': 0,
-            'module': 'N/A',
-            'message': f'文件不存在: {file_path}'
-        }]
+        return [{"line": 0, "module": "N/A", "message": f"文件不存在: {file_path}"}]
 
     try:
         tree = ast.parse(source)
     except SyntaxError as e:
-        return [{
-            'line': e.lineno or 0,
-            'module': 'N/A',
-            'message': f'语法错误: {e.msg}'
-        }]
+        return [{"line": e.lineno or 0, "module": "N/A", "message": f"语法错误: {e.msg}"}]
 
     issues = []
 
     # backend内部模块列表
     backend_modules = (
-        'api.', 'services.', 'models.', 'core.', 'auth.',
-        'middleware.', 'cache.', 'domains.', 'gateway.',
-        'monitoring.', 'common.', 'config.', 'utils.'
+        "api.",
+        "services.",
+        "models.",
+        "core.",
+        "auth.",
+        "middleware.",
+        "cache.",
+        "domains.",
+        "gateway.",
+        "monitoring.",
+        "common.",
+        "config.",
+        "utils.",
     )
 
     for node in ast.walk(tree):
@@ -55,23 +57,27 @@ def check_imports(file_path: str) -> List[Dict[str, Any]]:
                 module = alias.name
                 # 检查是否是backend内部的模块
                 if module.startswith(backend_modules):
-                    if not module.startswith('backend.'):
-                        issues.append({
-                            'line': node.lineno,
-                            'module': module,
-                            'message': f'应该使用 "from backend.{module} import xxx"'
-                        })
+                    if not module.startswith("backend."):
+                        issues.append(
+                            {
+                                "line": node.lineno,
+                                "module": module,
+                                "message": f'应该使用 "from backend.{module} import xxx"',
+                            }
+                        )
 
         # 检查 from ... import 语句
         elif isinstance(node, ast.ImportFrom):
             module = node.module
             if module and module.startswith(backend_modules):
-                if not module.startswith('backend.'):
-                    issues.append({
-                        'line': node.lineno,
-                        'module': module,
-                        'message': f'应该使用 "from backend.{module} import xxx"'
-                    })
+                if not module.startswith("backend."):
+                    issues.append(
+                        {
+                            "line": node.lineno,
+                            "module": module,
+                            "message": f'应该使用 "from backend.{module} import xxx"',
+                        }
+                    )
 
     return issues
 
@@ -88,9 +94,9 @@ def check_directory(directory: str) -> Dict[str, List[Dict[str, Any]]]:
     results = {}
     path = Path(directory)
 
-    for py_file in path.rglob('*.py'):
+    for py_file in path.rglob("*.py"):
         # 跳过__pycache__和虚拟环境
-        if '__pycache__' in str(py_file) or 'venv' in str(py_file):
+        if "__pycache__" in str(py_file) or "venv" in str(py_file):
             continue
 
         file_path = str(py_file)
@@ -121,14 +127,14 @@ def print_results(results: Dict[str, List[Dict[str, Any]]]):
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("用法:")
         print("  python scripts/check_imports.py <file.py>")
         print("  python scripts/check_imports.py --all <directory>")
         sys.exit(1)
 
-    if sys.argv[1] == '--all':
+    if sys.argv[1] == "--all":
         if len(sys.argv) < 3:
             print("错误: --all 需要指定目录")
             sys.exit(1)

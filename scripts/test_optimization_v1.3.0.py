@@ -14,9 +14,9 @@ from pathlib import Path
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backend.services.ai_service_enhanced import get_enhanced_ai_service
-from backend.config.timeouts import get_timeout_config, OperationType, Timeouts
+from backend.config.timeouts import OperationType, Timeouts, get_timeout_config
 from backend.gateway.circuit_breaker import CircuitBreakerRegistry
+from backend.services.ai_service_enhanced import get_enhanced_ai_service
 
 
 async def test_timeout_config():
@@ -116,11 +116,11 @@ async def test_ai_service_import():
 
     try:
         from backend.services.ai_service import (
+            ENHANCED_ENABLED,
+            USE_ENHANCED,
             chat,
             generate_text,
             get_enhanced_ai_service,
-            ENHANCED_ENABLED,
-            USE_ENHANCED
         )
 
         print(f"\n🔧 配置:")

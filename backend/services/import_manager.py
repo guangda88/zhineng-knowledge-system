@@ -106,7 +106,8 @@ class ImportManager:
             conn = await asyncpg.connect(self.database_url, timeout=10)
 
             # 创建导入任务表（如果不存在）
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS import_locks (
                     id SERIAL PRIMARY KEY,
                     task_name VARCHAR(100) UNIQUE NOT NULL,
@@ -116,7 +117,8 @@ class ImportManager:
                     completed_at TIMESTAMP,
                     error_message TEXT
                 );
-            """)
+            """
+            )
 
             # 检查是否有运行中的导入任务
             result = await conn.fetchrow(
@@ -147,7 +149,8 @@ class ImportManager:
             self.conn = await asyncpg.connect(self.database_url, timeout=10)
 
             # 创建导入任务表（如果不存在）
-            await self.conn.execute("""
+            await self.conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS import_locks (
                     id SERIAL PRIMARY KEY,
                     task_name VARCHAR(100) UNIQUE NOT NULL,
@@ -157,7 +160,8 @@ class ImportManager:
                     completed_at TIMESTAMP,
                     error_message TEXT
                 );
-            """)
+            """
+            )
 
             # 插入或更新任务记录
             await self.conn.execute(

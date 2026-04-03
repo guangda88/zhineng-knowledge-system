@@ -8,9 +8,9 @@
     python scripts/guji_query.py --stats            # 显示统计信息
 """
 
+import argparse
 import subprocess
 import sys
-import argparse
 from pathlib import Path
 
 POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
@@ -19,9 +19,16 @@ POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
 def query_sql(sql: str) -> str:
     """执行 SQL 查询"""
     cmd = [
-        "docker", "exec", POSTGRES_CONTAINER,
-        "psql", "-U", "zhineng", "-d", "zhineng_kb",
-        "-c", sql
+        "docker",
+        "exec",
+        POSTGRES_CONTAINER,
+        "psql",
+        "-U",
+        "zhineng",
+        "-d",
+        "zhineng_kb",
+        "-c",
+        sql,
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -36,20 +43,23 @@ def show_stats():
     print()
 
     # 总体统计
-    output = query_sql("""
+    output = query_sql(
+        """
         SELECT
             COUNT(*) as total_files,
             COUNT(DISTINCT book_id) as unique_books,
             COUNT(DISTINCT source_table) as source_tables
         FROM guji_scan_mapping
-    """)
+    """
+    )
 
     print("📈 总体统计:")
     print(output)
     print()
 
     # 按表统计
-    output = query_sql("""
+    output = query_sql(
+        """
         SELECT
             source_table,
             COUNT(*) as file_count,
@@ -57,21 +67,24 @@ def show_stats():
         FROM guji_scan_mapping
         GROUP BY source_table
         ORDER BY file_count DESC
-    """)
+    """
+    )
 
     print("📚 按来源表统计:")
     print(output)
     print()
 
     # 按类型统计
-    output = query_sql("""
+    output = query_sql(
+        """
         SELECT
             file_type,
             COUNT(*) as count
         FROM guji_scan_mapping
         GROUP BY file_type
         ORDER BY count DESC
-    """)
+    """
+    )
 
     print("📄 按文件类型统计:")
     print(output)
@@ -85,7 +98,8 @@ def find_by_book_id(book_id: int):
     print("=" * 70)
     print()
 
-    output = query_sql(f"""
+    output = query_sql(
+        f"""
         SELECT
             file_name,
             file_path,
@@ -94,12 +108,14 @@ def find_by_book_id(book_id: int):
         FROM guji_scan_mapping
         WHERE book_id = {book_id}
         ORDER BY file_name
-    """)
+    """
+    )
 
     print(output)
 
     # 同时查询内容
-    content_output = query_sql(f"""
+    content_output = query_sql(
+        f"""
         SELECT
             source_table,
             book_id,
@@ -109,7 +125,8 @@ def find_by_book_id(book_id: int):
         FROM guoxue_content
         WHERE book_id = {book_id}
         LIMIT 5
-    """)
+    """
+    )
 
     print()
     print("📖 数据库内容预览:")
@@ -124,7 +141,8 @@ def search_by_title(keyword: str):
     print()
 
     # 搜索映射表
-    output = query_sql(f"""
+    output = query_sql(
+        f"""
         SELECT
             file_name,
             file_path,
@@ -134,14 +152,16 @@ def search_by_title(keyword: str):
         WHERE file_name ILIKE '%{keyword}%'
         ORDER BY book_id
         LIMIT 20
-    """)
+    """
+    )
 
     print("📁 找到的扫描文档:")
     print(output)
     print()
 
     # 搜索内容表
-    output = query_sql(f"""
+    output = query_sql(
+        f"""
         SELECT
             source_table,
             book_id,
@@ -149,7 +169,8 @@ def search_by_title(keyword: str):
         FROM guoxue_content
         WHERE body ILIKE '%{keyword}%'
         LIMIT 10
-    """)
+    """
+    )
 
     print("📖 找到的文本内容:")
     print(output)
@@ -162,7 +183,8 @@ def show_file_list(limit: int = 50):
     print("=" * 70)
     print()
 
-    output = query_sql(f"""
+    output = query_sql(
+        f"""
         SELECT
             file_name,
             book_id,
@@ -171,7 +193,8 @@ def show_file_list(limit: int = 50):
         FROM guji_scan_mapping
         ORDER BY book_id, file_name
         LIMIT {limit}
-    """)
+    """
+    )
 
     print(output)
 
@@ -208,7 +231,8 @@ def main():
 
 def export_mapping(filename: str):
     """导出映射到文件"""
-    output = query_sql("""
+    output = query_sql(
+        """
         COPY (
             SELECT
                 file_name,
@@ -219,9 +243,10 @@ def export_mapping(filename: str):
             FROM guji_scan_mapping
             ORDER BY source_table, book_id, file_name
         ) TO STDOUT WITH CSV HEADER
-    """)
+    """
+    )
 
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(output)
 
     print(f"✅ 导出完成: {filename}")

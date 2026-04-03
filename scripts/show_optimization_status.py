@@ -19,15 +19,11 @@ def show_optimization_status():
     print("-" * 70)
 
     try:
-        result = subprocess.run(
-            ["ps", "aux"],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
 
         service_process = None
-        for line in result.stdout.split('\n'):
-            if 'auto_optimization_service' in line and 'grep' not in line:
+        for line in result.stdout.split("\n"):
+            if "auto_optimization_service" in line and "grep" not in line:
                 service_process = line
                 break
 
@@ -55,7 +51,7 @@ def show_optimization_status():
 
     plan_file = Path("config/lingminopt_plan.json")
     if plan_file.exists():
-        with open(plan_file, 'r') as f:
+        with open(plan_file, "r") as f:
             plan_data = json.load(f)
 
         print(f"  生成时间: {plan_data['generated_at']}")
@@ -66,7 +62,7 @@ def show_optimization_status():
         print()
         print("  优化机会:")
 
-        for i, opp in enumerate(plan_data['opportunities'], 1):
+        for i, opp in enumerate(plan_data["opportunities"], 1):
             print(f"  {i}. [{opp['priority'].upper()}] {opp['title']}")
             print(f"     当前: {opp['current_value']} → 目标: {opp['target_value']}")
             print(f"     预期改进: {opp['expected_improvement']}, 工作量: {opp['effort']}")
@@ -84,16 +80,12 @@ def show_optimization_status():
     log_file = Path("/tmp/lingminopt_auto.log")
     if log_file.exists():
         # 获取最后30行
-        result = subprocess.run(
-            ["tail", "-30", str(log_file)],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(["tail", "-30", str(log_file)], capture_output=True, text=True)
 
         print("  📋 最近30行日志:")
         print()
 
-        for line in result.stdout.split('\n'):
+        for line in result.stdout.split("\n"):
             if line.strip():
                 print(f"  {line}")
 
@@ -111,9 +103,7 @@ def show_optimization_status():
     print()
     print(f"  停止服务:")
     pid = subprocess.run(
-        ["pgrep", "-f", "auto_optimization_service"],
-        capture_output=True,
-        text=True
+        ["pgrep", "-f", "auto_optimization_service"], capture_output=True, text=True
     ).stdout.strip()
 
     if pid:
@@ -122,7 +112,9 @@ def show_optimization_status():
         print(f"    kill $(pgrep -f 'auto_optimization_service' | awk '{{print $1}}')")
     print()
     print(f"  重启服务:")
-    print(f"    nohup python scripts/auto_optimization_service.py --interval 60 > /tmp/lingminopt_auto.log 2>&1 &")
+    print(
+        f"    nohup python scripts/auto_optimization_service.py --interval 60 > /tmp/lingminopt_auto.log 2>&1 &"
+    )
     print()
 
     print("=" * 70)
@@ -150,9 +142,7 @@ def show_realtime_dashboard():
             # 显示服务状态
             print("🔄 服务状态:")
             result = subprocess.run(
-                ["pgrep", "-f", "auto_optimization_service"],
-                capture_output=True,
-                text=True
+                ["pgrep", "-f", "auto_optimization_service"], capture_output=True, text=True
             )
 
             if result.stdout.strip():
@@ -164,12 +154,10 @@ def show_realtime_dashboard():
             # 显示最近日志
             print("📋 最近日志:")
             log_result = subprocess.run(
-                ["tail", "-10", "/tmp/lingminopt_auto.log"],
-                capture_output=True,
-                text=True
+                ["tail", "-10", "/tmp/lingminopt_auto.log"], capture_output=True, text=True
             )
 
-            for line in log_result.stdout.split('\n'):
+            for line in log_result.stdout.split("\n"):
                 if line.strip():
                     print(f"  {line}")
 
@@ -197,15 +185,10 @@ def main():
 
   # 显示实时仪表板
   python scripts/show_optimization_status.py --watch
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--watch",
-        "-w",
-        action="store_true",
-        help="实时监控模式（每10秒更新）"
-    )
+    parser.add_argument("--watch", "-w", action="store_true", help="实时监控模式（每10秒更新）")
 
     args = parser.parse_args()
 

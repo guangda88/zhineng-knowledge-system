@@ -38,19 +38,19 @@ logger = logging.getLogger(__name__)
 class StorageTier(str, Enum):
     """存储层级"""
 
-    HOT = "hot"       # 热数据（频繁访问，SSD，0延迟）
-    WARM = "warm"     # 温数据（偶尔访问，HDD，低延迟）
-    COLD = "cold"     # 冷数据（归档，对象存储，中延迟）
-    ARCHIVE = "archive" # 归档数据（深度归档，磁带/云存储，高延迟）
+    HOT = "hot"  # 热数据（频繁访问，SSD，0延迟）
+    WARM = "warm"  # 温数据（偶尔访问，HDD，低延迟）
+    COLD = "cold"  # 冷数据（归档，对象存储，中延迟）
+    ARCHIVE = "archive"  # 归档数据（深度归档，磁带/云存储，高延迟）
 
 
 class StorageClass(str, Enum):
     """存储类（S3标准）"""
 
-    STANDARD = "STANDARD"         # 标准存储（热数据）
-    INFREQUENT_ACCESS = "STANDARD_IA" # 不常访问（温数据）
-    ARCHIVE = "GLACIER"         # 归档（冷数据）
-    INTELLIGENT_TIERING = "INTELLIGENT_TIERING" # 智能分层
+    STANDARD = "STANDARD"  # 标准存储（热数据）
+    INFREQUENT_ACCESS = "STANDARD_IA"  # 不常访问（温数据）
+    ARCHIVE = "GLACIER"  # 归档（冷数据）
+    INTELLIGENT_TIERING = "INTELLIGENT_TIERING"  # 智能分层
 
 
 class FileMetadata:
@@ -111,9 +111,20 @@ class FileMetadata:
             "uploaded_at": metadata.get("uploaded-at"),
             "file_size": int(metadata.get("file-size", 0)),
             "file_hash": metadata.get("file-hash"),
-            "custom": {k: v for k, v in metadata.items()
-                     if k not in ["file-name", "content-type", "user-id",
-                                "storage-tier", "uploaded-at", "file-size", "file-hash"]}
+            "custom": {
+                k: v
+                for k, v in metadata.items()
+                if k
+                not in [
+                    "file-name",
+                    "content-type",
+                    "user-id",
+                    "storage-tier",
+                    "uploaded-at",
+                    "file-size",
+                    "file-hash",
+                ]
+            },
         }
 
 
@@ -137,7 +148,7 @@ class StorageConfig:
 
     # 分片上传配置
     multipart_threshold: int = 100 * 1024 * 1024  # 100MB
-    multipart_chunksize: int = 25 * 1024 * 1024    # 25MB
+    multipart_chunksize: int = 25 * 1024 * 1024  # 25MB
     max_concurrent_uploads: int = 10
 
     # 生命周期配置
@@ -152,14 +163,16 @@ class StorageConfig:
 
     # 压缩配置
     auto_compress: bool = True
-    compress_mimes: List[str] = field(default_factory=lambda: [
-        "text/plain",
-        "text/html",
-        "text/css",
-        "application/javascript",
-        "application/json",
-        "application/xml",
-    ])
+    compress_mimes: List[str] = field(
+        default_factory=lambda: [
+            "text/plain",
+            "text/html",
+            "text/css",
+            "application/javascript",
+            "application/json",
+            "application/xml",
+        ]
+    )
 
     # 缓存配置
     cache_control: str = "public, max-age=3600"
@@ -198,20 +211,20 @@ class ObjectStorageService:
 
         # 创建S3客户端
         self.s3_client = self.session.client(
-            's3',
+            "s3",
             endpoint_url=config.endpoint_url,
             aws_access_key_id=config.access_key_id,
             aws_secret_access_key=config.secret_access_key,
             config=Config(
-                signature_version='s3v4',
-                s3={'addressing_style': 'path'},
+                signature_version="s3v4",
+                s3={"addressing_style": "path"},
                 max_pool_connections=50,
             ),
         )
 
         # 创建资源（异步）
         self.resource = self.session.resource(
-            's3',
+            "s3",
             endpoint_url=config.endpoint_url,
             aws_access_key_id=config.access_key_id,
             aws_secret_access_key=config.secret_access_key,
@@ -225,10 +238,7 @@ class ObjectStorageService:
             StorageTier.ARCHIVE: config.archive_bucket,
         }
 
-        logger.info(
-            f"Object Storage Service initialized "
-            f"(endpoint: {config.endpoint_url})"
-        )
+        logger.info(f"Object Storage Service initialized " f"(endpoint: {config.endpoint_url})")
 
     async def ensure_buckets_exist(self):
         """确保所有存储桶存在"""
@@ -237,13 +247,11 @@ class ObjectStorageService:
                 self.s3_client.head_bucket(Bucket=bucket_name)
                 logger.debug(f"Bucket exists: {bucket_name}")
             except ClientError as e:
-                if e.response['Error']['Code'] == '404':
+                if e.response["Error"]["Code"] == "404":
                     # 创建存储桶
                     self._create_bucket(bucket_name, tier)
                 else:
-                    logger.error(
-                        f"Error checking bucket {bucket_name}: {str(e)}"
-                    )
+                    logger.error(f"Error checking bucket {bucket_name}: {str(e)}")
                     raise
 
     def _create_bucket(self, bucket_name: str, tier: StorageTier):
@@ -266,9 +274,7 @@ class ObjectStorageService:
             if location_constraint:
                 self.s3_client.create_bucket(
                     Bucket=bucket_name,
-                    CreateBucketConfiguration={
-                        'LocationConstraint': location_constraint
-                    }
+                    CreateBucketConfiguration={"LocationConstraint": location_constraint},
                 )
             else:
                 self.s3_client.create_bucket(Bucket=bucket_name)
@@ -278,16 +284,13 @@ class ObjectStorageService:
 
             # 配置版本控制
             self.s3_client.put_bucket_versioning(
-                Bucket=bucket_name,
-                VersioningConfiguration={'Status': 'Enabled'}
+                Bucket=bucket_name, VersioningConfiguration={"Status": "Enabled"}
             )
 
             logger.info(f"Bucket created: {bucket_name} (tier: {tier.value})")
 
         except ClientError as e:
-            logger.error(
-                f"Failed to create bucket {bucket_name}: {str(e)}"
-            )
+            logger.error(f"Failed to create bucket {bucket_name}: {str(e)}")
             raise
 
     def _configure_lifecycle(self, bucket_name: str, tier: StorageTier):
@@ -303,51 +306,50 @@ class ObjectStorageService:
         # 添加转换规则
         if tier == StorageTier.HOT:
             # 热数据 → 温数据
-            rules.append({
-                'ID': f'{bucket_name}-to-warm',
-                'Status': 'Enabled',
-                'Filter': {'Prefix': ''},
-                'Transitions': [{
-                    'Days': self.config.transition_to_warm_days,
-                    'StorageClass': 'STANDARD_IA'
-                }]
-            })
+            rules.append(
+                {
+                    "ID": f"{bucket_name}-to-warm",
+                    "Status": "Enabled",
+                    "Filter": {"Prefix": ""},
+                    "Transitions": [
+                        {"Days": self.config.transition_to_warm_days, "StorageClass": "STANDARD_IA"}
+                    ],
+                }
+            )
 
         if tier in [StorageTier.HOT, StorageTier.WARM]:
             # 热/温数据 → 冷数据
-            rules.append({
-                'ID': f'{bucket_name}-to-cold',
-                'Status': 'Enabled',
-                'Filter': {'Prefix': ''},
-                'Transitions': [{
-                    'Days': self.config.transition_to_cold_days,
-                    'StorageClass': 'GLACIER'
-                }]
-            })
+            rules.append(
+                {
+                    "ID": f"{bucket_name}-to-cold",
+                    "Status": "Enabled",
+                    "Filter": {"Prefix": ""},
+                    "Transitions": [
+                        {"Days": self.config.transition_to_cold_days, "StorageClass": "GLACIER"}
+                    ],
+                }
+            )
 
         # 添加过期规则（所有层级）
-        rules.append({
-            'ID': f'{bucket_name}-expiration',
-            'Status': 'Enabled',
-            'Filter': {'Prefix': ''},
-            'Expiration': {
-                'Days': self.config.expiration_days,
+        rules.append(
+            {
+                "ID": f"{bucket_name}-expiration",
+                "Status": "Enabled",
+                "Filter": {"Prefix": ""},
+                "Expiration": {
+                    "Days": self.config.expiration_days,
+                },
             }
-        })
+        )
 
         if rules:
             try:
                 self.s3_client.put_bucket_lifecycle_configuration(
-                    Bucket=bucket_name,
-                    LifecycleConfiguration={
-                        'Rules': rules
-                    }
+                    Bucket=bucket_name, LifecycleConfiguration={"Rules": rules}
                 )
                 logger.info(f"Lifecycle configured for {bucket_name}")
             except ClientError as e:
-                logger.warning(
-                    f"Failed to configure lifecycle for {bucket_name}: {str(e)}"
-                )
+                logger.warning(f"Failed to configure lifecycle for {bucket_name}: {str(e)}")
 
     async def upload_file(
         self,
@@ -376,7 +378,7 @@ class ObjectStorageService:
 
         # 获取文件信息
         file_size = os.path.getsize(file_path)
-        content_type = mimetypes.guess_type(file_path) or 'application/octet-stream'
+        content_type = mimetypes.guess_type(file_path) or "application/octet-stream"
         file_name = os.path.basename(file_path)
 
         # 生成元数据
@@ -395,20 +397,20 @@ class ObjectStorageService:
 
         # 构建上传参数
         extra_args = {
-            'Metadata': final_metadata,
+            "Metadata": final_metadata,
         }
 
         # 添加压缩信息
         if compress:
-            extra_args['ContentEncoding'] = 'gzip'
+            extra_args["ContentEncoding"] = "gzip"
 
         # 添加缓存控制
-        extra_args['CacheControl'] = self.config.cache_control
+        extra_args["CacheControl"] = self.config.cache_control
 
         # 添加存储类
         storage_class = self._get_storage_class(tier)
         if storage_class:
-            extra_args['StorageClass'] = storage_class
+            extra_args["StorageClass"] = storage_class
 
         # 根据文件大小选择上传方式
         if file_size < self.config.multipart_threshold:
@@ -473,15 +475,13 @@ class ObjectStorageService:
 
         # 创建分片上传
         mpu = self.s3_client.create_multipart_upload(
-            Bucket=self.buckets[tier],
-            Key=object_key,
-            **extra_args
+            Bucket=self.buckets[tier], Key=object_key, **extra_args
         )
 
         parts = []
 
         # 上传分片
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             part_number = 1
             while True:
                 data = f.read(chunk_size)
@@ -491,24 +491,14 @@ class ObjectStorageService:
                 part = mpu.Part(part_number)
                 part.upload(Body=data)
 
-                parts.append({
-                    'PartNumber': part_number,
-                    'ETag': part.e_tag
-                })
+                parts.append({"PartNumber": part_number, "ETag": part.e_tag})
 
                 part_number += 1
 
-                logger.debug(
-                    f"Uploaded part {part_number}/{len(parts)} "
-                    f"for {object_key}"
-                )
+                logger.debug(f"Uploaded part {part_number}/{len(parts)} " f"for {object_key}")
 
         # 完成分片上传
-        result = mpu.complete(
-            MultipartUpload={
-                'Parts': parts
-            }
-        )
+        result = mpu.complete(MultipartUpload={"Parts": parts})
 
         return result
 
@@ -535,22 +525,20 @@ class ObjectStorageService:
             # 构建下载参数
             params = {}
             if range_header:
-                params['Range'] = range_header
+                params["Range"] = range_header
 
             # 下载文件
             response = self.s3_client.get_object(
-                Bucket=self.buckets[tier],
-                Key=object_key,
-                **params
+                Bucket=self.buckets[tier], Key=object_key, **params
             )
 
             # 获取文件内容
-            content = response['Body']
+            content = response["Body"]
 
             # 如果指定了保存路径
             if file_path:
                 os.makedirs(os.path.dirname(file_path), exist_ok=True)
-                with open(file_path, 'wb') as f:
+                with open(file_path, "wb") as f:
                     f.write(content.read())
 
                 logger.info(f"File downloaded: {object_key} to {file_path}")
@@ -581,9 +569,9 @@ class ObjectStorageService:
             是否成功
         """
         try:
-            params = {'Bucket': self.buckets[tier], 'Key': object_key}
+            params = {"Bucket": self.buckets[tier], "Key": object_key}
             if version_id:
-                params['VersionId'] = version_id
+                params["VersionId"] = version_id
 
             self.s3_client.delete_object(**params)
 
@@ -660,15 +648,17 @@ class ObjectStorageService:
             )
 
             files = []
-            for obj in response.get('Contents', []):
-                files.append({
-                    'object_key': obj['Key'],
-                    'size': obj['Size'],
-                    'last_modified': obj['LastModified'],
-                    'etag': obj['ETag'],
-                    'storage_class': obj.get('StorageClass', 'STANDARD'),
-                    'metadata': obj.get('Metadata', {}),
-                })
+            for obj in response.get("Contents", []):
+                files.append(
+                    {
+                        "object_key": obj["Key"],
+                        "size": obj["Size"],
+                        "last_modified": obj["LastModified"],
+                        "etag": obj["ETag"],
+                        "storage_class": obj.get("StorageClass", "STANDARD"),
+                        "metadata": obj.get("Metadata", {}),
+                    }
+                )
 
             return files
 
@@ -694,25 +684,25 @@ class ObjectStorageService:
             文件信息
         """
         try:
-            params = {'Bucket': self.buckets[tier], 'Key': object_key}
+            params = {"Bucket": self.buckets[tier], "Key": object_key}
             if version_id:
-                params['VersionId'] = version_id
+                params["VersionId"] = version_id
 
             response = self.s3_client.head_object(**params)
 
             return {
-                'object_key': object_key,
-                'size': response['ContentLength'],
-                'last_modified': response['LastModified'],
-                'etag': response['ETag'],
-                'content_type': response['ContentType'],
-                'metadata': response.get('Metadata', {}),
-                'storage_class': response.get('StorageClass', 'STANDARD'),
-                'cdn_url': self._get_cdn_url(tier, object_key),
+                "object_key": object_key,
+                "size": response["ContentLength"],
+                "last_modified": response["LastModified"],
+                "etag": response["ETag"],
+                "content_type": response["ContentType"],
+                "metadata": response.get("Metadata", {}),
+                "storage_class": response.get("StorageClass", "STANDARD"),
+                "cdn_url": self._get_cdn_url(tier, object_key),
             }
 
         except ClientError as e:
-            if e.response['Error']['Code'] == '404':
+            if e.response["Error"]["Code"] == "404":
                 return None
             logger.error(f"Failed to get file info: {str(e)}")
             raise
@@ -763,8 +753,8 @@ class ObjectStorageService:
         """
         sha256 = hashlib.sha256()
 
-        with open(file_path, 'rb') as f:
-            for chunk in iter(lambda: f.read(4096), b''):
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
                 sha256.update(chunk)
 
         return sha256.hexdigest()
@@ -781,7 +771,7 @@ class ObjectStorageService:
         for tier, bucket_name in self.buckets.items():
             try:
                 # 获取存储桶大小
-                cloudwatch = self.session.client('cloudwatch')
+                cloudwatch = self.session.client("cloudwatch")
 
                 # 注意：MinIO可能不支持CloudWatch
                 # 使用S3 API计算大小
@@ -795,29 +785,27 @@ class ObjectStorageService:
                         ContinuationToken=continuation_token,
                     )
 
-                    for obj in response.get('Contents', []):
-                        total_size += obj['Size']
+                    for obj in response.get("Contents", []):
+                        total_size += obj["Size"]
                         file_count += 1
 
-                    continuation_token = response.get('NextContinuationToken')
+                    continuation_token = response.get("NextContinuationToken")
                     if not continuation_token:
                         break
 
                 stats[tier.value] = {
-                    'bucket': bucket_name,
-                    'total_size': total_size,
-                    'file_count': file_count,
-                    'size_mb': total_size / (1024 * 1024),
-                    'size_gb': total_size / (1024 * 1024 * 1024),
+                    "bucket": bucket_name,
+                    "total_size": total_size,
+                    "file_count": file_count,
+                    "size_mb": total_size / (1024 * 1024),
+                    "size_gb": total_size / (1024 * 1024 * 1024),
                 }
 
             except ClientError as e:
-                logger.warning(
-                    f"Failed to get stats for {bucket_name}: {str(e)}"
-                )
+                logger.warning(f"Failed to get stats for {bucket_name}: {str(e)}")
                 stats[tier.value] = {
-                    'bucket': bucket_name,
-                    'error': str(e),
+                    "bucket": bucket_name,
+                    "error": str(e),
                 }
 
         return stats

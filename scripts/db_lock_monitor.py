@@ -20,8 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # 配置
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
 )
 LOCK_DIR = Path("/tmp/zhineng_imports")
 LOCK_TIMEOUT_MINUTES = 60  # 1小时后认为锁过期
@@ -40,20 +39,22 @@ async def check_file_locks():
     for lock_file in LOCK_DIR.glob("*.lock"):
         try:
             content = lock_file.read_text().strip()
-            lines = content.split('\n')
+            lines = content.split("\n")
             pid = int(lines[0]) if lines else None
             started = lines[1] if len(lines) > 1 else "未知"
 
             # 检查进程是否还在运行
             is_running = pid is not None and _is_process_running(pid)
 
-            locks.append({
-                "name": lock_file.stem,
-                "file": lock_file,
-                "pid": pid,
-                "started": started,
-                "is_running": is_running,
-            })
+            locks.append(
+                {
+                    "name": lock_file.stem,
+                    "file": lock_file,
+                    "pid": pid,
+                    "started": started,
+                    "is_running": is_running,
+                }
+            )
 
             status = "🟢 运行中" if is_running else "🔴 进程已死"
             print(f"  {lock_file.stem}:")
@@ -74,7 +75,8 @@ async def check_database_locks(conn):
     print("=" * 60)
 
     # 创建表（如果不存在）
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS import_locks (
             id SERIAL PRIMARY KEY,
             task_name VARCHAR(100) UNIQUE NOT NULL,
@@ -84,31 +86,36 @@ async def check_database_locks(conn):
             completed_at TIMESTAMP,
             error_message TEXT
         );
-    """)
+    """
+    )
 
     # 查询运行中的任务
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT task_name, status, pid, started_at,
                EXTRACT(EPOCH FROM (NOW() - started_at))/60 as minutes_ago
         FROM import_locks
         WHERE status = 'running'
         ORDER BY started_at DESC
-    """)
+    """
+    )
 
     locks = []
     for row in rows:
-        pid = row['pid']
+        pid = row["pid"]
         is_running = pid is not None and _is_process_running(pid)
-        is_expired = row['minutes_ago'] > LOCK_TIMEOUT_MINUTES
+        is_expired = row["minutes_ago"] > LOCK_TIMEOUT_MINUTES
 
-        locks.append({
-            "name": row['task_name'],
-            "pid": pid,
-            "started": row['started_at'],
-            "minutes_ago": row['minutes_ago'],
-            "is_running": is_running,
-            "is_expired": is_expired,
-        })
+        locks.append(
+            {
+                "name": row["task_name"],
+                "pid": pid,
+                "started": row["started_at"],
+                "minutes_ago": row["minutes_ago"],
+                "is_running": is_running,
+                "is_expired": is_expired,
+            }
+        )
 
         status = "🟢 运行中" if is_running else "🔴 进程已死"
         if is_expired:
@@ -129,7 +136,8 @@ async def check_active_database_locks(conn):
     print("=" * 60)
 
     # 查询锁等待情况
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT
             pid,
             usename,
@@ -145,7 +153,8 @@ async def check_active_database_locks(conn):
           AND pid != pg_backend_pid()
         ORDER BY query_start DESC
         LIMIT 20
-    """)
+    """
+    )
 
     if not rows:
         print("  无活跃事务")
@@ -153,10 +162,12 @@ async def check_active_database_locks(conn):
 
     for row in rows:
         wait_info = ""
-        if row['wait_event_type']:
+        if row["wait_event_type"]:
             wait_info = f" 等待: {row['wait_event_type']}/{row['wait_event']}"
 
-        query_preview = (row['query'][:80] + '...') if row['query'] and len(row['query']) > 80 else row['query']
+        query_preview = (
+            (row["query"][:80] + "...") if row["query"] and len(row["query"]) > 80 else row["query"]
+        )
 
         print(f"  PID {row['pid']} ({row['usename']}):")
         print(f"    应用: {row['application_name'] or 'unknown'}")
@@ -173,7 +184,8 @@ async def check_blocked_queries(conn):
     print("\n⚠️  被阻塞的查询:")
     print("=" * 60)
 
-    rows = await conn.fetch("""
+    rows = await conn.fetch(
+        """
         SELECT
             blocked.pid as blocked_pid,
             blocked.usename as blocked_user,
@@ -188,15 +200,24 @@ async def check_blocked_queries(conn):
         WHERE blocked.datname = current_database()
         ORDER BY blocked.query_start
         LIMIT 10
-    """)
+    """
+    )
 
     if not rows:
         print("  无阻塞查询")
         return []
 
     for row in rows:
-        blocked_query = (row['blocked_query'][:60] + '...') if row['blocked_query'] and len(row['blocked_query']) > 60 else row['blocked_query']
-        blocking_query = (row['blocking_query'][:60] + '...') if row['blocking_query'] and len(row['blocking_query']) > 60 else row['blocking_query']
+        blocked_query = (
+            (row["blocked_query"][:60] + "...")
+            if row["blocked_query"] and len(row["blocked_query"]) > 60
+            else row["blocked_query"]
+        )
+        blocking_query = (
+            (row["blocking_query"][:60] + "...")
+            if row["blocking_query"] and len(row["blocking_query"]) > 60
+            else row["blocking_query"]
+        )
 
         print(f"  🔒 被阻塞 PID {row['blocked_pid']}:")
         print(f"     查询: {blocked_query}")
@@ -229,7 +250,7 @@ async def kill_import_processes():
         for lock_file in LOCK_DIR.glob("*.lock"):
             try:
                 content = lock_file.read_text().strip()
-                pid = int(content.split('\n')[0])
+                pid = int(content.split("\n")[0])
                 if _is_process_running(pid):
                     print(f"  终止 PID {pid} ({lock_file.stem})...")
                     os.kill(pid, signal.SIGTERM)
@@ -241,14 +262,16 @@ async def kill_import_processes():
     # 2. 终止数据库中记录的进程
     conn = await asyncpg.connect(DATABASE_URL)
     try:
-        rows = await conn.fetch("""
+        rows = await conn.fetch(
+            """
             SELECT task_name, pid
             FROM import_locks
             WHERE status = 'running' AND pid IS NOT NULL
-        """)
+        """
+        )
 
         for row in rows:
-            pid = row['pid']
+            pid = row["pid"]
             if _is_process_running(pid):
                 print(f"  终止 PID {pid} ({row['task_name']})...")
                 try:
@@ -272,7 +295,7 @@ async def clean_expired_locks():
         for lock_file in LOCK_DIR.glob("*.lock"):
             try:
                 content = lock_file.read_text().strip()
-                lines = content.split('\n')
+                lines = content.split("\n")
                 pid = int(lines[0]) if lines else None
 
                 # 如果进程已死，删除锁文件
@@ -299,7 +322,8 @@ async def clean_expired_locks():
     # 2. 清理数据库锁
     conn = await asyncpg.connect(DATABASE_URL)
     try:
-        result = await conn.execute("""
+        result = await conn.execute(
+            """
             UPDATE import_locks
             SET status = 'expired',
                 completed_at = NOW(),
@@ -313,7 +337,8 @@ async def clean_expired_locks():
                   )
                   OR started_at < NOW() - INTERVAL '1 hour'
               )
-        """)
+        """
+        )
 
         # 解析 affected rows
         if result:
@@ -365,8 +390,8 @@ async def main():
             await conn.close()
 
         # 汇总
-        total_file_locks = len([l for l in file_locks if l['is_running']])
-        total_db_locks = len([l for l in db_locks if l['is_running']])
+        total_file_locks = len([l for l in file_locks if l["is_running"]])
+        total_db_locks = len([l for l in db_locks if l["is_running"]])
         total_blocked = len(blocked)
 
         print("\n" + "=" * 60)

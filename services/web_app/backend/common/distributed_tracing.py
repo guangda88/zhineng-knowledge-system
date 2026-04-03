@@ -19,9 +19,7 @@ from enum import Enum
 from datetime import datetime
 
 # Context variables for trace propagation
-_trace_context_var: ContextVar["TraceContext"] = ContextVar(
-    "trace_context", default=None
-)
+_trace_context_var: ContextVar["TraceContext"] = ContextVar("trace_context", default=None)
 
 
 class TraceStatus(Enum):
@@ -211,9 +209,7 @@ class TraceContext:
             "parent_span_id": self.parent_span_id,
             "span_count": len(self.spans),
             "baggage": self.baggage,
-            "spans": [
-                span.to_dict() for span in self.spans if span.duration_ms is not None
-            ],
+            "spans": [span.to_dict() for span in self.spans if span.duration_ms is not None],
         }
 
 
@@ -232,9 +228,7 @@ def clear_trace_context() -> None:
     _trace_context_var.set(None)
 
 
-def init_trace_context(
-    service_name: str, headers: Optional[Dict[str, str]] = None
-) -> TraceContext:
+def init_trace_context(service_name: str, headers: Optional[Dict[str, str]] = None) -> TraceContext:
     """
     Initialize a new trace context
 
@@ -311,9 +305,7 @@ def trace_incoming_request(
     return span
 
 
-def trace_outgoing_request(
-    url: str, method: str, operation_name: Optional[str] = None
-) -> Span:
+def trace_outgoing_request(url: str, method: str, operation_name: Optional[str] = None) -> Span:
     """
     Trace an outgoing HTTP request
 
@@ -376,9 +368,7 @@ class DistributedTracer:
     def __init__(self, service_name: str):
         self.service_name = service_name
 
-    def trace_database_query(
-        self, query: str, db_type: str = "postgresql", **kwargs
-    ) -> Span:
+    def trace_database_query(self, query: str, db_type: str = "postgresql", **kwargs) -> Span:
         """Trace a database query"""
         context = get_trace_context()
         if context is None:
@@ -465,9 +455,7 @@ class DistributedTracer:
             context = init_trace_context(self.service_name, {})
 
         span = context.create_span(f"document_{operation}")
-        span.add_tags(
-            {"document.id": document_id, "document.operation": operation, **kwargs}
-        )
+        span.add_tags({"document.id": document_id, "document.operation": operation, **kwargs})
         return span
 
 

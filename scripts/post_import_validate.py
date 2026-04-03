@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgresql://zhineng:{os.getenv('POSTGRES_PASSWORD', 'zhineng_secure_2024')}@localhost:5436/zhineng_kb"
+    f"postgresql://zhineng:{os.getenv('POSTGRES_PASSWORD', 'zhineng_secure_2024')}@localhost:5436/zhineng_kb",
 )
 
 EXPECTED_COUNTS = {
@@ -49,7 +49,7 @@ async def validate_table(conn, table_name: str, expected: int = None) -> dict:
     try:
         exists = await conn.fetchval(
             "SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = $1)",
-            table_name
+            table_name,
         )
         if not exists:
             result["checks"].append({"check": "exists", "status": "FAIL", "message": "表不存在"})
@@ -60,55 +60,54 @@ async def validate_table(conn, table_name: str, expected: int = None) -> dict:
 
         if expected is not None:
             if actual_count >= expected * 0.9:
-                result["checks"].append({
-                    "check": "row_count",
-                    "status": "PASS",
-                    "message": f"实际 {actual_count:,} >= 预期 {expected:,} 的90%"
-                })
+                result["checks"].append(
+                    {
+                        "check": "row_count",
+                        "status": "PASS",
+                        "message": f"实际 {actual_count:,} >= 预期 {expected:,} 的90%",
+                    }
+                )
             elif actual_count > 0:
-                result["checks"].append({
-                    "check": "row_count",
-                    "status": "WARN",
-                    "message": f"实际 {actual_count:,} < 预期 {expected:,} 的90%"
-                })
+                result["checks"].append(
+                    {
+                        "check": "row_count",
+                        "status": "WARN",
+                        "message": f"实际 {actual_count:,} < 预期 {expected:,} 的90%",
+                    }
+                )
             else:
-                result["checks"].append({
-                    "check": "row_count",
-                    "status": "FAIL",
-                    "message": f"表为空 (预期 {expected:,})"
-                })
+                result["checks"].append(
+                    {
+                        "check": "row_count",
+                        "status": "FAIL",
+                        "message": f"表为空 (预期 {expected:,})",
+                    }
+                )
                 result["passed"] = False
         else:
-            result["checks"].append({
-                "check": "row_count",
-                "status": "PASS",
-                "message": f"行数: {actual_count:,}"
-            })
+            result["checks"].append(
+                {"check": "row_count", "status": "PASS", "message": f"行数: {actual_count:,}"}
+            )
 
         await conn.execute(f"ANALYZE {table_name}")
-        result["checks"].append({
-            "check": "analyze",
-            "status": "PASS",
-            "message": "ANALYZE 完成"
-        })
+        result["checks"].append({"check": "analyze", "status": "PASS", "message": "ANALYZE 完成"})
 
-        indexes = await conn.fetch("""
+        indexes = await conn.fetch(
+            """
             SELECT indexname, indexdef
             FROM pg_indexes WHERE tablename = $1
-        """, table_name)
+        """,
+            table_name,
+        )
         if indexes:
             idx_names = [r["indexname"] for r in indexes]
-            result["checks"].append({
-                "check": "indexes",
-                "status": "PASS",
-                "message": f"索引: {', '.join(idx_names)}"
-            })
+            result["checks"].append(
+                {"check": "indexes", "status": "PASS", "message": f"索引: {', '.join(idx_names)}"}
+            )
         else:
-            result["checks"].append({
-                "check": "indexes",
-                "status": "WARN",
-                "message": "无索引 (大表应建索引)"
-            })
+            result["checks"].append(
+                {"check": "indexes", "status": "WARN", "message": "无索引 (大表应建索引)"}
+            )
 
     except Exception as e:
         result["checks"].append({"check": "error", "status": "FAIL", "message": str(e)})
@@ -145,7 +144,7 @@ async def run_validation(tables: dict = None, output_json: bool = False) -> int:
                     "total": len(results),
                     "passed": sum(1 for r in results if r["passed"]),
                     "failed": sum(1 for r in results if not r["passed"]),
-                }
+                },
             }
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:
@@ -177,6 +176,7 @@ async def run_validation(tables: dict = None, output_json: bool = False) -> int:
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="数据导入后验证")
     parser.add_argument("--table", help="仅验证指定表")
     parser.add_argument("--expected", type=int, help="预期行数")

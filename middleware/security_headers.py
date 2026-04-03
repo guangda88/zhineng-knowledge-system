@@ -7,7 +7,8 @@ Security Response Headers Middleware
 """
 
 import logging
-from typing import Optional, Callable, Awaitable
+from typing import Awaitable, Callable, Optional
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -181,12 +182,9 @@ def create_security_headers_middleware(
     app.add_middleware(create_security_headers_middleware, enable_hsts=True)
     ```
     """
+
     def middleware_factory(app: ASGIApp) -> SecurityHeadersMiddleware:
-        return SecurityHeadersMiddleware(
-            app=app,
-            config=config,
-            enable_hsts=enable_hsts
-        )
+        return SecurityHeadersMiddleware(app=app, config=config, enable_hsts=enable_hsts)
 
     return middleware_factory
 

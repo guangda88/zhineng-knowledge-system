@@ -619,14 +619,14 @@ function initBooks() {
             toggleBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentSearchType = btn.dataset.type;
-            
+
             // 更新搜索框提示
             if (currentSearchType === 'metadata') {
                 searchInput.placeholder = '搜索书名、作者...';
             } else {
                 searchInput.placeholder = '搜索章节内容...';
             }
-            
+
             // 如果有搜索词，重新搜索
             if (searchInput.value.trim()) {
                 performBookSearch();
@@ -668,7 +668,7 @@ async function performBookSearch(query, category = '', dynasty = '') {
 
     try {
         const API_BASE = '/api/v2';  // 使用v2 API
-        
+
         let url = '';
         if (currentSearchType === 'metadata') {
             // 元数据搜索
@@ -684,7 +684,7 @@ async function performBookSearch(query, category = '', dynasty = '') {
         }
 
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -706,8 +706,8 @@ async function performBookSearch(query, category = '', dynasty = '') {
         resultsDiv.innerHTML = `
             <p class="result-meta">找到 ${data.total || data.results.length} 条结果</p>
             <div class="results-list">
-                ${data.results.map(item => currentSearchType === 'metadata' 
-                    ? createBookCard(item) 
+                ${data.results.map(item => currentSearchType === 'metadata'
+                    ? createBookCard(item)
                     : createChapterCard(item)).join('')}
             </div>
         `;
@@ -725,10 +725,10 @@ async function performBookSearch(query, category = '', dynasty = '') {
 
 // 创建书籍卡片
 function createBookCard(book) {
-    const categoryTag = book.category ? 
+    const categoryTag = book.category ?
         `<span class="tag tag-${book.category}">${book.category}</span>` : '';
-    
-    const dynastyTag = book.dynasty ? 
+
+    const dynastyTag = book.dynasty ?
         `<span class="tag tag-dynasty">${book.dynasty}</span>` : '';
 
     return `
@@ -786,14 +786,14 @@ async function showBookDetail(bookId) {
                 </div>
                 <div class="detail-chapters">
                     <h3>目录</h3>
-                    ${book.chapters && book.chapters.length > 0 ? 
+                    ${book.chapters && book.chapters.length > 0 ?
                         `<ul class="chapter-list">
                             ${book.chapters.map(ch => `
                                 <li><a href="#" onclick="showChapterDetail(${bookId}, ${ch.id}); return false;">
                                     第${ch.chapter_num}章：${ch.title || '无标题'}
                                 </a></li>
                             `).join('')}
-                        </ul>` : 
+                        </ul>` :
                         '<p class="hint">暂无目录</p>'
                     }
                 </div>
@@ -803,7 +803,7 @@ async function showBookDetail(bookId) {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
@@ -833,7 +833,7 @@ async function showChapterDetail(bookId, chapterId) {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
@@ -873,7 +873,7 @@ async function showRelatedBooks(bookId) {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
@@ -1227,7 +1227,7 @@ async function showSysbookDetail(bookId) {
 // 加载书籍列表（默认显示所有）
 async function loadBooksList() {
     const resultsDiv = document.getElementById('book-search-results');
-    
+
     try {
         const API_BASE = '/api/v2';
         const response = await fetch(`${API_BASE}/library/search?page=1&size=20`);
