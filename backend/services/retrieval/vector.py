@@ -2,10 +2,12 @@
 向量检索服务模块
 使用 BGE 嵌入模型 (本地 sentence-transformers) 和 pgvector 进行语义搜索
 """
+
 import asyncio
 import logging
 import os
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 import asyncpg
 
 logger = logging.getLogger(__name__)
@@ -30,10 +32,11 @@ async def _get_model():
         os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
         os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         def _load():
             from sentence_transformers import SentenceTransformer
+
             model = SentenceTransformer(model_name, device="cpu")
             return model
 
@@ -62,7 +65,6 @@ class VectorRetriever:
     def __init__(
         self,
         db_pool: asyncpg.Pool,
-        embedding_api_url: Optional[str] = None,
         embedding_dim: int = 512,
     ):
         self.db_pool = db_pool
@@ -179,15 +181,17 @@ class VectorRetriever:
 
         results = []
         for row in rows:
-            if row['similarity'] >= threshold:
-                results.append({
-                    'id': row['id'],
-                    'title': row['title'],
-                    'content': row['content'],
-                    'category': row['category'],
-                    'similarity': float(row['similarity']),
-                    'method': 'vector',
-                })
+            if row["similarity"] >= threshold:
+                results.append(
+                    {
+                        "id": row["id"],
+                        "title": row["title"],
+                        "content": row["content"],
+                        "category": row["category"],
+                        "similarity": float(row["similarity"]),
+                        "method": "vector",
+                    }
+                )
 
         logger.info(f"向量搜索: query='{query}', found={len(results)}")
         return results
@@ -218,7 +222,8 @@ class VectorRetriever:
 
             await conn.execute(
                 "UPDATE documents SET embedding = $1::vector WHERE id = $2",
-                vector_str, doc_id,
+                vector_str,
+                doc_id,
             )
 
             logger.info(f"已更新文档 {doc_id} 的嵌入向量")
@@ -235,12 +240,10 @@ class VectorRetriever:
             统计信息
         """
         async with self.db_pool.acquire() as conn:
-            rows = await conn.fetch(
-                """SELECT id, title, content
+            rows = await conn.fetch("""SELECT id, title, content
                    FROM documents
                    WHERE embedding IS NULL
-                   ORDER BY id"""
-            )
+                   ORDER BY id""")
 
         total = len(rows)
         updated = 0
@@ -249,7 +252,7 @@ class VectorRetriever:
         logger.info(f"开始更新 {total} 个文档的嵌入向量")
 
         for i in range(0, total, batch_size):
-            batch = rows[i:i + batch_size]
+            batch = rows[i : i + batch_size]
             texts = [f"{row['title']}\n{row['content']}" for row in batch]
 
             try:
@@ -261,7 +264,8 @@ class VectorRetriever:
                             vector_str = "[" + ",".join(map(str, embedding)) + "]"
                             await conn.execute(
                                 "UPDATE documents SET embedding = $1::vector WHERE id = $2",
-                                vector_str, row['id'],
+                                vector_str,
+                                row["id"],
                             )
                             updated += 1
                         except Exception as e:
@@ -276,7 +280,7 @@ class VectorRetriever:
         logger.info(f"嵌入向量更新完成: 成功={updated}, 失败={failed}")
 
         return {
-            'total': total,
-            'updated': updated,
-            'failed': failed,
+            "total": total,
+            "updated": updated,
+            "failed": failed,
         }

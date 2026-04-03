@@ -1,0 +1,58 @@
+# Version control
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Data and backups
+data/
+backups/
+*.pdf
+*.docx
+*.exe
+*.deb
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Monitoring
+monitoring/
+scripts/
+
+# Node
+node_modules/
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# LingFlow
+.lingflow/

@@ -2,23 +2,25 @@
 
 提供OCR和语音转写的标注功能
 """
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from datetime import datetime
 
-from core.database import get_async_session
-from services.annotation import OCRAnnotator, TranscriptionAnnotator, AnnotationManager
-from services.annotation.base import Correction
+import asyncio
+from typing import List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel, Field
+
+from backend.services.annotation import OCRAnnotator, TranscriptionAnnotator
+from backend.services.annotation.base import Correction
 
 router = APIRouter(prefix="/annotation", tags=["标注系统"])
 
 
 # ==================== 请求/响应模型 ====================
 
+
 class OCRAnnotationRequest(BaseModel):
     """OCR标注请求"""
+
     text: str = Field(..., description="OCR识别的文本")
     source: str = Field(..., description="文本来源（文件路径）")
     metadata: dict = Field(default_factory=dict, description="额外元数据")
@@ -26,6 +28,7 @@ class OCRAnnotationRequest(BaseModel):
 
 class TranscriptionAnnotationRequest(BaseModel):
     """转写标注请求"""
+
     text: str = Field(..., description="语音转写的文本")
     audio_source: str = Field(..., description="音频文件路径")
     speaker: Optional[str] = Field(None, description="说话人")
@@ -36,6 +39,7 @@ class TranscriptionAnnotationRequest(BaseModel):
 
 class CorrectionRequest(BaseModel):
     """校正请求"""
+
     task_id: str = Field(..., description="任务ID")
     corrected_text: str = Field(..., description="校正后的文本")
     corrections: List[dict] = Field(..., description="校正详情列表")
@@ -44,12 +48,14 @@ class CorrectionRequest(BaseModel):
 
 class BatchOCRRequest(BaseModel):
     """批量OCR标注请求"""
+
     pdf_path: str = Field(..., description="PDF文件路径")
     ocr_engine: str = Field("tesseract", description="OCR引擎")
 
 
 class BatchTranscriptionRequest(BaseModel):
     """批量转写标注请求"""
+
     audio_path: str = Field(..., description="音频文件路径")
     asr_engine: str = Field("whisper", description="ASR引擎")
     speaker_diarization: bool = Field(False, description="是否进行说话人分离")
@@ -57,10 +63,9 @@ class BatchTranscriptionRequest(BaseModel):
 
 # ==================== API端点 ====================
 
+
 @router.post("/ocr/create")
-async def create_ocr_annotation_task(
-    request: OCRAnnotationRequest
-) -> dict:
+async def create_ocr_annotation_task(request: OCRAnnotationRequest) -> dict:
     """
     创建OCR标注任务
 
@@ -77,9 +82,7 @@ async def create_ocr_annotation_task(
         annotator = OCRAnnotator()
 
         task = await annotator.create_task(
-            source_content=request.text,
-            source_path=request.source,
-            metadata=request.metadata
+            source_content=request.text, source_path=request.source, metadata=request.metadata
         )
 
         return {
@@ -91,8 +94,8 @@ async def create_ocr_annotation_task(
                 "task_id": task.task_id,
                 "original_text": task.original_text[:200],
                 "source": task.original_source,
-                "created_at": task.created_at.isoformat()
-            }
+                "created_at": task.created_at.isoformat(),
+            },
         }
 
     except Exception as e:
@@ -100,9 +103,7 @@ async def create_ocr_annotation_task(
 
 
 @router.post("/ocr/correct")
-async def submit_ocr_correction(
-    request: CorrectionRequest
-) -> dict:
+async def submit_ocr_correction(request: CorrectionRequest) -> dict:
     """
     提交OCR校正
 
@@ -126,7 +127,7 @@ async def submit_ocr_correction(
                 original=c.get("original", ""),
                 corrected=c.get("corrected", ""),
                 correction_type=c.get("correction_type", "substitution"),
-                confidence=c.get("confidence", 1.0)
+                confidence=c.get("confidence", 1.0),
             )
             for c in request.corrections
         ]
@@ -135,7 +136,7 @@ async def submit_ocr_correction(
             task_id=request.task_id,
             corrected_text=request.corrected_text,
             corrections=corrections,
-            annotator=request.annotator
+            annotator=request.annotator,
         )
 
         improvement = task.metadata.get("improvement", {})
@@ -146,7 +147,7 @@ async def submit_ocr_correction(
             "status": task.status.value,
             "message": "OCR校正已提交",
             "improvement": improvement,
-            "completed_at": task.completed_at.isoformat() if task.completed_at else None
+            "completed_at": task.completed_at.isoformat() if task.completed_at else None,
         }
 
     except Exception as e:
@@ -155,8 +156,7 @@ async def submit_ocr_correction(
 
 @router.post("/ocr/batch")
 async def batch_create_ocr_tasks(
-    request: BatchOCRRequest,
-    background_tasks: BackgroundTasks
+    request: BatchOCRRequest, background_tasks: BackgroundTasks
 ) -> dict:
     """
     批量创建OCR标注任务
@@ -174,8 +174,7 @@ async def batch_create_ocr_tasks(
 
         async def run_batch_ocr():
             return await annotator.batch_create_from_pdf(
-                pdf_path=request.pdf_path,
-                ocr_engine=request.ocr_engine
+                pdf_path=request.pdf_path, ocr_engine=request.ocr_engine
             )
 
         background_tasks.add_task(run_batch_ocr)
@@ -183,7 +182,7 @@ async def batch_create_ocr_tasks(
         return {
             "success": True,
             "message": f"批量OCR任务已启动: {request.pdf_path}",
-            "ocr_engine": request.ocr_engine
+            "ocr_engine": request.ocr_engine,
         }
 
     except Exception as e:
@@ -191,9 +190,7 @@ async def batch_create_ocr_tasks(
 
 
 @router.get("/ocr/tasks/pending")
-async def list_pending_ocr_tasks(
-    limit: int = 10
-) -> dict:
+async def list_pending_ocr_tasks(limit: int = 10) -> dict:
     """
     列出待标注的OCR任务
 
@@ -215,10 +212,10 @@ async def list_pending_ocr_tasks(
                     "task_id": t.task_id,
                     "original_text": t.original_text[:200],
                     "source": t.original_source,
-                    "created_at": t.created_at.isoformat()
+                    "created_at": t.created_at.isoformat(),
                 }
                 for t in tasks
-            ]
+            ],
         }
 
     except Exception as e:
@@ -255,15 +252,15 @@ async def get_ocr_task(task_id: str) -> dict:
                         "original": c.original,
                         "corrected": c.corrected,
                         "correction_type": c.correction_type,
-                        "confidence": c.confidence
+                        "confidence": c.confidence,
                     }
                     for c in task.corrections
                 ],
                 "annotator": task.annotator,
                 "created_at": task.created_at.isoformat() if task.created_at else None,
                 "completed_at": task.completed_at.isoformat() if task.completed_at else None,
-                "metadata": task.metadata
-            }
+                "metadata": task.metadata,
+            },
         }
 
     except HTTPException:
@@ -284,10 +281,7 @@ async def get_ocr_statistics() -> dict:
 
         stats = await annotator.get_statistics()
 
-        return {
-            "success": True,
-            "statistics": stats
-        }
+        return {"success": True, "statistics": stats}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -295,10 +289,9 @@ async def get_ocr_statistics() -> dict:
 
 # ==================== 语音转写标注 ====================
 
+
 @router.post("/transcription/create")
-async def create_transcription_annotation_task(
-    request: TranscriptionAnnotationRequest
-) -> dict:
+async def create_transcription_annotation_task(request: TranscriptionAnnotationRequest) -> dict:
     """
     创建语音转写标注任务
 
@@ -321,13 +314,11 @@ async def create_transcription_annotation_task(
             "speaker": request.speaker,
             "timestamp_start": request.timestamp_start,
             "timestamp_end": request.timestamp_end,
-            "confidence": request.confidence
+            "confidence": request.confidence,
         }
 
         task = await annotator.create_task(
-            source_content=request.text,
-            source_path=request.audio_source,
-            metadata=metadata
+            source_content=request.text, source_path=request.audio_source, metadata=metadata
         )
 
         return {
@@ -339,8 +330,8 @@ async def create_transcription_annotation_task(
                 "task_id": task.task_id,
                 "original_text": task.original_text[:200],
                 "source": task.original_source,
-                "created_at": task.created_at.isoformat()
-            }
+                "created_at": task.created_at.isoformat(),
+            },
         }
 
     except Exception as e:
@@ -348,9 +339,7 @@ async def create_transcription_annotation_task(
 
 
 @router.post("/transcription/correct")
-async def submit_transcription_correction(
-    request: CorrectionRequest
-) -> dict:
+async def submit_transcription_correction(request: CorrectionRequest) -> dict:
     """
     提交转写校正
 
@@ -374,7 +363,7 @@ async def submit_transcription_correction(
                 original=c.get("original", ""),
                 corrected=c.get("corrected", ""),
                 correction_type=c.get("correction_type", "substitution"),
-                confidence=c.get("confidence", 1.0)
+                confidence=c.get("confidence", 1.0),
             )
             for c in request.corrections
         ]
@@ -383,7 +372,7 @@ async def submit_transcription_correction(
             task_id=request.task_id,
             corrected_text=request.corrected_text,
             corrections=corrections,
-            annotator=request.annotator
+            annotator=request.annotator,
         )
 
         improvement = task.metadata.get("improvement", {})
@@ -394,7 +383,7 @@ async def submit_transcription_correction(
             "status": task.status.value,
             "message": "转写校正已提交",
             "improvement": improvement,
-            "completed_at": task.completed_at.isoformat() if task.completed_at else None
+            "completed_at": task.completed_at.isoformat() if task.completed_at else None,
         }
 
     except Exception as e:
@@ -403,8 +392,7 @@ async def submit_transcription_correction(
 
 @router.post("/transcription/batch")
 async def batch_create_transcription_tasks(
-    request: BatchTranscriptionRequest,
-    background_tasks: BackgroundTasks
+    request: BatchTranscriptionRequest, background_tasks: BackgroundTasks
 ) -> dict:
     """
     批量创建转写标注任务
@@ -425,7 +413,7 @@ async def batch_create_transcription_tasks(
             return await annotator.batch_create_from_audio(
                 audio_path=request.audio_path,
                 asr_engine=request.asr_engine,
-                speaker_diarization=request.speaker_diarization
+                speaker_diarization=request.speaker_diarization,
             )
 
         background_tasks.add_task(run_batch_transcription)
@@ -434,7 +422,7 @@ async def batch_create_transcription_tasks(
             "success": True,
             "message": f"批量转写任务已启动: {request.audio_path}",
             "asr_engine": request.asr_engine,
-            "speaker_diarization": request.speaker_diarization
+            "speaker_diarization": request.speaker_diarization,
         }
 
     except Exception as e:
@@ -442,9 +430,7 @@ async def batch_create_transcription_tasks(
 
 
 @router.get("/transcription/tasks/pending")
-async def list_pending_transcription_tasks(
-    limit: int = 10
-) -> dict:
+async def list_pending_transcription_tasks(limit: int = 10) -> dict:
     """
     列出待标注的转写任务
 
@@ -466,10 +452,10 @@ async def list_pending_transcription_tasks(
                     "task_id": t.task_id,
                     "original_text": t.original_text[:200],
                     "source": t.original_source,
-                    "created_at": t.created_at.isoformat()
+                    "created_at": t.created_at.isoformat(),
                 }
                 for t in tasks
-            ]
+            ],
         }
 
     except Exception as e:
@@ -506,15 +492,15 @@ async def get_transcription_task(task_id: str) -> dict:
                         "original": c.original,
                         "corrected": c.corrected,
                         "correction_type": c.correction_type,
-                        "confidence": c.confidence
+                        "confidence": c.confidence,
                     }
                     for c in task.corrections
                 ],
                 "annotator": task.annotator,
                 "created_at": task.created_at.isoformat() if task.created_at else None,
                 "completed_at": task.completed_at.isoformat() if task.completed_at else None,
-                "metadata": task.metadata
-            }
+                "metadata": task.metadata,
+            },
         }
 
     except HTTPException:
@@ -535,10 +521,7 @@ async def get_transcription_statistics() -> dict:
 
         stats = await annotator.get_statistics()
 
-        return {
-            "success": True,
-            "statistics": stats
-        }
+        return {"success": True, "statistics": stats}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -556,8 +539,7 @@ async def get_overall_statistics() -> dict:
         transcription_annotator = TranscriptionAnnotator()
 
         ocr_stats, transcription_stats = await asyncio.gather(
-            ocr_annotator.get_statistics(),
-            transcription_annotator.get_statistics()
+            ocr_annotator.get_statistics(), transcription_annotator.get_statistics()
         )
 
         return {
@@ -566,8 +548,9 @@ async def get_overall_statistics() -> dict:
                 "ocr": ocr_stats,
                 "transcription": transcription_stats,
                 "total_tasks": ocr_stats["total_tasks"] + transcription_stats["total_tasks"],
-                "total_completed": ocr_stats["completed_tasks"] + transcription_stats["completed_tasks"]
-            }
+                "total_completed": ocr_stats["completed_tasks"]
+                + transcription_stats["completed_tasks"],
+            },
         }
 
     except Exception as e:

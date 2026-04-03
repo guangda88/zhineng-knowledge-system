@@ -3,11 +3,11 @@
 将指标导出为Prometheus格式
 """
 
+import logging
 import time
 from typing import Dict, List, Optional
-import logging
 
-from .metrics import MetricsCollector, MetricType, get_metrics_collector
+from .metrics import MetricsCollector, get_metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +128,6 @@ class PrometheusExporter:
             filepath: 文件路径
         """
         content = self.export()
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
         logger.info(f"指标已保存到 {filepath}")

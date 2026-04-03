@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .base import BaseDomain, DomainConfig, DomainType, QueryResult
 from .mixins import DatabaseSearchMixin, QueryFormatterMixin
@@ -19,18 +19,38 @@ class ConfucianDomain(DatabaseSearchMixin, QueryFormatterMixin, BaseDomain):
     """
 
     KEYWORDS = [
-        "儒家", "孔子", "孟子", "荀子", "论语",
-        "大学", "中庸", "礼记", "易经", "尚书",
-        "诗经", "春秋", "孝经", "仁义", "礼智",
-        "忠恕", "中庸之道", "修身", "齐家", "治国",
-        "平天下", "君子", "小人", "五伦", "三纲五常",
-        "四书五经", "儒家思想", "传统文化", "国学"
+        "儒家",
+        "孔子",
+        "孟子",
+        "荀子",
+        "论语",
+        "大学",
+        "中庸",
+        "礼记",
+        "易经",
+        "尚书",
+        "诗经",
+        "春秋",
+        "孝经",
+        "仁义",
+        "礼智",
+        "忠恕",
+        "中庸之道",
+        "修身",
+        "齐家",
+        "治国",
+        "平天下",
+        "君子",
+        "小人",
+        "五伦",
+        "三纲五常",
+        "四书五经",
+        "儒家思想",
+        "传统文化",
+        "国学",
     ]
 
-    CATEGORIES = [
-        "经典著作", "思想理念", "历史人物",
-        "文化传承", "现代意义"
-    ]
+    CATEGORIES = ["经典著作", "思想理念", "历史人物", "文化传承", "现代意义"]
 
     def __init__(self, db_pool=None):
         config = DomainConfig(
@@ -39,7 +59,7 @@ class ConfucianDomain(DatabaseSearchMixin, QueryFormatterMixin, BaseDomain):
             enabled=True,
             priority=8,
             categories=self.CATEGORIES,
-            keywords=self.KEYWORDS
+            keywords=self.KEYWORDS,
         )
         super().__init__(config)
         self._db_pool = db_pool
@@ -52,12 +72,7 @@ class ConfucianDomain(DatabaseSearchMixin, QueryFormatterMixin, BaseDomain):
         """关闭儒家领域"""
         logger.info("关闭儒家领域")
 
-    async def query(
-        self,
-        question: str,
-        context: Optional[str] = None,
-        **kwargs
-    ) -> QueryResult:
+    async def query(self, question: str, context: Optional[str] = None, **kwargs) -> QueryResult:
         """执行儒家领域查询"""
         self._stats.query_count += 1
         sources = await self.search(question, top_k=3)
@@ -68,16 +83,9 @@ class ConfucianDomain(DatabaseSearchMixin, QueryFormatterMixin, BaseDomain):
             domain_label="儒家",
         )
 
-    async def search(
-        self,
-        query: str,
-        top_k: int = 10,
-        **kwargs
-    ) -> List[Dict[str, Any]]:
+    async def search(self, query: str, top_k: int = 10, **kwargs) -> List[Dict[str, Any]]:
         """搜索儒家文档"""
-        return await self.search_by_category(
-            self._db_pool, query, "儒家", top_k
-        )
+        return await self.search_by_category(self._db_pool, query, "儒家", top_k)
 
     async def get_quote_by_keyword(self, keyword: str) -> List[Dict[str, Any]]:
         """根据关键词获取经典语录"""
@@ -91,7 +99,7 @@ class ConfucianDomain(DatabaseSearchMixin, QueryFormatterMixin, BaseDomain):
                    WHERE category = '儒家'
                    AND content ILIKE $1
                    LIMIT 5""",
-                f"%{keyword}%"
+                f"%{keyword}%",
             )
             return [dict(row) for row in rows]
         except Exception as e:

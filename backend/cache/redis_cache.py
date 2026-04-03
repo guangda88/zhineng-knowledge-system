@@ -9,17 +9,19 @@ import logging
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Optional, Dict, List, Callable
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 
 def _sanitize_url(url: str) -> str:
     """Remove password from URL for safe logging."""
-    return re.sub(r'(:\/\/[^:]+:)([^@]+)(@)', r'\1***\3', url)
+    return re.sub(r"(:\/\/[^:]+:)([^@]+)(@)", r"\1***\3", url)
+
 
 try:
     import redis.asyncio as aioredis
-    from redis.exceptions import RedisError, ConnectionError, TimeoutError
+    from redis.exceptions import ConnectionError, RedisError, TimeoutError
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -33,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class RedisStatus(Enum):
     """Redis连接状态"""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -42,6 +45,7 @@ class RedisStatus(Enum):
 @dataclass
 class RedisConfig:
     """Redis配置"""
+
     url: str = "redis://localhost:6379/0"
     key_prefix: str = "zhineng_kb:"
     max_connections: int = 50
@@ -246,7 +250,7 @@ class RedisCache:
                     logger.error("Redis断路器已打开")
 
                 if attempt < self.config.retry_attempts - 1:
-                    await asyncio.sleep(self.config.retry_delay * (2 ** attempt))
+                    await asyncio.sleep(self.config.retry_delay * (2**attempt))
             except RedisError as e:
                 last_error = e
                 break
@@ -312,10 +316,7 @@ class RedisCache:
         try:
             full_key = self._make_key(key)
 
-            result = await self._execute_with_retry(
-                lambda client, k: client.get(k),
-                full_key
-            )
+            result = await self._execute_with_retry(lambda client, k: client.get(k), full_key)
 
             if result is None:
                 return None
@@ -337,26 +338,14 @@ class RedisCache:
         try:
             full_keys = [self._make_key(k) for k in keys]
 
-            result = await self._execute_with_retry(
-                lambda client, ks: client.mget(ks),
-                full_keys
-            )
+            result = await self._execute_with_retry(lambda client, ks: client.mget(ks), full_keys)
 
-            return {
-                k: self._deserialize(v)
-                for k, v in zip(keys, result)
-                if v is not None
-            }
+            return {k: self._deserialize(v) for k, v in zip(keys, result) if v is not None}
         except Exception as e:
             logger.error(f"Redis MGET 失败: {e}")
             return {}
 
-    async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: Optional[int] = None
-    ) -> bool:
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
         """设置缓存值
 
         Args:
@@ -373,13 +362,11 @@ class RedisCache:
 
             if ttl and ttl > 0:
                 await self._execute_with_retry(
-                    lambda client, k, v, t: client.setex(k, t, v),
-                    full_key, serialized, ttl
+                    lambda client, k, v, t: client.setex(k, t, v), full_key, serialized, ttl
                 )
             else:
                 await self._execute_with_retry(
-                    lambda client, k, v: client.set(k, v),
-                    full_key, serialized
+                    lambda client, k, v: client.set(k, v), full_key, serialized
                 )
 
             return True
@@ -387,11 +374,7 @@ class RedisCache:
             logger.error(f"Redis SET 失败: {e}")
             return False
 
-    async def set_many(
-        self,
-        mapping: Dict[str, Any],
-        ttl: Optional[int] = None
-    ) -> bool:
+    async def set_many(self, mapping: Dict[str, Any], ttl: Optional[int] = None) -> bool:
         """批量设置缓存值
 
         Args:
@@ -430,10 +413,7 @@ class RedisCache:
         """
         try:
             full_key = self._make_key(key)
-            await self._execute_with_retry(
-                lambda client, k: client.delete(k),
-                full_key
-            )
+            await self._execute_with_retry(lambda client, k: client.delete(k), full_key)
             return True
         except Exception as e:
             logger.error(f"Redis DELETE 失败: {e}")
@@ -451,8 +431,7 @@ class RedisCache:
         try:
             full_keys = [self._make_key(k) for k in keys]
             result = await self._execute_with_retry(
-                lambda client, ks: client.delete(*ks),
-                full_keys
+                lambda client, ks: client.delete(*ks), full_keys
             )
             return result or 0
         except Exception as e:
@@ -500,10 +479,7 @@ class RedisCache:
         """
         try:
             full_key = self._make_key(key)
-            result = await self._execute_with_retry(
-                lambda client, k: client.exists(k),
-                full_key
-            )
+            result = await self._execute_with_retry(lambda client, k: client.exists(k), full_key)
             return bool(result)
         except Exception as e:
             logger.error(f"Redis EXISTS 失败: {e}")
@@ -522,8 +498,7 @@ class RedisCache:
         try:
             full_key = self._make_key(key)
             result = await self._execute_with_retry(
-                lambda client, k, t: client.expire(k, t),
-                full_key, ttl
+                lambda client, k, t: client.expire(k, t), full_key, ttl
             )
             return bool(result)
         except Exception as e:
@@ -541,10 +516,7 @@ class RedisCache:
         """
         try:
             full_key = self._make_key(key)
-            result = await self._execute_with_retry(
-                lambda client, k: client.ttl(k),
-                full_key
-            )
+            result = await self._execute_with_retry(lambda client, k: client.ttl(k), full_key)
             return result or -2
         except Exception as e:
             logger.error(f"Redis TTL 失败: {e}")
@@ -563,8 +535,7 @@ class RedisCache:
         try:
             full_key = self._make_key(key)
             result = await self._execute_with_retry(
-                lambda client, k, d: client.incrby(k, d),
-                full_key, delta
+                lambda client, k, d: client.incrby(k, d), full_key, delta
             )
             return result
         except Exception as e:

@@ -1,6 +1,6 @@
 # AGENTS.md — Agent Guide for zhineng-knowledge-system
 
-> **Project**: 智能知识系统 (Zhineng Knowledge System) — a RAG-based Q&A system for traditional Chinese culture (气功/Qigong, 中医/TCM, 儒家/Confucianism).
+> **Project**: 智能知识系统 (Zhineng Knowledge System) — a RAG-based Q&A system covering nine domains: 儒(Confucianism)、释(Buddhism)、道(Daoism)、医(TCM)、武(Martial Arts)、哲(Philosophy)、科(Science)、气(Qigong)、心理(Psychology).
 > **Stack**: Python 3.12 · FastAPI · AsyncPG · PostgreSQL 16 + pgvector · Redis 7 · Docker Compose
 > **Version**: 1.1.0
 
@@ -112,11 +112,18 @@ zhineng-knowledge-system/
 │   │   ├── lingzhi/           # Legacy LingZhi integration
 │   │   └── knowledge_base/    # Knowledge base processing
 │   ├── domains/               # Domain-specific handlers
-│   │   ├── base.py            # BaseDomain ABC, DomainConfig, QueryResult
+│   │   ├── base.py            # BaseDomain ABC, DomainConfig, QueryResult, DomainType
 │   │   ├── qigong.py          # 气功 domain
 │   │   ├── tcm.py             # 中医 domain
 │   │   ├── confucian.py       # 儒家 domain
+│   │   ├── buddhist.py        # 佛家 domain
+│   │   ├── daoist.py          # 道家 domain
+│   │   ├── martial.py         # 武术 domain
+│   │   ├── philosophy.py      # 哲学 domain
+│   │   ├── science.py         # 科学 domain
+│   │   ├── psychology.py      # 心理学 domain
 │   │   ├── general.py         # 通用 fallback domain
+│   │   ├── mixins.py          # DatabaseSearchMixin, QueryFormatterMixin, RelationMapMixin
 │   │   └── registry.py        # DomainRegistry, setup_domains(), get_registry()
 │   ├── auth/                  # JWT authentication (RS256)
 │   │   ├── jwt.py             # JWTAuth, TokenBlacklist, AuthConfig
@@ -230,7 +237,7 @@ All I/O operations use `async/await`. Database access uses `asyncpg` with connec
 Multi-level: L1 (in-memory `MemoryCache`) + L2 (Redis `RedisCache`). Managed by `cache/manager.py` with per-resource-type TTL configuration.
 
 ### Domain System
-Four domains implementing `BaseDomain` ABC: `QigongDomain`, `TcmDomain`, `ConfucianDomain`, `GeneralDomain`. Registered in `DomainRegistry` via `setup_domains()`. Domain-based routing in `gateway/router.py`.
+Ten domains implementing `BaseDomain` ABC: `QigongDomain`, `TcmDomain`, `ConfucianDomain`, `BuddhistDomain`, `DaoistDomain`, `MartialDomain`, `PhilosophyDomain`, `ScienceDomain`, `PsychologyDomain`, `GeneralDomain`. Registered in `DomainRegistry` via `setup_domains()`. Domain-based routing in `gateway/router.py`.
 
 ### API Gateway
 `gateway/` provides circuit breaker, rate limiting, and domain-based request routing.
@@ -277,7 +284,7 @@ Required on all public functions. The project uses `typing` module extensively.
 - RESTful: `GET /api/v1/resources`, `POST /api/v1/resources`, etc.
 - Unified response format: `{"status": "ok", "data": {...}}` or `{"status": "error", "error": {...}}`.
 - Versioned prefix: `/api/v1/`.
-- Categories validated against fixed set: `气功`, `中医`, `儒家`.
+- Categories validated against fixed set: `气功`, `中医`, `儒家`, `佛家`, `道家`, `武术`, `哲学`, `科学`, `心理学`.
 
 ---
 
@@ -400,8 +407,8 @@ await db.fetch("SELECT * FROM documents WHERE id = $1", doc_id)
 ### 10. DEVELOPMENT_RULES.md is Authoritative
 The project has a comprehensive `DEVELOPMENT_RULES.md` (in Chinese) that is the single source of truth for all conventions. It includes resource management, emergency response procedures, and hook-based enforcement mechanisms.
 
-### 11. No ORM
-The project uses raw SQL via asyncpg. There is no SQLAlchemy ORM usage despite it being in requirements.txt (listed as `sqlalchemy==2.0.35`).
+### 11. Dual Database Access (asyncpg + SQLAlchemy)
+The project uses both raw SQL via asyncpg for performance-critical paths and SQLAlchemy ORM for model definitions and structured queries (books, analytics, evolution, annotations). SQLAlchemy is in `requirements.txt` and actively used across ~24 files.
 
 ---
 
@@ -418,6 +425,46 @@ The project uses raw SQL via asyncpg. There is no SQLAlchemy ORM usage despite i
 | How does caching work? | `backend/cache/manager.py` |
 | How does search work? | `backend/services/retrieval/` (vector, bm25, hybrid) |
 | How does auth work? | `backend/auth/jwt.py` |
-| What are the domains? | `backend/domains/` (qigong, tcm, confucian, general) |
+| What are the domains? | `backend/domains/` (qigong, tcm, confucian, buddhist, daoist, martial, philosophy, science, psychology, general) |
 | Docker services | `docker-compose.yml` |
 | All development rules | `DEVELOPMENT_RULES.md` |
+
+---
+
+## Agent Workflow Rules — CRITICAL
+
+### 1. POLLING IS A BUG — Zero Tolerance
+
+`job_output` on any background job is **FORBIDDEN**. Every call to `job_output` is a bug.
+
+**Why this rule exists:** Each `job_output` call wastes one conversation turn and thousands of tokens. In a single session, polling consumed 50+ turns checking a background index build — burning the entire session budget on "no output" responses.
+
+**The fix — use synchronous execution:**
+
+```python
+# WRONG — starts background, then you'll be tempted to poll:
+bash: "some_command", run_in_background: true  # ← NEVER DO THIS unless ABSOLUTELY necessary
+
+# CORRECT — let the command block until done:
+bash: "some_command"  # synchronous, returns result when complete
+
+# CORRECT — if you need to wait, embed the wait in ONE command:
+bash: "sleep 300 && docker exec ... psql -c 'SELECT ...'"
+```
+
+**Rules:**
+1. Default to `run_in_background: false` (synchronous). Only use background for truly indefinite processes (servers, watchers).
+2. If an operation takes long, use `sleep N && check` in a single `bash` call, NOT `job_output`.
+3. NEVER call `job_output`. If you think you need it, you should have used a synchronous call instead.
+4. If a background job is already running and user asks about it, use ONE `bash` call to query status directly, NOT `job_output`.
+
+### 2. Long-Running Database Operations
+
+For operations taking >2 min (index builds, VACUUM, bulk imports):
+- Start the operation with a synchronous `bash` call (it will return when done)
+- If you must start it background, report progress ONCE with a direct `bash` query, give the ETA, then STOP
+- Do NOT monitor it. The user will ask if they want an update.
+
+### 3. Database shm_size
+
+The postgres container requires `shm_size: '4gb'` in docker-compose.yml. Set on 2026-04-03. The default 64MB causes VACUUM and large index builds to fail with shared memory errors.

@@ -2,12 +2,12 @@
 
 定期审计系统，识别优化机会
 """
-import asyncio
-import logging
-from typing import Dict, List, Any
-from datetime import datetime, timedelta
 
-from .lingminopt import OptimizationOpportunity, OptimizationSource, OptimizationPriority
+import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+from .lingminopt import OptimizationOpportunity, OptimizationPriority, OptimizationSource
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,7 @@ class SystemAuditor:
         self.logger = logging.getLogger(__name__)
         self.audit_history = []
 
-    async def perform_audit(
-        self,
-        audit_type: str = "comprehensive"
-    ) -> Dict[str, Any]:
+    async def perform_audit(self, audit_type: str = "comprehensive") -> Dict[str, Any]:
         """
         执行系统审计
 
@@ -40,7 +37,7 @@ class SystemAuditor:
             "audit_id": audit_id,
             "type": audit_type,
             "timestamp": datetime.now().isoformat(),
-            "findings": []
+            "findings": [],
         }
 
         if audit_type == "comprehensive":
@@ -72,7 +69,8 @@ class SystemAuditor:
 
         # 分析最近的审计结果
         recent_audits = [
-            a for a in self.audit_history
+            a
+            for a in self.audit_history
             if datetime.fromisoformat(a["timestamp"]) > datetime.now() - timedelta(days=7)
         ]
 
@@ -84,12 +82,16 @@ class SystemAuditor:
                         title=f"修复审计问题: {finding['title']}",
                         description=finding["description"],
                         source=OptimizationSource.AUDIT_RESULT,
-                        priority=OptimizationPriority.HIGH if finding["severity"] == "high" else OptimizationPriority.CRITICAL,
+                        priority=(
+                            OptimizationPriority.HIGH
+                            if finding["severity"] == "high"
+                            else OptimizationPriority.CRITICAL
+                        ),
                         category=finding["category"],
                         current_state={"issue_found": True},
                         desired_state={"issue_resolved": True},
                         impact_estimate=finding["impact"],
-                        effort_estimate="medium"
+                        effort_estimate="medium",
                     )
                     opportunities.append(opportunity)
 
@@ -99,35 +101,41 @@ class SystemAuditor:
         """安全审计"""
         findings = []
 
-        findings.append({
-            "title": "API密钥安全检查",
-            "description": "检查代码中是否硬编码API密钥",
-            "severity": "low",
-            "category": "security",
-            "impact": "防止密钥泄露",
-            "status": "not_scanned",
-            "details": "PLACEHOLDER: Security scanning not yet implemented. This result is fabricated."
-        })
+        findings.append(
+            {
+                "title": "API密钥安全检查",
+                "description": "检查代码中是否硬编码API密钥",
+                "severity": "low",
+                "category": "security",
+                "impact": "防止密钥泄露",
+                "status": "not_scanned",
+                "details": "PLACEHOLDER: Security scanning not yet implemented. This result is fabricated.",
+            }
+        )
 
-        findings.append({
-            "title": "SQL注入风险检查",
-            "description": "检查所有数据库查询是否使用参数化",
-            "severity": "medium",
-            "category": "security",
-            "impact": "防止SQL注入攻击",
-            "status": "not_scanned",
-            "details": "PLACEHOLDER: Security scanning not yet implemented. This result is fabricated."
-        })
+        findings.append(
+            {
+                "title": "SQL注入风险检查",
+                "description": "检查所有数据库查询是否使用参数化",
+                "severity": "medium",
+                "category": "security",
+                "impact": "防止SQL注入攻击",
+                "status": "not_scanned",
+                "details": "PLACEHOLDER: Security scanning not yet implemented. This result is fabricated.",
+            }
+        )
 
-        findings.append({
-            "title": "依赖包漏洞扫描",
-            "description": "扫描项目依赖包中的已知漏洞",
-            "severity": "high",
-            "category": "security",
-            "impact": "修复已知安全漏洞",
-            "status": "not_scanned",
-            "details": "PLACEHOLDER: Security scanning not yet implemented. This result is fabricated."
-        })
+        findings.append(
+            {
+                "title": "依赖包漏洞扫描",
+                "description": "扫描项目依赖包中的已知漏洞",
+                "severity": "high",
+                "category": "security",
+                "impact": "修复已知安全漏洞",
+                "status": "not_scanned",
+                "details": "PLACEHOLDER: Security scanning not yet implemented. This result is fabricated.",
+            }
+        )
 
         return findings
 
@@ -135,35 +143,41 @@ class SystemAuditor:
         """性能审计"""
         findings = []
 
-        findings.append({
-            "title": "API响应时间检查",
-            "description": "检查API端点的平均响应时间",
-            "severity": "medium",
-            "category": "performance",
-            "impact": "提升用户体验",
-            "status": "not_scanned",
-            "details": "PLACEHOLDER: Performance scanning not yet implemented. This result is fabricated."
-        })
+        findings.append(
+            {
+                "title": "API响应时间检查",
+                "description": "检查API端点的平均响应时间",
+                "severity": "medium",
+                "category": "performance",
+                "impact": "提升用户体验",
+                "status": "not_scanned",
+                "details": "PLACEHOLDER: Performance scanning not yet implemented. This result is fabricated.",
+            }
+        )
 
-        findings.append({
-            "title": "数据库查询优化",
-            "description": "检查慢查询和缺少索引的表",
-            "severity": "high",
-            "category": "performance",
-            "impact": "提升查询速度",
-            "status": "not_scanned",
-            "details": "PLACEHOLDER: Performance scanning not yet implemented. This result is fabricated."
-        })
+        findings.append(
+            {
+                "title": "数据库查询优化",
+                "description": "检查慢查询和缺少索引的表",
+                "severity": "high",
+                "category": "performance",
+                "impact": "提升查询速度",
+                "status": "not_scanned",
+                "details": "PLACEHOLDER: Performance scanning not yet implemented. This result is fabricated.",
+            }
+        )
 
-        findings.append({
-            "title": "缓存效率检查",
-            "description": "检查Redis缓存的命中率",
-            "severity": "low",
-            "category": "performance",
-            "impact": "减少数据库负载",
-            "status": "not_scanned",
-            "details": "PLACEHOLDER: Performance scanning not yet implemented. This result is fabricated."
-        })
+        findings.append(
+            {
+                "title": "缓存效率检查",
+                "description": "检查Redis缓存的命中率",
+                "severity": "low",
+                "category": "performance",
+                "impact": "减少数据库负载",
+                "status": "not_scanned",
+                "details": "PLACEHOLDER: Performance scanning not yet implemented. This result is fabricated.",
+            }
+        )
 
         return findings
 
@@ -172,35 +186,41 @@ class SystemAuditor:
         findings = []
 
         # 检查1：代码重复
-        findings.append({
-            "title": "代码重复检查",
-            "description": "检查重复的代码片段",
-            "severity": "low",
-            "category": "code_quality",
-            "impact": "提高代码可维护性",
-            "status": "pass"
-        })
+        findings.append(
+            {
+                "title": "代码重复检查",
+                "description": "检查重复的代码片段",
+                "severity": "low",
+                "category": "code_quality",
+                "impact": "提高代码可维护性",
+                "status": "pass",
+            }
+        )
 
         # 检查2：测试覆盖率
-        findings.append({
-            "title": "测试覆盖率检查",
-            "description": "检查单元测试覆盖率",
-            "severity": "medium",
-            "category": "code_quality",
-            "impact": "提高代码质量",
-            "status": "warning",
-            "details": "当前测试覆盖率65%，建议提升到80%"
-        })
+        findings.append(
+            {
+                "title": "测试覆盖率检查",
+                "description": "检查单元测试覆盖率",
+                "severity": "medium",
+                "category": "code_quality",
+                "impact": "提高代码质量",
+                "status": "warning",
+                "details": "当前测试覆盖率65%，建议提升到80%",
+            }
+        )
 
         # 检查3：文档完整性
-        findings.append({
-            "title": "API文档检查",
-            "description": "检查API文档的完整性",
-            "severity": "low",
-            "category": "code_quality",
-            "impact": "改善开发者体验",
-            "status": "pass"
-        })
+        findings.append(
+            {
+                "title": "API文档检查",
+                "description": "检查API文档的完整性",
+                "severity": "low",
+                "category": "code_quality",
+                "impact": "改善开发者体验",
+                "status": "pass",
+            }
+        )
 
         return findings
 
@@ -209,34 +229,40 @@ class SystemAuditor:
         findings = []
 
         # 检查1：数据备份
-        findings.append({
-            "title": "数据备份检查",
-            "description": "检查数据备份是否正常执行",
-            "severity": "high",
-            "category": "data_integrity",
-            "impact": "防止数据丢失",
-            "status": "pass"
-        })
+        findings.append(
+            {
+                "title": "数据备份检查",
+                "description": "检查数据备份是否正常执行",
+                "severity": "high",
+                "category": "data_integrity",
+                "impact": "防止数据丢失",
+                "status": "pass",
+            }
+        )
 
         # 检查2：数据一致性
-        findings.append({
-            "title": "数据一致性检查",
-            "description": "检查向量数据与原始数据的一致性",
-            "severity": "medium",
-            "category": "data_integrity",
-            "impact": "确保检索准确性",
-            "status": "pass"
-        })
+        findings.append(
+            {
+                "title": "数据一致性检查",
+                "description": "检查向量数据与原始数据的一致性",
+                "severity": "medium",
+                "category": "data_integrity",
+                "impact": "确保检索准确性",
+                "status": "pass",
+            }
+        )
 
         # 检查3：孤立记录
-        findings.append({
-            "title": "孤立记录检查",
-            "description": "检查数据库中的孤立记录",
-            "severity": "low",
-            "category": "data_integrity",
-            "impact": "保持数据整洁",
-            "status": "pass"
-        })
+        findings.append(
+            {
+                "title": "孤立记录检查",
+                "description": "检查数据库中的孤立记录",
+                "severity": "low",
+                "category": "data_integrity",
+                "impact": "保持数据整洁",
+                "status": "pass",
+            }
+        )
 
         return findings
 
@@ -245,18 +271,9 @@ class SystemAuditor:
         if not findings:
             return 100.0
 
-        severity_weights = {
-            "critical": 10,
-            "high": 5,
-            "medium": 2,
-            "low": 1
-        }
+        severity_weights = {"critical": 10, "high": 5, "medium": 2, "low": 1}
 
-        status_penalties = {
-            "fail": 1.0,
-            "warning": 0.3,
-            "pass": 0.0
-        }
+        status_penalties = {"fail": 1.0, "warning": 0.3, "pass": 0.0}
 
         total_penalty = 0
         for finding in findings:

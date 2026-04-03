@@ -173,6 +173,13 @@ repos:
   # ===========================
 - repo: local
   hooks:
+      # 检查导入路径规范（新代码必须使用from backend.xxx）
+  - id: check-imports
+    name: 检查导入路径规范
+    entry: python scripts/check_imports.py
+    language: system
+    files: ^backend/.*\.py$
+
       # 检查 docker-compose 文件语法
   - id: docker-compose-check
     name: Docker Compose 语法检查
@@ -187,6 +194,22 @@ repos:
     entry: shellcheck
     language: system
     files: \.sh$
+
+      # 检查导入脚本是否使用 ImportManager（防止并发锁死）
+  - id: check-import-safety
+    name: 检查导入脚本并发安全
+    entry: python scripts/check_import_safety.py --strict
+    language: system
+    files: ^(scripts/.*import.*\.py|scripts/import_.*\.py)$
+    pass_filenames: true
+
+      # 检查115网盘访问速率限制合规性（防止账号锁定）
+  - id: check-115-rate-limit
+    name: 检查115网盘访问速率限制
+    entry: python scripts/hooks/check_115_rate_limit.py
+    language: system
+    files: ^.*\.py$
+    pass_filenames: true
 
 # CI 配置 - 在 CI 中跳过自动修复钩子
 ci:

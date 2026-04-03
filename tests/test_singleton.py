@@ -39,10 +39,10 @@ async def get_svc():
         exec(code, sys.modules[name].__dict__)
 
         get_svc = sys.modules[name].__dict__["get_svc"]
-        result = asyncio.get_event_loop().run_until_complete(get_svc())
+        result = asyncio.run(get_svc())
         assert result == {"id": 1}
 
-        r2 = asyncio.get_event_loop().run_until_complete(get_svc())
+        r2 = asyncio.run(get_svc())
         assert r2 is result  # same cached instance
 
         _cleanup_module(name)
@@ -68,7 +68,7 @@ async def get_fail_svc():
         get_fail_svc = sys.modules[name].__dict__["get_fail_svc"]
 
         with pytest.raises(ConnectionError, match="DB down"):
-            asyncio.get_event_loop().run_until_complete(get_fail_svc())
+            asyncio.run(get_fail_svc())
 
         assert getattr(sys.modules[name], var) is _INIT_FAILED_SENTINEL
 
@@ -91,10 +91,10 @@ async def get_retry_svc():
         get_retry_svc = sys.modules[name].__dict__["get_retry_svc"]
 
         with pytest.raises(ValueError):
-            asyncio.get_event_loop().run_until_complete(get_retry_svc())
+            asyncio.run(get_retry_svc())
 
         with pytest.raises(RuntimeError, match="previously failed"):
-            asyncio.get_event_loop().run_until_complete(get_retry_svc())
+            asyncio.run(get_retry_svc())
 
         _cleanup_module(name)
 
@@ -115,10 +115,10 @@ async def get_fast_svc():
         get_fast_svc = sys.modules[name].__dict__["get_fast_svc"]
 
         with pytest.raises(RuntimeError, match="boom"):
-            asyncio.get_event_loop().run_until_complete(get_fast_svc())
+            asyncio.run(get_fast_svc())
 
         with pytest.raises(RuntimeError, match="previously failed"):
-            asyncio.get_event_loop().run_until_complete(get_fast_svc())
+            asyncio.run(get_fast_svc())
 
         _cleanup_module(name)
 
@@ -144,7 +144,7 @@ async def get_init_svc():
         exec(code, sys.modules[name].__dict__)
 
         get_init_svc = sys.modules[name].__dict__["get_init_svc"]
-        result = asyncio.get_event_loop().run_until_complete(get_init_svc())
+        result = asyncio.run(get_init_svc())
         assert result == {"custom": True}
 
         _cleanup_module(name)

@@ -2,20 +2,20 @@
 
 管理新技术的实验、验证、合并流程
 """
-import asyncio
+
 import logging
 import subprocess
-from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass, field
-import json
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ExperimentStatus(Enum):
     """实验状态"""
+
     PROPOSED = "proposed"  # 已提议
     APPROVED = "approved"  # 已批准
     IN_PROGRESS = "in_progress"  # 进行中
@@ -29,6 +29,7 @@ class ExperimentStatus(Enum):
 @dataclass
 class InnovationProposal:
     """创新提案"""
+
     id: str
     title: str
     description: str
@@ -66,16 +67,20 @@ class InnovationManager:
         for suggestion in suggestions:
             proposal = InnovationProposal(
                 id=self._generate_id(),
-                title=suggestion['title'],
-                description=suggestion['description'],
-                url=suggestion['url'],
-                source_repo=suggestion['url'].split('/github.com/')[1].split('/commits')[0] if 'github.com' in suggestion['url'] else suggestion['url'].split('/')[3],
-                type=suggestion['type'],
-                tags=suggestion['tags'],
-                relevance=suggestion['relevance'],
-                potential_benefit=suggestion['potential_benefit'],
-                implementation_difficulty=suggestion['implementation_difficulty'],
-                suggested_approach=suggestion['suggested_approach']
+                title=suggestion["title"],
+                description=suggestion["description"],
+                url=suggestion["url"],
+                source_repo=(
+                    suggestion["url"].split("/github.com/")[1].split("/commits")[0]
+                    if "github.com" in suggestion["url"]
+                    else suggestion["url"].split("/")[3]
+                ),
+                type=suggestion["type"],
+                tags=suggestion["tags"],
+                relevance=suggestion["relevance"],
+                potential_benefit=suggestion["potential_benefit"],
+                implementation_difficulty=suggestion["implementation_difficulty"],
+                suggested_approach=suggestion["suggested_approach"],
             )
             self.proposals.append(proposal)
 
@@ -85,10 +90,7 @@ class InnovationManager:
         """生成唯一ID"""
         return f"prop_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    async def create_experiment_branch(
-        self,
-        proposal_id: str
-    ) -> Dict[str, str]:
+    async def create_experiment_branch(self, proposal_id: str) -> Dict[str, str]:
         """创建实验分支"""
         proposal = self._get_proposal(proposal_id)
         if not proposal:
@@ -101,33 +103,39 @@ class InnovationManager:
         try:
             # 创建新分支
             subprocess.run(
-                f"cd {self.project_root} && git checkout -b {branch_name}",
-                shell=True,
+                ["git", "checkout", "-b", branch_name],
+                cwd=self.project_root,
                 check=True,
-                capture_output=True
+                capture_output=True,
             )
 
             logger.info(f"Created experimental branch: {branch_name}")
 
             return {
-                'status': 'success',
-                'branch': branch_name,
-                'message': f'实验分支 "{branch_name}" 已创建'
+                "status": "success",
+                "branch": branch_name,
+                "message": f'实验分支 "{branch_name}" 已创建',
             }
 
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to create branch: {e}")
-            return {
-                'status': 'error',
-                'error': str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def run_mvp_test(
-        self,
-        proposal_id: str,
-        test_commands: List[str]
-    ) -> Dict[str, Any]:
-        """运行MVP测试"""
+    def _validate_command(self, command: str) -> None:
+        """验证命令安全性，防止命令注入攻击
+
+        检测危险的 shell 元字符：; | & $ ` ( ) < > 以及换行符
+        """
+        dangerous_chars = [";", "|", "&", "$", "`", "(", ")", "<", ">", "\n", "\r"]
+        for char in dangerous_chars:
+            if char in command:
+                raise ValueError(f"命令包含危险字符 '{char}'，可能存在命令注入风险: {command}")
+
+    async def run_mvp_test(self, proposal_id: str, test_commands: List[str]) -> Dict[str, Any]:
+        """运行MVP测试
+
+        安全警告: test_commands 会进行安全验证，但仍建议仅使用受信任的命令。
+        """
         proposal = self._get_proposal(proposal_id)
         if not proposal:
             raise ValueError(f"Proposal {proposal_id} not found")
@@ -137,46 +145,43 @@ class InnovationManager:
 
         for i, command in enumerate(test_commands):
             try:
+                # 安全验证：检查命令是否包含危险的 shell 元字符
+                self._validate_command(command)
+
                 result = subprocess.run(
                     command,
                     shell=True,
                     cwd=self.project_root,
                     capture_output=True,
                     text=True,
-                    timeout=300  # 5分钟超时
+                    timeout=300,  # 5分钟超时
                 )
 
                 test_result = {
-                    'command': command,
-                    'exit_code': result.returncode,
-                    'stdout': result.stdout[:1000],  # 限制输出长度
-                    'stderr': result.stderr[:1000],
-                    'success': result.returncode == 0
+                    "command": command,
+                    "exit_code": result.returncode,
+                    "stdout": result.stdout[:1000],  # 限制输出长度
+                    "stderr": result.stderr[:1000],
+                    "success": result.returncode == 0,
                 }
 
                 results.append(test_result)
 
-                if not test_result['success']:
+                if not test_result["success"]:
                     # 测试失败，停止后续测试
                     break
 
             except subprocess.TimeoutExpired:
-                results.append({
-                    'command': command,
-                    'error': '命令执行超时（5分钟）',
-                    'success': False
-                })
+                results.append(
+                    {"command": command, "error": "命令执行超时（5分钟）", "success": False}
+                )
                 break
             except Exception as e:
-                results.append({
-                    'command': command,
-                    'error': str(e),
-                    'success': False
-                })
+                results.append({"command": command, "error": str(e), "success": False})
                 break
 
         # 评估测试结果
-        all_passed = all(r.get('success', False) for r in results)
+        all_passed = all(r.get("success", False) for r in results)
 
         if all_passed:
             proposal.status = ExperimentStatus.PASSED
@@ -184,22 +189,19 @@ class InnovationManager:
             proposal.status = ExperimentStatus.FAILED
 
         proposal.experimental_results = {
-            'test_results': results,
-            'all_passed': all_passed,
-            'tested_at': datetime.now().isoformat()
+            "test_results": results,
+            "all_passed": all_passed,
+            "tested_at": datetime.now().isoformat(),
         }
 
         return {
-            'proposal_id': proposal_id,
-            'status': proposal.status.value,
-            'results': results,
-            'all_passed': all_passed
+            "proposal_id": proposal_id,
+            "status": proposal.status.value,
+            "results": results,
+            "all_passed": all_passed,
         }
 
-    async def merge_to_main(
-        self,
-        proposal_id: str
-    ) -> Dict[str, str]:
+    async def merge_to_main(self, proposal_id: str) -> Dict[str, str]:
         """合并到主分支"""
         proposal = self._get_proposal(proposal_id)
         if not proposal:
@@ -207,66 +209,39 @@ class InnovationManager:
 
         if proposal.status != ExperimentStatus.PASSED:
             return {
-                'status': 'error',
-                'message': f'提案未通过测试，无法合并。当前状态: {proposal.status.value}'
+                "status": "error",
+                "message": f"提案未通过测试，无法合并。当前状态: {proposal.status.value}",
             }
 
         if not proposal.branch_name:
-            return {
-                'status': 'error',
-                'message': '实验分支不存在'
-            }
+            return {"status": "error", "message": "实验分支不存在"}
 
         try:
             # 切换到主分支
-            subprocess.run(
-                f"cd {self.project_root} && git checkout main",
-                shell=True,
-                check=True
-            )
+            subprocess.run(["git", "checkout", "main"], cwd=self.project_root, check=True)
 
             # 拉取最新代码
-            subprocess.run(
-                f"cd {self.project_root} && git pull origin main",
-                shell=True,
-                check=True
-            )
+            subprocess.run(["git", "pull", "origin", "main"], cwd=self.project_root, check=True)
 
             # 合并实验分支
             subprocess.run(
-                f"cd {self.project_root} && git merge {proposal.branch_name} --no-ff",
-                shell=True,
-                check=True
+                ["git", "merge", proposal.branch_name, "--no-ff"], cwd=self.project_root, check=True
             )
 
             # 推送到远程
-            subprocess.run(
-                f"cd {self.project_root} && git push origin main",
-                shell=True,
-                check=True
-            )
+            subprocess.run(["git", "push", "origin", "main"], cwd=self.project_root, check=True)
 
             proposal.status = ExperimentStatus.MERGED
 
             logger.info(f"Merged proposal {proposal_id} to main branch")
 
-            return {
-                'status': 'success',
-                'message': f'已成功合并到主分支: {proposal.title}'
-            }
+            return {"status": "success", "message": f"已成功合并到主分支: {proposal.title}"}
 
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to merge: {e}")
-            return {
-                'status': 'error',
-                'message': f'合并失败: {str(e)}'
-            }
+            return {"status": "error", "message": f"合并失败: {str(e)}"}
 
-    async def reject_proposal(
-        self,
-        proposal_id: str,
-        reason: str
-    ) -> Dict[str, str]:
+    async def reject_proposal(self, proposal_id: str, reason: str) -> Dict[str, str]:
         """拒绝提案"""
         proposal = self._get_proposal(proposal_id)
         if not proposal:
@@ -275,10 +250,7 @@ class InnovationManager:
         proposal.status = ExperimentStatus.REJECTED
         proposal.user_feedback.append(f"拒绝原因: {reason}")
 
-        return {
-            'status': 'success',
-            'message': f'提案已拒绝: {reason}'
-        }
+        return {"status": "success", "message": f"提案已拒绝: {reason}"}
 
     def _get_proposal(self, proposal_id: str) -> Optional[InnovationProposal]:
         """获取提案"""
@@ -290,30 +262,28 @@ class InnovationManager:
     def get_pending_proposals(self) -> List[InnovationProposal]:
         """获取待处理的提案"""
         return [
-            p for p in self.proposals
-            if p.status in [
-                ExperimentStatus.PROPOSED,
-                ExperimentStatus.APPROVED,
-                ExperimentStatus.IN_PROGRESS
-            ]
+            p
+            for p in self.proposals
+            if p.status
+            in [ExperimentStatus.PROPOSED, ExperimentStatus.APPROVED, ExperimentStatus.IN_PROGRESS]
         ]
 
     def get_proposal_summary(self) -> Dict[str, Any]:
         """获取提案摘要"""
         return {
-            'total': len(self.proposals),
-            'by_status': {
+            "total": len(self.proposals),
+            "by_status": {
                 status.value: len([p for p in self.proposals if p.status == status])
                 for status in ExperimentStatus
             },
-            'high_priority': [
+            "high_priority": [
                 {
-                    'id': p.id,
-                    'title': p.title,
-                    'relevance': p.relevance,
-                    'benefit': p.potential_benefit
+                    "id": p.id,
+                    "title": p.title,
+                    "relevance": p.relevance,
+                    "benefit": p.potential_benefit,
                 }
                 for p in self.proposals
                 if p.relevance > 0.8 and p.status == ExperimentStatus.PROPOSED
-            ]
+            ],
         }

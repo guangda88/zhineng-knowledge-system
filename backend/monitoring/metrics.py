@@ -283,8 +283,6 @@ def track_metrics(metric_name: str, metric_type: MetricType = MetricType.COUNTER
                 collector.increment_counter(f"{metric_name}_error")
                 raise e
 
-        import asyncio
-
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:

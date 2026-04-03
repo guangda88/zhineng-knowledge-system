@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from .base import BaseDomain, DomainType, QueryResult
 
@@ -76,17 +76,9 @@ class DomainRegistry:
         Returns:
             该类型的所有领域
         """
-        return [
-            d for d in self._domains.values()
-            if d.domain_type == domain_type
-        ]
+        return [d for d in self._domains.values() if d.domain_type == domain_type]
 
-    async def route(
-        self,
-        question: str,
-        context: Optional[str] = None,
-        **kwargs
-    ) -> QueryResult:
+    async def route(self, question: str, context: Optional[str] = None, **kwargs) -> QueryResult:
         """智能路由到最适合的领域
 
         Args:
@@ -105,10 +97,7 @@ class DomainRegistry:
                 scored_domains.append((domain, score))
 
         # 按分数和优先级排序
-        scored_domains.sort(
-            key=lambda x: (x[1], x[0].priority),
-            reverse=True
-        )
+        scored_domains.sort(key=lambda x: (x[1], x[0].priority), reverse=True)
 
         if not scored_domains:
             # 使用通用领域作为兜底
@@ -116,10 +105,7 @@ class DomainRegistry:
             if general_domain:
                 return await general_domain.query(question, context, **kwargs)
             else:
-                return QueryResult(
-                    content="没有可用的领域来处理此问题。",
-                    confidence=0.0
-                )
+                return QueryResult(content="没有可用的领域来处理此问题。", confidence=0.0)
 
         # 使用匹配度最高的领域
         best_domain, _ = scored_domains[0]
@@ -132,7 +118,7 @@ class DomainRegistry:
         question: str,
         domains: Optional[List[str]] = None,
         merge_results: bool = True,
-        **kwargs
+        **kwargs,
     ) -> List[QueryResult]:
         """多领域查询
 
@@ -147,8 +133,7 @@ class DomainRegistry:
         """
         if domains:
             target_domains = [
-                self.get(name) for name in domains
-                if self.get(name) and self.get(name).enabled
+                self.get(name) for name in domains if self.get(name) and self.get(name).enabled
             ]
         else:
             target_domains = self.get_enabled()
@@ -202,7 +187,7 @@ class DomainRegistry:
         health_report = {
             "total_domains": len(self._domains),
             "enabled_domains": len(self.get_enabled()),
-            "domains": []
+            "domains": [],
         }
 
         for domain in self._domains.values():
@@ -210,27 +195,22 @@ class DomainRegistry:
                 health = await domain.health_check()
                 health_report["domains"].append(health)
             except Exception as e:
-                health_report["domains"].append({
-                    "domain": domain.name,
-                    "status": "error",
-                    "error": str(e)
-                })
+                health_report["domains"].append(
+                    {"domain": domain.name, "status": "error", "error": str(e)}
+                )
 
         return health_report
 
     def get_stats(self) -> Dict[str, Any]:
         """获取所有领域统计"""
-        stats = {
-            "total_queries": 0,
-            "domains": {}
-        }
+        stats = {"total_queries": 0, "domains": {}}
 
         for domain in self._domains.values():
             domain_stats = domain.get_stats()
             stats["domains"][domain.name] = {
                 "document_count": domain_stats.document_count,
                 "query_count": domain_stats.query_count,
-                "avg_response_time": domain_stats.avg_response_time
+                "avg_response_time": domain_stats.avg_response_time,
             }
             stats["total_queries"] += domain_stats.query_count
 
@@ -262,17 +242,28 @@ async def setup_domains(db_pool=None) -> DomainRegistry:
     Returns:
         初始化后的注册表
     """
-    from .qigong import QigongDomain
-    from .tcm import TcmDomain
+    from .buddhist import BuddhistDomain
     from .confucian import ConfucianDomain
+    from .daoist import DaoistDomain
     from .general import GeneralDomain
+    from .martial import MartialDomain
+    from .philosophy import PhilosophyDomain
+    from .psychology import PsychologyDomain
+    from .qigong import QigongDomain
+    from .science import ScienceDomain
+    from .tcm import TcmDomain
 
     registry = get_registry()
 
-    # 注册所有领域
     registry.register(QigongDomain(db_pool))
     registry.register(TcmDomain(db_pool))
     registry.register(ConfucianDomain(db_pool))
+    registry.register(BuddhistDomain(db_pool))
+    registry.register(DaoistDomain(db_pool))
+    registry.register(MartialDomain(db_pool))
+    registry.register(PhilosophyDomain(db_pool))
+    registry.register(ScienceDomain(db_pool))
+    registry.register(PsychologyDomain(db_pool))
     registry.register(GeneralDomain(db_pool))
 
     # 初始化所有领域

@@ -1,19 +1,30 @@
-"""自优化服务模块
+"""LingMinOpt自优化系统
 
-LingMinOpt框架 - 灵知系统自优化能力
-通过系统报错、用户反馈、审计结果、论坛反馈识别优化方向并自动优化
+⚠️ 实验性功能 - 未完成，不建议生产使用
+
+提供系统自优化功能，包括反馈收集、错误分析、审计和优化执行。
+详见: backend/services/optimization/README.md
 """
 
-from .lingminopt import LingMinOptOptimizer
-from .feedback_collector import FeedbackCollector
-from .error_analyzer import ErrorAnalyzer
+import warnings
+
 from .auditor import SystemAuditor
-from .optimization_executor import OptimizationExecutor
+from .error_analyzer import ErrorAnalyzer
+from .feedback_collector import FeedbackCollector
+from .lingminopt import LingMinOptOptimizer
+
+# 发出实验性功能警告
+warnings.warn(
+    "LingMinOpt optimization system is experimental and incomplete. "
+    "Not recommended for production use. "
+    "See: backend/services/optimization/README.md",
+    UserWarning,
+    stacklevel=2,
+)
 
 __all__ = [
     "LingMinOptOptimizer",
     "FeedbackCollector",
     "ErrorAnalyzer",
     "SystemAuditor",
-    "OptimizationExecutor",
 ]

@@ -5,14 +5,13 @@
 """
 
 import logging
+import os
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from backend.textbook_processing.autonomous_processor import (
     AutonomousTextbookProcessor,
     ProcessingResult,
-    TocItem,
-    TextBlock
 )
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,6 @@ class Processor(ABC):
         Returns:
             处理后的数据
         """
-        pass
 
 
 class TOCProcessor(Processor):
@@ -42,10 +40,7 @@ class TOCProcessor(Processor):
     """
 
     def __init__(
-        self,
-        auto_expand: bool = True,
-        target_depth: int = 3,
-        api_key: Optional[str] = None
+        self, auto_expand: bool = True, target_depth: int = 3, api_key: Optional[str] = None
     ):
         """
         Args:
@@ -62,8 +57,7 @@ class TOCProcessor(Processor):
         """获取自主处理器实例"""
         if self._processor is None:
             self._processor = AutonomousTextbookProcessor(
-                api_key=self.api_key,
-                target_toc_depth=self.target_depth
+                api_key=self.api_key, target_toc_depth=self.target_depth
             )
         return self._processor
 
@@ -84,8 +78,7 @@ class TOCProcessor(Processor):
             try:
                 # 调用自主处理器处理文本
                 result: ProcessingResult = await processor.process(
-                    textbook_path=item.get("path", ""),
-                    textbook_title=item.get("name", "")
+                    textbook_path=item.get("path", ""), textbook_title=item.get("name", "")
                 )
 
                 # 转换TOC为字典格式
@@ -100,7 +93,9 @@ class TOCProcessor(Processor):
 
                 results.append(processed_item)
 
-                logger.info(f"Processed TOC for {item.get('name', 'unknown')}: {len(toc_list)} items")
+                logger.info(
+                    f"Processed TOC for {item.get('name', 'unknown')}: {len(toc_list)} items"
+                )
 
             except Exception as e:
                 logger.error(f"Failed to process TOC for {item.get('name', 'unknown')}: {e}")
@@ -129,9 +124,7 @@ class SegmentProcessor(Processor):
     def _get_processor(self) -> AutonomousTextbookProcessor:
         """获取自主处理器实例"""
         if self._processor is None:
-            self._processor = AutonomousTextbookProcessor(
-                max_block_chars=self.max_block_size
-            )
+            self._processor = AutonomousTextbookProcessor(max_block_chars=self.max_block_size)
         return self._processor
 
     async def process(self, data: List[Dict[str, Any]], **kwargs) -> List[Dict[str, Any]]:
@@ -160,7 +153,9 @@ class SegmentProcessor(Processor):
                             valid_blocks.append(block)
                         else:
                             # 重新分割大块
-                            logger.warning(f"Block size {len(content)} exceeds limit, need re-segmentation")
+                            logger.warning(
+                                f"Block size {len(content)} exceeds limit, need re-segmentation"
+                            )
 
                     processed_item = item.copy()
                     processed_item["blocks"] = valid_blocks
@@ -169,8 +164,7 @@ class SegmentProcessor(Processor):
                     # 如果没有blocks，则分割文本
                     processor = self._get_processor()
                     result = await processor.process(
-                        textbook_path=item.get("path", ""),
-                        textbook_title=item.get("name", "")
+                        textbook_path=item.get("path", ""), textbook_title=item.get("name", "")
                     )
                     block_list = [block.to_dict() for block in result.text_blocks]
 
@@ -227,7 +221,9 @@ class QualityValidator(Processor):
             else:
                 content_length = len(item["content"])
                 if content_length < self.min_content_length:
-                    errors.append(f"Content too short: {content_length} < {self.min_content_length}")
+                    errors.append(
+                        f"Content too short: {content_length} < {self.min_content_length}"
+                    )
                 if content_length > self.max_content_length:
                     errors.append(f"Content too long: {content_length} > {self.max_content_length}")
 
@@ -246,11 +242,13 @@ class QualityValidator(Processor):
             if valid:
                 results.append(item)
             else:
-                validation_errors.append({
-                    "index": idx,
-                    "item": item.get("name", item.get("path", "unknown")),
-                    "errors": errors
-                })
+                validation_errors.append(
+                    {
+                        "index": idx,
+                        "item": item.get("name", item.get("path", "unknown")),
+                        "errors": errors,
+                    }
+                )
                 logger.warning(f"Validation failed for item {idx}: {', '.join(errors)}")
 
         if validation_errors:
@@ -270,9 +268,11 @@ class VectorEmbedder(Processor):
     def __init__(self, embedding_service_url: Optional[str] = None):
         """
         Args:
-            embedding_service_url: 嵌入服务URL
+            embedding_service_url: 嵌入服务URL（备用方案）
         """
-        self.embedding_service_url = embedding_service_url
+        self.embedding_service_url = embedding_service_url or os.getenv(
+            "EMBEDDING_SERVICE_URL", "http://localhost:8001"
+        )
 
     async def process(self, data: List[Dict[str, Any]], **kwargs) -> List[Dict[str, Any]]:
         """生成向量嵌入
@@ -284,25 +284,56 @@ class VectorEmbedder(Processor):
         Returns:
             包含向量嵌入的数据
         """
-        results = []
-        for item in data:
-            try:
-                if "embedding" in item:
-                    results.append(item)
-                    continue
+        items_to_embed = []
+        indices_to_embed = []
+        for i, item in enumerate(data):
+            if "embedding" in item:
+                continue
+            content = item.get("content", "")
+            if content and content.strip():
+                items_to_embed.append(content)
+                indices_to_embed.append(i)
 
-                content = item.get("content", "")
+        if items_to_embed:
+            embeddings = await self._generate_embeddings(items_to_embed)
+            for idx, embedding in zip(indices_to_embed, embeddings):
+                data[idx]["embedding"] = embedding
 
-                raise NotImplementedError(
-                    "Embedding generation requires VectorRetriever. "
-                    "Use backend.services.retrieval.vector.VectorRetriever.embed_text() "
-                    "or call the embedding API directly."
-                )
+        return data
 
-            except NotImplementedError:
-                raise
-            except Exception as e:
-                logger.error(f"Failed to generate embedding for {item.get('name', 'unknown')}: {e}")
-                results.append(item)
+    async def _generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """生成嵌入向量，优先使用本地BGE模型，备用远程服务"""
+        try:
+            from backend.core.database import get_db_pool
 
-        return results
+            pool = get_db_pool()
+            if pool:
+                from backend.services.retrieval.vector import VectorRetriever
+
+                retriever = VectorRetriever(pool)
+                return await retriever.embed_batch(texts)
+        except Exception as e:
+            logger.warning(f"本地BGE模型不可用，尝试嵌入服务: {e}")
+
+        return await self._embed_via_service(texts)
+
+    async def _embed_via_service(self, texts: List[str]) -> List[List[float]]:
+        """通过嵌入服务生成嵌入向量"""
+        import httpx
+
+        embeddings = []
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for text in texts:
+                try:
+                    resp = await client.post(
+                        f"{self.embedding_service_url}/embed", json={"text": text}
+                    )
+                    if resp.status_code == 200:
+                        embeddings.append(resp.json()["embedding"])
+                    else:
+                        logger.error(f"嵌入服务返回 {resp.status_code}")
+                        embeddings.append(None)
+                except Exception as e:
+                    logger.error(f"嵌入服务连接失败: {e}")
+                    embeddings.append(None)
+        return embeddings

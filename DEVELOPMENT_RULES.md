@@ -527,6 +527,60 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 - 实现 CORS 限制
 - 考虑速率限制
 
+### 数据库锁死防范 ⚠️ 强制规则
+
+**背景**: 6进程并发导入导致锁死的历史教训 (2026-04-02)
+
+```
+PID  操作                    锁类型    等待
+────────────────────────────────────────────
+158759 INSERT ... ON CONFLICT   IO      5-35秒
+159654 TRUNCATE guji_documents  Lock    34-49秒
+160248 SELECT COUNT(*)          Lock    22-48秒
+160317 SELECT pg_size_pretty()  Lock    21-50秒
+160569 CREATE INDEX             Lock    16-39秒
+161352 DROP+CREATE TABLE        Lock    47秒
+```
+
+**强制规则**:
+
+1. **批量导入必须使用 ImportManager**
+   ```python
+   from backend.services.import_manager import ImportManager
+
+   async with ImportManager("task_name") as mgr:
+       # 执行导入
+       pass
+   ```
+
+2. **使用统一入口运行导入**
+   ```bash
+   # 正确 ✅
+   python scripts/import_guard.py guji
+
+   # 错误 ❌ - 直接运行脚本可能导致并发
+   python scripts/import_guji_data.py
+   ```
+
+3. **事务控制**
+   - 批量操作分批提交 (1000-2000条/批)
+   - 避免长事务持有锁
+   - 设置超时: `lock_timeout = '5s'`, `statement_timeout = '300s'`
+
+4. **监控和清理**
+   ```bash
+   # 定期检查锁状态
+   python scripts/db_lock_monitor.py
+
+   # 清理过期锁
+   python scripts/db_lock_monitor.py --clean
+   ```
+
+5. **禁止操作**
+   - ❌ 禁止同时运行多个导入脚本
+   - ❌ 禁止在导入时执行 DDL (TRUNCATE/DROP)
+   - ❌ 禁止绕过 ImportManager 的批量写入
+
 ---
 
 ## 8. 部署规范
@@ -1060,6 +1114,137 @@ insert_final_newline = true
 
 ---
 
+## 15. 外部资源访问规范
+
+> **⚠️ 重要更新 (2026-04-03)**: 115网盘访问限制现已扩大到 **OpenList** 系统整体。
+> 所有针对 OpenList 的访问（包括但不限于 115网盘路径、国学大师内容、古籍下载）
+> **必须遵守以下速率限制**。
+
+### 15.1 OpenList/115网盘访问限制
+
+**严禁高速高频多线程访问OpenList！**
+
+**强制执行的速率限制**（防止账号被锁定）：
+
+| 参数 | 限制值 | 说明 |
+|------|--------|------|
+| **单文件线程数** | 2 | 下载单个文件时的最大线程 |
+| **同时下载数** | 3～4 | 并发下载任务数量 |
+| **API请求频率** | ≤ 1次/秒 | 接口调用间隔 |
+
+**访问地址**：
+- OpenList API: `http://100.66.1.8:2455`
+- guji目录: `/115/国学大师/guji`
+
+**代码实现要求**：
+
+```python
+# ✅ 正确 - 添加延迟
+import time
+
+async def fetch_guji_files():
+    for file in files:
+        result = await api.fetch(file)
+        time.sleep(1)  # 每次请求间隔1秒
+        yield result
+
+# ❌ 错误 - 无延迟，可能触发保护
+async def fetch_guji_files_wrong():
+    for file in files:
+        yield await api.fetch(file)  # 太快！
+```
+
+```python
+# ✅ 正确 - 限制并发
+import asyncio
+
+MAX_CONCURRENT = 4  # 最大4个并发任务
+
+async def fetch_with_limit():
+    semaphore = asyncio.Semaphore(MAX_CONCURRENT)
+
+    async def fetch_one(file):
+        async with semaphore:
+            result = await api.fetch(file)
+            await asyncio.sleep(1)  # 请求间隔
+            return result
+
+    return await asyncio.gather(*[fetch_one(f) for f in files])
+```
+
+### 15.2 rclone 访问配置
+
+```bash
+# ✅ 正确配置
+rclone copy openlist:115/国学大师/guji /dest/ \
+  --transfers 3 \          # 同时传输3个文件
+  --checkers 4 \           # 4个检查线程
+  --bwlimit 1M \           # 限速1MB/s
+  --retries 3 \            # 失败重试3次
+  --low-level-retries 10   # 低级重试
+
+# ❌ 错误配置 - 会导致115保护
+rclone copy openlist:115/国学大师/guji /dest/ \
+  --transfers 10 \         # 太多并发！
+  --bwlimit 10M            # 速率太高！
+```
+
+### 15.3 Hook 自动检查
+
+**Pre-commit hook 自动检查**：
+- 检测代码中是否有违反速率限制的模式
+- 警告未添加延迟的API调用
+- 检查并发数是否超限
+
+**Hook脚本位置**：`scripts/hooks/check_115_rate_limit.py`
+
+**执行方式**：
+```bash
+# 自动执行（每次git commit）
+pre-commit run check-115-rate-limit --all-files
+
+# 手动执行
+python scripts/hooks/check_115_rate_limit.py
+```
+
+### 15.4 违规后果
+
+| 违规类型 | 后果 |
+|---------|------|
+| 超过API频率 | 115账号被锁定（24小时） |
+| 并发数超限 | 下载任务失败 |
+| 无限制批量访问 | IP被临时封禁 |
+| 违反OpenList限制 | 服务访问权限暂停 |
+
+**恢复时间**：通常24小时，严重违规可能更长。
+
+### 15.5 Claude Code 集成
+
+**自动Hooks保护**（项目配置 `.claude/settings.json`）：
+
+1. **PreToolUse Hook** - Bash命令执行前检查：
+   - 检测openlist/115相关命令
+   - 验证速率限制参数
+   - 阻止高风险操作
+
+2. **Write/Edit Hook** - 代码写入后检查：
+   - 运行 `check_115_rate_limit.py` 验证
+   - 警告未添加延迟的API调用
+   - 检测并发数超限
+
+3. **SessionStart Hook** - 会话开始时提醒：
+   - 显示OpenList访问规则
+   - 强调严禁高频访问
+
+**环境变量**：
+```bash
+OPENLIST_RATE_LIMIT=1         # 请求间隔(秒)
+OPENLIST_MAX_CONCURRENT=1     # 最大并发数
+OPENLIST_MIN_DELAY=1          # 最小延迟(秒)
+```
+
+---
+
 ## 变更历史
 
 | 版本 | 日期 | 变更内容 | 作者 |
@@ -1068,6 +1253,8 @@ insert_final_newline = true
 | 1.1.0 | 2026-03-30 | 新增第14章：系统资源管理规范 | Claude Code |
 | 2.0.0 | 2026-03-31 | 更新项目结构至当前架构；补充 SQL 命名规范 | Claude Code |
 | 2.0.0 | 2026-03-31 | 更新项目结构至当前架构；补充 SQL 命名规范；对齐 ENGINEERING_ALIGNMENT.md | Claude Code |
+| 2.1.0 | 2026-04-02 | 新增第15章：外部资源访问规范（115网盘速率限制） | Claude Code |
+| 2.2.0 | 2026-04-03 | 115网盘访问限制扩展至OpenList；新增Claude Code hooks集成；启用上下文管理 | Claude Code |
 
 ---
 

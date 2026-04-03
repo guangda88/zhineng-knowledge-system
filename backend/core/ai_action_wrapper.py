@@ -2,13 +2,13 @@
 AI操作包装器
 统一入口，拦截所有AI操作，应用各种Hook检查
 """
-import asyncio
-import logging
-from typing import Dict, Any, Optional
 
+import logging
+from typing import Any, Dict, Optional
+
+from .data_verification_gate import DataVerificationGate
 from .rules_checker import RulesChecker
 from .urgency_guard import UrgencyGuard
-from .data_verification_gate import DataVerificationGate
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class AIActionWrapper:
         self,
         action_type: str,
         action_data: Optional[Dict[str, Any]] = None,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         执行AI操作的统一入口
@@ -89,10 +89,7 @@ class AIActionWrapper:
             raise
 
     async def _execute_action(
-        self,
-        action_type: str,
-        action_data: Dict[str, Any],
-        context: Dict[str, Any]
+        self, action_type: str, action_data: Dict[str, Any], context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         执行具体操作

@@ -2,17 +2,18 @@
 
 定义所有生成器的通用接口和行为
 """
-import asyncio
+
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class GenerationStatus(Enum):
     """生成状态"""
+
     PENDING = "pending"  # 等待生成
     IN_PROGRESS = "in_progress"  # 生成中
     COMPLETED = "completed"  # 已完成
@@ -22,17 +23,22 @@ class GenerationStatus(Enum):
 
 class OutputFormat(Enum):
     """输出格式"""
+
     PDF = "pdf"
     MARKDOWN = "md"
     HTML = "html"
     DOCX = "docx"
     TXT = "txt"
     JSON = "json"
+    MP3 = "mp3"
+    WAV = "wav"
+    MP4 = "mp4"
 
 
 @dataclass
 class GenerationRequest:
     """生成请求"""
+
     task_id: str
     topic: str
     content_type: str  # report, ppt, audio, video, course, analysis
@@ -48,6 +54,7 @@ class GenerationRequest:
 @dataclass
 class GenerationResult:
     """生成结果"""
+
     task_id: str
     status: GenerationStatus
     output_path: Optional[str] = None
@@ -79,7 +86,6 @@ class BaseGenerator(ABC):
         Returns:
             GenerationResult: 生成结果
         """
-        pass
 
     @abstractmethod
     def validate_request(self, request: GenerationRequest) -> bool:
@@ -92,12 +98,9 @@ class BaseGenerator(ABC):
         Returns:
             bool: 是否有效
         """
-        pass
 
     async def generate_with_progress(
-        self,
-        request: GenerationRequest,
-        progress_callback: Optional[callable] = None
+        self, request: GenerationRequest, progress_callback: Optional[callable] = None
     ) -> GenerationResult:
         """
         带进度回调的生成
@@ -118,7 +121,7 @@ class BaseGenerator(ABC):
                 return GenerationResult(
                     task_id=request.task_id,
                     status=GenerationStatus.FAILED,
-                    error_message="请求参数无效"
+                    error_message="请求参数无效",
                 )
 
             if progress_callback:
@@ -135,14 +138,13 @@ class BaseGenerator(ABC):
         except Exception as e:
             self.logger.error(f"生成失败: {e}", exc_info=True)
             return GenerationResult(
-                task_id=request.task_id,
-                status=GenerationStatus.FAILED,
-                error_message=str(e)
+                task_id=request.task_id, status=GenerationStatus.FAILED, error_message=str(e)
             )
 
     def _generate_task_id(self) -> str:
         """生成任务ID"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         import uuid
+
         unique_id = str(uuid.uuid4())[:8]
         return f"{self.__class__.__name__}_{timestamp}_{unique_id}"

@@ -4,9 +4,16 @@
 
 ⚠️ **归档文档 — 数据已过时**
 
-本报告为历史快照存档。当前版本 **v1.3.0-dev**，232 测试通过。
+本报告为历史快照存档。当前版本 **v1.3.0-dev**。
 
 👉 最新工程状态请参阅 **[ENGINEERING_ALIGNMENT.md](ENGINEERING_ALIGNMENT.md)**
+
+📐 架构决策记录请参阅 **[docs/adr/](docs/adr/)**
+
+⚠️ 以下内容中的技术栈描述已过时：
+- 嵌入模型已从 bge-small-zh-v1.5 升级为 BGE-M3（见 ADR-0002）
+- LLM 提供商已从 OpenAI API 切换为 DeepSeek API（见 ADR-0003）
+- SQLAlchemy 计划移除（见 ADR-0005）
 
 </div>
 
@@ -177,9 +184,9 @@
 
 ## 三、知识体系结构
 
-### 3.1 八大分类
+### 3.1 九大分类
 
-儒、释、道、医、武、哲、科、气
+儒、释、道、医、武、哲、科、气、心理
 
 ### 3.2 核心教材
 
@@ -292,11 +299,11 @@
 - FastAPI（Web框架）
 - PostgreSQL + pgvector（数据库）
 - Redis（缓存）
-- SQLAlchemy（ORM）
+- ~~SQLAlchemy（ORM）~~ → 计划移除（ADR-0005）
 
 **AI/ML**:
-- bge-small-zh-v1.5（嵌入）
-- OpenAI API（大语言模型）
+- ~~bge-small-zh-v1.5（嵌入）~~ → BGE-M3（ADR-0002）
+- ~~OpenAI API（大语言模型）~~ → DeepSeek API（ADR-0003）
 - Tesseract/PaddleOCR（OCR）
 - Whisper（语音识别）
 
@@ -405,7 +412,7 @@
    - 权威性内容
    - 实践导向
 
-2. **八大分类知识网络**
+2. **九大分类知识网络**
    - 完整的知识结构
    - 相互关联的知识
    - 球状网络组织

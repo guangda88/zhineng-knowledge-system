@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .base import BaseDomain, DomainConfig, DomainType, QueryResult
 
@@ -18,18 +18,39 @@ class TcmDomain(BaseDomain):
     """
 
     KEYWORDS = [
-        "中医", "中药", "针灸", "经络", "穴位",
-        "阴阳", "五行", "气血", "脏腑", "辨证",
-        "论治", "方剂", "草药", "推拿", "拔罐",
-        "艾灸", "刮痧", "脉诊", "舌诊", "望闻问切",
-        "伤寒", "金匮", "黄帝内经", "难经", "神农",
-        "本草", "治病", "调理", "养生", "保健"
+        "中医",
+        "中药",
+        "针灸",
+        "经络",
+        "穴位",
+        "阴阳",
+        "五行",
+        "气血",
+        "脏腑",
+        "辨证",
+        "论治",
+        "方剂",
+        "草药",
+        "推拿",
+        "拔罐",
+        "艾灸",
+        "刮痧",
+        "脉诊",
+        "舌诊",
+        "望闻问切",
+        "伤寒",
+        "金匮",
+        "黄帝内经",
+        "难经",
+        "神农",
+        "本草",
+        "治病",
+        "调理",
+        "养生",
+        "保健",
     ]
 
-    CATEGORIES = [
-        "基础理论", "诊断方法", "治疗技术",
-        "中药方剂", "经络穴位", "预防保健"
-    ]
+    CATEGORIES = ["基础理论", "诊断方法", "治疗技术", "中药方剂", "经络穴位", "预防保健"]
 
     def __init__(self, db_pool=None):
         config = DomainConfig(
@@ -38,7 +59,7 @@ class TcmDomain(BaseDomain):
             enabled=True,
             priority=9,
             categories=self.CATEGORIES,
-            keywords=self.KEYWORDS
+            keywords=self.KEYWORDS,
         )
         super().__init__(config)
         self._db_pool = db_pool
@@ -51,12 +72,7 @@ class TcmDomain(BaseDomain):
         """关闭中医领域"""
         logger.info("关闭中医领域")
 
-    async def query(
-        self,
-        question: str,
-        context: Optional[str] = None,
-        **kwargs
-    ) -> QueryResult:
+    async def query(self, question: str, context: Optional[str] = None, **kwargs) -> QueryResult:
         """执行中医领域查询"""
         self._stats.query_count += 1
         sources = await self.search(question, top_k=3)
@@ -76,15 +92,10 @@ class TcmDomain(BaseDomain):
             sources=sources,
             confidence=confidence,
             domain=self.name,
-            metadata={"domain_type": "中医"}
+            metadata={"domain_type": "中医"},
         )
 
-    async def search(
-        self,
-        query: str,
-        top_k: int = 10,
-        **kwargs
-    ) -> List[Dict[str, Any]]:
+    async def search(self, query: str, top_k: int = 10, **kwargs) -> List[Dict[str, Any]]:
         """搜索中医文档"""
         if not self._db_pool:
             return []
@@ -97,7 +108,8 @@ class TcmDomain(BaseDomain):
                    WHERE category = '中医'
                    AND (title ILIKE $1 OR content ILIKE $1)
                    LIMIT $2""",
-                search_pattern, top_k
+                search_pattern,
+                top_k,
             )
             return [dict(row) for row in rows]
         except Exception as e:

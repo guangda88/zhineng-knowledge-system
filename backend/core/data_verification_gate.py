@@ -2,10 +2,11 @@
 数据验证门禁
 验证报告和决策的数据来源
 """
+
 import logging
 import os
 import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class DataVerificationGate:
             "runtime_test",
             "metrics",
             "user_feedback",
-            "manual_review"
+            "manual_review",
         ]
 
         # 日志文件路径
@@ -177,11 +178,7 @@ class DataVerificationGate:
         if "verified" not in metadata:
             warnings.append("建议提供 verified 字段，说明是否已二次验证")
 
-        return {
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "warnings": warnings
-        }
+        return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
     def get_valid_data_sources(self) -> list:
         """获取有效的数据来源列表"""

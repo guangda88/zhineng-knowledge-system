@@ -4,9 +4,7 @@
 """
 
 import asyncio
-import functools
 import hashlib
-import inspect
 import json
 import logging
 from enum import Enum
@@ -20,7 +18,6 @@ from typing import (
     Optional,
     ParamSpec,
     TypeVar,
-    Union,
 )
 
 from .manager import CacheManager
@@ -463,7 +460,7 @@ def memoize_async(ttl: Optional[int] = None, max_size: int = 128):
             # 检查缓存
             if key in cache:
                 value, expiry = cache[key]
-                if ttl is None or expiry > asyncio.get_event_loop().time():
+                if ttl is None or expiry > asyncio.get_running_loop().time():
                     return value
                 else:
                     del cache[key]
@@ -688,7 +685,7 @@ def rate_limit(
 
                 raise HTTPException(
                     status_code=429,
-                    detail=f"Rate limit exceeded. Try again later.",
+                    detail="Rate limit exceeded. Try again later.",
                 )
 
             return await func(*args, **kwargs)

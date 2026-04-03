@@ -3,18 +3,16 @@
 实现基于知识图谱的增强检索和推理
 """
 
-import time
-import re
-import json
 import asyncio
-from typing import List, Dict, Any, Optional, Set, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict
 import logging
+import re
+import time
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
-from .base import BaseReasoner, ReasoningResult, ReasoningStep, QueryType
+from .base import BaseReasoner, ReasoningResult, ReasoningStep
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +33,7 @@ class Entity:
             "name": self.name,
             "type": self.type,
             "description": self.description,
-            "aliases": self.aliases
+            "aliases": self.aliases,
         }
 
 
@@ -53,7 +51,7 @@ class Relation:
             "source": self.source,
             "target": self.target,
             "relation_type": self.relation_type,
-            "weight": self.weight
+            "weight": self.weight,
         }
 
 
@@ -86,12 +84,7 @@ class KnowledgeGraph:
                 neighbors.append((rel.source, rel.relation_type, rel.weight))
         return neighbors
 
-    def find_path(
-        self,
-        start: str,
-        end: str,
-        max_depth: int = 3
-    ) -> Optional[List[str]]:
+    def find_path(self, start: str, end: str, max_depth: int = 3) -> Optional[List[str]]:
         """查找两个实体间的路径（BFS）
 
         Args:
@@ -132,7 +125,7 @@ class KnowledgeGraph:
         """转换为字典（用于可视化）"""
         return {
             "entities": [e.to_dict() for e in self.entities.values()],
-            "relations": [r.to_dict() for r in self.relations]
+            "relations": [r.to_dict() for r in self.relations],
         }
 
 
@@ -148,7 +141,7 @@ class EntityExtractor:
         "穴位": r"(百会|膻中|气海|关元|命门|涌泉|足三里|合谷|太冲)",
         "概念": r"(气|丹田|经络|气血|阴阳|虚实|寒热|表里)",
         "动作": r"(站桩|打坐|吐纳|导引|行气|采气|发气)",
-        "脏腑": r"(心|肝|脾|肺|肾|胃|胆|膀胱|三焦)"
+        "脏腑": r"(心|肝|脾|肺|肾|胃|胆|膀胱|三焦)",
     }
 
     def __init__(self):
@@ -171,20 +164,14 @@ class EntityExtractor:
                 name = match.group()
                 # 检查是否已存在
                 if not any(e.name == name for e in entities):
-                    entities.append(Entity(
-                        id=f"entity_{self.entity_id_counter}",
-                        name=name,
-                        type=entity_type
-                    ))
+                    entities.append(
+                        Entity(id=f"entity_{self.entity_id_counter}", name=name, type=entity_type)
+                    )
                     self.entity_id_counter += 1
 
         return entities
 
-    def extract_relations(
-        self,
-        text: str,
-        entities: List[Entity]
-    ) -> List[Relation]:
+    def extract_relations(self, text: str, entities: List[Entity]) -> List[Relation]:
         """从文本中抽取关系
 
         Args:
@@ -199,18 +186,20 @@ class EntityExtractor:
         # 简单关系抽取：共现
         entity_names = [e.name for e in entities]
         for i, name1 in enumerate(entity_names):
-            for name2 in entity_names[i + 1:]:
+            for name2 in entity_names[i + 1 :]:
                 # 检查两个实体是否在短距离内共现
                 pattern = f"{name1}.{{0,50}}{name2}|{name2}.{{0,50}}{name1}"
                 if re.search(pattern, text):
                     # 推断关系类型
                     rel_type = self._infer_relation_type(name1, name2)
-                    relations.append(Relation(
-                        source=f"entity_{i}",
-                        target=f"entity_{entity_names.index(name2)}",
-                        relation_type=rel_type,
-                        weight=1.0
-                    ))
+                    relations.append(
+                        Relation(
+                            source=f"entity_{i}",
+                            target=f"entity_{entity_names.index(name2)}",
+                            relation_type=rel_type,
+                            weight=1.0,
+                        )
+                    )
 
         return relations
 
@@ -241,7 +230,7 @@ class GraphRAGReasoner(BaseReasoner):
                 if self._http_client is None:
                     self._http_client = httpx.AsyncClient(
                         timeout=60.0,
-                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
                     )
         return self._http_client
 
@@ -258,10 +247,7 @@ class GraphRAGReasoner(BaseReasoner):
         await self.close()
 
     async def reason(
-        self,
-        question: str,
-        context: Optional[List[Dict[str, Any]]] = None,
-        **kwargs
+        self, question: str, context: Optional[List[Dict[str, Any]]] = None, **kwargs
     ) -> ReasoningResult:
         """执行GraphRAG推理
 
@@ -289,17 +275,11 @@ class GraphRAGReasoner(BaseReasoner):
         subgraph = self._extract_relevant_subgraph(question_entities)
 
         # 执行多跳推理
-        reasoning_steps = self._perform_multi_hop_reasoning(
-            question_entities,
-            subgraph
-        )
+        reasoning_steps = self._perform_multi_hop_reasoning(question_entities, subgraph)
 
         # 生成答案
         answer = await self._generate_graph_answer(
-            question,
-            question_entities,
-            subgraph,
-            reasoning_steps
+            question, question_entities, subgraph, reasoning_steps
         )
 
         reasoning_time = time.time() - start_time
@@ -307,20 +287,17 @@ class GraphRAGReasoner(BaseReasoner):
         return ReasoningResult(
             answer=answer,
             query_type=query_type,
-            steps=[ReasoningStep(
-                step_number=i + 1,
-                content=step
-            ) for i, step in enumerate(reasoning_steps)],
+            steps=[
+                ReasoningStep(step_number=i + 1, content=step)
+                for i, step in enumerate(reasoning_steps)
+            ],
             sources=context or [],
             confidence=self._calculate_confidence(subgraph, question_entities),
             reasoning_time=reasoning_time,
-            model_used=f"{self.model_name}+GraphRAG"
+            model_used=f"{self.model_name}+GraphRAG",
         )
 
-    async def _build_kg_from_context(
-        self,
-        context: List[Dict[str, Any]]
-    ) -> None:
+    async def _build_kg_from_context(self, context: List[Dict[str, Any]]) -> None:
         """从上下文构建知识图谱
 
         Args:
@@ -339,8 +316,7 @@ class GraphRAGReasoner(BaseReasoner):
             for entity in entities:
                 # 检查实体是否已存在
                 existing = next(
-                    (e for e in self.kg.entities.values() if e.name == entity.name),
-                    None
+                    (e for e in self.kg.entities.values() if e.name == entity.name), None
                 )
                 if existing:
                     entity.id = existing.id
@@ -350,10 +326,7 @@ class GraphRAGReasoner(BaseReasoner):
             for relation in relations:
                 self.kg.add_relation(relation)
 
-    def _extract_relevant_subgraph(
-        self,
-        query_entities: List[Entity]
-    ) -> Dict[str, Any]:
+    def _extract_relevant_subgraph(self, query_entities: List[Entity]) -> Dict[str, Any]:
         """提取相关的子图
 
         Args:
@@ -362,10 +335,7 @@ class GraphRAGReasoner(BaseReasoner):
         Returns:
             子图数据
         """
-        subgraph = {
-            "entities": {},
-            "relations": []
-        }
+        subgraph = {"entities": {}, "relations": []}
 
         # 找到查询实体在KG中的对应节点
         query_entity_ids = []
@@ -384,8 +354,7 @@ class GraphRAGReasoner(BaseReasoner):
                 if neighbor_id not in visited:
                     visited.add(neighbor_id)
                     subgraph["entities"][neighbor_id] = self.kg.entities.get(
-                        neighbor_id,
-                        Entity(id=neighbor_id, name=neighbor_id, type="unknown")
+                        neighbor_id, Entity(id=neighbor_id, name=neighbor_id, type="unknown")
                     )
 
         # 获取相关关系
@@ -397,9 +366,7 @@ class GraphRAGReasoner(BaseReasoner):
         return subgraph
 
     def _perform_multi_hop_reasoning(
-        self,
-        query_entities: List[Entity],
-        subgraph: Dict[str, Any]
+        self, query_entities: List[Entity], subgraph: Dict[str, Any]
     ) -> List[str]:
         """执行多跳推理
 
@@ -421,19 +388,26 @@ class GraphRAGReasoner(BaseReasoner):
                 path = self.kg.find_path(entity_ids[0], entity_ids[1], max_depth=3)
 
                 if path:
-                    steps.append(f"发现实体间路径: {' → '.join([self.kg.entities.get(pid, pid).name if isinstance(pid, str) else pid for pid in path])}")
+                    steps.append(
+                        f"发现实体间路径: {' → '.join([self.kg.entities.get(pid, pid).name if isinstance(pid, str) else pid for pid in path])}"
+                    )
 
                     # 分析路径上的关系
                     for i in range(len(path) - 1):
                         for rel in subgraph["relations"]:
                             if rel.source == path[i] and rel.target == path[i + 1]:
-                                steps.append(f"关系: {self.kg.entities.get(rel.source, rel.source).name} --[{rel.relation_type}]--> {self.kg.entities.get(rel.target, rel.target).name}")
+                                steps.append(
+                                    f"关系: {self.kg.entities.get(rel.source, rel.source).name} --[{rel.relation_type}]--> {self.kg.entities.get(rel.target, rel.target).name}"
+                                )
                                 break
 
         # 添加相关实体信息
         if len(subgraph["entities"]) > len(query_entities):
-            related = [e.name for e in subgraph["entities"].values()
-                      if e.name not in [qe.name for qe in query_entities]]
+            related = [
+                e.name
+                for e in subgraph["entities"].values()
+                if e.name not in [qe.name for qe in query_entities]
+            ]
             if related:
                 steps.append(f"相关实体: {', '.join(related[:5])}")
 
@@ -444,7 +418,7 @@ class GraphRAGReasoner(BaseReasoner):
         question: str,
         query_entities: List[Entity],
         subgraph: Dict[str, Any],
-        reasoning_steps: List[str]
+        reasoning_steps: List[str],
     ) -> str:
         """生成基于图谱的答案
 
@@ -468,7 +442,7 @@ class GraphRAGReasoner(BaseReasoner):
 识别的实体：{', '.join([e.name for e in query_entities])}
 
 推理过程：
-{chr(10).join([f'{i+1}. {step}' for i, step in enumerate(reasoning_steps)])}
+{chr(10).join([f'{i + 1}. {step}' for i, step in enumerate(reasoning_steps)])}
 
 请给出详细的答案：
 """
@@ -480,17 +454,11 @@ class GraphRAGReasoner(BaseReasoner):
 
                 response = await self.llm_client.call_api(
                     messages=[
-                        {
-                            "role": "system",
-                            "content": "你是一个基于知识图谱的推理助手。"
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
+                        {"role": "system", "content": "你是一个基于知识图谱的推理助手。"},
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=0.7,
-                    max_tokens=1500
+                    max_tokens=1500,
                 )
                 return response["choices"][0]["message"]["content"]
 
@@ -510,23 +478,17 @@ class GraphRAGReasoner(BaseReasoner):
                     self.api_url or "https://api.deepseek.com/v1/chat/completions",
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": self.model_name,
                         "messages": [
-                            {
-                                "role": "system",
-                                "content": "你是一个基于知识图谱的推理助手。"
-                            },
-                            {
-                                "role": "user",
-                                "content": prompt
-                            }
+                            {"role": "system", "content": "你是一个基于知识图谱的推理助手。"},
+                            {"role": "user", "content": prompt},
                         ],
                         "temperature": 0.7,
-                        "max_tokens": 1500
-                    }
+                        "max_tokens": 1500,
+                    },
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -537,7 +499,7 @@ class GraphRAGReasoner(BaseReasoner):
         # 模拟答案
         answer = f"""基于知识图谱的分析：
 
-{chr(10).join([f'{i+1}. {step}' for i, step in enumerate(reasoning_steps)])}
+{chr(10).join([f'{i + 1}. {step}' for i, step in enumerate(reasoning_steps)])}
 
 结论：
 通过图谱推理，发现{' → '.join([e.name for e in query_entities[:3]])}之间存在关联关系。
@@ -546,9 +508,7 @@ class GraphRAGReasoner(BaseReasoner):
         return answer
 
     def _calculate_confidence(
-        self,
-        subgraph: Dict[str, Any],
-        query_entities: List[Entity]
+        self, subgraph: Dict[str, Any], query_entities: List[Entity]
     ) -> float:
         """计算置信度"""
         entity_coverage = len([e for e in query_entities if e.id in subgraph["entities"]])

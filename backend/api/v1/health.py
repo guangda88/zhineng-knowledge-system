@@ -2,15 +2,14 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from core.database import init_db_pool
-from fastapi import APIRouter, Query, Response, Depends
+from fastapi import APIRouter, Depends, Response
 
+from backend.core.database import init_db_pool
 from backend.core.dependency_injection import require_admin_api_key
-
-from domains import get_registry
-from monitoring import get_health_checker
+from backend.domains import get_registry
+from backend.monitoring import get_health_checker
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ router = APIRouter(tags=["health"])
 @router.get("/")
 async def root() -> Dict[str, Any]:
     """根路径 - 系统信息"""
-    from core.request_stats import get_request_stats
+    from backend.core.request_stats import get_request_stats
 
     request_stats = get_request_stats()
 

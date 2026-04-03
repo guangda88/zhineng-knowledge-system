@@ -49,6 +49,10 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+markers = [
+    "integration: integration tests (require DB/external services)",
+    "slow: slow-running tests",
+]
 
 [tool.coverage.run]
 source = ["backend"]

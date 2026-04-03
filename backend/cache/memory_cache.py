@@ -4,10 +4,10 @@
 """
 
 import asyncio
-import time
-from typing import Any, Dict, Optional
-from collections import OrderedDict
 import logging
+import time
+from collections import OrderedDict
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +62,7 @@ class MemoryCache:
 
         return value
 
-    async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: Optional[int] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """设置缓存值
 
         Args:
@@ -107,10 +102,7 @@ class MemoryCache:
         """
         import fnmatch
 
-        keys_to_delete = [
-            key for key in self._cache
-            if fnmatch.fnmatch(key, pattern)
-        ]
+        keys_to_delete = [key for key in self._cache if fnmatch.fnmatch(key, pattern)]
 
         for key in keys_to_delete:
             del self._cache[key]
@@ -123,7 +115,8 @@ class MemoryCache:
         """清理过期条目"""
         current_time = time.time()
         expired_keys = [
-            key for key, (_, expiry) in self._cache.items()
+            key
+            for key, (_, expiry) in self._cache.items()
             if expiry is not None and current_time > expiry
         ]
 
@@ -142,5 +135,5 @@ class MemoryCache:
             "type": "memory",
             "size": len(self._cache),
             "max_size": self._max_size,
-            "default_ttl": self._default_ttl
+            "default_ttl": self._default_ttl,
         }

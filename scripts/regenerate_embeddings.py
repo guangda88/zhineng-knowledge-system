@@ -1,28 +1,54 @@
-"""Regenerate all embeddings using BGE-small-zh-v1.5 model."""
+"""Regenerate embeddings for documents/textbook_blocks via the local embedding service.
+
+Usage:
+    python scripts/regenerate_embeddings.py [--batch-size 32] [--limit 0]
+
+The embedding service must be running at localhost:8001 (zhineng-embedding container).
+"""
+import argparse
 import asyncio
 import logging
 import os
 import sys
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HUB_OFFLINE"] = "1"
+import asyncpg
+import httpx
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 64
+EMBEDDING_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
+MAX_TEXT_LENGTH = 8192
+
+TABLES = [
+    {"name": "documents", "text_columns": ["title", "content"], "label": "documents"},
+    {"name": "textbook_blocks", "text_columns": ["content"], "label": "textbook_blocks"},
+    {"name": "textbook_blocks_v2", "text_columns": ["content"], "label": "textbook_blocks_v2"},
+]
 
 
-async def regenerate_table(pool, model, table: str, text_columns: list[str], label: str):
-    """Regenerate embeddings for a single table."""
-    loop = asyncio.get_event_loop()
+async def fetch_embeddings(client: httpx.AsyncClient, texts: list[str]) -> list[list[float]]:
+    resp = await client.post(
+        f"{EMBEDDING_URL}/embed_batch",
+        json={"texts": texts},
+        timeout=120.0,
+    )
+    resp.raise_for_status()
+    return resp.json()["embeddings"]
 
-    async with pool.acquire() as conn:
-        total = await conn.fetchval(
-            f"SELECT count(*) FROM {table} WHERE embedding IS NULL"
-        )
+
+async def regenerate_table(pool, client: httpx.AsyncClient, table: dict, batch_size: int, limit: int):
+    table_name = table["name"]
+    text_cols = table["text_columns"]
+    label = table["label"]
+    col_expr = ", ".join(text_cols)
+
+    total = await pool.fetchval(
+        f"SELECT count(*) FROM {table_name} WHERE embedding IS NULL"
+    )
+    if limit > 0:
+        total = min(total, limit)
 
     if total == 0:
         logger.info(f"[{label}] No rows to update")
@@ -31,62 +57,68 @@ async def regenerate_table(pool, model, table: str, text_columns: list[str], lab
     logger.info(f"[{label}] Processing {total} rows...")
     updated = 0
     failed = 0
+    t0 = time.time()
 
     while True:
-        async with pool.acquire() as conn:
-            rows = await conn.fetch(
-                f"SELECT id, {', '.join(text_columns)} FROM {table} "
-                f"WHERE embedding IS NULL ORDER BY id LIMIT {BATCH_SIZE}"
-            )
-
+        rows = await pool.fetch(
+            f"SELECT id, {col_expr} FROM {table_name} "
+            f"WHERE embedding IS NULL ORDER BY id LIMIT {batch_size}"
+        )
         if not rows:
             break
 
         texts = []
         for row in rows:
-            parts = [str(row[c]) for c in text_columns if row[c]]
-            texts.append("\n".join(parts)[:512])
+            parts = [str(row[c]) for c in text_cols if row[c]]
+            texts.append("\n".join(parts)[:MAX_TEXT_LENGTH])
 
         try:
-            embeddings = await loop.run_in_executor(
-                None,
-                lambda: model.encode(texts, normalize_embeddings=True, batch_size=BATCH_SIZE).tolist(),
-            )
+            embeddings = await fetch_embeddings(client, texts)
 
             async with pool.acquire() as conn:
-                for row, embedding in zip(rows, embeddings):
-                    try:
-                        vector_str = "[" + ",".join(map(str, embedding)) + "]"
+                async with conn.transaction():
+                    for row, emb in zip(rows, embeddings):
+                        vector_str = "[" + ",".join(map(str, emb)) + "]"
                         await conn.execute(
-                            f"UPDATE {table} SET embedding = $1::vector WHERE id = $2",
-                            vector_str, row["id"],
+                            f"UPDATE {table_name} SET embedding = $1::vector WHERE id = $2",
+                            vector_str,
+                            row["id"],
                         )
-                        updated += 1
-                    except Exception as e:
-                        logger.error(f"[{label}] Update row {row['id']}: {e}")
-                        failed += 1
+            updated += len(rows)
+
         except Exception as e:
-            logger.error(f"[{label}] Batch embed failed: {e}")
+            logger.error(f"[{label}] Batch failed: {e}")
             failed += len(rows)
 
-        if updated % 500 < BATCH_SIZE:
-            logger.info(f"[{label}] Progress: {updated}/{total} ({failed} failed)")
+        if updated % 500 < batch_size:
+            elapsed = time.time() - t0
+            rate = updated / elapsed if elapsed > 0 else 0
+            eta = (total - updated) / rate if rate > 0 else 0
+            logger.info(
+                f"[{label}] Progress: {updated}/{total} "
+                f"({updated * 100 // total}%) "
+                f"rate={rate:.1f}/s ETA={eta / 60:.1f}min failed={failed}"
+            )
 
-    logger.info(f"[{label}] Done: {updated} updated, {failed} failed")
+        if limit > 0 and updated >= limit:
+            break
+
+    elapsed = time.time() - t0
+    logger.info(f"[{label}] Done: {updated} updated, {failed} failed in {elapsed:.0f}s")
     return updated
 
 
 async def main():
-    import asyncpg
-    from sentence_transformers import SentenceTransformer
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--limit", type=int, default=0, help="Max rows per table (0=all)")
+    parser.add_argument("--tables", type=str, default="", help="Comma-separated table names to process")
+    args = parser.parse_args()
 
-    logger.info("Loading BGE-small-zh-v1.5 model...")
-    loop = asyncio.get_event_loop()
-    model = await loop.run_in_executor(
-        None,
-        lambda: SentenceTransformer("BAAI/bge-small-zh-v1.5", device="cpu"),
-    )
-    logger.info(f"Model loaded, dim={model.get_sentence_embedding_dimension()}")
+    target_tables = TABLES
+    if args.tables:
+        names = set(args.tables.split(","))
+        target_tables = [t for t in TABLES if t["name"] in names]
 
     db_url = os.getenv(
         "DATABASE_URL",
@@ -96,9 +128,9 @@ async def main():
 
     try:
         t0 = time.time()
-        await regenerate_table(pool, model, "documents", ["title", "content"], "documents")
-        await regenerate_table(pool, model, "textbook_blocks", ["content"], "textbook_blocks")
-        await regenerate_table(pool, model, "textbook_blocks_v2", ["content"], "textbook_blocks_v2")
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            for table in target_tables:
+                await regenerate_table(pool, client, table, args.batch_size, args.limit)
         elapsed = time.time() - t0
         logger.info(f"All done in {elapsed:.0f}s")
     finally:

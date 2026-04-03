@@ -999,3 +999,338 @@ footer a {
     font-size: 0.8rem;
     font-weight: 500;
 }
+
+/* ========== 国学经典页面 ========== */
+
+.guoxue-header,
+.sysbooks-header {
+    margin-bottom: 20px;
+}
+
+.guoxue-stats,
+.sysbooks-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.stat-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: 16px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.stat-badge.error {
+    background: #fff3f3;
+    color: var(--error-color);
+}
+
+.guoxue-content-area {
+    display: flex;
+    gap: 20px;
+    min-height: 500px;
+}
+
+.guoxue-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-height: 700px;
+    overflow-y: auto;
+}
+
+.guoxue-sidebar h3 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+.book-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.guoxue-book-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.9rem;
+}
+
+.guoxue-book-item:hover {
+    background: var(--bg-color);
+}
+
+.guoxue-book-item.active {
+    background: #e3f2fd;
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+.guoxue-book-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+
+.guoxue-book-count {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    flex-shrink: 0;
+}
+
+.guoxue-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.guoxue-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.guoxue-results-header h3 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.guoxue-chapter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.guoxue-chapter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.guoxue-chapter-item:hover {
+    background: #f0f7ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.chapter-label {
+    font-weight: 500;
+}
+
+.chapter-length {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.guoxue-search-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.guoxue-search-item {
+    padding: 14px 18px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.guoxue-search-item:hover {
+    background: #f0f7ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.guoxue-search-meta {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.book-label {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.guoxue-search-preview {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-height: 4.8em;
+    overflow: hidden;
+}
+
+.guoxue-content-body {
+    padding: 20px 0;
+    line-height: 2;
+    font-size: 1.05rem;
+    white-space: pre-wrap;
+}
+
+/* ========== 模态框 (共享) ========== */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    overflow-y: auto;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-overlay .modal-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: modalFadeIn 0.3s;
+    position: relative;
+}
+
+.modal-overlay .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-overlay .modal-close:hover {
+    color: var(--error-color);
+}
+
+.modal-overlay .modal-content h2 {
+    color: var(--primary-color);
+    margin-bottom: 16px;
+    padding-right: 30px;
+}
+
+/* ========== 书目检索页面 ========== */
+
+.sysbooks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sysbook-item {
+    padding: 14px 18px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sysbook-item:hover {
+    background: #f0f7ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.sysbook-name {
+    font-weight: 500;
+    margin-bottom: 6px;
+    word-break: break-all;
+}
+
+.sysbook-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.sysbook-detail-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detail-row {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bg-color);
+}
+
+.detail-label {
+    width: 80px;
+    flex-shrink: 0;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.detail-value {
+    flex: 1;
+    word-break: break-all;
+}
+
+/* ========== 响应式补充 ========== */
+
+@media (max-width: 768px) {
+    .guoxue-content-area {
+        flex-direction: column;
+    }
+
+    .guoxue-sidebar {
+        width: 100%;
+        max-height: 250px;
+    }
+
+    .guoxue-stats,
+    .sysbooks-stats {
+        justify-content: center;
+    }
+}

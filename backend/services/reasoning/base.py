@@ -7,8 +7,8 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class ReasoningStep:
             "content": self.content,
             "thought": self.thought,
             "action": self.action,
-            "observation": self.observation
+            "observation": self.observation,
         }
 
 
@@ -66,7 +66,7 @@ class ReasoningResult:
             "confidence": self.confidence,
             "reasoning_time": self.reasoning_time,
             "model_used": self.model_used,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
 
@@ -88,9 +88,9 @@ class BaseReasoner(ABC):
         self.llm_client = None
         try:
             from backend.common.llm_api_wrapper import get_llm_client
+
             self.llm_client = get_llm_client(
-                api_key=api_key or self._get_default_api_key(),
-                api_url=api_url
+                api_key=api_key or self._get_default_api_key(), api_url=api_url
             )
             logger.info("LLM client initialized with rate limiting")
         except Exception as e:
@@ -99,14 +99,12 @@ class BaseReasoner(ABC):
     def _get_default_api_key(self) -> str:
         """获取默认API密钥"""
         import os
+
         return os.getenv("DEEPSEEK_API_KEY", "")
 
     @abstractmethod
     async def reason(
-        self,
-        question: str,
-        context: Optional[List[Dict[str, Any]]] = None,
-        **kwargs
+        self, question: str, context: Optional[List[Dict[str, Any]]] = None, **kwargs
     ) -> ReasoningResult:
         """执行推理
 
@@ -118,7 +116,6 @@ class BaseReasoner(ABC):
         Returns:
             推理结果
         """
-        pass
 
     def analyze_query(self, question: str) -> QueryType:
         """分析问题类型
@@ -129,24 +126,46 @@ class BaseReasoner(ABC):
         Returns:
             问题类型
         """
-        question_lower = question.lower()
+        _question_lower = question.lower()  # noqa: F841
 
         # 多跳推理关键词
         multi_hop_keywords = [
-            "为什么", "怎么", "如何", "原因", "关系", "联系",
-            "影响", "导致", "因为", "所以"
+            "为什么",
+            "怎么",
+            "如何",
+            "原因",
+            "关系",
+            "联系",
+            "影响",
+            "导致",
+            "因为",
+            "所以",
         ]
 
         # 对比分析关键词
         comparison_keywords = [
-            "区别", "差异", "比较", "对比", "相同", "不同",
-            "优劣", "优缺点", "和...的区别"
+            "区别",
+            "差异",
+            "比较",
+            "对比",
+            "相同",
+            "不同",
+            "优劣",
+            "优缺点",
+            "和...的区别",
         ]
 
         # 解释说明关键词
         explanation_keywords = [
-            "解释", "说明", "阐述", "描述", "介绍",
-            "是什么", "什么是", "原理", "机制"
+            "解释",
+            "说明",
+            "阐述",
+            "描述",
+            "介绍",
+            "是什么",
+            "什么是",
+            "原理",
+            "机制",
         ]
 
         # 检查关键词
@@ -165,10 +184,7 @@ class BaseReasoner(ABC):
 
         return QueryType.FACTUAL
 
-    def format_context(
-        self,
-        context: List[Dict[str, Any]]
-    ) -> str:
+    def format_context(self, context: List[Dict[str, Any]]) -> str:
         """格式化上下文
 
         Args:

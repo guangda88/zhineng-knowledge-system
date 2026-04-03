@@ -7,15 +7,14 @@ Import direction: database imports from config only.
 It must NOT import from services, api, or higher-level core modules.
 """
 
+import asyncio
 import logging
 import os
-import threading
 from typing import Optional
 
 import asyncpg
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, Integer, String, Text
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +25,9 @@ db_pool: Optional[asyncpg.Pool] = None
 async_engine = None
 async_session_factory = None
 
-# 线程安全锁
-_db_pool_lock = threading.Lock()
-_engine_lock = threading.Lock()
+# 异步安全锁
+_db_pool_lock = asyncio.Lock()
+_engine_lock = asyncio.Lock()
 
 # SQLAlchemy 声明式基类
 Base = declarative_base()
@@ -39,7 +38,7 @@ async def init_db_pool() -> asyncpg.Pool:
     global db_pool
     if db_pool is not None:
         return db_pool
-    with _db_pool_lock:
+    async with _db_pool_lock:
         if db_pool is not None:
             return db_pool
         database_url = os.getenv("DATABASE_URL")
@@ -50,8 +49,9 @@ async def init_db_pool() -> asyncpg.Pool:
             )
         try:
             from backend.config import get_config
+
             config = get_config()
-            max_size = getattr(config, 'DB_MAX_CONNECTIONS', 50) or 50
+            max_size = getattr(config, "DB_MAX_CONNECTIONS", 50) or 50
             min_size = max(2, max_size // 5)
         except (ImportError, AttributeError, ValueError, TypeError):
             max_size = 50
@@ -60,20 +60,28 @@ async def init_db_pool() -> asyncpg.Pool:
             database_url,
             min_size=min_size,
             max_size=max_size,
-            command_timeout=30,
-            max_inactive_connection_lifetime=300
+            command_timeout=10,
+            timeout=5,
+            max_inactive_connection_lifetime=300,
         )
-        logger.info(f"Database pool initialized (min={min_size}, max={max_size})")
+        logger.info(
+            f"Database pool initialized (min={min_size}, max={max_size}, "
+            f"command_timeout=10s, timeout=5s)"
+        )
     return db_pool
 
 
 async def close_db_pool() -> None:
     """关闭数据库连接池"""
     global db_pool
-    if db_pool:
-        await db_pool.close()
+    try:
+        if db_pool:
+            await db_pool.close()
+            db_pool = None
+            logger.info("Database pool closed")
+    except Exception as e:
+        logger.error(f"关闭数据库连接池失败: {e}")
         db_pool = None
-        logger.info("Database pool closed")
 
 
 def get_db_pool() -> Optional[asyncpg.Pool]:
@@ -83,13 +91,14 @@ def get_db_pool() -> Optional[asyncpg.Pool]:
 
 # ============== SQLAlchemy ORM 支持 ==============
 
+
 async def init_async_engine():
     """初始化 SQLAlchemy 异步引擎"""
     global async_engine, async_session_factory
 
     if async_engine is not None:
         return
-    with _engine_lock:
+    async with _engine_lock:
         if async_engine is not None:
             return
         database_url = os.getenv("DATABASE_URL")
@@ -103,17 +112,11 @@ async def init_async_engine():
             async_database_url = database_url
 
         async_engine = create_async_engine(
-            async_database_url,
-            echo=False,
-            pool_size=10,
-            max_overflow=20,
-            pool_pre_ping=True
+            async_database_url, echo=False, pool_size=10, max_overflow=20, pool_pre_ping=True
         )
 
         async_session_factory = sessionmaker(
-            async_engine,
-            class_=AsyncSession,
-            expire_on_commit=False
+            async_engine, class_=AsyncSession, expire_on_commit=False
         )
 
         logger.info("SQLAlchemy async engine initialized")
@@ -123,11 +126,16 @@ async def close_async_engine():
     """关闭 SQLAlchemy 异步引擎"""
     global async_engine, async_session_factory
 
-    if async_engine:
-        await async_engine.dispose()
+    try:
+        if async_engine:
+            await async_engine.dispose()
+            async_engine = None
+            async_session_factory = None
+            logger.info("SQLAlchemy async engine closed")
+    except Exception as e:
+        logger.error(f"关闭SQLAlchemy引擎失败: {e}")
         async_engine = None
         async_session_factory = None
-        logger.info("SQLAlchemy async engine closed")
 
 
 async def get_async_session() -> AsyncSession:

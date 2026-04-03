@@ -2,8 +2,9 @@
 规则修改检查器
 检查规则修改操作是否符合流程
 """
+
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class RulesChecker:
         self.required_fields = {
             "discussed": "规则修改前必须经过讨论（规则 4.4.1）",
             "data_source": "必须基于真实测量数据修改规则（规则 4.4.2）",
-            "consensus": "规则修改必须获得团队共识（规则 4.4.3）"
+            "consensus": "规则修改必须获得团队共识（规则 4.4.3）",
         }
 
         logger.info("RulesChecker initialized")
@@ -116,11 +117,7 @@ class RulesChecker:
         if "participants" not in action_data:
             warnings.append("建议提供 participants 字段，记录参与者")
 
-        return {
-            "valid": len(errors) == 0,
-            "errors": errors,
-            "warnings": warnings
-        }
+        return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
     def get_required_fields(self) -> Dict[str, str]:
         """获取必需字段及其说明"""

@@ -49,13 +49,12 @@ class TestDocumentsAPI:
     def test_api_v1_documents_list_empty(self, client):
         """测试文档列表端点"""
         response = client.get("/api/v1/documents?limit=10")
-        # 可能返回200、422（验证错误）或500（数据库未连接）
-        assert response.status_code in [200, 422, 500, 503]
+        assert response.status_code == 200 or response.status_code == 422
 
     def test_api_v1_documents_with_offset(self, client):
         """测试带偏移量的文档列表"""
         response = client.get("/api/v1/documents?limit=10&offset=0")
-        assert response.status_code in [200, 422, 500, 503]
+        assert response.status_code == 200 or response.status_code == 422
 
 
 class TestSearchAPI:
@@ -83,14 +82,15 @@ class TestReasoningAPI:
         # 应该返回422（验证错误）
         assert response.status_code == 422
 
-    def test_api_v1_reasoning_with_question(self, client):
+    def test_api_v1_reasoning_with_question(self, client, mock_llm_api):
         """测试带问题的推理请求"""
+        # 使用mock的LLM API
         response = client.post(
             "/api/v1/reason",
             json={"question": "什么是气功?", "mode": "cot"}
         )
-        # 可能返回200、503（服务不可用）或500
-        assert response.status_code in [200, 500, 503]
+        # 应该返回200或422
+        assert response.status_code in [200, 422, 503]
 
     def test_api_v1_reasoning_status(self, client):
         """测试推理状态端点"""

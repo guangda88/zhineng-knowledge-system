@@ -7,11 +7,10 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from .metrics import MetricsCollector, MetricType, get_metrics_collector
+from .metrics import MetricsCollector, get_metrics_collector
 
 logger = logging.getLogger(__name__)
 

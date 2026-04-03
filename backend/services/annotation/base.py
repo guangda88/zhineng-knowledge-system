@@ -2,17 +2,18 @@
 
 定义标注系统的通用接口
 """
-import asyncio
+
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class AnnotationStatus(Enum):
     """标注状态"""
+
     PENDING = "pending"  # 待标注
     IN_PROGRESS = "in_progress"  # 标注中
     COMPLETED = "completed"  # 已完成
@@ -22,6 +23,7 @@ class AnnotationStatus(Enum):
 
 class AnnotationType(Enum):
     """标注类型"""
+
     OCR = "ocr"  # OCR文本标注
     TRANSCRIPTION = "transcription"  # 语音转写标注
     VERIFICATION = "verification"  # 内容验证标注
@@ -30,6 +32,7 @@ class AnnotationType(Enum):
 @dataclass
 class AnnotationTask:
     """标注任务"""
+
     task_id: str
     annotation_type: AnnotationType
     original_text: str
@@ -53,6 +56,7 @@ class AnnotationTask:
 @dataclass
 class Correction:
     """校正记录"""
+
     position: int  # 字符位置
     original: str  # 原始文本
     corrected: str  # 校正后文本
@@ -68,10 +72,7 @@ class BaseAnnotator(ABC):
 
     @abstractmethod
     async def create_task(
-        self,
-        source_content: str,
-        source_path: str,
-        metadata: Dict[str, Any] = None
+        self, source_content: str, source_path: str, metadata: Dict[str, Any] = None
     ) -> AnnotationTask:
         """
         创建标注任务
@@ -84,15 +85,10 @@ class BaseAnnotator(ABC):
         Returns:
             AnnotationTask: 创建的标注任务
         """
-        pass
 
     @abstractmethod
     async def submit_correction(
-        self,
-        task_id: str,
-        corrected_text: str,
-        corrections: List[Correction],
-        annotator: str
+        self, task_id: str, corrected_text: str, corrections: List[Correction], annotator: str
     ) -> AnnotationTask:
         """
         提交校正
@@ -106,7 +102,6 @@ class BaseAnnotator(ABC):
         Returns:
             AnnotationTask: 更新后的任务
         """
-        pass
 
     @abstractmethod
     async def get_task(self, task_id: str) -> Optional[AnnotationTask]:
@@ -119,13 +114,9 @@ class BaseAnnotator(ABC):
         Returns:
             AnnotationTask: 标注任务，不存在则返回None
         """
-        pass
 
     @abstractmethod
-    async def list_pending_tasks(
-        self,
-        limit: int = 10
-    ) -> List[AnnotationTask]:
+    async def list_pending_tasks(self, limit: int = 10) -> List[AnnotationTask]:
         """
         列出待标注任务
 
@@ -135,13 +126,8 @@ class BaseAnnotator(ABC):
         Returns:
             List[AnnotationTask]: 待标注任务列表
         """
-        pass
 
-    def calculate_accuracy_improvement(
-        self,
-        original: str,
-        corrected: str
-    ) -> Dict[str, Any]:
+    def calculate_accuracy_improvement(self, original: str, corrected: str) -> Dict[str, Any]:
         """
         计算准确率提升
 
@@ -160,7 +146,9 @@ class BaseAnnotator(ABC):
             "cer_before": cer_before,
             "cer_after": cer_after,
             "cer_improvement": cer_before - cer_after,
-            "improvement_percentage": ((cer_before - cer_after) / cer_before * 100) if cer_before > 0 else 0
+            "improvement_percentage": (
+                ((cer_before - cer_after) / cer_before * 100) if cer_before > 0 else 0
+            ),
         }
 
         return improvement
@@ -191,5 +179,6 @@ class BaseAnnotator(ABC):
         """生成任务ID"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         import uuid
+
         unique_id = str(uuid.uuid4())[:8]
         return f"{self.__class__.__name__}_{timestamp}_{unique_id}"

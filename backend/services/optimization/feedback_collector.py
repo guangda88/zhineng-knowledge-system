@@ -2,13 +2,13 @@
 
 收集和分析用户反馈，识别优化机会
 """
-import asyncio
-import logging
-from typing import Dict, List, Any
-from datetime import datetime, timedelta
-from collections import Counter
 
-from .lingminopt import OptimizationOpportunity, OptimizationSource, OptimizationPriority
+import logging
+from collections import Counter
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+from .lingminopt import OptimizationOpportunity, OptimizationPriority, OptimizationSource
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class FeedbackCollector:
         feedback_type: str,
         content: str,
         rating: int = None,
-        metadata: Dict = None
+        metadata: Dict = None,
     ) -> str:
         """
         收集用户反馈
@@ -52,7 +52,7 @@ class FeedbackCollector:
             "rating": rating,
             "metadata": metadata or {},
             "created_at": datetime.now().isoformat(),
-            "status": "pending"
+            "status": "pending",
         }
 
         self.feedback_data.append(feedback)
@@ -89,7 +89,7 @@ class FeedbackCollector:
             "average_rating": avg_rating,
             "top_keywords": keywords[:10],
             "hot_issues": hot_issues,
-            "sentiment": self._analyze_sentiment(all_content)
+            "sentiment": self._analyze_sentiment(all_content),
         }
 
     async def identify_optportunities(self) -> List[OptimizationOpportunity]:
@@ -108,9 +108,7 @@ class FeedbackCollector:
 
         # 分析Bug反馈
         if "bug" in feedback_by_type:
-            bug_opportunities = await self._analyze_bug_feedbacks(
-                feedback_by_type["bug"]
-            )
+            bug_opportunities = await self._analyze_bug_feedbacks(feedback_by_type["bug"])
             opportunities.extend(bug_opportunities)
 
         # 分析功能请求
@@ -130,8 +128,7 @@ class FeedbackCollector:
         return opportunities
 
     async def _analyze_bug_feedbacks(
-        self,
-        bug_feedbacks: List[Dict]
+        self, bug_feedbacks: List[Dict]
     ) -> List[OptimizationOpportunity]:
         """分析Bug反馈"""
         opportunities = []
@@ -151,15 +148,14 @@ class FeedbackCollector:
                     current_state={"bug_reports": len(group)},
                     desired_state={"bug_reports": 0},
                     impact_estimate="影响用户体验",
-                    effort_estimate="medium"
+                    effort_estimate="medium",
                 )
                 opportunities.append(opportunity)
 
         return opportunities
 
     async def _analyze_feature_requests(
-        self,
-        feature_feedbacks: List[Dict]
+        self, feature_feedbacks: List[Dict]
     ) -> List[OptimizationOpportunity]:
         """分析功能请求"""
         opportunities = []
@@ -184,24 +180,20 @@ class FeedbackCollector:
                     current_state={"feature_requested": True},
                     desired_state={"feature_implemented": True},
                     impact_estimate="提升用户满意度",
-                    effort_estimate="high"
+                    effort_estimate="high",
                 )
                 opportunities.append(opportunity)
 
         return opportunities
 
     async def _analyze_improvement_suggestions(
-        self,
-        improvement_feedbacks: List[Dict]
+        self, improvement_feedbacks: List[Dict]
     ) -> List[OptimizationOpportunity]:
         """分析改进建议"""
         opportunities = []
 
         # 分析低评分反馈
-        low_rating_feedbacks = [
-            f for f in improvement_feedbacks
-            if f.get("rating", 5) <= 3
-        ]
+        low_rating_feedbacks = [f for f in improvement_feedbacks if f.get("rating", 5) <= 3]
 
         if len(low_rating_feedbacks) >= 5:
             opportunity = OptimizationOpportunity(
@@ -214,7 +206,7 @@ class FeedbackCollector:
                 current_state={"avg_rating": 3.0},
                 desired_state={"avg_rating": 4.5},
                 impact_estimate="显著提升满意度",
-                effort_estimate="medium"
+                effort_estimate="medium",
             )
             opportunities.append(opportunity)
 
@@ -227,10 +219,39 @@ class FeedbackCollector:
         from collections import Counter
 
         # 分词
-        words = re.findall(r'\w+', text.lower())
+        words = re.findall(r"\w+", text.lower())
 
         # 过滤停用词
-        stopwords = {'的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这'}
+        stopwords = {
+            "的",
+            "了",
+            "是",
+            "在",
+            "我",
+            "有",
+            "和",
+            "就",
+            "不",
+            "人",
+            "都",
+            "一",
+            "一个",
+            "上",
+            "也",
+            "很",
+            "到",
+            "说",
+            "要",
+            "去",
+            "你",
+            "会",
+            "着",
+            "没有",
+            "看",
+            "好",
+            "自己",
+            "这",
+        }
         words = [w for w in words if len(w) > 1 and w not in stopwords]
 
         # 统计词频
@@ -243,8 +264,7 @@ class FeedbackCollector:
         # 最近7天的反馈
         cutoff = datetime.now() - timedelta(days=7)
         recent_feedbacks = [
-            f for f in self.feedback_data
-            if datetime.fromisoformat(f["created_at"]) > cutoff
+            f for f in self.feedback_data if datetime.fromisoformat(f["created_at"]) > cutoff
         ]
 
         # 按内容相似度分组
@@ -253,18 +273,14 @@ class FeedbackCollector:
         hot_issues = []
         for group in groups[:5]:
             if len(group) >= 3:
-                hot_issues.append({
-                    "content": group[0]["content"],
-                    "count": len(group),
-                    "type": group[0]["type"]
-                })
+                hot_issues.append(
+                    {"content": group[0]["content"], "count": len(group), "type": group[0]["type"]}
+                )
 
         return hot_issues
 
     def _group_similar_feedbacks(
-        self,
-        feedbacks: List[Dict],
-        threshold: float = 0.7
+        self, feedbacks: List[Dict], threshold: float = 0.7
     ) -> List[List[Dict]]:
         """按相似度分组反馈"""
         # 简化实现：使用关键词重叠度
@@ -278,7 +294,7 @@ class FeedbackCollector:
             group = [feedback1]
             keywords1 = set(self._extract_keywords(feedback1["content"]))
 
-            for j, feedback2 in enumerate(feedbacks[i+1:], i+1):
+            for j, feedback2 in enumerate(feedbacks[i + 1 :], i + 1):
                 if j in used:
                     continue
 

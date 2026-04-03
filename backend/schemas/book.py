@@ -2,16 +2,20 @@
 
 定义请求和响应的数据模型
 """
-from pydantic import BaseModel, Field
+
 from typing import List, Optional
-from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class BookBase(BaseModel):
     """书籍基础模型"""
+
     title: str = Field(..., description="书籍标题")
     author: Optional[str] = Field(None, description="作者")
-    category: Optional[str] = Field(None, description="分类（气功/中医/儒家）")
+    category: Optional[str] = Field(
+        None, description="分类（气功/中医/儒家/佛家/道家/武术/哲学/科学/心理学）"
+    )
     dynasty: Optional[str] = Field(None, description="朝代")
     year: Optional[str] = Field(None, description="年代")
     description: Optional[str] = Field(None, description="简介")
@@ -19,6 +23,7 @@ class BookBase(BaseModel):
 
 class BookResponse(BookBase):
     """书籍响应模型"""
+
     id: int
     title: str
     author: Optional[str]
@@ -39,11 +44,13 @@ class BookResponse(BookBase):
 
 class BookDetailResponse(BookResponse):
     """书籍详情响应模型"""
+
     chapters: List[dict] = Field(default_factory=list, description="章节列表")
 
 
 class BookListItem(BaseModel):
     """书籍列表项"""
+
     id: int
     title: str
     author: Optional[str]
@@ -56,6 +63,7 @@ class BookListItem(BaseModel):
 
 class BookSearchResult(BaseModel):
     """搜索结果"""
+
     total: int = Field(..., description="总数量")
     page: int = Field(..., description="当前页码")
     size: int = Field(..., description="每页数量")
@@ -64,6 +72,7 @@ class BookSearchResult(BaseModel):
 
 class ContentSearchResult(BaseModel):
     """全文搜索结果"""
+
     id: int
     book_id: int
     book_title: str
@@ -75,6 +84,7 @@ class ContentSearchResult(BaseModel):
 
 class ContentSearchResponse(BaseModel):
     """全文搜索响应"""
+
     total: int
     page: int
     size: int
@@ -83,6 +93,7 @@ class ContentSearchResponse(BaseModel):
 
 class SimilarBookResponse(BaseModel):
     """相似书籍响应"""
+
     id: int
     title: str
     author: Optional[str]
@@ -93,6 +104,7 @@ class SimilarBookResponse(BaseModel):
 
 class ChapterResponse(BaseModel):
     """章节响应"""
+
     id: int
     book_id: int
     chapter_num: int
@@ -103,6 +115,7 @@ class ChapterResponse(BaseModel):
 
 class DataSourceResponse(BaseModel):
     """数据源响应"""
+
     id: int
     code: str
     name_zh: str
@@ -116,6 +129,7 @@ class DataSourceResponse(BaseModel):
 
 class FiltersResponse(BaseModel):
     """筛选选项响应"""
+
     categories: List[str]
     dynasties: List[str]
     languages: List[str]

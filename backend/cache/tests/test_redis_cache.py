@@ -5,8 +5,6 @@
 
 import asyncio
 import time
-from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -82,7 +80,7 @@ class TestRedisConnection:
 
         # 获取客户端会触发连接
         try:
-            client = await pool.get_client()
+            _client = await pool.get_client()  # noqa: F841
             assert pool.status == RedisStatus.CONNECTED
             await pool.close()
         except Exception as e:

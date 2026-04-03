@@ -2,13 +2,14 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from common import fetch_one_or_404, rows_to_list, search_documents
-from common.typing import JSONResponse
-from core.database import init_db_pool
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
+
+from backend.common import fetch_one_or_404, rows_to_list
+from backend.common.typing import JSONResponse
+from backend.core.database import init_db_pool
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,11 @@ class DocumentCreate(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=500, description="文档标题")
     content: str = Field(..., min_length=1, description="文档内容")
-    category: str = Field(..., pattern="^(气功|中医|儒家)$", description="文档分类")
+    category: str = Field(
+        ...,
+        pattern="^(气功|中医|儒家|佛家|道家|武术|哲学|科学|心理学)$",
+        description="文档分类",
+    )
     tags: List[str] = Field(default_factory=list, description="文档标签")
 
 

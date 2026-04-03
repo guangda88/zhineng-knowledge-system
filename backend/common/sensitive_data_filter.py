@@ -3,8 +3,8 @@
 防止敏感信息（密码、密钥、令牌等）被记录到日志中。
 """
 
-import re
 import logging
+import re
 from typing import Any, Dict, List, Set
 
 logger = logging.getLogger(__name__)
@@ -12,48 +12,62 @@ logger = logging.getLogger(__name__)
 # 敏感字段名称列表
 SENSITIVE_FIELDS: Set[str] = {
     # 密码相关
-    'password', 'passwd', 'pwd', 'pass',
-    'password_confirmation', 'new_password', 'old_password',
-
+    "password",
+    "passwd",
+    "pwd",
+    "pass",
+    "password_confirmation",
+    "new_password",
+    "old_password",
     # 认证相关
-    'api_key', 'apikey', 'api-key', 'access_token', 'refresh_token',
-    'secret', 'secret_key', 'secret_key_base', 'private_key',
-    'authorization', 'auth_token', 'session_token', 'csrf_token',
-
+    "api_key",
+    "apikey",
+    "api-key",
+    "access_token",
+    "refresh_token",
+    "secret",
+    "secret_key",
+    "secret_key_base",
+    "private_key",
+    "authorization",
+    "auth_token",
+    "session_token",
+    "csrf_token",
     # 个人信息
-    'credit_card', 'ssn', 'social_security', 'social_security_number',
-    'bank_account', 'account_number', 'routing_number',
-
+    "credit_card",
+    "ssn",
+    "social_security",
+    "social_security_number",
+    "bank_account",
+    "account_number",
+    "routing_number",
     # 其他敏感信息
-    'pin', 'otp', 'verification_code', 'reset_token',
+    "pin",
+    "otp",
+    "verification_code",
+    "reset_token",
 }
 
 # 敏感数据模式
 SENSITIVE_PATTERNS: List[tuple[str, str]] = [
     # JWT 令牌
-    (r'Bearer\s+[A-Za-z0-9\-._~+/]+=*', 'Bearer *****'),
-
+    (r"Bearer\s+[A-Za-z0-9\-._~+/]+=*", "Bearer *****"),
     # 邮箱地址
-    (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '***@***.***'),
-
+    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "***@***.***"),
     # IP 地址（可选，根据需求）
     # (r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '*.***.***'),
-
     # 电话号码（可选）
     # (r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b', '***-****'),
-
     # 信用卡号
-    (r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b', '****-****-****-****'),
-
+    (r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b", "****-****-****-****"),
     # JSON Web Token
-    (r'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*', 'eyJ***.*****.********'),
-
+    (r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*", "eyJ***.*****.********"),
     # API 密钥常见格式
-    (r'\b[A-Za-z0-9]{32,}\b', '***'),  # 32+ 字符的密钥
+    (r"\b[A-Za-z0-9]{32,}\b", "***"),  # 32+ 字符的密钥
 ]
 
 
-def filter_sensitive_data(data: Any, mask_char: str = '*') -> Any:
+def filter_sensitive_data(data: Any, mask_char: str = "*") -> Any:
     """过滤敏感数据
 
     Args:
@@ -76,7 +90,7 @@ def filter_sensitive_data(data: Any, mask_char: str = '*') -> Any:
         return data
 
 
-def _filter_string(text: str, mask_char: str = '*') -> str:
+def _filter_string(text: str, mask_char: str = "*") -> str:
     """过滤字符串中的敏感信息"""
     filtered_text = text
 
@@ -87,7 +101,7 @@ def _filter_string(text: str, mask_char: str = '*') -> str:
     return filtered_text
 
 
-def _filter_dict(data: Dict, mask_char: str = '*') -> Dict:
+def _filter_dict(data: Dict, mask_char: str = "*") -> Dict:
     """过滤字典中的敏感字段"""
     filtered = {}
 
@@ -111,7 +125,7 @@ def _filter_dict(data: Dict, mask_char: str = '*') -> Dict:
     return filtered
 
 
-def _filter_item(item: Any, mask_char: str = '*') -> Any:
+def _filter_item(item: Any, mask_char: str = "*") -> Any:
     """过滤单个数据项"""
     if isinstance(item, (str, dict, list, tuple)):
         return filter_sensitive_data(item, mask_char)
@@ -141,7 +155,7 @@ def _is_sensitive_field(field_name: str) -> bool:
 class SensitiveDataFilter(logging.Filter):
     """日志过滤器 - 自动过滤敏感数据"""
 
-    def __init__(self, mask_char: str = '*'):
+    def __init__(self, mask_char: str = "*"):
         super().__init__()
         self.mask_char = mask_char
 
@@ -153,17 +167,11 @@ class SensitiveDataFilter(logging.Filter):
 
         # 过滤参数
         if record.args:
-            record.args = tuple(
-                filter_sensitive_data(arg, self.mask_char)
-                for arg in record.args
-            )
+            record.args = tuple(filter_sensitive_data(arg, self.mask_char) for arg in record.args)
 
         # 过滤额外信息
-        if hasattr(record, 'extra_data'):
-            record.extra_data = filter_sensitive_data(
-                record.extra_data,
-                self.mask_char
-            )
+        if hasattr(record, "extra_data"):
+            record.extra_data = filter_sensitive_data(record.extra_data, self.mask_char)
 
         return True
 

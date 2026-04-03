@@ -5,8 +5,8 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class DomainType(Enum):
@@ -15,6 +15,12 @@ class DomainType(Enum):
     QIGONG = "气功"
     TCM = "中医"
     CONFUCIAN = "儒家"
+    BUDDHIST = "佛家"
+    DAOIST = "道家"
+    MARTIAL = "武术"
+    PHILOSOPHY = "哲学"
+    SCIENCE = "科学"
+    PSYCHOLOGY = "心理学"
     GENERAL = "通用"
 
 
@@ -47,7 +53,7 @@ class QueryResult:
             "sources": self.sources,
             "confidence": self.confidence,
             "domain": self.domain,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -103,7 +109,6 @@ class BaseDomain(ABC):
 
         在系统启动时调用
         """
-        pass
 
     @abstractmethod
     async def shutdown(self) -> None:
@@ -111,15 +116,9 @@ class BaseDomain(ABC):
 
         在系统关闭时调用
         """
-        pass
 
     @abstractmethod
-    async def query(
-        self,
-        question: str,
-        context: Optional[str] = None,
-        **kwargs
-    ) -> QueryResult:
+    async def query(self, question: str, context: Optional[str] = None, **kwargs) -> QueryResult:
         """执行领域查询
 
         Args:
@@ -130,15 +129,9 @@ class BaseDomain(ABC):
         Returns:
             查询结果
         """
-        pass
 
     @abstractmethod
-    async def search(
-        self,
-        query: str,
-        top_k: int = 10,
-        **kwargs
-    ) -> List[Dict[str, Any]]:
+    async def search(self, query: str, top_k: int = 10, **kwargs) -> List[Dict[str, Any]]:
         """搜索领域文档
 
         Args:
@@ -149,7 +142,6 @@ class BaseDomain(ABC):
         Returns:
             搜索结果列表
         """
-        pass
 
     async def health_check(self) -> Dict[str, Any]:
         """健康检查
@@ -161,7 +153,7 @@ class BaseDomain(ABC):
             "domain": self.name,
             "status": "healthy" if self.enabled else "disabled",
             "type": self.domain_type.value,
-            "priority": self.priority
+            "priority": self.priority,
         }
 
     def get_stats(self) -> DomainStats:
@@ -195,11 +187,7 @@ class BaseDomain(ABC):
 
         return min(score, 1.0)
 
-    async def batch_query(
-        self,
-        questions: List[str],
-        **kwargs
-    ) -> List[QueryResult]:
+    async def batch_query(self, questions: List[str], **kwargs) -> List[QueryResult]:
         """批量查询
 
         Args:

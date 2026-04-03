@@ -3,15 +3,15 @@
 实现 ReAct (Reasoning + Acting) 模式，让模型在推理过程中执行行动
 """
 
-import time
-import re
 import asyncio
-from typing import List, Dict, Any, Optional
 import logging
+import re
+import time
+from typing import Any, Dict, List, Optional
 
 import httpx
 
-from .base import BaseReasoner, ReasoningResult, ReasoningStep, QueryType
+from .base import BaseReasoner, ReasoningResult, ReasoningStep
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ReActReasoner(BaseReasoner):
                 if self._http_client is None:
                     self._http_client = httpx.AsyncClient(
                         timeout=60.0,
-                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
                     )
         return self._http_client
 
@@ -57,7 +57,7 @@ class ReActReasoner(BaseReasoner):
         context: Optional[List[Dict[str, Any]]] = None,
         tools: Optional[Dict[str, Any]] = None,
         max_iterations: int = 5,
-        **kwargs
+        **kwargs,
     ) -> ReasoningResult:
         """执行ReAct推理
 
@@ -89,17 +89,14 @@ class ReActReasoner(BaseReasoner):
         for iteration in range(max_iterations):
             # 构建提示词
             prompt = self._build_react_prompt(
-                question,
-                current_context,
-                available_tools,
-                iteration > 0
+                question, current_context, available_tools, iteration > 0
             )
 
             # 调用LLM获取下一步行动
             response = await self._call_llm(
                 prompt,
                 temperature=kwargs.get("temperature", 0.7),
-                max_tokens=kwargs.get("max_tokens", 1000)
+                max_tokens=kwargs.get("max_tokens", 1000),
             )
 
             # 解析响应
@@ -107,10 +104,7 @@ class ReActReasoner(BaseReasoner):
 
             # 创建推理步骤
             step = ReasoningStep(
-                step_number=iteration + 1,
-                content=thought or "",
-                action=action,
-                observation=None
+                step_number=iteration + 1, content=thought or "", action=action, observation=None
             )
             steps.append(step)
 
@@ -122,9 +116,7 @@ class ReActReasoner(BaseReasoner):
             # 执行行动
             if action and action in available_tools:
                 observation = await self._execute_tool(
-                    action,
-                    action_input,
-                    available_tools[action]
+                    action, action_input, available_tools[action]
                 )
                 step.observation = observation
                 current_context += f"执行 {action}: {action_input}\n观察: {observation}\n\n"
@@ -143,7 +135,7 @@ class ReActReasoner(BaseReasoner):
             sources=context or [],
             confidence=self._calculate_confidence(steps),
             reasoning_time=reasoning_time,
-            model_used=self.model_name
+            model_used=self.model_name,
         )
 
     def _default_tools(self, context: Optional[List[Dict[str, Any]]]) -> Dict[str, Any]:
@@ -163,8 +155,8 @@ class ReActReasoner(BaseReasoner):
                 results = [
                     f"- {doc.get('title', '')}: {doc.get('content', '')[:100]}..."
                     for doc in context[:3]
-                    if query.lower() in doc.get('content', '').lower() or
-                       query.lower() in doc.get('title', '').lower()
+                    if query.lower() in doc.get("content", "").lower()
+                    or query.lower() in doc.get("title", "").lower()
                 ]
                 return "\n".join(results) if results else "未找到相关内容"
             return "无可用上下文"
@@ -173,28 +165,18 @@ class ReActReasoner(BaseReasoner):
         async def knowledge_lookup(topic: str) -> str:
             if context:
                 for doc in context:
-                    if topic.lower() in doc.get('title', '').lower():
+                    if topic.lower() in doc.get("title", "").lower():
                         return f"{doc.get('title', '')}: {doc.get('content', '')[:200]}"
             return f"未找到关于'{topic}'的知识"
 
-        tools["search"] = {
-            "description": "在知识库中搜索相关信息",
-            "function": search_tool
-        }
+        tools["search"] = {"description": "在知识库中搜索相关信息", "function": search_tool}
 
-        tools["lookup"] = {
-            "description": "查找特定主题的知识",
-            "function": knowledge_lookup
-        }
+        tools["lookup"] = {"description": "查找特定主题的知识", "function": knowledge_lookup}
 
         return tools
 
     def _build_react_prompt(
-        self,
-        question: str,
-        context: str,
-        tools: Dict[str, Any],
-        has_history: bool
+        self, question: str, context: str, tools: Dict[str, Any], has_history: bool
     ) -> str:
         """构建ReAct提示词
 
@@ -207,10 +189,7 @@ class ReActReasoner(BaseReasoner):
         Returns:
             提示词字符串
         """
-        tools_desc = "\n".join([
-            f"- {name}: {info['description']}"
-            for name, info in tools.items()
-        ])
+        tools_desc = "\n".join([f"- {name}: {info['description']}" for name, info in tools.items()])
 
         if has_history:
             return f"""继续以下推理过程（{context}）
@@ -242,12 +221,7 @@ class ReActReasoner(BaseReasoner):
 行动输入：八段锦
 """
 
-    async def _call_llm(
-        self,
-        prompt: str,
-        temperature: float = 0.7,
-        max_tokens: int = 1000
-    ) -> str:
+    async def _call_llm(self, prompt: str, temperature: float = 0.7, max_tokens: int = 1000) -> str:
         """调用大语言模型（使用速率限制器）"""
         # 优先使用LLM API包装器（带速率限制）
         if self.llm_client:
@@ -256,17 +230,11 @@ class ReActReasoner(BaseReasoner):
 
                 response = await self.llm_client.call_api(
                     messages=[
-                        {
-                            "role": "system",
-                            "content": "你是一个使用ReAct模式的推理助手。"
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
+                        {"role": "system", "content": "你是一个使用ReAct模式的推理助手。"},
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=temperature,
-                    max_tokens=max_tokens
+                    max_tokens=max_tokens,
                 )
                 return response["choices"][0]["message"]["content"]
 
@@ -280,8 +248,7 @@ class ReActReasoner(BaseReasoner):
             except Exception as e:
                 logger.error(f"LLM API call failed: {e}")
                 raise RuntimeError(
-                    f"LLM API call failed: {e}. "
-                    "Please check DEEPSEEK_API_KEY configuration."
+                    f"LLM API call failed: {e}. " "Please check DEEPSEEK_API_KEY configuration."
                 ) from e
 
         # 降级到原始HTTP客户端
@@ -297,23 +264,17 @@ class ReActReasoner(BaseReasoner):
                 self.api_url or "https://api.deepseek.com/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 json={
                     "model": self.model_name,
                     "messages": [
-                        {
-                            "role": "system",
-                            "content": "你是一个使用ReAct模式的推理助手。"
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
+                        {"role": "system", "content": "你是一个使用ReAct模式的推理助手。"},
+                        {"role": "user", "content": prompt},
                     ],
                     "temperature": temperature,
-                    "max_tokens": max_tokens
-                }
+                    "max_tokens": max_tokens,
+                },
             )
             response.raise_for_status()
             data = response.json()
@@ -346,28 +307,23 @@ class ReActReasoner(BaseReasoner):
         action_input = ""
 
         # 提取思考
-        thought_match = re.search(r'思考[：:]\s*(.+?)(?=\n行动[：:]|$)', response, re.DOTALL)
+        thought_match = re.search(r"思考[：:]\s*(.+?)(?=\n行动[：:]|$)", response, re.DOTALL)
         if thought_match:
             thought = thought_match.group(1).strip()
 
         # 提取行动
-        action_match = re.search(r'行动[：:]\s*(\w+)', response)
+        action_match = re.search(r"行动[：:]\s*(\w+)", response)
         if action_match:
             action = action_match.group(1).strip()
 
         # 提取行动输入
-        input_match = re.search(r'行动输入[：:]\s*(.+)', response, re.DOTALL)
+        input_match = re.search(r"行动输入[：:]\s*(.+)", response, re.DOTALL)
         if input_match:
             action_input = input_match.group(1).strip()
 
         return thought, action, action_input
 
-    async def _execute_tool(
-        self,
-        action: str,
-        action_input: str,
-        tool_info: Dict[str, Any]
-    ) -> str:
+    async def _execute_tool(self, action: str, action_input: str, tool_info: Dict[str, Any]) -> str:
         """执行工具
 
         Args:
@@ -390,10 +346,7 @@ class ReActReasoner(BaseReasoner):
         return f"未知工具: {action}"
 
     async def _generate_final_answer(
-        self,
-        question: str,
-        steps: List[ReasoningStep],
-        context: Optional[List[Dict[str, Any]]]
+        self, question: str, steps: List[ReasoningStep], context: Optional[List[Dict[str, Any]]]
     ) -> str:
         """生成最终答案
 

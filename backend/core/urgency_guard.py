@@ -2,10 +2,11 @@
 紧急问题守卫
 检查系统是否处于紧急状态，拦截不合适的操作
 """
+
 import asyncio
 import logging
 import subprocess
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class UrgencyGuard:
         "debug_system",
         "restart_service",
         "check_logs",
-        "view_status"
+        "view_status",
     ]
 
     # 阻止的非紧急操作
@@ -38,7 +39,7 @@ class UrgencyGuard:
         "modify_documentation",
         "improve_coverage",
         "modify_rules",
-        "generate_report"
+        "generate_report",
     ]
 
     def __init__(self):
@@ -85,7 +86,7 @@ class UrgencyGuard:
         """
         # 使用缓存避免频繁检查
         if self._emergency_cache is not None:
-            cache_age = asyncio.get_event_loop().time() - self._cache_time
+            cache_age = asyncio.get_running_loop().time() - self._cache_time
             if cache_age < self._cache_ttl:
                 return self._emergency_cache
 
@@ -143,11 +144,18 @@ class UrgencyGuard:
         """
         try:
             result = subprocess.run(
-                ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-                 "http://localhost:8000/health"],
+                [
+                    "curl",
+                    "-s",
+                    "-o",
+                    "/dev/null",
+                    "-w",
+                    "%{http_code}",
+                    "http://localhost:8000/health",
+                ],
                 capture_output=True,
                 text=True,
-                timeout=3
+                timeout=3,
             )
 
             # 如果不是200，认为有紧急问题
@@ -169,11 +177,10 @@ class UrgencyGuard:
         """
         try:
             result = subprocess.run(
-                ["docker", "ps", "--filter", "name=zhineng-api",
-                 "--format", "{{.Status}}"],
+                ["docker", "ps", "--filter", "name=zhineng-api", "--format", "{{.Status}}"],
                 capture_output=True,
                 text=True,
-                timeout=3
+                timeout=3,
             )
 
             output = result.stdout.strip()
@@ -201,7 +208,7 @@ class UrgencyGuard:
                 capture_output=True,
                 text=True,
                 timeout=10,
-                cwd="/home/ai/zhineng-knowledge-system"
+                cwd="/home/ai/zhineng-knowledge-system",
             )
 
             # 如果有输出，说明有导入错误

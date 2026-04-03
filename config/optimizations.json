@@ -1,0 +1,61 @@
+{
+  "opportunities": [
+    {
+      "id": "opt_api_success_rate",
+      "category": "reliability",
+      "priority": "critical",
+      "title": "提升API成功率",
+      "description": "API成功率低于98%，需要优化错误处理",
+      "current_value": "95.0%",
+      "target_value": "99%",
+      "expected_improvement": "4%",
+      "effort": "1d",
+      "risk": "low"
+    },
+    {
+      "id": "opt_user_satisfaction",
+      "category": "quality",
+      "priority": "high",
+      "title": "提升用户满意度",
+      "description": "用户满意度低于4.0，需要改进回答质量",
+      "current_value": "3.8/5.0",
+      "target_value": "4.2/5.0",
+      "expected_improvement": "10%",
+      "effort": "1w",
+      "risk": "medium"
+    },
+    {
+      "id": "opt_competitor_win_rate",
+      "category": "quality",
+      "priority": "high",
+      "title": "提升竞品对比胜率",
+      "description": "竞品胜率低于50%，需要学习竞品优势",
+      "current_value": "45.0%",
+      "target_value": "60%",
+      "expected_improvement": "33%",
+      "effort": "2w",
+      "risk": "high"
+    }
+  ],
+  "estimated_duration": "1月",
+  "expected_impact": "轻微改善",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "立即优化",
+      "opportunities": [
+        "opt_api_success_rate"
+      ],
+      "duration": "1-2天"
+    },
+    {
+      "phase": 2,
+      "name": "本周优化",
+      "opportunities": [
+        "opt_user_satisfaction",
+        "opt_competitor_win_rate"
+      ],
+      "duration": "1周"
+    }
+  ]
+}

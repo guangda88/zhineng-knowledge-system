@@ -35,7 +35,6 @@ from .manager import (
     CacheManager,
     CacheStats,
     CacheStrategy,
-    cached,
     get_cache_manager,
     setup_cache,
 )

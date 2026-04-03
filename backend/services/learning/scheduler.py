@@ -2,10 +2,10 @@
 
 定期执行学习相关任务：监控GitHub、评估更新等
 """
-import asyncio
+
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -23,8 +23,8 @@ class LearningScheduler:
 
     async def start(self):
         """启动调度器"""
-        from services.learning.github_monitor import GitHubMonitorService
-        from services.learning.innovation_manager import InnovationManager
+        from backend.services.learning.github_monitor import GitHubMonitorService
+        from backend.services.learning.innovation_manager import InnovationManager
 
         self.github_monitor = GitHubMonitorService()
         self.innovation_manager = InnovationManager()
@@ -33,21 +33,21 @@ class LearningScheduler:
         self.scheduler.add_job(
             self._check_github_updates,
             trigger=CronTrigger(hour=2, minute=0),
-            id='github_update_check'
+            id="github_update_check",
         )
 
         # 每周评估提案（周日下午3点）
         self.scheduler.add_job(
             self._evaluate_proposals,
-            trigger=CronTrigger(day_of_week='sun', hour=15, minute=0),
-            id='proposal_evaluation'
+            trigger=CronTrigger(day_of_week="sun", hour=15, minute=0),
+            id="proposal_evaluation",
         )
 
         # 每月生成学习报告（每月1号凌晨）
         self.scheduler.add_job(
             self._generate_learning_report,
             trigger=CronTrigger(day=1, hour=3, minute=0),
-            id='monthly_report'
+            id="monthly_report",
         )
 
         self.scheduler.start()
@@ -102,20 +102,21 @@ class LearningScheduler:
             summary = self.innovation_manager.get_proposal_summary()
 
             report = {
-                'report_date': datetime.now().isoformat(),
-                'report_period': f"上月",
-                'total_proposals': summary['total'],
-                'approved_proposals': summary['by_status'].get('approved', 0),
-                'merged_proposals': summary['by_status'].get('merged', 0),
-                'rejected_proposals': summary['by_status'].get('rejected', 0),
-                'pending_proposals': len(self.innovation_manager.get_pending_proposals()),
-                'learning_trends': self._analyze_learning_trends()
+                "report_date": datetime.now().isoformat(),
+                "report_period": "上月",
+                "total_proposals": summary["total"],
+                "approved_proposals": summary["by_status"].get("approved", 0),
+                "merged_proposals": summary["by_status"].get("merged", 0),
+                "rejected_proposals": summary["by_status"].get("rejected", 0),
+                "pending_proposals": len(self.innovation_manager.get_pending_proposals()),
+                "learning_trends": self._analyze_learning_trends(),
             }
 
             # 保存报告到文件
             report_path = f"logs/learning_reports/{datetime.now().strftime('%Y%m')}_report.json"
             import json
-            with open(report_path, 'w', encoding='utf-8') as f:
+
+            with open(report_path, "w", encoding="utf-8") as f:
                 json.dump(report, f, ensure_ascii=False, indent=2)
 
             logger.info(f"Monthly learning report saved to {report_path}")
@@ -136,20 +137,16 @@ class LearningScheduler:
 
         # 保存到通知文件
         notification = {
-            'timestamp': datetime.now().isoformat(),
-            'count': len(updates),
-            'updates': [
-                {
-                    'title': u.title,
-                    'repo': u.repo_name,
-                    'relevance': u.relevance
-                }
-                for u in updates
-            ]
+            "timestamp": datetime.now().isoformat(),
+            "count": len(updates),
+            "updates": [
+                {"title": u.title, "repo": u.repo_name, "relevance": u.relevance} for u in updates
+            ],
         }
 
         import json
-        with open('data/learning_notifications/latest.json', 'w', encoding='utf-8') as f:
+
+        with open("data/learning_notifications/latest.json", "w", encoding="utf-8") as f:
             json.dump(notification, f, ensure_ascii=False, indent=2)
 
     def _analyze_learning_trends(self) -> dict:
@@ -157,10 +154,10 @@ class LearningScheduler:
         summary = self.innovation_manager.get_proposal_summary()
 
         return {
-            'most_active_categories': self._get_top_categories(),
-            'average_relevance': self._calculate_avg_relevance(summary),
-            'success_rate': self._calculate_success_rate(summary),
-            'learning_velocity': self._calculate_learning_velocity()
+            "most_active_categories": self._get_top_categories(),
+            "average_relevance": self._calculate_avg_relevance(summary),
+            "success_rate": self._calculate_success_rate(summary),
+            "learning_velocity": self._calculate_learning_velocity(),
         }
 
     def _get_top_categories(self) -> List[str]:
@@ -185,12 +182,12 @@ class LearningScheduler:
 
     def _calculate_success_rate(self, summary: dict) -> float:
         """计算成功率"""
-        total = summary['total']
+        total = summary["total"]
         if total == 0:
             return 0.0
 
-        passed = summary['by_status'].get('passed', 0)
-        merged = summary['by_status'].get('merged', 0)
+        passed = summary["by_status"].get("passed", 0)
+        merged = summary["by_status"].get("merged", 0)
 
         return (passed + merged) / total if total > 0 else 0.0
 
@@ -199,8 +196,7 @@ class LearningScheduler:
         # 计算过去30天的提案数量
         thirty_days_ago = datetime.now() - timedelta(days=30)
         recent_proposals = [
-            p for p in self.innovation_manager.proposals
-            if p.created_at >= thirty_days_ago
+            p for p in self.innovation_manager.proposals if p.created_at >= thirty_days_ago
         ]
 
         count = len(recent_proposals)

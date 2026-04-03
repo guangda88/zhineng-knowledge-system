@@ -2,13 +2,13 @@
 
 自动生成课程结构、内容、练习等
 """
-import asyncio
-import logging
-from typing import Dict, Any, List
-from datetime import datetime
-import os
 
-from .base import BaseGenerator, GenerationRequest, GenerationResult, OutputFormat
+import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List
+
+from .base import BaseGenerator, GenerationRequest, GenerationResult, GenerationStatus, OutputFormat
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +49,14 @@ class CourseGenerator(BaseGenerator):
                 target_audience=target_audience,
                 duration_weeks=duration_weeks,
                 custom_chapters=custom_chapters,
-                include_exercises=include_exercises
+                include_exercises=include_exercises,
             )
 
             # 保存课程
             output_path = await self._save_course(
                 task_id=request.task_id,
                 structure=course_structure,
-                output_format=request.output_format
+                output_format=request.output_format,
             )
 
             return GenerationResult(
@@ -68,17 +68,15 @@ class CourseGenerator(BaseGenerator):
                     "course_title": request.topic,
                     "duration_weeks": duration_weeks,
                     "chapter_count": len(course_structure["chapters"]),
-                    "target_audience": target_audience
+                    "target_audience": target_audience,
                 },
-                completed_at=datetime.now()
+                completed_at=datetime.now(),
             )
 
         except Exception as e:
             logger.error(f"课程生成失败: {e}", exc_info=True)
             return GenerationResult(
-                task_id=request.task_id,
-                status=GenerationStatus.FAILED,
-                error_message=str(e)
+                task_id=request.task_id, status=GenerationStatus.FAILED, error_message=str(e)
             )
 
     async def _build_course_structure(
@@ -87,7 +85,7 @@ class CourseGenerator(BaseGenerator):
         target_audience: str,
         duration_weeks: int,
         custom_chapters: List[str],
-        include_exercises: bool
+        include_exercises: bool,
     ) -> Dict[str, Any]:
         """构建课程结构"""
 
@@ -98,13 +96,29 @@ class CourseGenerator(BaseGenerator):
         chapters = []
         for week, chapter_title in enumerate(custom_chapters, 1):
             # 检索章节内容
-            from services.retrieval.vector import VectorRetrievalService
-            retrieval_service = VectorRetrievalService()
+            from backend.core.database import get_db_pool
 
-            search_results = await retrieval_service.search(
-                query=f"{title} {chapter_title}",
-                limit=5
-            )
+            pool = get_db_pool()
+            search_results = []
+            if pool:
+                try:
+                    async with pool.acquire() as conn:
+                        rows = await conn.fetch(
+                            "SELECT id, title, content, category FROM documents "
+                            "WHERE title ILIKE $1 OR content ILIKE $1 LIMIT 5",
+                            f"%{title} {chapter_title}%",
+                        )
+                        search_results = [
+                            {
+                                "id": r["id"],
+                                "title": r["title"],
+                                "content": r["content"],
+                                "category": r["category"],
+                            }
+                            for r in rows
+                        ]
+                except Exception as e:
+                    logger.warning(f"Course generation search failed: {e}")
 
             # 构建章节
             chapter = {
@@ -112,7 +126,7 @@ class CourseGenerator(BaseGenerator):
                 "title": chapter_title,
                 "content": self._synthesize_chapter_content(search_results),
                 "learning_objectives": self._generate_learning_objectives(chapter_title),
-                "key_concepts": self._extract_key_concepts(search_results)
+                "key_concepts": self._extract_key_concepts(search_results),
             }
 
             if include_exercises:
@@ -125,7 +139,7 @@ class CourseGenerator(BaseGenerator):
             "target_audience": target_audience,
             "duration_weeks": duration_weeks,
             "created_at": datetime.now().isoformat(),
-            "chapters": chapters
+            "chapters": chapters,
         }
 
     async def _generate_chapters(self, title: str, week_count: int) -> List[str]:
@@ -140,7 +154,7 @@ class CourseGenerator(BaseGenerator):
             "实践方法（二）",
             "案例分析",
             "进阶应用",
-            "总结与展望"
+            "总结与展望",
         ]
 
         # 根据周数调整
@@ -150,7 +164,7 @@ class CourseGenerator(BaseGenerator):
             # 如果周数更多，添加更多实践章节
             extended = base_chapters.copy()
             for i in range(week_count - len(base_chapters)):
-                extended.append(f"专题研讨 {i+1}")
+                extended.append(f"专题研讨 {i + 1}")
             return extended
 
     def _synthesize_chapter_content(self, search_results: List[Dict]) -> str:
@@ -160,7 +174,7 @@ class CourseGenerator(BaseGenerator):
 
         content_parts = []
         for result in search_results[:3]:
-            content = result.get('content', '')
+            content = result.get("content", "")
             if content:
                 content_parts.append(content[:300])
 
@@ -172,14 +186,14 @@ class CourseGenerator(BaseGenerator):
             f"理解{chapter_title}的核心概念",
             "掌握相关的理论知识",
             "能够应用于实践",
-            "培养分析问题和解决问题的能力"
+            "培养分析问题和解决问题的能力",
         ]
 
     def _extract_key_concepts(self, search_results: List[Dict]) -> List[str]:
         """提取关键概念"""
         concepts = []
         for result in search_results[:5]:
-            content = result.get('content', '')
+            content = result.get("content", "")
             # 简单实现：提取长词汇作为概念
             words = content.split()
             concepts.extend([w for w in words if len(w) >= 4])
@@ -193,25 +207,18 @@ class CourseGenerator(BaseGenerator):
                 "type": "choice",
                 "question": f"关于{chapter_title}，以下说法正确的是？",
                 "options": ["选项A", "选项B", "选项C", "选项D"],
-                "answer": 0
+                "answer": 0,
             },
-            {
-                "type": "essay",
-                "question": f"请简述{chapter_title}的重要性。",
-                "word_limit": 500
-            },
+            {"type": "essay", "question": f"请简述{chapter_title}的重要性。", "word_limit": 500},
             {
                 "type": "practice",
                 "question": f"请设计一个{chapter_title}的练习方案。",
-                "duration_minutes": 30
-            }
+                "duration_minutes": 30,
+            },
         ]
 
     async def _save_course(
-        self,
-        task_id: str,
-        structure: Dict[str, Any],
-        output_format: OutputFormat
+        self, task_id: str, structure: Dict[str, Any], output_format: OutputFormat
     ) -> str:
         """保存课程"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -221,7 +228,7 @@ class CourseGenerator(BaseGenerator):
         # 生成Markdown格式的课程内容
         content = self._format_course_as_markdown(structure)
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
 
         logger.info(f"课程已保存: {filepath}")

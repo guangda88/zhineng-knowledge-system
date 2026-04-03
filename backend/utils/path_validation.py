@@ -23,6 +23,19 @@ def get_project_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
+def _is_under_allowed_dir(
+    resolved_path: Path, allowed_base_dirs: List[str], project_root: Path
+) -> bool:
+    for base_dir in allowed_base_dirs:
+        allowed_root = (project_root / base_dir).resolve()
+        try:
+            resolved_path.relative_to(allowed_root)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
 def validate_file_path(
     user_path: str,
     allowed_base_dirs: Optional[List[str]] = None,
@@ -61,33 +74,12 @@ def validate_file_path(
     project_root = get_project_root()
     resolved = (project_root / normalized_input).resolve()
 
-    is_under_allowed = False
-    for base_dir in allowed_base_dirs:
-        allowed_root = (project_root / base_dir).resolve()
-        try:
-            resolved.relative_to(allowed_root)
-            is_under_allowed = True
-            break
-        except ValueError:
-            continue
-
-    if not is_under_allowed:
-        raise ValueError(
-            f"文件路径不在允许的目录内。允许的目录: {', '.join(allowed_base_dirs)}"
-        )
+    if not _is_under_allowed_dir(resolved, allowed_base_dirs, project_root):
+        raise ValueError(f"文件路径不在允许的目录内。允许的目录: {', '.join(allowed_base_dirs)}")
 
     if resolved.is_symlink():
         real_target = resolved.resolve()
-        is_under_allowed_symlink = False
-        for base_dir in allowed_base_dirs:
-            allowed_root = (project_root / base_dir).resolve()
-            try:
-                real_target.relative_to(allowed_root)
-                is_under_allowed_symlink = True
-                break
-            except ValueError:
-                continue
-        if not is_under_allowed_symlink:
+        if not _is_under_allowed_dir(real_target, allowed_base_dirs, project_root):
             raise ValueError("符号链接目标不在允许的目录内")
 
     ext = resolved.suffix.lower()

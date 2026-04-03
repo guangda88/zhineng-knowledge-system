@@ -93,3 +93,11 @@ lingzhi_ubuntu/
 data/ima_export/
 data/textbooks/pdf格式/
 data/textbooks/docx格式/
+
+# 安全：Source Map文件（绝不上传）
+*.map
+*.js.map
+*.ts.map
+*.css.map
+dist/*.map
+build/*.map
