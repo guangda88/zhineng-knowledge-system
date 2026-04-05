@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/lifecycle", tags=["生命周期追踪"])
+router = APIRouter(prefix="/api/v1/lifecycle", tags=["生命周期追踪"])
 
 
 # ==================== 请求/响应模型 ====================

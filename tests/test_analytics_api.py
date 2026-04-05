@@ -6,7 +6,8 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from backend.main import app
+from backend.main import create_app
+from tests.conftest import _noop_lifespan
 
 
 class TestAnalyticsAPI:
@@ -15,9 +16,9 @@ class TestAnalyticsAPI:
     @pytest.fixture
     async def client(self):
         """创建测试客户端"""
+        app = create_app(lifespan_ctx=_noop_lifespan)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
-            # 设置session_id
             ac.cookies["session_id"] = "test-session-123"
             ac.headers["X-Session-ID"] = "test-session-123"
             yield ac
@@ -180,6 +181,7 @@ class TestAnalyticsDataFlow:
     @pytest.fixture
     async def client(self):
         """创建测试客户端"""
+        app = create_app(lifespan_ctx=_noop_lifespan)
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             ac.cookies["session_id"] = "test-session-flow"
             ac.headers["X-Session-ID"] = "test-session-flow"
@@ -229,7 +231,7 @@ class TestAnalyticsPrivacy:
     @pytest.mark.asyncio
     async def test_anonymous_mode_tracking(self):
         """测试匿名模式追踪"""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=create_app(lifespan_ctx=_noop_lifespan)), base_url="http://test") as client:
             # 匿名用户（无JWT，只有session_id）
             client.cookies["session_id"] = "anonymous-user-123"
 
@@ -243,7 +245,7 @@ class TestAnalyticsPrivacy:
     @pytest.mark.asyncio
     async def test_session_id_generation(self):
         """测试session_id生成"""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=create_app(lifespan_ctx=_noop_lifespan)), base_url="http://test") as client:
             # 不提供session_id，应该自动生成
             response = await client.post(
                 "/api/v1/analytics/track",
