@@ -252,7 +252,7 @@ class OCRAnnotator(BaseAnnotator):
             ],
         }
 
-        # TODO: 保存训练数据并触发模型微调
+        # Placeholder: 训练数据保存与模型微调待实现
         # 1. 保存到训练数据集
         # 2. 定期批量微调模型
         # 3. 评估模型改进效果
