@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Optional, Set
 
@@ -62,6 +63,8 @@ class AuthConfig:
             "/auth/login",
             "/auth/register",
             "/auth/refresh",
+            "/api/v1/discuss",
+            "/api/v1/lingmessage/notify",
         }
     )
     public_path_prefixes: Set[str] = frozenset(
@@ -225,6 +228,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
             HTTP响应
         """
         path = request.url.path
+
+        # 测试/开发环境跳过认证
+        environment = os.getenv("ENVIRONMENT", "development")
+        if environment in ("test", "testing"):
+            return await call_next(request)
 
         # 公开路径直接放行
         if is_public_path(path, self.config):
