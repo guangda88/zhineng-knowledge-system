@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.v1 import api_router
 from backend.api.v2 import api_router_v2
+from backend.auth.middleware import AuthConfig, AuthMiddleware
 from backend.core import (
     get_allowed_origins,
     log_requests,
@@ -24,7 +25,6 @@ from backend.core import (
 from backend.core.lifespan import lifespan
 from backend.middleware import RateLimitMiddleware
 from backend.middleware.security_headers import SecurityHeadersMiddleware
-from backend.auth.middleware import AuthMiddleware, AuthConfig
 
 # 配置日志
 logging.basicConfig(
@@ -59,27 +59,25 @@ def create_app(lifespan_ctx=None) -> FastAPI:
     # 安全响应头中间件（新增）
     app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=True)
 
-    # 认证中间件 — 测试环境跳过，避免阻塞所有API测试
-    environment = os.getenv("ENVIRONMENT", "development")
-    if environment not in ("test", "testing"):
-        auth_config = AuthConfig(
-            protected_path_prefixes={
-                "/api",
-                "/api/v1",
-                "/api/v2",
-            },
-            public_paths={
-                "/",
-                "/health",
-                "/docs",
-                "/redoc",
-                "/openapi.json",
-                "/api/v1/health",
-                "/api/v1/discuss",
-                "/api/v1/lingmessage/notify",
-            },
-        )
-        app.add_middleware(AuthMiddleware, config=auth_config)
+    # 认证中间件（测试环境在中间件内部自动跳过）
+    auth_config = AuthConfig(
+        protected_path_prefixes={
+            "/api",
+            "/api/v1",
+            "/api/v2",
+        },
+        public_paths={
+            "/",
+            "/health",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/api/v1/health",
+            "/api/v1/discuss",
+            "/api/v1/lingmessage/notify",
+        },
+    )
+    app.add_middleware(AuthMiddleware, config=auth_config)
 
     # 请求日志中间件
     app.middleware("http")(log_requests)

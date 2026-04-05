@@ -68,7 +68,6 @@ async def api_v1_health_check(detailed: bool = False) -> Dict[str, Any]:
     health_checker = get_health_checker()
     registry = get_registry()
 
-    # 获取整体状态
     summary = health_checker.get_summary()
     domain_health = await registry.health_check()
 
@@ -81,6 +80,30 @@ async def api_v1_health_check(detailed: bool = False) -> Dict[str, Any]:
         "domains": domain_health,
         "checks": summary["checks"],
     }
+
+
+@router.get("/api/v1/health/db")
+async def health_check_db() -> Dict[str, Any]:
+    """数据库健康检查端点"""
+    db_status = "ok"
+    db_error = None
+    try:
+        pool = await init_db_pool()
+        async with pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+    except (OSError, ValueError, RuntimeError, Exception) as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "error"
+        db_error = str(e)
+
+    result = {
+        "status": "ok" if db_status == "ok" else "degraded",
+        "database": db_status,
+        "timestamp": datetime.now().isoformat(),
+    }
+    if db_error:
+        result["error"] = db_error
+    return result
 
 
 @router.get("/api/v1/health/{check_name}")
