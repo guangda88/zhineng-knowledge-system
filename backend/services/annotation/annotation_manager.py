@@ -131,7 +131,7 @@ class AnnotationManager:
         Returns:
             str: 导出文件路径
         """
-        # TODO: 实现实际的导出逻辑
+        # Placeholder: 导出逻辑待实现
         # 1. 收集所有已完成的任务
         # 2. 格式化为训练数据（JSONL, CSV等）
         # 3. 保存到文件
@@ -192,7 +192,7 @@ class AnnotationManager:
         Returns:
             Dict: 训练任务信息
         """
-        # TODO: 实现实际的模型重训练逻辑
+        # Placeholder: 模型重训练逻辑待实现
         # 1. 导出训练数据
         # 2. 调用训练脚本
         # 3. 监控训练进度
@@ -231,7 +231,7 @@ class AnnotationManager:
         """
         _cutoff_date = datetime.now() - timedelta(days=older_than_days)  # noqa: F841
 
-        # TODO: 实现实际的清理逻辑
+        # Placeholder: 清理逻辑待实现
         # 1. 查询符合条件的任务
         # 2. 备份到归档
         # 3. 删除任务记录

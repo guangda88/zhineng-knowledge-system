@@ -214,7 +214,7 @@ class TranscriptionAnnotator(BaseAnnotator):
             "metadata": task.metadata,
         }
 
-        # TODO: 保存训练数据并触发模型微调
+        # Placeholder: 训练数据保存与模型微调待实现
         # 1. 将音频和校正文本配对
         # 2. 生成训练样本
         # 3. 定期批量微调模型

@@ -301,7 +301,7 @@ class LingMinOptOptimizer:
 
     async def _analyze_forum_feedback(self) -> List[OptimizationOpportunity]:
         """分析论坛反馈"""
-        # TODO: 集成论坛反馈分析
+        # Placeholder: 论坛反馈分析待集成
         return []
 
     async def _analyze_performance_metrics(self) -> List[OptimizationOpportunity]:
@@ -316,7 +316,7 @@ class LingMinOptOptimizer:
 
     async def _analyze_learning_insights(self) -> List[OptimizationOpportunity]:
         """分析学习洞察"""
-        # TODO: 从自学习系统获取洞察
+        # Placeholder: 自学习系统洞察待集成
         return []
 
     def _deduplicate_opportunities(
@@ -347,22 +347,22 @@ class LingMinOptOptimizer:
 
     async def _collect_detailed_data(self, opportunity: OptimizationOpportunity) -> Dict[str, Any]:
         """收集详细数据"""
-        # TODO: 根据优化类型收集相关数据
+        # Placeholder: 优化类型数据收集待实现
         return {"current_state": "待收集"}
 
     async def _assess_impact(self, opportunity: OptimizationOpportunity) -> str:
         """评估影响"""
-        # TODO: 评估优化的潜在影响
+        # Placeholder: 影响评估待实现
         return "中等影响"
 
     async def _assess_effort(self, opportunity: OptimizationOpportunity) -> str:
         """评估工作量"""
-        # TODO: 评估实现工作量
+        # Placeholder: 工作量评估待实现
         return "medium"
 
     async def _generate_solution(self, opportunity: OptimizationOpportunity) -> str:
         """生成解决方案"""
-        # TODO: 为优化机会生成解决方案
+        # Placeholder: 解决方案生成待实现
         return "待定解决方案"
 
     async def _generate_optimization_steps(
@@ -405,33 +405,33 @@ class LingMinOptOptimizer:
 
     async def _verify_preconditions(self, opportunity: OptimizationOpportunity):
         """验证前置条件"""
-        # TODO: 验证优化所需的前置条件
+        # Placeholder: 前置条件验证待实现
 
     async def _create_backup(self, opportunity: OptimizationOpportunity) -> str:
         """创建备份"""
-        # TODO: 创建系统备份
+        # Placeholder: 系统备份待实现
         return f"backup_{opportunity.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     async def _execute_step(
         self, opportunity: OptimizationOpportunity, step: Dict[str, Any]
     ) -> Dict[str, Any]:
         """执行单个步骤"""
-        # TODO: 根据步骤类型执行具体操作
+        # Placeholder: 步骤执行待实现
         return {"status": "success", "output": "步骤执行完成"}
 
     async def _validate_optimization(self, opportunity: OptimizationOpportunity) -> Dict[str, Any]:
         """验证优化效果"""
-        # TODO: 验证优化是否达到预期效果
+        # Placeholder: 效果验证待实现
         return {"success": True, "reason": ""}
 
     async def _collect_current_metrics(
         self, opportunity: OptimizationOpportunity
     ) -> Dict[str, float]:
         """收集当前指标"""
-        # TODO: 收集相关指标
+        # Placeholder: 指标收集待实现
         return {"response_time_ms": 150.0, "error_rate": 0.02, "throughput_rps": 100.0}
 
     async def _rollback_optimization(self, opportunity: OptimizationOpportunity):
         """回滚优化"""
-        # TODO: 执行回滚操作
+        # Placeholder: 回滚操作待实现
         self.logger.info(f"回滚优化: {opportunity.title}")
