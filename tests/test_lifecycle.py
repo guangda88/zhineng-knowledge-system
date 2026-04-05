@@ -3,16 +3,19 @@
 覆盖: 用户等级、生命状态追踪、练习记录、练习计划、用户概览
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.conftest import _noop_lifespan
+
 
 @pytest.fixture
 def client():
-    from backend.main import app
+    from backend.main import create_app
 
+    app = create_app(lifespan_ctx=_noop_lifespan)
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
 
@@ -70,7 +73,7 @@ def mock_pool():
 class TestUserLevel:
     """用户等级 API 测试"""
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_create_user_level_new(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(return_value=None)
@@ -85,7 +88,7 @@ class TestUserLevel:
             assert data["status"] == "ok"
             assert data["data"]["user_id"] == "new_user"
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_create_user_level_existing(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(return_value={"user_id": "existing_user"})
@@ -99,7 +102,7 @@ class TestUserLevel:
             data = response.json()
             assert data["status"] == "ok"
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_user_level_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
 
@@ -110,7 +113,7 @@ class TestUserLevel:
             assert data["status"] == "ok"
             assert "data" in data
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_user_level_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(return_value=None)
@@ -129,7 +132,7 @@ class TestUserLevel:
 class TestLifeStateTracking:
     """生命状态追踪 API 测试"""
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_record_life_state_new(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(side_effect=[True, None])
@@ -152,7 +155,7 @@ class TestLifeStateTracking:
             data = response.json()
             assert data["status"] == "ok"
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_record_life_state_update_existing(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(side_effect=[True, 42])
@@ -172,7 +175,7 @@ class TestLifeStateTracking:
             assert data["status"] == "ok"
             assert data["data"]["updated"] is True
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_record_life_state_user_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(return_value=False)
@@ -188,7 +191,7 @@ class TestLifeStateTracking:
         )
         assert response.status_code in [404, 500]
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_life_state_history(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
 
@@ -218,7 +221,7 @@ class TestLifeStateTracking:
 class TestPracticeRecords:
     """练习记录 API 测试"""
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_record_practice(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(
@@ -248,7 +251,7 @@ class TestPracticeRecords:
             assert data["status"] == "ok"
             assert data["data"]["concept"] == "浑圆桩"
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_record_practice_user_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(return_value=False)
@@ -263,7 +266,7 @@ class TestPracticeRecords:
         )
         assert response.status_code in [404, 500]
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_practice_records(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(return_value=10)
@@ -290,7 +293,7 @@ class TestPracticeRecords:
             assert data["data"]["total"] == 10
             assert len(data["data"]["items"]) == 1
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_practice_records_pagination(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(return_value=100)
@@ -325,7 +328,7 @@ class TestPracticeRecords:
 class TestPracticePlans:
     """练习计划 API 测试"""
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_create_practice_plan(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(
@@ -358,7 +361,7 @@ class TestPracticePlans:
             assert data["status"] == "ok"
             assert data["data"]["plan_name"] == "30天站桩计划"
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_create_plan_invalid_dates(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
 
@@ -373,7 +376,7 @@ class TestPracticePlans:
         )
         assert response.status_code in [400, 422, 500]
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_create_plan_user_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchval = AsyncMock(return_value=False)
@@ -389,7 +392,7 @@ class TestPracticePlans:
         )
         assert response.status_code in [404, 500]
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_practice_plans(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetch = AsyncMock(
@@ -417,7 +420,7 @@ class TestPracticePlans:
             assert data["status"] == "ok"
             assert isinstance(data["data"], list)
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_get_plans_with_status_filter(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetch = AsyncMock(return_value=[])
@@ -425,7 +428,7 @@ class TestPracticePlans:
         response = client.get("/api/v1/lifecycle/practice/plans?user_id=test_user&status=active")
         assert response.status_code == 200 or response.status_code == 500
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_update_practice_plan(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(return_value={"id": 1})
@@ -439,7 +442,7 @@ class TestPracticePlans:
             data = response.json()
             assert data["status"] == "ok"
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_update_plan_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(return_value=None)
@@ -450,7 +453,7 @@ class TestPracticePlans:
         )
         assert response.status_code in [404, 500]
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_update_plan_no_changes(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(return_value={"id": 1})
@@ -472,7 +475,7 @@ class TestPracticePlans:
 class TestDashboard:
     """用户概览 API 测试"""
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_dashboard_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(
@@ -499,7 +502,7 @@ class TestDashboard:
             assert data["data"]["total_practice_minutes"] == 300
             assert data["data"]["active_plans"] == 2
 
-    @patch("backend.api.v1.lifecycle.init_db_pool")
+    @patch("backend.core.database.init_db_pool")
     def test_dashboard_not_found(self, mock_init, client, mock_pool):
         mock_init.return_value = mock_pool
         mock_pool.fetchrow = AsyncMock(side_effect=[None])

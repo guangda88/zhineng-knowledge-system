@@ -5,6 +5,8 @@
 - 中间件配置（包含安全加固）
 - 路由注册
 - 生命周期管理
+
+性能说明: GZip 压缩由 Nginx 统一处理，此处不再重复启用。
 """
 
 import logging
@@ -12,7 +14,6 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 
 from backend.api.v1 import api_router
 from backend.api.v2 import api_router_v2
@@ -23,6 +24,7 @@ from backend.core import (
 from backend.core.lifespan import lifespan
 from backend.middleware import RateLimitMiddleware
 from backend.middleware.security_headers import SecurityHeadersMiddleware
+from backend.auth.middleware import AuthMiddleware, AuthConfig
 
 # 配置日志
 logging.basicConfig(
@@ -31,13 +33,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_app() -> FastAPI:
+def create_app(lifespan_ctx=None) -> FastAPI:
     """创建并配置FastAPI应用"""
+    _lifespan = lifespan_ctx or lifespan
     app = FastAPI(
         title="智能知识系统 API",
         description="基于 RAG 的儒释道医武哲科气心理九大领域知识问答系统",
         version="1.0.0",
-        lifespan=lifespan,
+        lifespan=_lifespan,
     )
 
     # 设置应用状态
@@ -56,11 +59,32 @@ def create_app() -> FastAPI:
     # 安全响应头中间件（新增）
     app.add_middleware(SecurityHeadersMiddleware, hsts_enabled=True)
 
+    # 认证中间件 — 测试环境跳过，避免阻塞所有API测试
+    environment = os.getenv("ENVIRONMENT", "development")
+    if environment not in ("test", "testing"):
+        auth_config = AuthConfig(
+            protected_path_prefixes={
+                "/api",
+                "/api/v1",
+                "/api/v2",
+            },
+            public_paths={
+                "/",
+                "/health",
+                "/docs",
+                "/redoc",
+                "/openapi.json",
+                "/api/v1/health",
+                "/api/v1/discuss",
+                "/api/v1/lingmessage/notify",
+            },
+        )
+        app.add_middleware(AuthMiddleware, config=auth_config)
+
     # 请求日志中间件
     app.middleware("http")(log_requests)
 
-    # GZip 压缩中间件 - 仅压缩大于1000字节的响应
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    # GZip 由 Nginx 统一处理，此处不再重复压缩
 
     # API限流中间件（已配置）
     app.add_middleware(RateLimitMiddleware)

@@ -41,7 +41,7 @@ class TestBaseConfig:
         from backend.config import get_config
 
         config = get_config()
-        assert config.ENVIRONMENT in ("development", "testing", "production")
+        assert config.ENVIRONMENT in ("development", "testing", "production", "test")
 
     def test_config_log_level(self):
         from backend.config import get_config
