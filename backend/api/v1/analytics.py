@@ -461,7 +461,10 @@ async def get_dashboard(
 
         require_permission("system:metrics")
     except (ImportError, NotImplementedError):
-        logger.warning("管理员权限检查不可用，允许匿名访问仪表盘")
+        raise HTTPException(
+            status_code=503,
+            detail="权限服务不可用，请稍后重试",
+        )
 
     try:
         # 计算日期范围

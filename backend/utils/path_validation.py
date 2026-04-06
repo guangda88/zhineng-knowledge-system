@@ -98,3 +98,75 @@ def is_safe_path(user_path: str) -> bool:
         return True
     except (ValueError, OSError):
         return False
+
+
+AUDIO_ALLOWED_EXTENSIONS = frozenset(
+    {".mp3", ".wav", ".flac", ".m4a", ".ogg", ".wma", ".aac"}
+)
+
+PDF_ALLOWED_EXTENSIONS = frozenset({".pdf"})
+
+DEFAULT_ABS_ALLOWED_DIRS: List[str] = [
+    "data",
+    "data/uploaded",
+    "data/uploaded/textbooks",
+    "data/uploaded/audio",
+    "data/processed",
+    "data/processed/textbooks",
+    "data/processed/audio",
+]
+
+
+def validate_absolute_file_path(
+    user_path: str,
+    allowed_extensions: Optional[frozenset] = None,
+    allowed_base_dirs: Optional[List[str]] = None,
+) -> Tuple[Path, str]:
+    """验证用户提供的绝对文件路径是否安全。
+
+    与 validate_file_path 不同，此函数允许绝对路径，但要求解析后的路径
+    必须落在项目根目录下的允许子目录中。
+
+    Args:
+        user_path: 用户提供的路径字符串（通常是绝对路径）
+        allowed_extensions: 允许的文件扩展名。为 None 则跳过扩展名检查。
+        allowed_base_dirs: 允许的基目录列表（相对于项目根目录）。
+                          为 None 则使用默认值 DEFAULT_ABS_ALLOWED_DIRS。
+
+    Returns:
+        (resolved_path, error_message) — error_message 为空字符串表示验证通过。
+
+    Raises:
+        ValueError: 路径不合法时抛出。
+    """
+    if not user_path or not user_path.strip():
+        raise ValueError("文件路径不能为空")
+
+    if allowed_base_dirs is None:
+        allowed_base_dirs = DEFAULT_ABS_ALLOWED_DIRS
+
+    resolved = Path(user_path).resolve()
+
+    if ".." in Path(user_path).parts:
+        raise ValueError("路径中不允许包含父目录引用 (..)")
+
+    project_root = get_project_root()
+
+    if not _is_under_allowed_dir(resolved, allowed_base_dirs, project_root):
+        raise ValueError(
+            f"文件路径不在允许的目录内。允许的目录: {', '.join(allowed_base_dirs)}"
+        )
+
+    if resolved.is_symlink():
+        real_target = resolved.resolve()
+        if not _is_under_allowed_dir(real_target, allowed_base_dirs, project_root):
+            raise ValueError("符号链接目标不在允许的目录内")
+
+    if allowed_extensions is not None:
+        ext = resolved.suffix.lower()
+        if ext not in allowed_extensions:
+            raise ValueError(
+                f"不支持的文件类型: {ext}。允许的类型: {', '.join(sorted(allowed_extensions))}"
+            )
+
+    return resolved, ""

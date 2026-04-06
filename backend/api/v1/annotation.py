@@ -169,19 +169,27 @@ async def batch_create_ocr_tasks(
 
     返回：创建的任务列表
     """
+    from backend.utils.path_validation import validate_absolute_file_path, PDF_ALLOWED_EXTENSIONS
+
+    resolved, err = validate_absolute_file_path(
+        request.pdf_path, allowed_extensions=PDF_ALLOWED_EXTENSIONS
+    )
+    if err:
+        raise HTTPException(status_code=400, detail=f"PDF路径不安全: {err}")
+
     try:
         annotator = OCRAnnotator()
 
         async def run_batch_ocr():
             return await annotator.batch_create_from_pdf(
-                pdf_path=request.pdf_path, ocr_engine=request.ocr_engine
+                pdf_path=str(resolved), ocr_engine=request.ocr_engine
             )
 
         background_tasks.add_task(run_batch_ocr)
 
         return {
             "success": True,
-            "message": f"批量OCR任务已启动: {request.pdf_path}",
+            "message": "批量OCR任务已启动",
             "ocr_engine": request.ocr_engine,
         }
 
@@ -406,12 +414,20 @@ async def batch_create_transcription_tasks(
 
     返回：创建的任务列表
     """
+    from backend.utils.path_validation import validate_absolute_file_path, AUDIO_ALLOWED_EXTENSIONS
+
+    resolved, err = validate_absolute_file_path(
+        request.audio_path, allowed_extensions=AUDIO_ALLOWED_EXTENSIONS
+    )
+    if err:
+        raise HTTPException(status_code=400, detail=f"音频路径不安全: {err}")
+
     try:
         annotator = TranscriptionAnnotator()
 
         async def run_batch_transcription():
             return await annotator.batch_create_from_audio(
-                audio_path=request.audio_path,
+                audio_path=str(resolved),
                 asr_engine=request.asr_engine,
                 speaker_diarization=request.speaker_diarization,
             )
@@ -420,7 +436,7 @@ async def batch_create_transcription_tasks(
 
         return {
             "success": True,
-            "message": f"批量转写任务已启动: {request.audio_path}",
+            "message": "批量转写任务已启动",
             "asr_engine": request.asr_engine,
             "speaker_diarization": request.speaker_diarization,
         }
