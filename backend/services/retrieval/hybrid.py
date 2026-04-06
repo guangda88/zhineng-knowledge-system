@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional
 import asyncpg
 
 from .bm25 import BM25Retriever
+from .feedback import get_doc_quality_scores
+from .gap_tracker import record_search_outcome
 from .vector import VectorRetriever
 
 logger = logging.getLogger(__name__)
@@ -200,11 +202,34 @@ class HybridRetriever:
         # 追加音频结果
         results.extend(audio_results)
 
+        # 反馈质量提升：有正面反馈的文档排序靠前
+        try:
+            doc_ids = [r["id"] for r in results if isinstance(r.get("id"), int)]
+            if doc_ids:
+                quality = await get_doc_quality_scores(self.db_pool, doc_ids)
+                for r in results:
+                    if isinstance(r.get("id"), int) and r["id"] in quality:
+                        q = quality[r["id"]]
+                        if q["helpful_ratio"] > 0.5:
+                            r["score"] = r.get("score", 0) * (1 + 0.1 * q["helpful_ratio"])
+                        r["feedback_quality"] = q
+        except Exception as fb_err:
+            logger.debug(f"反馈质量评估跳过: {fb_err}")
+
+        results.sort(key=lambda x: x.get("score", 0), reverse=True)
+
         logger.info(
             f"混合检索: query='{query}', vector={len(vector_results)}, "
             f"bm25={len(bm25_results)}, audio={len(audio_results)}, "
             f"merged={len(results)}"
         )
+
+        try:
+            await record_search_outcome(
+                self.db_pool, query, results, category, source="hybrid"
+            )
+        except Exception as gap_err:
+            logger.debug(f"缺口记录跳过: {gap_err}")
 
         return results[:top_k]
 
