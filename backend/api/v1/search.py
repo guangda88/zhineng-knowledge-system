@@ -14,6 +14,7 @@ from backend.common.typing import JSONResponse
 from backend.core.database import init_db_pool
 from backend.core.request_stats import get_request_stats
 from backend.services.retrieval import HybridRetriever
+from backend.services.retrieval.gap_tracker import record_search_outcome
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +201,13 @@ async def ask_question(request: ChatRequest) -> ChatResponse:
         pool = await init_db_pool()
 
         sources = await search_documents(pool, request.question, request.category, 3)
+
+        try:
+            await record_search_outcome(
+                pool, request.question, sources, request.category, source="ask"
+            )
+        except Exception:
+            pass
 
         if sources:
             answer = f"根据知识库找到 {len(sources)} 条相关内容：\n\n"
