@@ -328,7 +328,10 @@ class AudioService:
             )
 
         file_id = uuid.uuid4().hex[:12]
-        filename = f"{file_id}_{original_name}"
+        safe_name = Path(original_name).name
+        if ".." in safe_name:
+            raise ValueError("文件名不合法")
+        filename = f"{file_id}_{safe_name}"
         storage_path = Path(config.AUDIO_STORAGE_PATH) / "uploads" / filename
         storage_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -627,7 +630,15 @@ class AudioService:
         Returns:
             导入结果
         """
-        path = Path(audio_path)
+        from backend.utils.path_validation import validate_absolute_file_path, AUDIO_ALLOWED_EXTENSIONS
+
+        resolved_path, err = validate_absolute_file_path(
+            audio_path, allowed_extensions=AUDIO_ALLOWED_EXTENSIONS
+        )
+        if err:
+            raise ValueError(f"音频路径不安全: {err}")
+
+        path = resolved_path
         if not path.exists():
             raise FileNotFoundError(f"音频文件不存在: {audio_path}")
 

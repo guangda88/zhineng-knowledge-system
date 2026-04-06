@@ -210,12 +210,19 @@ async def delete_audio_file(file_id: int):
 async def import_with_transcript(request: ImportRequest):
     """导入带转写文本的音频文件（从听悟导出的数据）"""
     from backend.services.audio import AudioService
+    from backend.utils.path_validation import validate_absolute_file_path, AUDIO_ALLOWED_EXTENSIONS
+
+    resolved, err = validate_absolute_file_path(
+        request.audio_path, allowed_extensions=AUDIO_ALLOWED_EXTENSIONS
+    )
+    if err:
+        raise HTTPException(status_code=400, detail=f"音频路径不安全: {err}")
 
     service = AudioService()
 
     try:
         result = await service.import_with_transcript(
-            audio_path=request.audio_path,
+            audio_path=str(resolved),
             transcript_text=request.transcript_text,
             original_name=request.original_name,
             category=request.category,
@@ -227,7 +234,7 @@ async def import_with_transcript(request: ImportRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Import failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"导入失败: {e}")
+        raise HTTPException(status_code=500, detail="导入失败，请检查日志")
 
 
 # ==================== 标注 ====================

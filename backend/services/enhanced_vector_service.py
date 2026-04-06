@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from backend.services.ai_service_adapter import AIServiceAdapter
-from backend.services.retrieval.vector import _get_model
+from backend.services.retrieval.vector import _get_local_model
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +163,7 @@ class EnhancedEmbeddingService:
     async def _get_local_model(self):
         """获取本地模型"""
         if self._local_model is None:
-            self._local_model = await _get_model()
+            self._local_model = await _get_local_model()
         return self._local_model
 
     async def _get_remote_adapter(self) -> AIServiceAdapter:
@@ -348,9 +348,9 @@ class EnhancedEmbeddingService:
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
 
-            def _encode_batch():
+            def _encode_batch(b=batch):
                 return model.encode(
-                    batch, normalize_embeddings=True, batch_size=batch_size
+                    b, normalize_embeddings=True, batch_size=batch_size
                 ).tolist()
 
             embeddings = await loop.run_in_executor(None, _encode_batch)

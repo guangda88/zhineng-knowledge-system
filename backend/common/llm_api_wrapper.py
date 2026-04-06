@@ -58,6 +58,8 @@ class LLMAPIClient:
         self.api_url = api_url
         self.model = model
 
+        self._session: Optional[Any] = None
+
         # 初始化速率限制器
         self.rate_limiter = DistributedRateLimiter(
             redis_url=redis_url, max_calls=max_calls_per_minute, period=60
@@ -179,19 +181,21 @@ class LLMAPIClient:
             **kwargs,
         }
 
-        async with aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=timeout, connect=10)
-        ) as session:
-            async with session.post(
-                self.api_url,
-                json=payload,
-                headers=headers,
-            ) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    error_text = await response.text()
-                    raise Exception(f"API error {response.status}: {error_text}")
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=timeout, connect=10)
+            )
+
+        async with self._session.post(
+            self.api_url,
+            json=payload,
+            headers=headers,
+        ) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                error_text = await response.text()
+                raise Exception(f"API error {response.status}: {error_text}")
 
     def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
@@ -205,6 +209,12 @@ class LLMAPIClient:
             "rate_limit_hits": 0,
             "total_tokens": 0,
         }
+
+    async def close(self):
+        """关闭底层 aiohttp 会话"""
+        if self._session is not None and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
 
 # ==================== 全局单例 ====================
@@ -235,21 +245,33 @@ def get_llm_client(
     if _global_client is None:
         import os
 
+        glm_key = os.getenv("GLM_CODING_PLAN_KEY") or os.getenv("GLM_API_KEY")
         if api_key is None:
-            api_key = os.getenv("DEEPSEEK_API_KEY")
+            if glm_key:
+                api_key = glm_key
+            else:
+                api_key = os.getenv("DEEPSEEK_API_KEY")
 
         if api_key is None:
-            raise ValueError("DEEPSEEK_API_KEY not set")
+            raise ValueError(
+                "No LLM API key found (GLM_CODING_PLAN_KEY, GLM_API_KEY, or DEEPSEEK_API_KEY)"
+            )
 
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-        deepseek_api_url = os.getenv(
-            "DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"
-        )
+
+        if glm_key and api_key == glm_key:
+            default_url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+            default_model = "glm-4.7"
+        else:
+            default_url = os.getenv(
+                "DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"
+            )
+            default_model = "deepseek-chat"
 
         _global_client = LLMAPIClient(
             api_key=api_key,
-            api_url=api_url or deepseek_api_url,
-            model=model or "deepseek-chat",
+            api_url=api_url or default_url,
+            model=model or default_model,
             max_calls_per_minute=max_calls_per_minute,
             redis_url=redis_url,
         )
