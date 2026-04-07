@@ -130,6 +130,8 @@ services:
       LOG_LEVEL: INFO
       ENVIRONMENT: production
       EMBEDDING_SERVICE_URL: http://embedding:8001
+      JWT_PRIVATE_KEY_FILE: /app/jwt_private.pem
+      JWT_PUBLIC_KEY_FILE: /app/jwt_public.pem
     volumes:
     - ./backend:/app/backend
     - ./jwt_private.pem:/app/jwt_private.pem

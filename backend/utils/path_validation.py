@@ -100,9 +100,7 @@ def is_safe_path(user_path: str) -> bool:
         return False
 
 
-AUDIO_ALLOWED_EXTENSIONS = frozenset(
-    {".mp3", ".wav", ".flac", ".m4a", ".ogg", ".wma", ".aac"}
-)
+AUDIO_ALLOWED_EXTENSIONS = frozenset({".mp3", ".wav", ".flac", ".m4a", ".ogg", ".wma", ".aac"})
 
 PDF_ALLOWED_EXTENSIONS = frozenset({".pdf"})
 
@@ -153,9 +151,7 @@ def validate_absolute_file_path(
     project_root = get_project_root()
 
     if not _is_under_allowed_dir(resolved, allowed_base_dirs, project_root):
-        raise ValueError(
-            f"文件路径不在允许的目录内。允许的目录: {', '.join(allowed_base_dirs)}"
-        )
+        raise ValueError(f"文件路径不在允许的目录内。允许的目录: {', '.join(allowed_base_dirs)}")
 
     if resolved.is_symlink():
         real_target = resolved.resolve()

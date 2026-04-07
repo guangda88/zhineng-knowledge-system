@@ -69,7 +69,9 @@ async def post_feedback(req: FeedbackSubmit):
 
 @router.get("")
 async def get_feedback_list(
-    feedback_type: Optional[str] = Query(None, pattern="^(helpful|not_helpful|wrong|irrelevant|partial)$"),
+    feedback_type: Optional[str] = Query(
+        None, pattern="^(helpful|not_helpful|wrong|irrelevant|partial)$"
+    ),
     doc_id: Optional[int] = None,
     query: Optional[str] = None,
     limit: int = Query(50, ge=1, le=200),
@@ -79,8 +81,12 @@ async def get_feedback_list(
     try:
         pool = await init_db_pool()
         feedbacks = await list_feedback(
-            pool, feedback_type=feedback_type, doc_id=doc_id,
-            query=query, limit=limit, offset=offset,
+            pool,
+            feedback_type=feedback_type,
+            doc_id=doc_id,
+            query=query,
+            limit=limit,
+            offset=offset,
         )
         return {"status": "ok", "data": feedbacks, "count": len(feedbacks)}
     except Exception as e:

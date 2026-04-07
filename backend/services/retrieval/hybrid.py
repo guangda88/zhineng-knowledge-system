@@ -225,9 +225,7 @@ class HybridRetriever:
         )
 
         try:
-            await record_search_outcome(
-                self.db_pool, query, results, category, source="hybrid"
-            )
+            await record_search_outcome(self.db_pool, query, results, category, source="hybrid")
         except Exception as gap_err:
             logger.debug(f"缺口记录跳过: {gap_err}")
 

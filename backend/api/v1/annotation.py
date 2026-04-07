@@ -169,7 +169,7 @@ async def batch_create_ocr_tasks(
 
     返回：创建的任务列表
     """
-    from backend.utils.path_validation import validate_absolute_file_path, PDF_ALLOWED_EXTENSIONS
+    from backend.utils.path_validation import PDF_ALLOWED_EXTENSIONS, validate_absolute_file_path
 
     resolved, err = validate_absolute_file_path(
         request.pdf_path, allowed_extensions=PDF_ALLOWED_EXTENSIONS
@@ -414,7 +414,7 @@ async def batch_create_transcription_tasks(
 
     返回：创建的任务列表
     """
-    from backend.utils.path_validation import validate_absolute_file_path, AUDIO_ALLOWED_EXTENSIONS
+    from backend.utils.path_validation import AUDIO_ALLOWED_EXTENSIONS, validate_absolute_file_path
 
     resolved, err = validate_absolute_file_path(
         request.audio_path, allowed_extensions=AUDIO_ALLOWED_EXTENSIONS

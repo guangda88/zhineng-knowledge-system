@@ -181,6 +181,20 @@ class AuthConfig:
         if self.private_key_pem is None or self.public_key_pem is None:
             import os
 
+            for env_key, file_env, attr in [
+                ("JWT_PRIVATE_KEY", "JWT_PRIVATE_KEY_FILE", "private_key_pem"),
+                ("JWT_PUBLIC_KEY", "JWT_PUBLIC_KEY_FILE", "public_key_pem"),
+            ]:
+                val = os.getenv(env_key)
+                if val:
+                    setattr(self, attr, val)
+                    continue
+                file_path = os.getenv(file_env)
+                if file_path and os.path.isfile(file_path):
+                    setattr(self, attr, open(file_path).read())
+                    logger.info(f"从文件加载 {env_key}: {file_path}")
+
+        if self.private_key_pem is None or self.public_key_pem is None:
             environment = os.getenv("ENVIRONMENT", "development").lower()
 
             if environment in ("production", "prod"):
@@ -188,7 +202,8 @@ class AuthConfig:
                     "安全错误: RSA密钥对在生产环境必须通过环境变量提供。\n"
                     "请设置以下环境变量：\n"
                     "  - JWT_PRIVATE_KEY: RSA私钥PEM格式\n"
-                    "  - JWT_PUBLIC_KEY: RSA公钥PEM格式\n\n"
+                    "  - JWT_PUBLIC_KEY: RSA公钥PEM格式\n"
+                    "  - JWT_PRIVATE_KEY_FILE / JWT_PUBLIC_KEY_FILE: 密钥文件路径\n\n"
                     "生成密钥对命令:\n"
                     "  openssl genrsa -out private.pem 2048\n"
                     "  openssl rsa -in private.pem -pubout -out public.pem"

@@ -377,9 +377,10 @@ async def get_staging_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
         by_source = await conn.fetch(
             "SELECT source, COUNT(*) as count FROM documents_staging GROUP BY source"
         )
-        gap_linked = await conn.fetchval(
-            "SELECT COUNT(*) FROM documents_staging WHERE gap_id IS NOT NULL"
-        ) or 0
+        gap_linked = (
+            await conn.fetchval("SELECT COUNT(*) FROM documents_staging WHERE gap_id IS NOT NULL")
+            or 0
+        )
 
     return {
         "total": total,

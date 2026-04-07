@@ -210,7 +210,7 @@ async def delete_audio_file(file_id: int):
 async def import_with_transcript(request: ImportRequest):
     """导入带转写文本的音频文件（从听悟导出的数据）"""
     from backend.services.audio import AudioService
-    from backend.utils.path_validation import validate_absolute_file_path, AUDIO_ALLOWED_EXTENSIONS
+    from backend.utils.path_validation import AUDIO_ALLOWED_EXTENSIONS, validate_absolute_file_path
 
     resolved, err = validate_absolute_file_path(
         request.audio_path, allowed_extensions=AUDIO_ALLOWED_EXTENSIONS

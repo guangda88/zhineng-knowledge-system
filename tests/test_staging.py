@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock
 import asyncpg
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Unit tests for staging service (mocked pool)
 # ---------------------------------------------------------------------------
@@ -44,9 +43,7 @@ class TestCreateStagingDoc:
 
         pool, _ = mock_pool
         with pytest.raises(ValueError, match="无效来源"):
-            await create_staging_doc(
-                pool, title="测试", content="内容", source="invalid_source"
-            )
+            await create_staging_doc(pool, title="测试", content="内容", source="invalid_source")
 
 
 class TestListStagingDocs:

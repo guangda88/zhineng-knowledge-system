@@ -349,9 +349,7 @@ class EnhancedEmbeddingService:
             batch = texts[i : i + batch_size]
 
             def _encode_batch(b=batch):
-                return model.encode(
-                    b, normalize_embeddings=True, batch_size=batch_size
-                ).tolist()
+                return model.encode(b, normalize_embeddings=True, batch_size=batch_size).tolist()
 
             embeddings = await loop.run_in_executor(None, _encode_batch)
             all_embeddings.extend(embeddings)

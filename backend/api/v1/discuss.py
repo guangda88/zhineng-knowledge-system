@@ -32,6 +32,7 @@ ZHI_IDENTITY = (
     "理解时以语义为准，回复时用正确的字词。不要纠正用户，直接理解并回复。"
 )
 
+
 def _load_env_keys() -> dict[str, str]:
     """Load API keys from env vars first, then .env files (host + container paths)."""
     import os
@@ -61,9 +62,21 @@ def _load_env_keys() -> dict[str, str]:
 
 
 _LLM_PROVIDERS = [
-    {"key_env": "GLM_CODING_PLAN_KEY", "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions", "model": "glm-4.7"},
-    {"key_env": "GLM_API_KEY", "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions", "model": "glm-4.7"},
-    {"key_env": "DEEPSEEK_API_KEY", "url": "https://api.deepseek.com/v1/chat/completions", "model": "deepseek-chat"},
+    {
+        "key_env": "GLM_CODING_PLAN_KEY",
+        "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+        "model": "glm-4.7",
+    },
+    {
+        "key_env": "GLM_API_KEY",
+        "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+        "model": "glm-4.7",
+    },
+    {
+        "key_env": "DEEPSEEK_API_KEY",
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "model": "deepseek-chat",
+    },
 ]
 
 
@@ -79,15 +92,19 @@ def _call_llm_sync(prompt: str, max_tokens: int = 1500) -> Optional[str]:
         if not api_key:
             continue
 
-        payload = json.dumps({
-            "model": provider["model"],
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": max_tokens,
-            "temperature": 0.7,
-        }, ensure_ascii=False).encode("utf-8")
+        payload = json.dumps(
+            {
+                "model": provider["model"],
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": max_tokens,
+                "temperature": 0.7,
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
 
         req = urllib.request.Request(
-            provider["url"], data=payload,
+            provider["url"],
+            data=payload,
             headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
             method="POST",
         )
@@ -108,7 +125,10 @@ def _call_llm_sync(prompt: str, max_tokens: int = 1500) -> Optional[str]:
 async def _call_llm(prompt: str, max_tokens: int = 1500) -> tuple[Optional[str], str]:
     """异步包装 — 在线程池中执行同步 HTTP 调用"""
     import asyncio
-    result = await asyncio.get_event_loop().run_in_executor(None, _call_llm_sync, prompt, max_tokens)
+
+    result = await asyncio.get_event_loop().run_in_executor(
+        None, _call_llm_sync, prompt, max_tokens
+    )
     if result is None:
         return None, ""
     return result
@@ -187,6 +207,7 @@ async def discuss(req: DiscussRequest):
 
         try:
             from backend.services.ai_service import chat
+
             result = await chat(prompt, use_cache=False)
             if result:
                 return DiscussResponse(
@@ -215,8 +236,8 @@ class NotifyRequest(BaseModel):
 @router.post("/lingmessage/notify")
 async def lingmessage_notify(req: NotifyRequest):
     """灵信通知端点 — 收到通知后独立生成回复并写入灵信"""
-    import threading
     import sys
+    import threading
 
     if req.event != "new_message" or req.from_id == "lingzhi":
         return {"received": True, "service": "灵知", "action": "skipped"}
@@ -228,10 +249,12 @@ async def lingmessage_notify(req: NotifyRequest):
         try:
             import os
 
-            lingyi_src = os.environ.get("LINGYI_SRC_PATH", os.path.join(os.path.expanduser("~"), "LingYi", "src"))
+            lingyi_src = os.environ.get(
+                "LINGYI_SRC_PATH", os.path.join(os.path.expanduser("~"), "LingYi", "src")
+            )
             if lingyi_src not in sys.path:
                 sys.path.insert(0, lingyi_src)
-            from lingyi.lingmessage import send_message, read_discussion
+            from lingyi.lingmessage import read_discussion, send_message
 
             context = ""
             if req.discussion_id:

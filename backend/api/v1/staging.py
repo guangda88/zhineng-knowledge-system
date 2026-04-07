@@ -78,7 +78,9 @@ async def post_staging_doc(req: StagingDocCreate):
 
 @router.get("")
 async def get_staging_list(
-    status: Optional[str] = Query(None, pattern="^(draft|submitted|reviewing|approved|rejected|published)$"),
+    status: Optional[str] = Query(
+        None, pattern="^(draft|submitted|reviewing|approved|rejected|published)$"
+    ),
     category: Optional[str] = None,
     source: Optional[str] = None,
     gap_id: Optional[int] = None,
@@ -89,8 +91,13 @@ async def get_staging_list(
     try:
         pool = await init_db_pool()
         docs = await list_staging_docs(
-            pool, status=status, category=category, source=source,
-            gap_id=gap_id, limit=limit, offset=offset,
+            pool,
+            status=status,
+            category=category,
+            source=source,
+            gap_id=gap_id,
+            limit=limit,
+            offset=offset,
         )
         return {"status": "ok", "data": docs, "count": len(docs)}
     except Exception as e:
@@ -164,7 +171,8 @@ async def patch_approve(staging_id: int, req: ReviewRequest):
     try:
         pool = await init_db_pool()
         doc_id = await approve_and_publish(
-            pool, staging_id,
+            pool,
+            staging_id,
             reviewed_by=req.reviewed_by,
             review_notes=req.review_notes,
         )
@@ -184,7 +192,8 @@ async def patch_reject(staging_id: int, req: ReviewRequest):
     try:
         pool = await init_db_pool()
         ok = await reject_staging(
-            pool, staging_id,
+            pool,
+            staging_id,
             reviewed_by=req.reviewed_by,
             review_notes=req.review_notes,
         )
