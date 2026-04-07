@@ -1,0 +1,16 @@
+intents:
+  practice_method:
+    keywords: ["怎么做", "如何练习", "动作要领", "步骤", "方法", "练法", "功法"]
+    templates: ["{title}怎么做", "如何练习{title}", "{title}的动作要领是什么", "{title}的练习步骤", "{title}练法", "请讲解{title}的方法"]
+  scientific_basis:
+    keywords: ["科学依据", "研究", "证明", "实验", "数据", "论文", "现代医学"]
+    templates: ["{title}有科学依据吗", "关于{title}有什么研究", "{title}的现代科学研究", "有没有实验证明{title}的效果", "{title}的科学原理是什么"]
+  theory_explanation:
+    keywords: ["什么是", "原理", "为什么", "解释", "含义", "概念", "理论"]
+    templates: ["什么是{title}", "{title}的原理是什么", "为什么要有{title}", "请解释{title}的含义", "{title}是什么概念", "介绍一下{title}的理论"]
+  book_search:
+    keywords: ["哪本书", "出处", "参考", "来源", "章节", "文献", "典籍"]
+    templates: ["{title}出自哪本书", "{title}的出处是什么", "哪本书提到过{title}", "{title}的参考文献", "关于{title}的典籍有哪些"]
+  comparison:
+    keywords: ["区别", "不同", "对比", "差异", "关系", "联系", "比较"]
+    templates: ["{title}和{other}有什么区别", "对比{title}和{other}", "{title}与{other}的差异", "{title}和{other}的关系", "比较{title}和{other}的不同"]
