@@ -401,8 +401,8 @@ Use `$1`, `$2` positional parameters (not `%s` or `?`):
 await db.fetch("SELECT * FROM documents WHERE id = $1", doc_id)
 ```
 
-### 9. Embedding Placeholder
-`VectorRetriever.embed_text()` currently uses a SHA-256 hash-based placeholder. Production needs a real BGE embedding service integration.
+### 9. Embedding Service
+`VectorRetriever.embed_text()` uses `sentence-transformers` with `BAAI/bge-small-zh-v1.5` (default, 512-dim). Model controlled by `EMBEDDING_MODEL` env var. `enhanced_vector_service.py` provides local-first with remote API fallback.
 
 ### 10. DEVELOPMENT_RULES.md is Authoritative
 The project has a comprehensive `DEVELOPMENT_RULES.md` (in Chinese) that is the single source of truth for all conventions. It includes resource management, emergency response procedures, and hook-based enforcement mechanisms.

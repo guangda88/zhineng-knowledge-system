@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from backend.services.ai_service_adapter import AIServiceAdapter
-from backend.services.retrieval.vector import _get_local_model
+from backend.services.retrieval.vector import _get_model as _get_local_model
 
 logger = logging.getLogger(__name__)
 
