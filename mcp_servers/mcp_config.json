@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "zhineng-knowledge": {
+      "command": "python",
+      "args": ["-m", "mcp_servers.zhineng_server"],
+      "cwd": "/home/ai/zhineng-knowledge-system",
+      "env": {
+        "ZHINENG_API_URL": "http://localhost:8000",
+        "DATABASE_URL": "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+      }
+    }
+  }
+}
