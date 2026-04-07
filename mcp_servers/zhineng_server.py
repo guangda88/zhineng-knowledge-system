@@ -1,9 +1,9 @@
-"""智能知识系统 MCP Server — P0 工具封装
+"""智能知识系统 MCP Server — 30个工具封装
 
 封装智能知识系统的核心 API 为 MCP 工具，供灵族成员通过 MCP 协议调用。
 使用 FastMCP 框架，代理至 FastAPI 后端。
 
-P0 工具列表:
+P0 工具(11):
   1. knowledge_search  — 知识检索（混合 BM25+向量）
   2. ask_question      — 智能问答
   3. domain_query      — 领域路由查询
@@ -11,6 +11,15 @@ P0 工具列表:
   5. submit_feedback   — 反馈提交
   6. generate_training_data — 训练数据生成
   7. safe_db_query     — 安全数据库查询
+
+P1 扩展(19):
+  藏书检索: book_search, book_fulltext, book_detail, book_related
+  国学经典: guoxue_search, guoxue_cross_book, guoxue_classics
+  书目系统: sysbook_search, sysbook_domains
+  推理图谱: reason, graph_query, kg_entities, kg_subgraph
+  知识缺口: knowledge_gaps, gap_stats
+  灵信线程: thread_list, thread_summary
+  管道情报: pipeline_stats, intelligence_dashboard
 """
 
 import asyncio
@@ -34,8 +43,12 @@ DB_URL = os.getenv(
 TRAINING_SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "prepare_training_data.py"
 
 READONLY_TABLES = {
-    "documents", "guji_documents", "textbook_knowledge",
-    "lingmessage_threads", "lingmessage_messages", "lingmessage_agents",
+    "documents",
+    "guji_documents",
+    "textbook_knowledge",
+    "lingmessage_threads",
+    "lingmessage_messages",
+    "lingmessage_agents",
 }
 
 mcp = FastMCP("zhineng-knowledge")
@@ -44,6 +57,7 @@ mcp = FastMCP("zhineng-knowledge")
 # ---------------------------------------------------------------------------
 # Tool 1: 知识检索
 # ---------------------------------------------------------------------------
+
 
 @mcp.tool()
 async def knowledge_search(
@@ -82,6 +96,7 @@ async def knowledge_search(
 # Tool 2: 智能问答
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool()
 async def ask_question(
     question: str,
@@ -114,6 +129,7 @@ async def ask_question(
 # Tool 3: 领域路由查询
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool()
 async def domain_query(
     domain: str,
@@ -142,6 +158,7 @@ async def domain_query(
 # ---------------------------------------------------------------------------
 # Tool 4: 自优化状态
 # ---------------------------------------------------------------------------
+
 
 @mcp.tool()
 async def optimization_status() -> dict:
@@ -181,6 +198,7 @@ async def optimization_status() -> dict:
 # ---------------------------------------------------------------------------
 # Tool 5: 反馈提交
 # ---------------------------------------------------------------------------
+
 
 @mcp.tool()
 async def submit_feedback(
@@ -226,6 +244,7 @@ async def submit_feedback(
 # ---------------------------------------------------------------------------
 # Tool 6: 训练数据生成
 # ---------------------------------------------------------------------------
+
 
 @mcp.tool()
 async def generate_training_data(
@@ -282,6 +301,7 @@ async def generate_training_data(
             report_path = Path(output_dir) / "data_quality_report.json"
             if report_path.exists():
                 import json
+
                 with open(report_path) as f:
                     result["report"] = json.load(f)
         except Exception:
@@ -362,6 +382,7 @@ async def safe_db_query(
 # ---------------------------------------------------------------------------
 # Tool 5b: 检索反馈（持久化）
 # ---------------------------------------------------------------------------
+
 
 @mcp.tool()
 async def submit_search_feedback(
@@ -444,6 +465,7 @@ async def get_search_feedback(
 # 辅助工具：获取分类列表 / 系统统计
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool()
 async def list_categories() -> dict:
     """获取知识库所有分类列表。
@@ -466,6 +488,207 @@ async def system_stats() -> dict:
     """
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
         resp = await client.get("/api/v1/stats")
+        resp.raise_for_status()
+        return resp.json()
+
+
+# ── P1 扩展工具（19个） ──
+
+
+@mcp.tool()
+async def book_search(q: str, category: str = "", page: int = 1, size: int = 10) -> dict:
+    """统一跨源搜书（灵典）— books+sys_books+guoxue_books。"""
+    params = {"q": q, "page": page, "size": size}
+    if category:
+        params["category"] = category
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
+        resp = await client.get("/library/lingflow/unified", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def book_fulltext(q: str, book_id: str = "", page: int = 1, size: int = 10) -> dict:
+    """书籍全文内容搜索（灵典全文）。"""
+    params = {"q": q, "page": page, "size": size}
+    if book_id:
+        params["book_id"] = book_id
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
+        resp = await client.get("/library/lingflow/fulltext", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def book_detail(book_id: str) -> dict:
+    """书籍详情+章节目录（灵典详情）。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get(f"/library/{book_id}")
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def book_related(book_id: str, top_k: int = 5) -> dict:
+    """向量相似书籍推荐（灵典荐）。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get(f"/library/{book_id}/related", params={"top_k": top_k})
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def guoxue_search(q: str, mode: str = "fulltext", page: int = 1, size: int = 20) -> dict:
+    """国学经典全文搜索（灵经）— 26万条，3种模式(fulltext/fuzzy/broad)。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
+        resp = await client.get("/api/v1/guoxue/search", params={"q": q, "mode": mode, "page": page, "size": size})
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def guoxue_cross_book(q: str, top_k: int = 10, per_book: int = 3) -> dict:
+    """跨典籍搜索（灵经跨）— 概念在不同经典中的论述。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
+        resp = await client.get("/api/v1/guoxue/search/cross-book", params={"q": q, "top_k": top_k, "per_book": per_book})
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def guoxue_classics(page: int = 1, size: int = 50) -> dict:
+    """国学典籍列表（灵经目）— 109部。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/guoxue/books", params={"page": page, "size": size})
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def sysbook_search(q: str = "", domain: str = "", page: int = 1, size: int = 20) -> dict:
+    """系统书目检索（灵目）— 302万条。"""
+    params = {"page": page, "size": size}
+    if q:
+        params["q"] = q
+    if domain:
+        params["domain"] = domain
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
+        resp = await client.get("/api/v1/sysbooks/search", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def sysbook_domains() -> dict:
+    """书目领域分类树（灵目域）。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/sysbooks/domains")
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def reason(question: str, mode: str = "auto", category: str = "", use_rag: bool = True) -> dict:
+    """多模式推理问答（灵思）— CoT/ReAct/GraphRAG/auto。"""
+    payload = {"question": question, "mode": mode, "use_rag": use_rag}
+    if category:
+        payload["category"] = category
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=30.0) as client:
+        resp = await client.post("/api/v1/reason", json=payload)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def graph_query(entity1: str, entity2: str, max_depth: int = 3) -> dict:
+    """知识图谱路径查询（灵图）— 两实体间关系。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
+        resp = await client.post("/api/v1/graph/query", json={"entity1": entity1, "entity2": entity2, "max_depth": max_depth})
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def kg_entities(q: str = "", entity_type: str = "", limit: int = 20) -> dict:
+    """知识图谱实体搜索（灵图实）。"""
+    params = {"limit": limit}
+    if q:
+        params["q"] = q
+    if entity_type:
+        params["entity_type"] = entity_type
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/pipeline/kg/entities", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def kg_subgraph(entity_id: str, depth: int = 1) -> dict:
+    """获取实体周围子图（灵图邻）— BFS扩展。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/pipeline/kg/graph", params={"entity_id": entity_id, "depth": depth})
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def knowledge_gaps(status: str = "", category: str = "", limit: int = 20) -> dict:
+    """查询知识缺口列表（灵缺）— 灵知反射弧。"""
+    params = {"limit": limit}
+    if status:
+        params["status"] = status
+    if category:
+        params["category"] = category
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/knowledge-gaps", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def gap_stats() -> dict:
+    """知识缺口统计（灵缺统）。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/knowledge-gaps/stats")
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def thread_list(status: str = "", limit: int = 20) -> dict:
+    """灵信线程列表（灵信列）。"""
+    params = {"limit": limit}
+    if status:
+        params["status"] = status
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/lingmessage/threads", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def thread_summary(thread_id: str) -> dict:
+    """灵信线程摘要（灵信摘）— 消息+共识。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get(f"/api/v1/lingmessage/threads/{thread_id}/summary")
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def pipeline_stats() -> dict:
+    """管道总览（灵报）— 提取/标注/图谱/对账进度。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/pipeline/stats")
+        resp.raise_for_status()
+        return resp.json()
+
+
+@mcp.tool()
+async def intelligence_dashboard() -> dict:
+    """情报仪表盘摘要（灵智）。"""
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+        resp = await client.get("/api/v1/intelligence/dashboard")
         resp.raise_for_status()
         return resp.json()
 
