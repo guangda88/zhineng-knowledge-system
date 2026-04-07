@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock
 import asyncpg
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Unit tests for gap_tracker service (mocked pool)
 # ---------------------------------------------------------------------------
@@ -218,7 +217,15 @@ class TestGetGapsStats:
         mock_conn.fetchval.side_effect = [10, 3]
         mock_conn.fetch.side_effect = [
             [{"status": "open", "count": 7}, {"status": "resolved", "count": 3}],
-            [{"query": "热门缺口", "category": "气功", "hit_count": 5, "best_score": 0.1, "last_seen": None}],
+            [
+                {
+                    "query": "热门缺口",
+                    "category": "气功",
+                    "hit_count": 5,
+                    "best_score": 0.1,
+                    "last_seen": None,
+                }
+            ],
         ]
 
         stats = await get_gaps_stats(pool)

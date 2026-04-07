@@ -36,10 +36,16 @@ class TestSubmitFeedback:
         mock_conn.fetchval.return_value = 2
 
         fb_id = await submit_feedback(
-            pool, query="气功", feedback_type="not_helpful",
-            doc_id=10, rating=2, category="气功",
-            search_method="hybrid", rank_position=1,
-            similarity_score=0.75, comment="不太相关",
+            pool,
+            query="气功",
+            feedback_type="not_helpful",
+            doc_id=10,
+            rating=2,
+            category="气功",
+            search_method="hybrid",
+            rank_position=1,
+            similarity_score=0.75,
+            comment="不太相关",
             session_id="sess_123",
         )
         assert fb_id == 2
@@ -88,7 +94,10 @@ class TestGetFeedbackStats:
         pool, mock_conn = mock_pool
         mock_conn.fetchval.side_effect = [100, 4.2, 65.0, 20]
         mock_conn.fetch.side_effect = [
-            [{"feedback_type": "helpful", "count": 65}, {"feedback_type": "not_helpful", "count": 35}],
+            [
+                {"feedback_type": "helpful", "count": 65},
+                {"feedback_type": "not_helpful", "count": 35},
+            ],
             [{"query": "八段锦", "feedback_count": 10, "helpful": 8, "not_helpful": 2}],
         ]
 

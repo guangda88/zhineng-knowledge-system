@@ -10,8 +10,9 @@ from tests.conftest import _noop_lifespan
 
 @pytest.fixture
 def client():
-    from backend.main import create_app
     from fastapi.testclient import TestClient
+
+    from backend.main import create_app
 
     app = create_app(lifespan_ctx=_noop_lifespan)
     with TestClient(app, raise_server_exceptions=False) as c:

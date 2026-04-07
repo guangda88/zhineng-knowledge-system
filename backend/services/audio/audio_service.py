@@ -630,7 +630,10 @@ class AudioService:
         Returns:
             导入结果
         """
-        from backend.utils.path_validation import validate_absolute_file_path, AUDIO_ALLOWED_EXTENSIONS
+        from backend.utils.path_validation import (
+            AUDIO_ALLOWED_EXTENSIONS,
+            validate_absolute_file_path,
+        )
 
         resolved_path, err = validate_absolute_file_path(
             audio_path, allowed_extensions=AUDIO_ALLOWED_EXTENSIONS
