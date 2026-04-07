@@ -14,14 +14,14 @@ import asyncio
 import json
 import os
 import sys
-import time
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault(
     "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
 )
 
-from backend.core.database import get_db_pool, init_db_pool
+from backend.core.database import init_db_pool
 
 AGENT_PERSONAS = {
     "lingzhi": {
@@ -173,7 +173,7 @@ async def run_discussion(
 ):
     """运行自主讨论循环"""
     pool = await init_db_pool()
-    print(f"✓ 数据库连接已建立")
+    print("✓ 数据库连接已建立")
 
     from backend.services.lingmessage.service import LingMessageService
 
@@ -361,12 +361,12 @@ def main():
     print("║         灵信通信系统 — 灵字辈大家庭战略会议              ║")
     print("╚══════════════════════════════════════════════════════════╝")
     print()
-    print(f"  📚 灵知  — 知识后盾")
-    print(f"  🎤 灵通  — 内容传播")
-    print(f"  🌸 灵依  — 情报汇总")
-    print(f"  ⚡ 灵克  — 行动执行")
-    print(f"  🔧 灵极优 — 自优化框架")
-    print(f"  🔬 灵研  — 科研微调")
+    print("  📚 灵知  — 知识后盾")
+    print("  🎤 灵通  — 内容传播")
+    print("  🌸 灵依  — 情报汇总")
+    print("  ⚡ 灵克  — 行动执行")
+    print("  🔧 灵极优 — 自优化框架")
+    print("  🔬 灵研  — 科研微调")
     print()
 
     asyncio.run(
