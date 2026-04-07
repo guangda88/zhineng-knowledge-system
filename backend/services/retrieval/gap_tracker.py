@@ -82,10 +82,19 @@ async def record_gap(
                     WHERE id = $3
                     """,
                     best_score,
-                    json.dumps({"last_source": source, **(metadata or {})}) if metadata else json.dumps({"last_source": source}),
+                    (
+                        json.dumps({"last_source": source, **(metadata or {})})
+                        if metadata
+                        else json.dumps({"last_source": source})
+                    ),
                     row["id"],
                 )
                 logger.debug(f"知识缺口聚合: query='{query}', hit_count={row['hit_count'] + 1}")
+
+                new_count = row["hit_count"] + 1
+                if new_count == GAP_THRESHOLD_COUNT + 1:
+                    await _alert_gap_threshold(query, new_count, category)
+
                 return row["id"]
             else:
                 gap_id = await conn.fetchval(
@@ -101,7 +110,9 @@ async def record_gap(
                     source,
                     json.dumps(metadata or {}),
                 )
-                logger.info(f"新知识缺口: query='{query}', results={result_count}, score={best_score}")
+                logger.info(
+                    f"新知识缺口: query='{query}', results={result_count}, score={best_score}"
+                )
                 return gap_id
 
     except Exception as e:
@@ -216,12 +227,15 @@ async def get_gaps_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
             LIMIT 10
             """,
         )
-        recent = await conn.fetchval(
-            """
+        recent = (
+            await conn.fetchval(
+                """
             SELECT COUNT(*) FROM knowledge_gaps
             WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '7 days'
             """
-        ) or 0
+            )
+            or 0
+        )
 
     return {
         "total": total,
@@ -229,6 +243,44 @@ async def get_gaps_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
         "recent_7d": recent,
         "top_unresolved": [dict(r) for r in top_unresolved],
     }
+
+
+async def _alert_gap_threshold(
+    query: str, hit_count: int, category: Optional[str]
+) -> None:
+    """当知识缺口命中次数超过阈值时，通过灵信服务发送告警。"""
+    try:
+        from backend.services.lingmessage.service import LingMessageService
+
+        svc = LingMessageService()
+        cat_info = f" (分类: {category})" if category else ""
+        topic = f"知识缺口告警: {query}{cat_info}"
+
+        thread = await svc.create_thread(
+            topic=topic,
+            created_by="lingzhi",
+            description=f"查询 '{query}' 已被搜索 {hit_count} 次仍无满意结果，需要补充相关知识。"
+            f"分类: {category or '未知'}",
+            priority="high",
+            max_rounds=5,
+        )
+
+        await svc.post_message(
+            thread_id=thread["id"],
+            agent_id="lingzhi",
+            content=(
+                f"🔔 知识缺口告警\n\n"
+                f"查询: {query}\n"
+                f"命中次数: {hit_count}\n"
+                f"分类: {category or '未知'}\n\n"
+                f"请灵克/灵通关注此缺口，评估是否需要补充相关文档。"
+            ),
+            message_type="opening",
+        )
+
+        logger.info(f"缺口告警已发送: query='{query}', hit_count={hit_count}, thread={thread['id']}")
+    except Exception as e:
+        logger.warning(f"发送缺口告警失败（不影响主流程）: {e}")
 
 
 async def update_gap_status(
