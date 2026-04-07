@@ -15,6 +15,9 @@ import asyncpg
 
 logger = logging.getLogger(__name__)
 
+_DOC_QUALITY_CACHE_TTL = 300
+_DOC_QUALITY_NAMESPACE = "doc_quality"
+
 VALID_FEEDBACK_TYPES = {"helpful", "not_helpful", "wrong", "irrelevant", "partial"}
 
 
@@ -96,20 +99,29 @@ async def get_feedback_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
         by_type = await conn.fetch(
             "SELECT feedback_type, COUNT(*) as count FROM search_feedback GROUP BY feedback_type"
         )
-        avg_rating = await conn.fetchval(
-            "SELECT ROUND(AVG(rating)::numeric, 2) FROM search_feedback WHERE rating IS NOT NULL"
-        ) or 0
-        helpful_rate = await conn.fetchval(
-            """
+        avg_rating = (
+            await conn.fetchval(
+                "SELECT ROUND(AVG(rating)::numeric, 2) FROM search_feedback WHERE rating IS NOT NULL"
+            )
+            or 0
+        )
+        helpful_rate = (
+            await conn.fetchval(
+                """
             SELECT CASE WHEN COUNT(*) = 0 THEN 0
                 ELSE ROUND(100.0 * SUM(CASE WHEN feedback_type = 'helpful' THEN 1 ELSE 0 END) / COUNT(*), 1)
                 END
             FROM search_feedback
             """
-        ) or 0.0
-        recent_7d = await conn.fetchval(
-            "SELECT COUNT(*) FROM search_feedback WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '7 days'"
-        ) or 0
+            )
+            or 0.0
+        )
+        recent_7d = (
+            await conn.fetchval(
+                "SELECT COUNT(*) FROM search_feedback WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '7 days'"
+            )
+            or 0
+        )
 
         top_queries = await conn.fetch(
             """
@@ -134,23 +146,9 @@ async def get_feedback_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
     }
 
 
-async def get_doc_quality_scores(
-    pool: asyncpg.Pool,
-    doc_ids: List[int],
+async def _fetch_quality_from_db(
+    pool: asyncpg.Pool, doc_ids: List[int]
 ) -> Dict[int, Dict[str, Any]]:
-    """
-    批量获取文档的反馈质量评分。
-
-    Args:
-        pool: 数据库连接池
-        doc_ids: 文档 ID 列表
-
-    Returns:
-        {doc_id: {helpful_count, total_feedback, helpful_ratio, avg_rating}}
-    """
-    if not doc_ids:
-        return {}
-
     async with pool.acquire() as conn:
         rows = await conn.fetch(
             """
@@ -178,6 +176,40 @@ async def get_doc_quality_scores(
         }
 
     return result
+
+
+async def get_doc_quality_scores(
+    pool: asyncpg.Pool,
+    doc_ids: List[int],
+) -> Dict[int, Dict[str, Any]]:
+    """
+    批量获取文档的反馈质量评分（带缓存）。
+
+    Args:
+        pool: 数据库连接池
+        doc_ids: 文档 ID 列表
+
+    Returns:
+        {doc_id: {helpful_count, total_feedback, helpful_ratio, avg_rating}}
+    """
+    if not doc_ids:
+        return {}
+
+    try:
+        from backend.cache.manager import get_cache_manager
+
+        cache_mgr = get_cache_manager()
+        cache_key = ",".join(str(did) for did in sorted(doc_ids))
+
+        return await cache_mgr.get_or_set(
+            cache_key,
+            lambda: _fetch_quality_from_db(pool, doc_ids),
+            namespace=_DOC_QUALITY_NAMESPACE,
+            ttl=_DOC_QUALITY_CACHE_TTL,
+        )
+    except Exception:
+        logger.debug("缓存不可用，直接查询数据库")
+        return await _fetch_quality_from_db(pool, doc_ids)
 
 
 async def list_feedback(

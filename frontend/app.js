@@ -101,7 +101,7 @@ async function performSearch(query, category = '') {
 
         resultsDiv.innerHTML = `
             <p class="result-meta">找到 ${data.total} 条结果</p>
-            ${data.results.map(item => createResultItem(item)).join('')}
+            ${data.results.map(item => createResultItem(item, query)).join('')}
         `;
     } catch (error) {
         resultsDiv.innerHTML = `
@@ -114,18 +114,27 @@ async function performSearch(query, category = '') {
 }
 
 // 创建搜索结果项
-function createResultItem(item) {
+function createResultItem(item, query) {
     const content = item.content.length > 200
         ? item.content.substring(0, 200) + '...'
         : item.content;
 
+    const safeQuery = escapeHtml(query || '');
     return `
-        <div class="result-item">
+        <div class="result-item" data-doc-id="${item.id}">
             <h3 class="result-title">${escapeHtml(item.title)}</h3>
             <p class="result-content">${escapeHtml(content)}</p>
             <div class="result-meta">
                 <span class="category-tag ${item.category}">${item.category}</span>
                 <span>ID: ${item.id}</span>
+                <div class="feedback-buttons">
+                    <button class="feedback-btn helpful-btn" onclick="submitFeedback(event, ${item.id}, 'helpful', '${safeQuery}')" title="有帮助">
+                        👍
+                    </button>
+                    <button class="feedback-btn not-helpful-btn" onclick="submitFeedback(event, ${item.id}, 'not_helpful', '${safeQuery}')" title="没帮助">
+                        👎
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -260,16 +269,23 @@ async function askQuestion(question) {
         const data = await response.json();
         sessionId = data.session_id;
 
-        // 格式化回答
         const formattedAnswer = data.answer
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
+
+        const feedbackHtml = `
+            <div class="answer-feedback">
+                <span class="feedback-label">这个回答对您有帮助吗？</span>
+                <button class="feedback-btn helpful-btn" onclick="submitChatFeedback(event, 'helpful', '${escapeHtml(question)}')">👍 有帮助</button>
+                <button class="feedback-btn not-helpful-btn" onclick="submitChatFeedback(event, 'not_helpful', '${escapeHtml(question)}')">👎 没帮助</button>
+            </div>
+        `;
 
         const assistantMessage = document.createElement('div');
         assistantMessage.className = 'message assistant';
         assistantMessage.innerHTML = `
             <div class="message-avatar">🤖</div>
-            <div class="message-content">${formattedAnswer}</div>
+            <div class="message-content">${formattedAnswer}${feedbackHtml}</div>
         `;
 
         messagesDiv.appendChild(assistantMessage);
@@ -296,6 +312,66 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ========== 反馈功能 ==========
+
+async function submitFeedback(evt, docId, feedbackType, query) {
+    const btn = evt.target.closest('.feedback-btn');
+    if (btn.classList.contains('submitted')) return;
+
+    const container = btn.closest('.feedback-buttons');
+    container.querySelectorAll('.feedback-btn').forEach(b => b.classList.add('submitted'));
+    btn.style.opacity = '1';
+    btn.style.fontWeight = 'bold';
+
+    try {
+        await fetch(`${API_BASE}/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: query,
+                doc_id: docId,
+                feedback_type: feedbackType,
+                session_id: sessionId
+            })
+        });
+    } catch (error) {
+        container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('submitted'));
+        btn.style.opacity = '';
+        btn.style.fontWeight = '';
+        console.error('反馈提交失败:', error);
+    }
+}
+
+async function submitChatFeedback(evt, feedbackType, query) {
+    const container = evt.target.closest('.answer-feedback');
+    if (container.classList.contains('submitted')) return;
+    container.classList.add('submitted');
+
+    container.querySelectorAll('.feedback-btn').forEach(b => {
+        b.disabled = true;
+        b.style.opacity = '0.5';
+    });
+    evt.target.style.opacity = '1';
+    evt.target.style.fontWeight = 'bold';
+    const label = container.querySelector('.feedback-label');
+    if (label) label.textContent = '感谢您的反馈！';
+
+    try {
+        await fetch(`${API_BASE}/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: query,
+                feedback_type: feedbackType,
+                session_id: sessionId
+            })
+        });
+    } catch (error) {
+        container.classList.remove('submitted');
+        console.error('反馈提交失败:', error);
+    }
 }
 
 // ========== 推理功能 ==========
