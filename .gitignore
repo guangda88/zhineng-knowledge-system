@@ -102,3 +102,9 @@ data/textbooks/docx格式/
 dist/*.map
 build/*.map
 backups/db_dumps/*.sql
+
+# 运行时会话上下文（不提交）
+data/context/
+
+# OWData 运行时日志
+store/OWData/*/ownbsv/
