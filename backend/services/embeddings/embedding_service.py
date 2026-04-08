@@ -127,7 +127,7 @@ async def embed_text(request: EmbedRequest):
         raise HTTPException(status_code=503, detail=f"模型未加载: {model_load_error}")
 
     try:
-        embedding = model.encode(request.text, normalize=request.normalize, show_progress_bar=False)
+        embedding = model.encode(request.text, normalize_embeddings=request.normalize, show_progress_bar=False)
         embedding_list = embedding.tolist()
         return EmbedResponse(embedding=embedding_list, dim=len(embedding_list))
     except Exception as e:
@@ -145,7 +145,7 @@ async def embed_batch(request: EmbedBatchRequest):
 
     try:
         embeddings = model.encode(
-            request.texts, normalize=request.normalize, show_progress_bar=False
+            request.texts, normalize_embeddings=request.normalize, show_progress_bar=False
         )
         embeddings_list = [emb.tolist() for emb in embeddings]
         return EmbedBatchResponse(
