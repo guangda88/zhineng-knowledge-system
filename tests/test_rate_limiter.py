@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from backend.common.rate_limiter import DistributedRateLimiter
 
 

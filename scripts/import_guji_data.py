@@ -14,7 +14,6 @@ import asyncio
 import logging
 import sqlite3
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
 
@@ -330,7 +329,7 @@ async def main():
     if not database_url:
         database_url = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
 
-    logger.info(f"开始导入古籍数据...")
+    logger.info("开始导入古籍数据...")
     logger.info(f"源数据库: {SOURCE_DB}")
 
     result = await import_all_guji_data(database_url)

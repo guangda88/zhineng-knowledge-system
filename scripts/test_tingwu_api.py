@@ -41,9 +41,9 @@ def test_tingwu_api():
         from alibabacloud_core.models import Config
         from alibabacloud_tingwu20230930.client import Client as TingwuClient
 
-        print(f"📡 连接到阿里云听愚...")
+        print("📡 连接到阿里云听愚...")
         print(f"   AccessKey ID: {access_key_id[:15]}...{access_key_id[-4:]}")
-        print(f"   区域: cn-hangzhou")
+        print("   区域: cn-hangzhou")
         print()
 
         # 创建客户端
@@ -58,11 +58,11 @@ def test_tingwu_api():
 
         # 测试API: 获取文件夹265086的任务列表
         print()
-        print(f"📂 获取文件夹 265086 的任务...")
+        print("📂 获取文件夹 265086 的任务...")
 
         response = client.list_tasks(folder_id="265086", page_size=20, page_number=1)
 
-        print(f"✅ API调用成功!")
+        print("✅ API调用成功!")
         print(f"   状态码: {response.status_code}")
 
         # 解析响应

@@ -114,7 +114,7 @@ def print_results(results: Dict[str, List[Dict[str, Any]]]):
     total_issues = sum(len(issues) for issues in results.values())
 
     if total_issues == 0:
-        print(f"✅ 所有文件的导入路径都符合规范！")
+        print("✅ 所有文件的导入路径都符合规范！")
         return
 
     print(f"❌ 发现 {total_files} 个文件存在导入路径问题，共 {total_issues} 个问题：\n")

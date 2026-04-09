@@ -50,7 +50,7 @@ async def main():
     subparsers = parser.add_subparsers(dest="command", help="可用命令")
 
     # stats 命令
-    stats_parser = subparsers.add_parser("stats", help="显示打标覆盖率统计")
+    subparsers.add_parser("stats", help="显示打标覆盖率统计")
 
     # tag 命令
     tag_parser = subparsers.add_parser("tag", help="执行批量打标")
@@ -58,7 +58,7 @@ async def main():
     tag_parser.add_argument("--dry-run", action="store_true", help="只测试不实际写入")
 
     # validate 命令
-    validate_parser = subparsers.add_parser("validate", help="验证维度数据")
+    subparsers.add_parser("validate", help="验证维度数据")
 
     # parse 命令
     parse_parser = subparsers.add_parser("parse", help="解析单个文件路径")
@@ -120,7 +120,7 @@ async def cmd_tag(args):
     """执行批量打标"""
     tagger = QigongBatchTagger(args.db_url)
     try:
-        print(f"\n开始批量打标...")
+        print("\n开始批量打标...")
         print(f"模式: {'测试（不写入）' if args.dry_run else '执行'}")
         print(f"路径模式: {args.pattern}")
         print()

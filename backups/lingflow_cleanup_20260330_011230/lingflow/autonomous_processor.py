@@ -20,11 +20,10 @@ import asyncio
 import json
 import logging
 import re
-from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
@@ -840,13 +839,11 @@ class AutonomousTextbookProcessor:
         # 尝试多种编码
         encodings = ["utf-8", "gbk", "gb2312", "gb18030"]
         content = None
-        used_encoding = None
 
         for encoding in encodings:
             try:
                 with open(path, "r", encoding=encoding) as f:
                     content = f.read()
-                used_encoding = encoding
                 logger.info(f"使用编码 {encoding} 读取文件: {textbook_path}")
                 break
             except UnicodeDecodeError:

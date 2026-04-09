@@ -9,13 +9,11 @@
 - 性能测试（响应时间）
 """
 
-import asyncio
 import json
 
 # 导入待测试的模块
 import sys
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -28,7 +26,6 @@ from autonomous_processor import (
     ProcessingStage,
     SmartTextSegmenter,
     TextBlock,
-    TocExpander,
     TocItem,
 )
 
@@ -140,7 +137,7 @@ class TestAutonomousTocExtractor:
         content = TEXTBOOK_WITH_TOC
         items = extractor.extract(content)
 
-        assert len(items) >= 3, f"应该提取到至少3个章节"
+        assert len(items) >= 3, "应该提取到至少3个章节"
         assert all(item.level == 1 for item in items), "所有提取的应该是1级标题"
 
     def test_extract_complex_hierarchy(self, extractor):
@@ -189,7 +186,7 @@ class TestAutonomousTocExtractor:
                 assert (
                     parent.level < item.level
                 ), f"父节点级别应该小于子节点: {parent.level} vs {item.level}"
-                assert item.id in parent.children, f"子节点应该在父节点的children列表中"
+                assert item.id in parent.children, "子节点应该在父节点的children列表中"
 
     def test_empty_content(self, extractor):
         """测试空内容处理"""
@@ -729,7 +726,7 @@ class TestPerformance:
         tracemalloc.start()
 
         content = REAL_TEXTBOOK_SAMPLE * 10  # 重复10次
-        items = extractor.extract(content)
+        extractor.extract(content)
 
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()

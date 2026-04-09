@@ -7,12 +7,11 @@
 
 import argparse
 import asyncio
-import csv
 import json
 import statistics
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import httpx
 
@@ -54,7 +53,7 @@ class BenchmarkCollector:
                     times.append(elapsed)
                 else:
                     errors += 1
-            except Exception as e:
+            except Exception:
                 errors += 1
 
         if not times:

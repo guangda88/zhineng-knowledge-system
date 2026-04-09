@@ -10,7 +10,7 @@ import re
 import sqlite3
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List
 
 # 配置
 SQLITE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guoxue.db"
@@ -205,7 +205,7 @@ def main():
                 safe_preview = content["preview"].replace("'", "''").replace("\n", "\\n")[:100]
                 f.write(f"-- {book_name}\n")
                 f.write(
-                    f"INSERT INTO guji_content_mapping (book_name, source_table, source_id, content_preview)\n"
+                    "INSERT INTO guji_content_mapping (book_name, source_table, source_id, content_preview)\n"
                 )
                 f.write(
                     f"VALUES ('{book_name}', '{content['source_table']}', {content['source_id']}, '{safe_preview}');\n\n"

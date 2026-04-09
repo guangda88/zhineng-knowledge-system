@@ -139,7 +139,9 @@ def _is_quality_content(content: str, min_len: int = 100, chinese_ratio: float =
     chinese_chars = len(re.findall(r"[\u4e00-\u9fff]", content))
     if chinese_chars < min_len * chinese_ratio:
         return False
-    noise = len(re.findall(r"(注册时间|最后登录|威望|金钱|阅读权限|帖子|精华\d|UID\d)", content[:300]))
+    noise = len(
+        re.findall(r"(注册时间|最后登录|威望|金钱|阅读权限|帖子|精华\d|UID\d)", content[:300])
+    )
     if noise >= 3:
         return False
     return True
@@ -369,7 +371,9 @@ class TrainingDataPipeline:
             "test": len(test),
             "intent_distribution": intent_counts,
         }
-        logger.info(f"  意图数据集: {stats['total']} 条 (train={stats['train']}, test={stats['test']})")
+        logger.info(
+            f"  意图数据集: {stats['total']} 条 (train={stats['train']}, test={stats['test']})"
+        )
         return stats
 
     async def generate_embedding_pairs(self) -> Dict[str, Any]:
@@ -389,27 +393,31 @@ class TrainingDataPipeline:
 
                 anchor = title if _is_clean_title(title) else content[:80]
                 positive = content[:400]
-                pairs.append({
-                    "anchor": anchor,
-                    "positive": positive,
-                    "category": cat,
-                    "doc_id": doc["id"],
-                    "source": "documents",
-                    "pair_type": "title_content",
-                })
+                pairs.append(
+                    {
+                        "anchor": anchor,
+                        "positive": positive,
+                        "category": cat,
+                        "doc_id": doc["id"],
+                        "source": "documents",
+                        "pair_type": "title_content",
+                    }
+                )
 
                 if i > 0 and i % 3 == 0:
                     prev = docs[i - 1]
                     prev_content = prev.get("content", "")
                     if _is_quality_content(prev_content, 50):
-                        pairs.append({
-                            "anchor": content[:400],
-                            "positive": prev_content[:400],
-                            "category": cat,
-                            "doc_id": doc["id"],
-                            "source": "documents",
-                            "pair_type": "same_category",
-                        })
+                        pairs.append(
+                            {
+                                "anchor": content[:400],
+                                "positive": prev_content[:400],
+                                "category": cat,
+                                "doc_id": doc["id"],
+                                "source": "documents",
+                                "pair_type": "same_category",
+                            }
+                        )
 
         guji_docs = await self._fetch_from_guji(limit=2000, min_content=300)
         logger.info(f"  古籍高质量文档: {len(guji_docs)}")
@@ -424,28 +432,32 @@ class TrainingDataPipeline:
                 author_info += "）"
             anchor = title
             positive = content[:400]
-            pairs.append({
-                "anchor": anchor,
-                "positive": positive,
-                "category": "古籍",
-                "doc_id": doc["id"],
-                "source": "guji_documents",
-                "pair_type": "title_content",
-            })
+            pairs.append(
+                {
+                    "anchor": anchor,
+                    "positive": positive,
+                    "category": "古籍",
+                    "doc_id": doc["id"],
+                    "source": "guji_documents",
+                    "pair_type": "title_content",
+                }
+            )
 
         textbook_docs = await self._fetch_from_textbook(limit=2000)
         logger.info(f"  教材高质量条目: {len(textbook_docs)}")
         for doc in textbook_docs:
             title = doc["title"]
             content = doc["content"]
-            pairs.append({
-                "anchor": title[:80],
-                "positive": content[:400],
-                "category": "教材",
-                "doc_id": doc["id"],
-                "source": "textbook_knowledge",
-                "pair_type": "title_content",
-            })
+            pairs.append(
+                {
+                    "anchor": title[:80],
+                    "positive": content[:400],
+                    "category": "教材",
+                    "doc_id": doc["id"],
+                    "source": "textbook_knowledge",
+                    "pair_type": "title_content",
+                }
+            )
 
         neg_pairs = await self._generate_hard_negatives()
 
@@ -468,7 +480,9 @@ class TrainingDataPipeline:
             "sources": {
                 "documents": sum(1 for p in pairs if p.get("source") == "documents"),
                 "guji_documents": sum(1 for p in pairs if p.get("source") == "guji_documents"),
-                "textbook_knowledge": sum(1 for p in pairs if p.get("source") == "textbook_knowledge"),
+                "textbook_knowledge": sum(
+                    1 for p in pairs if p.get("source") == "textbook_knowledge"
+                ),
             },
         }
         logger.info(
@@ -481,15 +495,23 @@ class TrainingDataPipeline:
         neg_pairs = []
 
         domain_pairs = [
-            ("气功", "古籍"), ("中医", "古籍"), ("儒家", "古籍"),
-            ("教材", "古籍"), ("气功", "教材"), ("中医", "教材"),
-            ("儒家", "教材"), ("气功", "中医"), ("中医", "儒家"),
+            ("气功", "古籍"),
+            ("中医", "古籍"),
+            ("儒家", "古籍"),
+            ("教材", "古籍"),
+            ("气功", "教材"),
+            ("中医", "教材"),
+            ("儒家", "教材"),
+            ("气功", "中医"),
+            ("中医", "儒家"),
         ]
 
         for cat_a, cat_b in domain_pairs:
-            docs_a = await self._fetch_from_documents(category=cat_a, limit=100) if cat_a in (
-                "气功", "中医", "儒家"
-            ) else []
+            docs_a = (
+                await self._fetch_from_documents(category=cat_a, limit=100)
+                if cat_a in ("气功", "中医", "儒家")
+                else []
+            )
             if cat_a == "古籍":
                 docs_a = await self._fetch_from_guji(limit=100)
             elif cat_a == "教材":
@@ -503,8 +525,10 @@ class TrainingDataPipeline:
                 docs_b = await self._fetch_from_textbook(limit=100)
 
             quality_a = [
-                d for d in docs_a
-                if _is_quality_content(d.get("content", ""), 50) and _is_clean_title(d.get("title", ""))
+                d
+                for d in docs_a
+                if _is_quality_content(d.get("content", ""), 50)
+                and _is_clean_title(d.get("title", ""))
             ][:20]
             candidates_b = [d for d in docs_b if len(d.get("content", "")) > 50]
 
@@ -514,13 +538,15 @@ class TrainingDataPipeline:
                 if sample_size == 0:
                     continue
                 for db in random.sample(candidates_b, sample_size):
-                    neg_pairs.append({
-                        "anchor": anchor,
-                        "negative": db["content"][:300],
-                        "category_anchor": cat_a,
-                        "category_negative": cat_b,
-                        "pair_type": "cross_domain_hard_negative",
-                    })
+                    neg_pairs.append(
+                        {
+                            "anchor": anchor,
+                            "negative": db["content"][:300],
+                            "category_anchor": cat_a,
+                            "category_negative": cat_b,
+                            "pair_type": "cross_domain_hard_negative",
+                        }
+                    )
 
         random.shuffle(neg_pairs)
         return neg_pairs[:target]
@@ -545,34 +571,40 @@ class TrainingDataPipeline:
                 if not answer:
                     continue
 
-                qa_pairs.append({
-                    "query": f"什么是{title}",
-                    "answer": answer,
-                    "doc_id": doc["id"],
-                    "category": cat,
-                    "source": "documents",
-                    "source_title": title,
-                })
-                qa_pairs.append({
-                    "query": f"{title}是什么",
-                    "answer": answer,
-                    "doc_id": doc["id"],
-                    "category": cat,
-                    "source": "documents",
-                    "source_title": title,
-                })
+                qa_pairs.append(
+                    {
+                        "query": f"什么是{title}",
+                        "answer": answer,
+                        "doc_id": doc["id"],
+                        "category": cat,
+                        "source": "documents",
+                        "source_title": title,
+                    }
+                )
+                qa_pairs.append(
+                    {
+                        "query": f"{title}是什么",
+                        "answer": answer,
+                        "doc_id": doc["id"],
+                        "category": cat,
+                        "source": "documents",
+                        "source_title": title,
+                    }
+                )
 
                 if len(content) > 500:
-                    mid_answer = _extract_meaningful_sentence(content[len(content) // 3:])
+                    mid_answer = _extract_meaningful_sentence(content[len(content) // 3 :])
                     if mid_answer:
-                        qa_pairs.append({
-                            "query": f"请详细介绍{title}",
-                            "answer": mid_answer,
-                            "doc_id": doc["id"],
-                            "category": cat,
-                            "source": "documents",
-                            "source_title": title,
-                        })
+                        qa_pairs.append(
+                            {
+                                "query": f"请详细介绍{title}",
+                                "answer": mid_answer,
+                                "doc_id": doc["id"],
+                                "category": cat,
+                                "source": "documents",
+                                "source_title": title,
+                            }
+                        )
 
         guji_docs = await self._fetch_from_guji(limit=2000, min_content=300)
         for doc in guji_docs:
@@ -586,22 +618,28 @@ class TrainingDataPipeline:
             if doc.get("author"):
                 author_tag = f"（{doc['author']}）"
 
-            qa_pairs.append({
-                "query": f"什么是{title}",
-                "answer": answer,
-                "doc_id": doc["id"],
-                "category": "古籍",
-                "source": "guji_documents",
-                "source_title": title,
-            })
-            qa_pairs.append({
-                "query": f"{title}{author_tag}的内容是什么" if author_tag else f"{title}讲了什么",
-                "answer": answer,
-                "doc_id": doc["id"],
-                "category": "古籍",
-                "source": "guji_documents",
-                "source_title": title,
-            })
+            qa_pairs.append(
+                {
+                    "query": f"什么是{title}",
+                    "answer": answer,
+                    "doc_id": doc["id"],
+                    "category": "古籍",
+                    "source": "guji_documents",
+                    "source_title": title,
+                }
+            )
+            qa_pairs.append(
+                {
+                    "query": (
+                        f"{title}{author_tag}的内容是什么" if author_tag else f"{title}讲了什么"
+                    ),
+                    "answer": answer,
+                    "doc_id": doc["id"],
+                    "category": "古籍",
+                    "source": "guji_documents",
+                    "source_title": title,
+                }
+            )
 
         textbook_docs = await self._fetch_from_textbook(limit=2000)
         for doc in textbook_docs:
@@ -609,14 +647,16 @@ class TrainingDataPipeline:
             content = doc["content"]
             if len(content) < 50:
                 continue
-            qa_pairs.append({
-                "query": f"什么是{title}",
-                "answer": content[:200],
-                "doc_id": doc["id"],
-                "category": "教材",
-                "source": "textbook_knowledge",
-                "source_title": title,
-            })
+            qa_pairs.append(
+                {
+                    "query": f"什么是{title}",
+                    "answer": content[:200],
+                    "doc_id": doc["id"],
+                    "category": "教材",
+                    "source": "textbook_knowledge",
+                    "source_title": title,
+                }
+            )
 
         random.shuffle(qa_pairs)
         split_idx = int(len(qa_pairs) * 0.8)

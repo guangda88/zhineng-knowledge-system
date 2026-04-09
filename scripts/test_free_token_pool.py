@@ -8,7 +8,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import httpx
 from dotenv import load_dotenv
@@ -209,7 +209,7 @@ class FreeTokenPoolTester:
         print(f"成功率: {success/total*100:.1f}%")
 
         # 详细结果
-        print(f"\n详细结果:")
+        print("\n详细结果:")
         print(f"{'Provider':<15} {'状态':<8} {'延迟':<10} {'说明'}")
         print("-" * 60)
 
@@ -221,7 +221,7 @@ class FreeTokenPoolTester:
             print(f"{name:<15} {status:<8} {latency:<10} {error}")
 
         # 可用额度
-        print(f"\n💰 可用免费额度:")
+        print("\n💰 可用免费额度:")
 
         if success >= 3:
             print(f"✅ 已配置 {success} 个provider")
@@ -230,11 +230,11 @@ class FreeTokenPoolTester:
         else:
             print(f"⚠️  仅配置 {success} 个provider，建议至少配置3个")
 
-        print(f"\n💡 下一步:")
-        print(f"   1. 参考 docs/FREE_TOKEN_POOL_DESIGN.md")
-        print(f"   2. 注册永久免费API（GLM、千帆、通义等）")
-        print(f"   3. 注册新用户额度（DeepSeek、混元、豆包等）")
-        print(f"   4. 总计可获得 3650万tokens/月 免费额度")
+        print("\n💡 下一步:")
+        print("   1. 参考 docs/FREE_TOKEN_POOL_DESIGN.md")
+        print("   2. 注册永久免费API（GLM、千帆、通义等）")
+        print("   3. 注册新用户额度（DeepSeek、混元、豆包等）")
+        print("   4. 总计可获得 3650万tokens/月 免费额度")
 
         print(f"\n{'='*60}\n")
 

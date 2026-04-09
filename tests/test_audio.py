@@ -1,10 +1,8 @@
 """音频处理模块测试"""
 
-import os
 import sys
-import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -236,7 +234,7 @@ class TestAudioAPIModels:
     """API请求/响应模型测试"""
 
     def test_annotation_create_model(self):
-        from typing import Any, Dict, List, Optional
+        from typing import Any, Dict, Optional
 
         from pydantic import BaseModel
 
@@ -279,7 +277,7 @@ class TestAudioAPIModels:
     def test_import_request_model(self):
         from typing import List, Optional
 
-        from pydantic import BaseModel, Field
+        from pydantic import BaseModel
 
         class ImportRequest(BaseModel):
             audio_path: str

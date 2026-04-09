@@ -10,11 +10,10 @@
 
 import asyncio
 import re
-import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 import aiohttp
 
@@ -62,7 +61,7 @@ async def scan_files_recursive(
 
     try:
         result = await fetch_directory(session, base_path)
-    except Exception as e:
+    except Exception:
         stats["errors"] += 1
         return []
 
@@ -226,7 +225,7 @@ async def main():
             print(f"    找到 {len(files)} 个文件")
             all_files.extend(files)
 
-        print(f"\n  扫描统计:")
+        print("\n  扫描统计:")
         print(f"    总目录: {total_stats['dirs']}")
         print(f"    总文件: {total_stats['files']}")
         print(f"    错误: {total_stats['errors']}")

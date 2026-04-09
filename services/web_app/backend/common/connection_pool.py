@@ -17,7 +17,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from typing import Optional, Any, Dict
+from typing import Optional
 from collections import deque
 
 import httpx

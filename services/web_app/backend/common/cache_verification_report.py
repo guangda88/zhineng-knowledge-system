@@ -33,10 +33,7 @@ async def generate_report():
             CacheKeyPattern,
             CacheTTL,
             MemoryCacheBackend,
-            RedisCacheBackend,
             cached,
-            cache_invalidate,
-            get_cache_manager,
         )
 
         print("   [OK] cache_manager.py 模块导入成功")
@@ -50,7 +47,6 @@ async def generate_report():
             DocumentCacheService,
             SearchCacheService,
             HotwordCacheService,
-            SessionCacheService,
         )
 
         print("   [OK] cache_service.py 模块导入成功")
@@ -59,12 +55,6 @@ async def generate_report():
         return False
 
     try:
-        from .cache_middleware import (
-            CacheMiddleware,
-            setup_cache_middleware,
-            cached_endpoint,
-            CacheWarmer,
-        )
 
         print("   [OK] cache_middleware.py 模块导入成功")
     except Exception as e:

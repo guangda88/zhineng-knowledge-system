@@ -6,7 +6,7 @@ Ima知识库数据导出工具
 import json
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 DB_PATH = "/home/ai/zhineng-knowledge-system/data/data.db"
 OUTPUT_DIR = Path("/home/ai/zhineng-knowledge-system/data/ima_export")

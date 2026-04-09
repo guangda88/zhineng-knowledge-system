@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -337,7 +337,7 @@ class LingFlowWorkflow:
         script_path = self.project_root / "scripts" / "extract_textbooks_python.py"
         if script_path.exists():
             try:
-                result = subprocess.run(
+                subprocess.run(
                     ["python3", str(script_path), str(pdf_path), str(output_path)],
                     capture_output=True,
                     text=True,
@@ -592,7 +592,7 @@ class LingFlowWorkflow:
                     textbook.processed_dir = self.output_dir / dir_name
 
                 text_file = textbook.processed_dir / "full_text.txt"
-                toc_file = textbook.processed_dir / "toc.json"
+                textbook.processed_dir / "toc.json"
 
                 if not text_file.exists():
                     continue

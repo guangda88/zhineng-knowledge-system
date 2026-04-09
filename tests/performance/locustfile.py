@@ -21,15 +21,12 @@
            --html=report.html
 """
 
-import json
 import os
 import random
 import time
 from datetime import datetime
-from typing import Any, Dict
 
 from locust import HttpUser, between, constant, events, task
-from locust.runners import MasterRunner
 
 # ========== 配置 ==========
 
@@ -369,7 +366,7 @@ def on_test_stop(environment, **kwargs):
             if issues:
                 print(f"  ⚠️ 性能问题: {'; '.join(issues)}")
             else:
-                print(f"  ✅ 性能达标")
+                print("  ✅ 性能达标")
 
     print("=" * 60 + "\n")
 

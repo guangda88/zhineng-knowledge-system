@@ -3,7 +3,6 @@
 """
 
 import pytest
-from fastapi.testclient import TestClient
 
 # 使用TestClient而不是httpx，这样不需要服务器运行
 

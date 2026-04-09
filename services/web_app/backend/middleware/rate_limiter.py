@@ -12,12 +12,10 @@ import logging
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import HTTPException, Request, Response, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from starlette.datastructures import Headers
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .tcm_exceptions import RateLimitError

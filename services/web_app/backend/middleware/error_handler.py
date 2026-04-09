@@ -39,13 +39,13 @@ try:
         "init_error_handling",
     ]
 
-except ImportError as e:
+except ImportError:
     # 如果顶层middleware不可用，提供基本的实现
     import logging
     from datetime import datetime
     from typing import Any, Dict, Optional, Union
 
-    from fastapi import Request, Response
+    from fastapi import Request
     from fastapi.responses import JSONResponse
 
     logger = logging.getLogger(__name__)

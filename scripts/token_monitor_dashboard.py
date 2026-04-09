@@ -16,7 +16,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from backend.services.ai_service import format_pool_status
-from backend.services.evolution.free_token_pool import get_free_token_pool
 from backend.services.evolution.token_monitor import get_token_monitor
 
 

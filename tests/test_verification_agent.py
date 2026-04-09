@@ -5,7 +5,7 @@
 
 import asyncio
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -45,9 +45,9 @@ class TestVerificationAgent:
 
         assert metrics["old_length"] == len(old_response)
         assert metrics["new_length"] == len(new_response)
-        assert metrics["length_improved"] == True
+        assert metrics["length_improved"]
         assert metrics["length_ratio"] > 1.2
-        assert metrics["meets_min_length"] == True
+        assert metrics["meets_min_length"]
 
     @pytest.mark.asyncio
     async def test_verify_structure(self, agent):
@@ -79,12 +79,12 @@ def focus():
 
         metrics = await agent._verify_structure(structured_response)
 
-        assert metrics["has_headings"] == True
-        assert metrics["has_lists"] == True
-        assert metrics["has_paragraphs"] == True
-        assert metrics["has_code"] == True
+        assert metrics["has_headings"]
+        assert metrics["has_lists"]
+        assert metrics["has_paragraphs"]
+        assert metrics["has_code"]
         assert metrics["structure_score"] >= 0.75
-        assert metrics["meets_threshold"] == True
+        assert metrics["meets_threshold"]
 
     @pytest.mark.asyncio
     async def test_verify_structure_no_structure(self, agent):
@@ -94,12 +94,12 @@ def focus():
 
         metrics = await agent._verify_structure(unstructured_response)
 
-        assert metrics["has_headings"] == False
-        assert metrics["has_lists"] == False
-        assert metrics["has_paragraphs"] == False
-        assert metrics["has_code"] == False
+        assert not metrics["has_headings"]
+        assert not metrics["has_lists"]
+        assert not metrics["has_paragraphs"]
+        assert not metrics["has_code"]
         assert metrics["structure_score"] == 0.0
-        assert metrics["meets_threshold"] == False
+        assert not metrics["meets_threshold"]
 
     @pytest.mark.asyncio
     async def test_verify_user_feedback(self, agent):
@@ -109,23 +109,23 @@ def focus():
         good_feedback = {"satisfaction": 5, "comments": "非常好"}
         metrics = await agent._verify_user_feedback(good_feedback)
 
-        assert metrics["has_feedback"] == True
+        assert metrics["has_feedback"]
         assert metrics["satisfaction"] == 5
-        assert metrics["meets_threshold"] == True
+        assert metrics["meets_threshold"]
 
         # 差评
         bad_feedback = {"satisfaction": 2, "comments": "不够详细"}
         metrics = await agent._verify_user_feedback(bad_feedback)
 
-        assert metrics["has_feedback"] == True
+        assert metrics["has_feedback"]
         assert metrics["satisfaction"] == 2
-        assert metrics["meets_threshold"] == False
+        assert not metrics["meets_threshold"]
 
         # 无反馈
         metrics = await agent._verify_user_feedback(None)
 
-        assert metrics["has_feedback"] == False
-        assert metrics["meets_threshold"] == True  # 无反馈时默认通过
+        assert not metrics["has_feedback"]
+        assert metrics["meets_threshold"]  # 无反馈时默认通过
 
     def test_make_decision(self, agent):
         """测试综合判断逻辑"""
@@ -143,7 +143,7 @@ def focus():
 
         is_valid, confidence, reasons, suggestions = agent._make_decision(perfect_metrics)
 
-        assert is_valid == True
+        assert is_valid
         assert confidence >= 0.7
         assert any("✅" in r for r in reasons)
         assert len(suggestions) >= 0
@@ -159,7 +159,7 @@ def focus():
 
         is_valid, confidence, reasons, suggestions = agent._make_decision(bad_metrics)
 
-        assert is_valid == False
+        assert not is_valid
         assert confidence < 0.7
         assert any("❌" in r for r in reasons)
         assert len(suggestions) > 0
@@ -194,9 +194,9 @@ def focus():
 
         metrics = await agent._verify_with_competitors(query, response)
 
-        assert metrics["has_competitor_data"] == True
+        assert metrics["has_competitor_data"]
         assert metrics["rank"] == 1  # 灵知第一
-        assert metrics["meets_threshold"] == True  # 前2名
+        assert metrics["meets_threshold"]  # 前2名
         assert metrics["winner"] == "lingzhi"
 
     @pytest.mark.asyncio
@@ -280,11 +280,11 @@ def focus():
 
         # 验证结果
         assert isinstance(result, VerificationResult)
-        assert result.is_valid == True  # 应该通过验证
+        assert result.is_valid  # 应该通过验证
         assert result.confidence > 0.7
         assert len(result.reasons) > 0
-        assert result.metrics["length_improved"] == True
-        assert result.metrics["meets_min_length"] == True
+        assert result.metrics["length_improved"]
+        assert result.metrics["meets_min_length"]
         assert result.metrics["structure_score"] > 0.5
 
         # 验证数据库记录被调用
@@ -304,11 +304,11 @@ def focus():
 
         result_dict = result.to_dict()
 
-        assert result_dict["is_valid"] == True
+        assert result_dict["is_valid"]
         assert result_dict["confidence"] == 0.85
         assert len(result_dict["reasons"]) == 1
         assert len(result_dict["suggestions"]) == 1
-        assert result_dict["metrics"]["length_improved"] == True
+        assert result_dict["metrics"]["length_improved"]
 
     def test_update_thresholds(self, agent):
         """测试动态更新阈值"""
@@ -352,15 +352,12 @@ class TestVerificationAgentIntegration:
         """
         import os
 
-        from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-        from sqlalchemy.orm import sessionmaker
-
         # 检查API密钥
         if not os.getenv("HUNYUAN_API_KEY"):
             pytest.skip("HUNYUAN_API_KEY not configured")
 
         # 创建真实Agent
-        agent = get_verification_agent()
+        get_verification_agent()
 
         # 使用真实的对比引擎
         # （这里需要真实的数据库连接，暂时跳过）
@@ -386,4 +383,4 @@ class TestVerificationAgentIntegration:
         elapsed_ms = (end - start).total_seconds() * 1000
 
         assert elapsed_ms < 100  # 应该在100ms内完成
-        assert metrics["length_improved"] == True
+        assert metrics["length_improved"]

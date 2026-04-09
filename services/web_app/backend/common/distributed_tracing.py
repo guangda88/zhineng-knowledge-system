@@ -482,7 +482,7 @@ def traced(operation_name: Optional[str] = None):
             with TracedOperation(op_name):
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except Exception:
                     # Context manager will mark as failed
                     raise
 

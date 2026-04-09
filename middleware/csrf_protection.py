@@ -11,7 +11,6 @@ import secrets
 from typing import Callable, Optional
 
 from fastapi import HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from itsdangerous import BadSignature, URLSafeTimedSerializer
 
 logger = logging.getLogger(__name__)

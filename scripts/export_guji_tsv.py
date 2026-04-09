@@ -3,7 +3,6 @@
 
 import logging
 import sqlite3
-import sys
 import time
 from pathlib import Path
 

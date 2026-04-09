@@ -6,7 +6,7 @@
 
 import os
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -406,7 +406,7 @@ class TestJWTAuth:
         """测试验证过期令牌"""
         with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
             # 创建一个已过期的令牌
-            auth = JWTAuth()
+            JWTAuth()
             past = datetime.now(tz=timezone.utc) - timedelta(hours=1)
             with patch("backend.auth.jwt.datetime") as mock_datetime:
                 mock_datetime.now.return_value = past

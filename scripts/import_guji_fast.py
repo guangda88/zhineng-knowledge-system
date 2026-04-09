@@ -2,12 +2,9 @@
 """古籍数据快速导入脚本 - 使用COPY命令批量导入"""
 
 import asyncio
-import csv
 import logging
 import sqlite3
 import sys
-import tempfile
-from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))

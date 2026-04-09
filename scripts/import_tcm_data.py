@@ -16,9 +16,8 @@ import json
 import logging
 import sqlite3
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -237,7 +236,7 @@ async def import_kxzd_data(conn: asyncpg.Connection, kxzd_db: str) -> int:
         strokes = to_str(row[3]) if len(row) > 3 else None
         definition = to_str(row[4]) if len(row) > 4 else None
         pinyin = to_str(row[5]) if len(row) > 5 else None
-        unicode_val = to_str(row[6]) if len(row) > 6 else None
+        to_str(row[6]) if len(row) > 6 else None
 
         if not char:
             continue
@@ -401,7 +400,7 @@ async def main():
     if not database_url:
         database_url = "postgresql://postgres:postgres@localhost:5432/zhineng"
 
-    logger.info(f"开始导入中医数据...")
+    logger.info("开始导入中医数据...")
     logger.info(f"知识字典: {KXZD_DB}")
 
     result = await import_tcm_data(database_url)

@@ -9,7 +9,6 @@
 
 import os
 
-import pytest
 from fastapi import Depends, FastAPI
 from starlette.testclient import TestClient
 

@@ -3,7 +3,6 @@
 会话开始时提醒Hook
 在每次Claude Code会话开始时提醒阅读规则
 """
-import os
 import sys
 
 

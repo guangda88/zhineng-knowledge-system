@@ -160,7 +160,7 @@ def main():
 
         if not is_safe:
             has_unsafe = True
-            print(f"     建议: 使用 'from backend.services.import_manager import ImportManager'")
+            print("     建议: 使用 'from backend.services.import_manager import ImportManager'")
 
     if has_unsafe:
         print("\n⚠️  发现不安全的导入脚本!")

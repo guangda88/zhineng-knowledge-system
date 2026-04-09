@@ -3,10 +3,7 @@
 测试 JWT 令牌的生成、验证和黑名单功能
 """
 
-import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Set
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

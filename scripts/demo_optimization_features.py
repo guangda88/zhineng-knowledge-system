@@ -17,7 +17,6 @@ load_dotenv()
 
 from backend.services.evolution.optimized_ai_client import (
     batch_chat,
-    batch_code_development,
     optimized_chat,
     optimized_code_development,
     show_optimization_stats,
@@ -94,9 +93,9 @@ async def demo_rate_limiting():
         results.append(result)
 
         if result:
-            print(f"✅ 成功")
+            print("✅ 成功")
         else:
-            print(f"❌ 失败")
+            print("❌ 失败")
 
         # 小延迟
         await asyncio.sleep(0.5)
@@ -182,11 +181,11 @@ async def test_code_development():
         result = await optimized_code_development(prompt)
 
         if result:
-            print(f"✅ 生成成功")
+            print("✅ 生成成功")
             # 只显示前100字符
             print(f"📝 {result[:100]}...")
         else:
-            print(f"❌ 生成失败")
+            print("❌ 生成失败")
 
         await asyncio.sleep(1)
 

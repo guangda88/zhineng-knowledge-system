@@ -11,7 +11,6 @@ from backend.services.evolution.lingminopt import (
     EvolutionOptimizer,
     MetricsCollector,
     OptimizationOrchestrator,
-    get_lingminopt_framework,
 )
 
 
@@ -53,7 +52,7 @@ async def run_analysis():
     print("📋 第3步：生成优化计划...")
     plan = await optimizer.create_optimization_plan(opportunities)
 
-    print(f"\n优化计划:")
+    print("\n优化计划:")
     print(f"  ⏱️  预计时长: {plan.estimated_duration}")
     print(f"  📈 预期影响: {plan.expected_impact}")
     print(f"  📊 分阶段: {len(plan.phases)} 个阶段")
@@ -72,11 +71,11 @@ async def run_analysis():
             opp for opp in plan.opportunities if opp.id in phase1["opportunities"]
         ]
 
-        orchestrator = OptimizationOrchestrator()
+        OptimizationOrchestrator()
 
         for opp in phase1_opportunities:
             print(f"\n  执行: {opp.title}")
-            print(f"  实施优化:")
+            print("  实施优化:")
 
             # 解析实施步骤
             steps = opp.implementation.strip().split("\n")
@@ -91,7 +90,7 @@ async def run_analysis():
                     print(f"    {step}")
 
             # 模拟执行（实际会调用API）
-            print(f"  状态: ✅ 优化已应用")
+            print("  状态: ✅ 优化已应用")
 
     # 5. 生成总结
     print("\n" + "=" * 70)

@@ -6,7 +6,7 @@ import types
 
 import pytest
 
-from backend.common.singleton import _INIT_FAILED_SENTINEL, async_singleton
+from backend.common.singleton import _INIT_FAILED_SENTINEL
 
 
 def _make_module(name: str, var_name: str):

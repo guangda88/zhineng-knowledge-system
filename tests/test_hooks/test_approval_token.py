@@ -2,12 +2,10 @@
 测试批准令牌功能
 """
 
-import json
 import os
 import sys
 import time
 import unittest
-from datetime import datetime, timedelta
 
 # 添加父目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -82,7 +80,7 @@ class TestApprovalToken(unittest.TestCase):
 
     def test_get_token_info(self):
         """测试获取令牌信息"""
-        token = ApprovalToken.create("db_write")
+        ApprovalToken.create("db_write")
         info = ApprovalToken.get_token_info()
 
         self.assertIsNotNone(info)

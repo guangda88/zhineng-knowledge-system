@@ -223,7 +223,7 @@ def _siku_sub(p: str, c: str) -> Optional[str]:
 
 
 async def import_batch(conn: asyncpg.Connection, batch: List[Tuple]) -> int:
-    result = await conn.executemany(
+    await conn.executemany(
         """
         INSERT INTO sys_books (
             source, path, filename, category, author, year,

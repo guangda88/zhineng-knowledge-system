@@ -10,8 +10,6 @@
 
 import asyncio
 import sys
-import time
-from pathlib import Path
 
 import asyncpg
 
@@ -146,7 +144,7 @@ async def establish_mapping():
         guji_dirs = await scan_guji_directory("/")
 
     # 2. 收集扫描文档
-    print(f"\n📄 第2步: 收集扫描文档...")
+    print("\n📄 第2步: 收集扫描文档...")
     all_files = []
 
     for directory in guji_dirs[:3]:  # 限制扫描目录数
@@ -158,7 +156,7 @@ async def establish_mapping():
     print(f"\n  总计: {len(all_files)} 个扫描文档")
 
     # 3. 分析文件名模式
-    print(f"\n🔬 第3步: 分析文件名模式...")
+    print("\n🔬 第3步: 分析文件名模式...")
 
     book_id_files = {}
     for f in all_files:
@@ -171,7 +169,7 @@ async def establish_mapping():
     print(f"  可关联的 book_id: {len(book_id_files)}")
 
     # 4. 连接数据库并写入映射
-    print(f"\n💾 第4步: 写入映射表...")
+    print("\n💾 第4步: 写入映射表...")
 
     conn = await asyncpg.connect("postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb")
 
@@ -199,7 +197,7 @@ async def establish_mapping():
 
     print(f"  ✅ 已写入 {inserted} 条映射记录")
 
-    print(f"\n" + "=" * 60)
+    print("\n" + "=" * 60)
     print("✅ 映射建立完成")
     print("=" * 60)
 
@@ -210,7 +208,7 @@ async def show_current_status():
 
     total = await conn.fetchval("SELECT COUNT(*) FROM guji_scan_mapping")
 
-    print(f"\n📊 当前映射状态:")
+    print("\n📊 当前映射状态:")
     print(f"  总记录数: {total}")
 
     if total > 0:
@@ -225,8 +223,8 @@ async def show_current_status():
         """
         )
 
-        print(f"\n  book_id | source_table | 文件数")
-        print(f"  ---------+-------------+--------")
+        print("\n  book_id | source_table | 文件数")
+        print("  ---------+-------------+--------")
         for row in rows:
             source = row["source_table"] or "N/A"
             print(f"  {row['book_id']:8} | {source:12} | {row['file_count']}")

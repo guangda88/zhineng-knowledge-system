@@ -5,8 +5,6 @@
 
 import os
 
-import pytest
-
 
 class TestBaseConfig:
     """基础配置测试"""

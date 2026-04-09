@@ -7,7 +7,6 @@ Reads SQLite rows, streams them to psql COPY stdin.
 import logging
 import sqlite3
 import subprocess
-import sys
 import time
 from pathlib import Path
 

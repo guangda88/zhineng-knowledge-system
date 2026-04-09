@@ -33,14 +33,14 @@ async def test_cache():
     result = "测试结果"
 
     cache.set(prompt, result, model="test")
-    print(f"✅ 缓存已保存")
+    print("✅ 缓存已保存")
 
     # 测试获取
     cached = cache.get(prompt, model="test")
     if cached == result:
         print(f"✅ 缓存命中: {cached}")
     else:
-        print(f"❌ 缓存未命中")
+        print("❌ 缓存未命中")
 
     # 显示统计
     stats = cache.get_stats()
@@ -73,7 +73,7 @@ async def test_batch_processor():
 
     # 显示统计
     stats = processor.get_stats()
-    print(f"📊 统计:")
+    print("📊 统计:")
     print(f"  批次数: {stats['batches_processed']}")
     print(f"  节省时间: {stats['time_saved_seconds']:.1f}秒")
 
@@ -102,7 +102,7 @@ async def test_rate_limiter():
 
     # 显示统计
     stats = limiter.get_stats()
-    print(f"📊 统计:")
+    print("📊 统计:")
     print(f"  成功请求: {stats['successful_requests']}")
     print(f"  窗口使用: {stats['minute_window_size']}/{stats['max_per_minute']}")
 
@@ -122,7 +122,9 @@ async def test_optimized_client():
 
     # 测试缓存功能
     print("测试1: 第一次调用（无缓存）")
-    mock_func = lambda x: asyncio.sleep(0.1) or "响应内容"
+
+    def mock_func(x):
+        return asyncio.sleep(0.1) or "响应内容"
 
     result1 = await client.call_with_optimization("测试提示词", mock_func, use_cache=True)
 

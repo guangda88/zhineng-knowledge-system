@@ -18,7 +18,6 @@ from typing import Any, Dict, Optional, Callable
 from dataclasses import dataclass
 
 import redis
-from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
 

@@ -4,11 +4,9 @@
 提供气功领域的专业知识检索和问答
 """
 
-import asyncio
 from typing import Any, Dict, List, Optional
 
-import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 app = FastAPI(

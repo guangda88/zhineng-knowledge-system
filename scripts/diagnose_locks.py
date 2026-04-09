@@ -8,7 +8,6 @@
 
 import asyncio
 import os
-import signal
 import sys
 from datetime import datetime
 from pathlib import Path

@@ -17,7 +17,7 @@ def check_toc_depth(text_path: Path) -> int:
     print(f"\n检查文件: {text_path.name}")
 
     if not text_path.exists():
-        print(f"  ✗ 文件不存在")
+        print("  ✗ 文件不存在")
         return 0
 
     # 读取文本
@@ -34,7 +34,7 @@ def check_toc_depth(text_path: Path) -> int:
             continue
 
     if not content:
-        print(f"  ✗ 无法读取文本")
+        print("  ✗ 无法读取文本")
         return 0
 
     # 解析目录
@@ -58,7 +58,7 @@ def check_toc_depth(text_path: Path) -> int:
             print(f"  方法 {method.name} 失败: {e}")
             continue
 
-    print(f"  ✗ 所有方法都失败")
+    print("  ✗ 所有方法都失败")
     return 0
 
 
@@ -126,7 +126,7 @@ def main():
     if best7["depth"] >= 6:
         print(f"  ✓ 推荐使用: {Path(best7['path']).name} ({best7['depth']}层)")
     else:
-        print(f"  ⚠️  所有版本都不足6层，需要AI补充")
+        print("  ⚠️  所有版本都不足6层，需要AI补充")
         print(f"  最佳版本: {Path(best7['path']).name} ({best7['depth']}层)")
 
     print("\n教材8（目标6层）:")
@@ -134,7 +134,7 @@ def main():
     if best8["depth"] >= 6:
         print(f"  ✓ 推荐使用: {Path(best8['path']).name} ({best8['depth']}层)")
     else:
-        print(f"  ⚠️  所有版本都不足6层，需要AI补充")
+        print("  ⚠️  所有版本都不足6层，需要AI补充")
         print(f"  最佳版本: {Path(best8['path']).name} ({best8['depth']}层)")
 
 

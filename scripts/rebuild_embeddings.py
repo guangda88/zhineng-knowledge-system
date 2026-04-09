@@ -76,7 +76,7 @@ async def main():
             # 批量更新
             stats = await retriever.update_all_embeddings(batch_size=50)
 
-        logger.info(f"\n=== 更新完成 ===")
+        logger.info("\n=== 更新完成 ===")
         logger.info(f"总数: {stats['total']}")
         logger.info(f"成功: {stats['updated']}")
         logger.info(f"失败: {stats['failed']}")

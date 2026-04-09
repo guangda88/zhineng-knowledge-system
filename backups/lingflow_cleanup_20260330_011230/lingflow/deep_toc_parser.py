@@ -5,14 +5,12 @@
 专门针对智能气功九本教材的复杂目录结构
 """
 
-import json
 import logging
 import re
-from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -276,7 +274,6 @@ class DeepTocParser:
     def _parse_deep_structure(self, lines: List[str], result: TocParseResult) -> TocParseResult:
         """深度解析目录结构"""
         items = []
-        indent_levels = {}  # 缩进 -> 层级映射
 
         for i, line in enumerate(lines):
             line_stripped = line.strip()

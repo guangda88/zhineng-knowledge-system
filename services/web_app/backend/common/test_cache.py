@@ -19,7 +19,6 @@ async def test_cache_manager():
         CacheManager,
         CacheKeyPattern,
         CacheTTL,
-        MemoryCacheBackend,
     )
 
     print("=== 测试缓存管理器 ===")
@@ -148,7 +147,7 @@ async def test_cache_services():
 
 async def test_cache_decorator():
     """测试缓存装饰器"""
-    from .cache_manager import CacheManager, cached, CacheKeyPattern
+    from .cache_manager import CacheManager, cached
 
     print("\n=== 测试缓存装饰器 ===")
 
@@ -201,7 +200,7 @@ async def test_rate_limiting():
     identifier = "test_user_123"
     endpoint = "search"
 
-    print(f"   速率限制配置: 10次/60秒")
+    print("   速率限制配置: 10次/60秒")
 
     for i in range(15):
         allowed, remaining = await cache_manager.check_rate_limit(

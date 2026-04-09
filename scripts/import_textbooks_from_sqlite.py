@@ -8,9 +8,9 @@
 
 import asyncio
 import json
+import os
 import sqlite3
 import sys
-import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -142,15 +142,11 @@ async def import_blocks_v2(pool: asyncpg.Pool) -> dict:
 
     async with pool.acquire() as conn:
         existing = set()
-        rows = await conn.fetch(
-            "SELECT node_id, content FROM textbook_blocks_v2"
-        )
+        rows = await conn.fetch("SELECT node_id, content FROM textbook_blocks_v2")
         for r in rows:
             existing.add((r["node_id"], r["content"][:100] if r["content"] else ""))
 
-        max_id = await conn.fetchval(
-            "SELECT COALESCE(MAX(id), 0) FROM textbook_blocks_v2"
-        )
+        max_id = await conn.fetchval("SELECT COALESCE(MAX(id), 0) FROM textbook_blocks_v2")
 
         batch_size = 100
         batch = []

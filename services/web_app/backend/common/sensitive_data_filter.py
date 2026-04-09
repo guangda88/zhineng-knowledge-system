@@ -16,8 +16,7 @@ Sensitive Data Filter Module
 import re
 import json
 import logging
-from typing import Any, Dict, List, Optional, Union
-from copy import deepcopy
+from typing import Any, Dict
 
 
 class SensitiveDataFilter:

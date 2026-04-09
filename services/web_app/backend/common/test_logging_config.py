@@ -7,9 +7,6 @@ Logging Configuration Test
 """
 
 import sys
-import os
-import json
-import tempfile
 from pathlib import Path
 
 # Add parent directory to path
@@ -24,7 +21,6 @@ def test_logging_config_basic():
         from .logging_config import (
             configure_logging,
             get_logger,
-            LogConfig,
             LogContext,
             bind_context,
             clear_context,

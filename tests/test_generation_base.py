@@ -3,8 +3,6 @@
 测试services/generation/base.py的基础功能
 """
 
-import pytest
-
 from backend.services.generation.base import (
     BaseGenerator,
     GenerationRequest,
@@ -103,13 +101,10 @@ class TestBaseGenerator:
         # BaseGenerator是抽象类，不能直接实例化
         from abc import ABC
 
-        from backend.services.generation.base import BaseGenerator
-
         assert issubclass(BaseGenerator, ABC)
 
     def test_base_generator_has_required_methods(self):
         """测试基类有必需的方法"""
-        from backend.services.generation.base import BaseGenerator
 
         # 检查抽象方法存在
         assert hasattr(BaseGenerator, "generate")

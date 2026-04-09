@@ -10,7 +10,6 @@ import asyncio
 import sys
 import os
 import time
-from typing import Dict, Any, List
 
 # 添加项目路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
@@ -138,7 +137,7 @@ class CacheValidator:
 
     async def check_lru_strategy(self):
         """检查 LRU 策略"""
-        from .cache_manager import CacheManager, MemoryCacheBackend
+        from .cache_manager import MemoryCacheBackend
 
         print("\n=== 4. LRU 驱逐策略验证 ===")
 
@@ -515,7 +514,7 @@ class CacheValidator:
         print("=" * 60)
 
         # 首先检查 Redis 连接
-        redis_available = await self.check_redis_connection()
+        await self.check_redis_connection()
 
         # 运行所有测试
         await self.check_cache_manager_basic()
