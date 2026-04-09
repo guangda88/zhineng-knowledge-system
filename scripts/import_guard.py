@@ -136,7 +136,7 @@ def force_unlock(task_name: str):
         )
         conn = await asyncpg.connect(database_url)
         try:
-            result = await conn.execute(
+            await conn.execute(
                 """
                 UPDATE import_locks
                 SET status = 'unlocked',
@@ -146,7 +146,7 @@ def force_unlock(task_name: str):
             """,
                 task_name,
             )
-            print(f"  ✅ 数据库状态已更新")
+            print("  ✅ 数据库状态已更新")
         except Exception as e:
             print(f"  ⚠️  数据库更新失败: {e}")
         finally:
@@ -169,7 +169,7 @@ async def run_import(task_name: str, *args):
 
     try:
         # 使用 ImportManager 确保独占运行
-        async with ImportManager(task_name) as mgr:
+        async with ImportManager(task_name):
             # 导入并执行任务
             module = __import__(task["module"], fromlist=[task["function"]])
             func = getattr(module, task["function"])
@@ -185,9 +185,9 @@ async def run_import(task_name: str, *args):
 
     except ImportLockError as e:
         print(f"\n❌ 导入失败: {e}")
-        print(f"\n提示:")
-        print(f"  1. 检查是否有其他导入进程在运行")
-        print(f"  2. 使用 --status 查看详细状态")
+        print("\n提示:")
+        print("  1. 检查是否有其他导入进程在运行")
+        print("  2. 使用 --status 查看详细状态")
         print(f"  3. 如需强制解锁: python scripts/import_guard.py --unlock {task_name}")
         return 1
 

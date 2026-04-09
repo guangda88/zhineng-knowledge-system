@@ -18,7 +18,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))

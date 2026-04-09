@@ -4,7 +4,7 @@ import asyncio
 import logging
 import signal
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -118,7 +118,7 @@ class AutoOptimizationService:
         logger = logging.getLogger(__name__)
 
         stats = self.framework.orchestrator.optimization_results
-        logger.info(f"📊 当前统计:")
+        logger.info("📊 当前统计:")
         logger.info(f"  优化轮次: {self.optimization_count}")
         logger.info(f"  成功优化: {len([r for r in stats if r.success])}")
         logger.info(f"  失败优化: {len([r for r in stats if not r.success])}")
@@ -133,7 +133,7 @@ class AutoOptimizationService:
 
         self.is_running = False
 
-        logger.info(f"📊 本次会话总结:")
+        logger.info("📊 本次会话总结:")
         logger.info(f"  优化轮次: {self.optimization_count}")
         logger.info(f"  结束时间: {datetime.now().isoformat()}")
 
@@ -159,7 +159,7 @@ async def main():
     print("🚀 LingMinOpt自动优化服务")
     print()
     print(f"⏱️  检查间隔: {args.interval}秒 ({args.interval/60:.1f}分钟)")
-    print(f"📝 日志文件: /tmp/lingminopt_auto.log")
+    print("📝 日志文件: /tmp/lingminopt_auto.log")
     print()
     print("💡 提示: 使用 'tail -f /tmp/lingminopt_auto.log' 查看实时日志")
     print("💡 停止: kill $(pgrep -f 'auto_optimization_service' | awk '{print $1}')")

@@ -1,16 +1,13 @@
 """保密数据安全搜索服务测试"""
 
 from datetime import datetime, timedelta
-from typing import Any, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
 
 import pytest
-from asyncpg import Pool
 
 from backend.services.qigong.secure_search import (
     AccessControlError,
     SecureSearchService,
-    get_secure_search_service,
 )
 
 

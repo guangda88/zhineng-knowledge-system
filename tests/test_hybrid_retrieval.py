@@ -4,8 +4,6 @@
 文字处理工程流A-3的测试套件
 """
 
-import asyncio
-
 import pytest
 
 from backend.services.hybrid_retrieval import (

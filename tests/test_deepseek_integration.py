@@ -32,7 +32,7 @@ async def test_deepseek_api():
     print("=" * 60)
 
     # 检查配置
-    print(f"\n1. 配置检查:")
+    print("\n1. 配置检查:")
     print(
         f"   - API Key: {'已设置' if config.DEEPSEEK_API_KEY and config.DEEPSEEK_API_KEY != 'sk-dummy' else '未设置'}"
     )

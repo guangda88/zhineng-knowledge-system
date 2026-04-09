@@ -16,7 +16,7 @@ import os
 import sqlite3
 import time
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import asyncpg
 

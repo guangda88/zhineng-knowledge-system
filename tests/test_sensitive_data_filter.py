@@ -7,8 +7,6 @@
 import logging
 from unittest.mock import MagicMock
 
-import pytest
-
 from backend.common.sensitive_data_filter import (
     SENSITIVE_FIELDS,
     SENSITIVE_PATTERNS,

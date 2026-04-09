@@ -196,7 +196,6 @@ class TingwuDownloader:
                                 await asyncio.sleep(RETRY_DELAY * attempt)
                             continue
 
-                        total_size = resp.content_length or 0
                         tmp_path = save_path.with_suffix(save_path.suffix + ".tmp")
                         downloaded = 0
 
@@ -317,7 +316,7 @@ class TingwuDownloader:
         total_mb = self._stats["bytes"] / 1024 / 1024
 
         print(f"\n{'='*60}")
-        print(f"下载完成")
+        print("下载完成")
         print(f"  成功: {self._stats['downloaded']}")
         print(f"  跳过: {self._stats['skipped']}")
         print(f"  失败: {self._stats['failed']}")

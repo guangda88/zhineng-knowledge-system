@@ -7,7 +7,6 @@
 
 import argparse
 import csv
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -222,9 +221,9 @@ def generate_markdown_report(stats: Dict[str, Any], history: List[Dict], output_
             "## 附加信息",
             "",
             "### 测试配置",
-            f"- **并发用户数**: 根据测试配置",
-            f"- **测试时长**: 根据测试配置",
-            f"- **目标主机**: ${TARGET_HOST:-http://localhost:8000}",
+            "- **并发用户数**: 根据测试配置",
+            "- **测试时长**: 根据测试配置",
+            f"- **目标主机**: http://localhost:8000",
             "",
             "### 性能优化建议",
             "",
@@ -252,7 +251,7 @@ def generate_markdown_report(stats: Dict[str, Any], history: List[Dict], output_
             "",
             "---",
             "",
-            f"*报告由 generate_report.py 自动生成*",
+            "*报告由 generate_report.py 自动生成*",
         ]
     )
 

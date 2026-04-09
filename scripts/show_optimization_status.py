@@ -32,7 +32,7 @@ def show_optimization_status():
             pid = parts[1]
             cpu = parts[2]
             mem = parts[3]
-            print(f"  ✅ 服务运行中")
+            print("  ✅ 服务运行中")
             print(f"  📌 PID: {pid}")
             print(f"  💻 CPU: {cpu}%")
             print(f"  🧠 内存: {mem}")
@@ -98,10 +98,10 @@ def show_optimization_status():
     print("4️⃣ 控制命令")
     print("-" * 70)
 
-    print(f"  查看实时日志:")
-    print(f"    tail -f /tmp/lingminopt_auto.log")
+    print("  查看实时日志:")
+    print("    tail -f /tmp/lingminopt_auto.log")
     print()
-    print(f"  停止服务:")
+    print("  停止服务:")
     pid = subprocess.run(
         ["pgrep", "-f", "auto_optimization_service"], capture_output=True, text=True
     ).stdout.strip()
@@ -109,11 +109,11 @@ def show_optimization_status():
     if pid:
         print(f"    kill {pid}")
     else:
-        print(f"    kill $(pgrep -f 'auto_optimization_service' | awk '{{print $1}}')")
+        print("    kill $(pgrep -f 'auto_optimization_service' | awk '{print $1}')")
     print()
-    print(f"  重启服务:")
+    print("  重启服务:")
     print(
-        f"    nohup python scripts/auto_optimization_service.py --interval 60 > /tmp/lingminopt_auto.log 2>&1 &"
+        "    nohup python scripts/auto_optimization_service.py --interval 60 > /tmp/lingminopt_auto.log 2>&1 &"
     )
     print()
 

@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     if args.action == "create":
         token = create_approval_token(args.operation, args.duration)
-        print(f"✅ 批准令牌已创建")
+        print("✅ 批准令牌已创建")
         print(f"   操作类型: {token['operation']}")
         print(f"   过期时间: {token['expires_at']}")
 

@@ -196,7 +196,7 @@ async def import_documents(dry_run: bool = False):
                 tags.append(meta["subcategory"])
 
             # Generate content hash
-            content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
+            hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
 
             if dry_run:
                 print(
@@ -263,7 +263,7 @@ async def import_documents(dry_run: bool = False):
     if tb_path.exists() and not dry_run:
         import sqlite3
 
-        print(f"\n--- Importing textbooks.db documents (with content previews) ---")
+        print("\n--- Importing textbooks.db documents (with content previews) ---")
         sq_conn = sqlite3.connect(str(tb_path))
         sq_cur = sq_conn.cursor()
         sq_cur.execute(
@@ -323,7 +323,7 @@ async def import_documents(dry_run: bool = False):
     print(f"  Total new documents: {imported + tb_imported}")
 
     if dry_run:
-        print(f"\n[DRY RUN] No data was written to database.")
+        print("\n[DRY RUN] No data was written to database.")
 
 
 if __name__ == "__main__":

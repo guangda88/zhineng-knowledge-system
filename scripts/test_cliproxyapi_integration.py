@@ -13,7 +13,6 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from openai import AsyncOpenAI
 
 from backend.services.ai_service_adapter import AIServiceAdapter, TaskType, UnifiedAIService
 

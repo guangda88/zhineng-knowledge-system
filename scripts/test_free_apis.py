@@ -18,7 +18,6 @@ from backend.services.evolution.multi_ai_adapter import (
     GLMAdapter,
     HunyuanAdapter,
     LingzhiAdapter,
-    MultiAIAdapter,
 )
 
 
@@ -39,14 +38,14 @@ async def test_single_adapter(adapter_name: str, adapter, test_prompt: str):
         if success:
             print(f"✅ {adapter_name} 测试成功")
             print(f"⏱️  延迟: {latency}ms")
-            print(f"📝 响应内容（前200字）:")
+            print("📝 响应内容（前200字）:")
             print(f"   {content[:200]}...")
             return True
         else:
             print(f"❌ {adapter_name} 测试失败")
             print(f"🔴 错误: {error}")
             if "mock" in content.lower() or "模拟" in content:
-                print(f"⚠️  当前使用模拟响应（未配置API密钥）")
+                print("⚠️  当前使用模拟响应（未配置API密钥）")
             return False
 
     except Exception as e:
@@ -82,7 +81,7 @@ async def main():
             api_key = os.getenv(env_key)
             if not api_key:
                 print(f"\n⚠️  {adapter_name.upper()}: 未配置 {env_key}")
-                print(f"   获取方式请参考: docs/FREE_API_ACQUISITION_GUIDE.md")
+                print("   获取方式请参考: docs/FREE_API_ACQUISITION_GUIDE.md")
                 results[adapter_name] = False
                 continue
             else:
@@ -108,19 +107,19 @@ async def main():
     print(f"成功率: {success_count/total*100:.1f}%")
 
     # 详细结果
-    print(f"\n详细结果:")
+    print("\n详细结果:")
     for name, success in results.items():
         status = "✅" if success else "❌"
         print(f"  {status} {name.upper()}")
 
     # 建议
     if fail_count > 0:
-        print(f"\n💡 建议:")
-        print(f"   1. 参考 docs/FREE_API_ACQUISITION_GUIDE.md 获取免费API")
-        print(f"   2. GLM Coding Plan: 100万tokens/月 永久免费")
-        print(f"   3. 混元新用户: 100万tokens 30天")
-        print(f"   4. 豆包火山引擎: 200万tokens 30天")
-        print(f"   5. DeepSeek: 500万tokens 30天（最便宜）")
+        print("\n💡 建议:")
+        print("   1. 参考 docs/FREE_API_ACQUISITION_GUIDE.md 获取免费API")
+        print("   2. GLM Coding Plan: 100万tokens/月 永久免费")
+        print("   3. 混元新用户: 100万tokens 30天")
+        print("   4. 豆包火山引擎: 200万tokens 30天")
+        print("   5. DeepSeek: 500万tokens 30天（最便宜）")
 
     print(f"\n{'='*60}\n")
 

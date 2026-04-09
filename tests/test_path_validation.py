@@ -4,14 +4,11 @@
 """
 
 import os
-import tempfile
-from pathlib import Path
 
 import pytest
 
 from backend.utils.path_validation import (
     ALLOWED_BASE_DIRS,
-    ALLOWED_EXTENSIONS,
     get_project_root,
     is_safe_path,
     validate_file_path,

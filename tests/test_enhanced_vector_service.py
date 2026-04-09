@@ -6,7 +6,6 @@
 
 import asyncio
 
-import numpy as np
 import pytest
 
 from backend.services.enhanced_vector_service import (

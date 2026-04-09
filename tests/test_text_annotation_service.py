@@ -4,7 +4,7 @@
 文字处理工程流A-5的测试套件
 """
 
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -39,7 +39,7 @@ class TestTextAnnotationService:
         mock_db_session.refresh = Mock(return_value=mock_annotation)
 
         # 创建标注
-        annotation = service.create_annotation(
+        service.create_annotation(
             text_block_id=1,
             annotation_type="keyword",
             content="混元灵通",
@@ -186,9 +186,7 @@ class TestAnnotationTagService:
         mock_db_session.refresh.return_value = mock_tag
 
         # 创建标签
-        tag = service.create_tag(
-            name="气功理论", description="智能气功相关理论标签", color="#FF0000"
-        )
+        service.create_tag(name="气功理论", description="智能气功相关理论标签", color="#FF0000")
 
         # 验证
         assert mock_db_session.add.called

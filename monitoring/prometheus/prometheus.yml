@@ -10,7 +10,7 @@ global:
 
 # 告警规则文件
 rule_files:
-  # - "alerts/*.yml"
+- alerts.yml
 
 # 抓取配置
 scrape_configs:

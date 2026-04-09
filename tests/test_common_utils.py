@@ -3,9 +3,7 @@
 覆盖: db_helpers, singleton, typing utilities
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 
 class TestDbHelpers:
@@ -50,7 +48,6 @@ class TestSingleton:
 
     def test_async_singleton_decorator(self):
         import asyncio
-        import sys
 
         from backend.common.singleton import async_singleton
 
@@ -75,7 +72,7 @@ class TestTyping:
     """类型工具测试"""
 
     def test_typing_import(self):
-        from backend.common.typing import APIResult, HealthStatus, SearchResult
+        from backend.common.typing import APIResult, SearchResult
 
         assert APIResult is not None
         assert SearchResult is not None

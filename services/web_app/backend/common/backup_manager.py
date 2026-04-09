@@ -17,20 +17,14 @@ import logging
 import gzip
 import shutil
 import hashlib
-import json
 import asyncio
-from typing import Optional, Dict, List, Any, Callable
+from typing import Optional, Dict, List, Any
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from io import BytesIO
-import subprocess
 
 # Database imports
 import asyncpg
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
 
 # Object storage imports
 from .object_storage import (
@@ -340,7 +334,7 @@ class BackupManager:
             备份文件路径
         """
         # 生成文件名
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{metadata.backup_id}.sql"
         file_path = os.path.join(self.config.backup_dir, filename)
 
@@ -409,7 +403,7 @@ class BackupManager:
             备份目录路径
         """
         # 生成目录名
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         dir_name = f"{metadata.backup_id}"
         dir_path = os.path.join(self.config.backup_dir, dir_name)
 

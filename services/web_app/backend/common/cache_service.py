@@ -8,16 +8,13 @@ Cache Service Layer
 
 import json
 import logging
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .cache_manager import (
     CacheManager,
     CacheKeyPattern,
     CacheTTL,
-    cached,
-    cache_invalidate,
     get_cache_manager,
 )
 

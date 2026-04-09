@@ -10,7 +10,6 @@ import argparse
 import asyncio
 import logging
 import os
-import sys
 import time
 
 import asyncpg

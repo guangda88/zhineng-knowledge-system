@@ -3,11 +3,8 @@
 测试重构后的RBAC系统功能
 """
 
-import pytest
-
 from backend.auth.rbac import (
     Permission,
-    RBACManager,
     Role,
     User,
     get_rbac,

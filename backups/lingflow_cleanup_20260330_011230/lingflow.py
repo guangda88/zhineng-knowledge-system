@@ -18,7 +18,6 @@ from pydantic import BaseModel, Field
 from backend.services.lingflow_agents import (
     LINGFLOW_AGENTS_AVAILABLE,
     AgentTaskConfig,
-    AgentTaskResult,
     get_agents_service,
 )
 

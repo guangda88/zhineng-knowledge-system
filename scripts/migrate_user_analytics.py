@@ -34,7 +34,6 @@ async def run_migration():
             # 分割SQL语句（简单实现，忽略注释和空行）
             statements = []
             current_statement = []
-            in_comment = False
 
             for line in sql_content.split("\n"):
                 # 跳过注释块
@@ -82,12 +81,12 @@ async def run_migration():
             await conn.execute(text("COMMIT"))
 
             print(f"\n{'='*60}")
-            print(f"✅ Migration completed!")
+            print("✅ Migration completed!")
             print(f"   Executed: {executed} statements")
             print(f"   Failed: {failed} statements")
 
             if failed > 0:
-                print(f"\n⚠️  Some statements failed. Please check the errors above.")
+                print("\n⚠️  Some statements failed. Please check the errors above.")
 
             # 验证表是否创建成功
             print(f"\n{'='*60}")

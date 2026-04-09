@@ -4,9 +4,7 @@
 """
 
 import json
-import re
 import sqlite3
-from collections import defaultdict
 from pathlib import Path
 
 SQLITE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guoxue.db"

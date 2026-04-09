@@ -2,7 +2,6 @@
 遵循开发规则：测试覆盖检索功能
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import asyncpg
@@ -150,7 +149,7 @@ class TestDomains:
         await domain.initialize()
 
         assert domain.name == "qigong"
-        assert domain.enabled == True
+        assert domain.enabled
         assert domain.priority == 10
 
         await domain.shutdown()
@@ -313,12 +312,12 @@ class TestRateLimiter:
         # 前5次请求应该通过
         for i in range(5):
             allowed, info = await limiter.check("test_key")
-            assert allowed == True
-            assert info["allowed"] == True
+            assert allowed
+            assert info["allowed"]
 
         # 第6次请求应该被限制
         allowed, info = await limiter.check("test_key")
-        assert allowed == False
+        assert not allowed
 
     @pytest.mark.asyncio
     async def test_whitelist(self):
@@ -332,8 +331,8 @@ class TestRateLimiter:
         # 白名单IP应该不受限制
         for i in range(10):
             allowed, info = await limiter.check("trusted_ip")
-            assert allowed == True
-            assert info.get("whitelisted") == True
+            assert allowed
+            assert info.get("whitelisted")
 
     @pytest.mark.asyncio
     async def test_token_bucket(self):
@@ -348,9 +347,9 @@ class TestRateLimiter:
         for i in range(15):
             allowed, info = await limiter.check("test_key")
             if i < 20:  # 初始令牌数 = 10 * 2 = 20
-                assert allowed == True
+                assert allowed
             else:
-                assert allowed == False
+                assert not allowed
 
 
 class TestCircuitBreaker:
@@ -374,7 +373,7 @@ class TestCircuitBreaker:
         for i in range(3):
             try:
                 await breaker.call(failing_func)
-            except:
+            except Exception:
                 pass
 
         # 熔断器应该打开

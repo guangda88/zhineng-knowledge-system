@@ -27,10 +27,9 @@ from backend.gateway.rate_limiter import (
     DEFAULT_WINDOW_SECONDS,
     InMemoryRateLimiter,
     RateLimit,
-    RateLimiter,
     TokenBucketRateLimiter,
 )
-from backend.gateway.router import APIGateway, RoutingResult, RoutingStrategy, ServiceEndpoint
+from backend.gateway.router import APIGateway, RoutingStrategy, ServiceEndpoint
 
 # ============================================================================
 # Mock Domain类

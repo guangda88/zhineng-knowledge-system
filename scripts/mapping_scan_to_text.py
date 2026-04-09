@@ -13,7 +13,7 @@ import sqlite3
 import subprocess
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 # 配置
 POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"

@@ -17,20 +17,16 @@ import os
 import logging
 import mimetypes
 import hashlib
-import asyncio
-from typing import Optional, Dict, List, Any, AsyncIterator, Tuple
+from typing import Optional, Dict, List, Any
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from io import BytesIO
-import json
 
 # S3 SDK imports
 import boto3
-from botocore.exceptions import ClientError, BotoCoreError
+from botocore.exceptions import ClientError
 from botocore.config import Config
-import aioboto3
 
 logger = logging.getLogger(__name__)
 
@@ -415,7 +411,7 @@ class ObjectStorageService:
         # 根据文件大小选择上传方式
         if file_size < self.config.multipart_threshold:
             # 普通上传
-            result = self.s3_client.upload_file(
+            self.s3_client.upload_file(
                 file_path,
                 Bucket=self.buckets[tier],
                 Key=object_key,
@@ -423,7 +419,7 @@ class ObjectStorageService:
             )
         else:
             # 分片上传
-            result = await self._upload_multipart(
+            await self._upload_multipart(
                 file_path=file_path,
                 object_key=object_key,
                 tier=tier,
@@ -470,7 +466,7 @@ class ObjectStorageService:
         Returns:
             上传结果
         """
-        file_size = os.path.getsize(file_path)
+        os.path.getsize(file_path)
         chunk_size = self.config.multipart_chunksize
 
         # 创建分片上传
@@ -771,7 +767,7 @@ class ObjectStorageService:
         for tier, bucket_name in self.buckets.items():
             try:
                 # 获取存储桶大小
-                cloudwatch = self.session.client("cloudwatch")
+                self.session.client("cloudwatch")
 
                 # 注意：MinIO可能不支持CloudWatch
                 # 使用S3 API计算大小

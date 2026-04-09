@@ -4,7 +4,6 @@
 """
 
 import asyncio
-import os
 
 
 async def import_sample_books():
@@ -120,7 +119,7 @@ async def import_sample_books():
                 print(f"✅ 插入书籍: {book_data['title']} (ID: {book_id})")
 
             # 为前3本书添加示例章节
-            print(f"\n--- 添加章节 ---")
+            print("\n--- 添加章节 ---")
             for book_id in book_ids[:3]:
                 for j in range(1, 4):  # 每本书3个章节
                     chapter_title = f"第{j}章"
@@ -157,7 +156,7 @@ async def import_sample_books():
             total_books = await conn.fetchval("SELECT COUNT(*) FROM books")
             total_chapters = await conn.fetchval("SELECT COUNT(*) FROM book_chapters")
 
-        print(f"\n=== 导入完成 ===")
+        print("\n=== 导入完成 ===")
         print(f"书籍总数: {total_books}")
         print(f"章节总数: {total_chapters}")
 

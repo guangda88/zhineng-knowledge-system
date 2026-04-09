@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """LingMinOpt自动优化监控面板"""
 import asyncio
-import json
 import sys
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
 

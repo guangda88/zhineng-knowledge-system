@@ -9,11 +9,9 @@ import asyncio
 import re
 import sqlite3
 import subprocess
-import sys
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List
 
 import aiohttp
 

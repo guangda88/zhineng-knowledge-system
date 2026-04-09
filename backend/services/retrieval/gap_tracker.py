@@ -245,9 +245,7 @@ async def get_gaps_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
     }
 
 
-async def _alert_gap_threshold(
-    query: str, hit_count: int, category: Optional[str]
-) -> None:
+async def _alert_gap_threshold(query: str, hit_count: int, category: Optional[str]) -> None:
     """当知识缺口命中次数超过阈值时，通过灵信服务发送告警。"""
     try:
         from backend.services.lingmessage.service import LingMessageService
@@ -278,7 +276,9 @@ async def _alert_gap_threshold(
             message_type="opening",
         )
 
-        logger.info(f"缺口告警已发送: query='{query}', hit_count={hit_count}, thread={thread['id']}")
+        logger.info(
+            f"缺口告警已发送: query='{query}', hit_count={hit_count}, thread={thread['id']}"
+        )
     except Exception as e:
         logger.warning(f"发送缺口告警失败（不影响主流程）: {e}")
 

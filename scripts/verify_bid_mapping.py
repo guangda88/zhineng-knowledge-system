@@ -8,7 +8,6 @@ import asyncio
 import json
 import random
 import sqlite3
-import subprocess
 from pathlib import Path
 
 import aiohttp
@@ -43,7 +42,7 @@ async def check_115_directory(session, bid: int) -> dict:
                         "items": len(content),
                         "sample_items": [c.get("name", "") for c in content[:5]],
                     }
-        except Exception as e:
+        except Exception:
             continue
 
     return {"bid": bid, "found": False, "path": None, "items": 0, "sample_items": []}

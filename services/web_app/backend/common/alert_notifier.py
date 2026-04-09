@@ -13,7 +13,7 @@ Security Alert Notification System
 
 import logging
 import httpx
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from dataclasses import dataclass
 from enum import Enum
 
@@ -439,7 +439,7 @@ class SecurityAlertNotifier:
                     </div>
             """
 
-        html += f"""
+        html += """
                 </div>
             </div>
         </body>
@@ -454,7 +454,7 @@ class SecurityAlertNotifier:
 
     def _get_dingtalk_markdown(self, alert: "SecurityAlert") -> str:
         """获取钉钉Markdown内容"""
-        color = self._get_color(alert.severity)
+        self._get_color(alert.severity)
         markdown = f"""### {self._get_emoji(alert.severity)} {alert.severity.value.upper()} 告警
 
 **类型:** {alert.event_type.value}

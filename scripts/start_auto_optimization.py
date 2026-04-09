@@ -39,7 +39,7 @@ class AutoOptimizationController:
         print("=" * 70)
         print()
         print(f"📊 优化间隔: {check_interval}秒 ({check_interval/60:.1f}分钟)")
-        print(f"🔄 循环模式: 持续运行直到手动停止")
+        print("🔄 循环模式: 持续运行直到手动停止")
         print()
         print("💡 提示: 按 Ctrl+C 停止优化")
         print()
@@ -139,7 +139,6 @@ def main():
 
     if args.action == "start":
         # 启动自动优化循环
-        interval = 30 if args.fast else 3600
         asyncio.run(run_with_status_updates())
 
     elif args.action == "once":

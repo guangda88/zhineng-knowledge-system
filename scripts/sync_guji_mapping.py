@@ -176,7 +176,7 @@ class GujiMapper:
                                 # 创建索引键
                                 key = self.normalize_title(title)
                                 self.title_index[key] = f"{table}:{row[0]}"
-                except Exception as e:
+                except Exception:
                     continue
 
             conn.close()

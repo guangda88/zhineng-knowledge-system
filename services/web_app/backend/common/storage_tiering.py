@@ -14,7 +14,7 @@ Storage Tiering Manager
 
 import logging
 import asyncio
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -23,7 +23,6 @@ from collections import defaultdict, deque
 from .object_storage import (
     ObjectStorageService,
     StorageTier,
-    FileMetadata,
 )
 
 logger = logging.getLogger(__name__)

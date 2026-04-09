@@ -10,8 +10,6 @@
 
 import argparse
 import subprocess
-import sys
-from pathlib import Path
 
 POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
 

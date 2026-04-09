@@ -14,7 +14,7 @@ from pathlib import Path
 # 添加backend到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backend.config.timeouts import OperationType, Timeouts, get_timeout_config
+from backend.config.timeouts import OperationType, get_timeout_config
 from backend.gateway.circuit_breaker import CircuitBreakerRegistry
 from backend.services.ai_service_enhanced import get_enhanced_ai_service
 
@@ -56,7 +56,7 @@ async def test_circuit_breakers():
     # 创建测试熔断器
     breaker = registry.get_or_create("test_provider")
 
-    print(f"\n🔧 熔断器状态:")
+    print("\n🔧 熔断器状态:")
     print(f"  名称: {breaker.name}")
     print(f"  状态: {breaker.state.value}")
     print(f"  失败阈值: {breaker.config.failure_threshold}")
@@ -123,7 +123,7 @@ async def test_ai_service_import():
             get_enhanced_ai_service,
         )
 
-        print(f"\n🔧 配置:")
+        print("\n🔧 配置:")
         print(f"  增强版可用: {ENHANCED_ENABLED}")
         print(f"  使用增强版: {USE_ENHANCED}")
 

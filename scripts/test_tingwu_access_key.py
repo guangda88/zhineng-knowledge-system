@@ -48,8 +48,8 @@ def test_access_key():
         from alibabacloud_tingwu20230930.client import Client as TingwuClient
 
         print("✅ SDK已安装")
-    except ImportError as e:
-        print(f"❌ 错误: SDK未安装")
+    except ImportError:
+        print("❌ 错误: SDK未安装")
         print("   请运行: pip install alibabacloud-tingwu20230930")
         return False
 
@@ -65,7 +65,7 @@ def test_access_key():
         client = TingwuClient(config)
         print("✅ 客户端创建成功")
     except Exception as e:
-        print(f"❌ 错误: 客户端创建失败")
+        print("❌ 错误: 客户端创建失败")
         print(f"   详情: {e}")
         return False
 
@@ -96,7 +96,7 @@ def test_access_key():
         return True
 
     except Exception as e:
-        print(f"❌ 错误: API调用失败")
+        print("❌ 错误: API调用失败")
         print(f"   详情: {e}")
 
         # 分析错误类型

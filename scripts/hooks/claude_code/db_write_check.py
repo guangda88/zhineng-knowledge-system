@@ -36,9 +36,9 @@ except ImportError:
 
                 expires_at = datetime.fromisoformat(token["expires_at"])
                 if datetime.now() > expires_at:
-                    return False, f"❌ 令牌已过期"
+                    return False, "❌ 令牌已过期"
 
-                return True, f"✅ 批准有效"
+                return True, "✅ 批准有效"
 
             except Exception as e:
                 return False, f"❌ 令牌验证失败: {e}"
@@ -78,7 +78,7 @@ def main():
     approved, message = ApprovalToken.validate("db_write")
 
     if not approved:
-        print(f"❌ 数据库写操作检查失败\n")
+        print("❌ 数据库写操作检查失败\n")
         print(f"原因: {message}\n")
         print("⚠️  数据库写操作需要用户批准！")
         print_help()

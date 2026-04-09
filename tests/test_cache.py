@@ -4,8 +4,6 @@
 """
 
 import asyncio
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -89,7 +87,7 @@ class TestCacheDecorators:
     """缓存装饰器测试"""
 
     def test_import_decorators(self):
-        from backend.cache.decorators import CacheAside, cached, memoize_async
+        from backend.cache.decorators import cached, memoize_async
 
         assert callable(cached)
         assert callable(memoize_async)

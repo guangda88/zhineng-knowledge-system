@@ -74,7 +74,7 @@ class SecurityScoreCalculator:
             with open(report_path, "r") as f:
                 report = json.load(f)
 
-            vulnerabilities = report.get("vulnerabilities", {})
+            report.get("vulnerabilities", {})
             metadata = report.get("metadata", {})
             vuln_metadata = metadata.get("vulnerabilities", {})
 

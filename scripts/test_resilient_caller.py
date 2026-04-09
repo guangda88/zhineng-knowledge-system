@@ -9,7 +9,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.services.evolution.resilient_caller import (
     PermanentError,
-    RetryableError,
     get_resilient_caller,
 )
 
@@ -35,10 +34,10 @@ async def test_retry_mechanism():
         print(f"  尝试 #{call_count['count']}")
 
         if call_count["count"] <= max_failures:
-            print(f"  ❌ 模拟网络错误")
+            print("  ❌ 模拟网络错误")
             raise ConnectionError("Network error")
 
-        print(f"  ✅ 成功!")
+        print("  ✅ 成功!")
         return {"content": f"Response to: {prompt}", "success": True}
 
     try:
@@ -56,7 +55,7 @@ async def test_retry_mechanism():
 
     async def permanent_error_api_call(prompt: str):
         """模拟永久性错误"""
-        print(f"  尝试调用（会立即失败）")
+        print("  尝试调用（会立即失败）")
         raise PermanentError("Invalid API key")
 
     try:
@@ -88,7 +87,7 @@ async def test_retry_mechanism():
                 provider="hunyuan", func=realistic_api_call, prompt=f"Test call {i+1}"
             )
             print(f"  调用 {i+1}: ✅ 成功")
-        except Exception as e:
+        except Exception:
             print(f"  调用 {i+1}: ❌ 失败")
 
     # 显示统计

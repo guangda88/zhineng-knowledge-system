@@ -395,7 +395,7 @@ async def main():
         total_blocked = len(blocked)
 
         print("\n" + "=" * 60)
-        print(f"📊 汇总:")
+        print("📊 汇总:")
         print(f"  运行中的文件锁: {total_file_locks}")
         print(f"  运行中的数据库锁: {total_db_locks}")
         print(f"  被阻塞的查询: {total_blocked}")

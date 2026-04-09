@@ -1,12 +1,11 @@
 """Tests for backend.domains modules — domain creation and dead code removal verification"""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
-from backend.domains.base import BaseDomain, DomainConfig, DomainType
+from backend.domains.base import DomainType
 from backend.domains.confucian import ConfucianDomain
-from backend.domains.general import GeneralDomain
 from backend.domains.qigong import QigongDomain
 from backend.domains.tcm import TcmDomain
 

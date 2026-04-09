@@ -5,7 +5,7 @@
 """
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -260,10 +260,10 @@ class TestRAGPipelineIntegration:
     def test_multi_turn_conversation(self, pipeline):
         """测试多轮对话"""
         # 第一轮
-        answer1 = asyncio.run(pipeline.query("什么是混元灵通？"))
+        asyncio.run(pipeline.query("什么是混元灵通？"))
 
         # 第二轮
-        answer2 = asyncio.run(pipeline.query("它有什么特点？"))
+        asyncio.run(pipeline.query("它有什么特点？"))
 
         # 验证对话历史
         assert len(pipeline.conversation_history) == 2

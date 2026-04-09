@@ -6,14 +6,12 @@ Distributed Tracing System V2
 
 import logging
 import time
-from typing import Optional, Dict, List, Any, Callable
+from typing import Optional, Dict, List, Any
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from contextlib import contextmanager
 from functools import wraps
 import uuid
-import json
 
 logger = logging.getLogger(__name__)
 

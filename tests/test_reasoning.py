@@ -3,18 +3,16 @@
 测试CoT、ReAct和GraphRAG推理功能
 """
 
-import asyncio
 import sys
-from dataclasses import dataclass
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backend.services.reasoning.base import BaseReasoner, QueryType, ReasoningResult, ReasoningStep
+from backend.services.reasoning.base import QueryType, ReasoningResult, ReasoningStep
 from backend.services.reasoning.cot import CoTReasoner
 from backend.services.reasoning.graph_rag import (
     Entity,

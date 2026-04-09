@@ -1,5 +1,3 @@
-import hashlib
-
 # -*- coding: utf-8 -*-
 """
 缓存中间件
@@ -9,17 +7,15 @@ Cache Middleware for FastAPI
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
-from fastapi import Request, Response, HTTPException, Depends
+from fastapi import Request, Depends
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.datastructures import Headers
 
 from .cache_manager import (
     CacheManager,
     CacheKeyPattern,
-    CacheTTL,
     get_cache_manager,
 )
 
@@ -245,7 +241,7 @@ def setup_cache_middleware(
     if config is None:
         config = {}
 
-    middleware = CacheMiddleware(app, cache_manager=cache_manager, **config)
+    CacheMiddleware(app, cache_manager=cache_manager, **config)
 
     # 添加中间件到应用
     app.add_middleware(CacheMiddleware, **config)
@@ -446,7 +442,7 @@ class CacheWarmer:
         """
         from cache_service import get_hotword_cache_service
 
-        service = get_hotword_cache_service()
+        get_hotword_cache_service()
         # 这里应该从实际数据源加载
         # words = await load_hotwords_from_db(domain)
         # await service.set_hotwords(domain, words)
@@ -461,7 +457,7 @@ class CacheWarmer:
         """
         from cache_service import get_document_cache_service
 
-        service = get_document_cache_service()
+        get_document_cache_service()
         # 这里应该从实际数据源加载
         # docs = await get_trending_documents_from_db(limit)
         # for doc in docs:

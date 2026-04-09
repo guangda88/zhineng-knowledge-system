@@ -40,9 +40,7 @@ async def main():
             texts = [r["content"][:512] for r in batch]
 
             try:
-                resp = await client.post(
-                    f"{EMBED_URL}/embed_batch", json={"texts": texts}
-                )
+                resp = await client.post(f"{EMBED_URL}/embed_batch", json={"texts": texts})
                 if resp.status_code != 200:
                     print(f"  嵌入服务返回 {resp.status_code}, 跳过批次")
                     continue

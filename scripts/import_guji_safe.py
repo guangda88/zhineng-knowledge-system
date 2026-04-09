@@ -5,7 +5,6 @@ import asyncio
 import logging
 import sqlite3
 import sys
-from datetime import datetime
 from pathlib import Path
 
 # 添加项目路径
@@ -39,7 +38,7 @@ async def import_table_batch(
 
     # 获取表结构和总数
     cursor.execute(f"PRAGMA table_info({table})")
-    cols = [col[1] for col in cursor.fetchall()]
+    [col[1] for col in cursor.fetchall()]
 
     cursor.execute(f"SELECT COUNT(*) FROM {table}")
     total = cursor.fetchone()[0]

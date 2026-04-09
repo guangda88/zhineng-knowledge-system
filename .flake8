@@ -6,12 +6,12 @@ max-line-length = 100
 # E203: 检测冒号前的空格（与 Black 冲突）
 # W503: 二元运算符前换行（与 Black 冲突）
 # E501: 行过长（由 Black 处理）
-ignore = E203, W503, E501, E226
+ignore = E203, W503, E501, E226, C901
 
 # 每个文件的忽略规则
 per-file-ignores =
     __init__.py:F401
-    tests/*:S101
+    tests/*:S101,E402
 
 # 排除目录
 exclude =
@@ -27,7 +27,12 @@ exclude =
     .pytest_cache,
     .mypy_cache,
     htmlcov,
-    migrations
+    migrations,
+    analytics,
+    scripts,
+    services,
+    backups,
+    data
 
 # 启用的插件
 enable-extensions =

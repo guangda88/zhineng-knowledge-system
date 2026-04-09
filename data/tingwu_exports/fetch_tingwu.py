@@ -2,7 +2,6 @@
 
 import requests
 import json
-import sys
 import os
 
 COOKIES = {
@@ -122,7 +121,7 @@ def main():
     print("=" * 60)
     print("Step 1: Fetching folder page")
     print("=" * 60)
-    html = fetch_page(session)
+    fetch_page(session)
 
     # Step 2: Try API endpoints
     print("\n" + "=" * 60)

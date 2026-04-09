@@ -13,9 +13,9 @@ import json
 import logging
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Dict, Optional, Callable, TypeVar, Union, List, Set
+from typing import Any, Dict, Optional, Callable, TypeVar, List
 
 from cachetools import TTLCache
 
@@ -421,7 +421,7 @@ class MemoryCacheBackend(CacheBackend):
         try:
             async with self._lock:
                 return key in self._cache
-        except Exception as e:
+        except Exception:
             self._errors += 1
             return False
 

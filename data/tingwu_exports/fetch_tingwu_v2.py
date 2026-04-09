@@ -131,7 +131,7 @@ def main():
 
     # Step 1: Discover APIs from JS
     print("=" * 60)
-    api_urls = fetch_js_and_find_api(session)
+    fetch_js_and_find_api(session)
 
     # Step 2: Try known patterns
     print("\n" + "=" * 60)

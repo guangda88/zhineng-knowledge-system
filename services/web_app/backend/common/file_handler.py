@@ -13,7 +13,7 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional, Union, List, IO, Generator, Callable
+from typing import Optional, Union, List, Generator
 import uuid
 
 from .exceptions import FileProcessingError
@@ -520,7 +520,7 @@ def get_file_hash(
             while chunk := f.read(chunk_size):
                 hasher.update(chunk)
         return hasher.hexdigest()
-    except ValueError as e:
+    except ValueError:
         raise FileProcessingError(
             f"Invalid hash algorithm: {algorithm}",
             file_path=str(path),

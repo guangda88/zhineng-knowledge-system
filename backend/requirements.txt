@@ -9,7 +9,7 @@ asyncpg==0.30.0
 sqlalchemy==2.0.35
 
 # 向量数据库
-pgvector==0.3.0
+pgvector==0.4.2
 
 # 缓存
 redis==5.2.0

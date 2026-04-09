@@ -11,7 +11,6 @@
 
 import asyncio
 import sqlite3
-import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
 
