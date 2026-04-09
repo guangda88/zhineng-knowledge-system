@@ -127,8 +127,8 @@ class SensitiveDataFilter:
     # 脱敏占位符
     MASK_PLACEHOLDERS = {
         "password": "***",
-        "token": "***TOKEN***",
-        "api_key": "***API_KEY***",
+        "token": "[REDACTED_TOKEN]",
+        "api_key": "[REDACTED_API_KEY]",
         "phone": "***PHONE***",
         "email": "***EMAIL***",
         "id_card": "***ID_CARD***",
