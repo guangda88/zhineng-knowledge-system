@@ -3,17 +3,23 @@
 提供国学古籍（guoxue_content / guoxue_books）的高级搜索功能：
 - 全文三元组搜索（利用 pg_trgm 索引）
 - 模糊匹配（pg_trgm similarity）
+- 语义向量搜索（pgvector + BGE embedding）
+- Cross-encoder 精排（Reranker）
 - 关键词高亮与上下文片段
 - 多字段加权排序（标题 > 正文 > 章节ID）
 - 跨典籍联合搜索
 """
 
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import asyncpg
+import httpx
 
 logger = logging.getLogger(__name__)
+
+_EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://zhineng-embedding:8001")
 
 
 class LingFlowGuoxueSearchService:
@@ -21,6 +27,23 @@ class LingFlowGuoxueSearchService:
 
     def __init__(self, db_pool: asyncpg.Pool):
         self.pool = db_pool
+        self._reranker = None
+        self._http_client: Optional[httpx.AsyncClient] = None
+
+    async def _get_http_client(self) -> httpx.AsyncClient:
+        if self._http_client is None or self._http_client.is_closed:
+            self._http_client = httpx.AsyncClient(timeout=60.0)
+        return self._http_client
+
+    async def _get_reranker(self):
+        if self._reranker is None:
+            try:
+                from backend.services.retrieval.reranker import create_reranker
+                self._reranker = create_reranker()
+            except ImportError:
+                logger.info("sentence_transformers 不可用，跳过 reranker")
+                self._reranker = None
+        return self._reranker
 
     async def search(
         self,
@@ -52,6 +75,8 @@ class LingFlowGuoxueSearchService:
             return await self._fuzzy_search(keyword, book_id, page, size)
         elif search_mode == "broad":
             return await self._broad_search(keyword, book_id, page, size)
+        elif search_mode == "semantic":
+            return await self._semantic_search(keyword, book_id, page, size)
         else:
             return await self._fulltext_search(keyword, book_id, page, size)
 
@@ -350,6 +375,115 @@ class LingFlowGuoxueSearchService:
             )
 
         return results
+
+    async def _semantic_search(
+        self,
+        keyword: str,
+        book_id: Optional[int],
+        page: int,
+        size: int,
+    ) -> Dict[str, Any]:
+        """语义向量搜索 + Cross-encoder 精排
+
+        使用 pgvector 向量相似度检索语义相关内容，
+        再用 cross-encoder reranker 对 top-N 结果精排。
+        当 embedding 列无数据时自动降级到 fulltext 模式。
+        """
+        try:
+            client = await self._get_http_client()
+            resp = await client.post(
+                f"{_EMBEDDING_SERVICE_URL}/embed",
+                json={"text": keyword, "normalize": True},
+            )
+            resp.raise_for_status()
+            query_vec = resp.json()["embedding"]
+        except Exception as e:
+            logger.warning(f"Embedding 服务调用失败，降级到 fulltext: {e}")
+            return await self._fulltext_search(keyword, book_id, page, size)
+
+        vec_str = "[" + ",".join(map(str, query_vec)) + "]"
+
+        has_embedding = await self.pool.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM guoxue_content WHERE embedding IS NOT NULL LIMIT 1)"
+        )
+        if not has_embedding:
+            logger.info("guoxue_content embedding 列无数据，降级到 fulltext 模式")
+            return await self._fulltext_search(keyword, book_id, page, size)
+
+        conditions = ["gc.embedding IS NOT NULL"]
+        params: list = [vec_str]
+        idx = 2
+
+        if book_id is not None:
+            conditions.append(f"gc.book_id = ${idx}")
+            params.append(book_id)
+            idx += 1
+
+        where_clause = " AND ".join(conditions)
+        offset = (page - 1) * size
+        fetch_size = min(size * 3, 60)
+
+        rows = await self.pool.fetch(
+            f"""
+            SELECT gc.id, gc.book_id, gc.chapter_id,
+                   gc.body, gc.body_length, gc.source_table,
+                   1 - (gc.embedding <=> $1::vector) AS vec_score
+            FROM guoxue_content gc
+            WHERE {where_clause}
+            ORDER BY gc.embedding <=> $1::vector
+            LIMIT ${idx} OFFSET ${idx + 1}
+            """,
+            *params,
+            fetch_size,
+            offset,
+            timeout=30,
+        )
+
+        results = []
+        for r in rows:
+            snippet = self._make_snippet(r["body"], keyword, max_len=300)
+            results.append(
+                {
+                    "id": r["id"],
+                    "book_id": r["book_id"],
+                    "book_title": None,
+                    "chapter_id": r["chapter_id"],
+                    "snippet": snippet,
+                    "body_length": r["body_length"],
+                    "sim_score": round(float(r["vec_score"]), 4),
+                    "source_table": r["source_table"],
+                    "content": r["body"][:500] if r["body"] else "",
+                }
+            )
+
+        if results:
+            book_ids = list(set(r["book_id"] for r in results))
+            book_rows = await self.pool.fetch(
+                "SELECT book_id, title FROM guoxue_books WHERE book_id = ANY($1)",
+                book_ids,
+            )
+            book_map = {r["book_id"]: r["title"] for r in book_rows}
+            for r in results:
+                r["book_title"] = book_map.get(r["book_id"])
+
+        if len(results) > 1:
+            try:
+                reranker = await self._get_reranker()
+                results = await reranker.rerank(keyword, results, top_k=size)
+            except Exception as e:
+                logger.warning(f"Reranker 精排失败，使用向量排序: {e}")
+
+        results = results[:size]
+
+        for r in results:
+            r.pop("content", None)
+
+        return {
+            "total": len(results) if page == 1 else fetch_size,
+            "page": page,
+            "size": size,
+            "results": results,
+        }
 
     async def _estimate_total(
         self,

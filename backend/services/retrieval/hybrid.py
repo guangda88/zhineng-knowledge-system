@@ -5,14 +5,18 @@
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 import asyncpg
 
 from .bm25 import BM25Retriever
 from .feedback import get_doc_quality_scores
 from .gap_tracker import record_search_outcome
+from .reranker import create_reranker
 from .vector import VectorRetriever
+
+if TYPE_CHECKING:
+    from .reranker import Reranker
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +34,7 @@ class HybridRetriever:
         vector_weight: float = 0.6,
         bm25_weight: float = 0.4,
         k: int = 60,
+        use_reranker: bool = True,
     ):
         """
         初始化混合检索器
@@ -39,20 +44,25 @@ class HybridRetriever:
             vector_weight: 向量检索权重
             bm25_weight: BM25检索权重
             k: RRF参数
+            use_reranker: 是否启用 cross-encoder 精排
         """
         self.db_pool = db_pool
         self.vector_weight = vector_weight
         self.bm25_weight = bm25_weight
         self.k = k
+        self.use_reranker = use_reranker
 
         self.vector_retriever: Optional[VectorRetriever] = None
         self.bm25_retriever: Optional[BM25Retriever] = None
+        self.reranker: "Optional[Reranker]" = None
 
     async def initialize(self) -> None:
         """初始化检索器"""
         self.vector_retriever = VectorRetriever(self.db_pool)
         self.bm25_retriever = BM25Retriever(self.db_pool)
         await self.bm25_retriever.initialize()
+        if self.use_reranker:
+            self.reranker = create_reranker()
         logger.info("混合检索器初始化完成")
 
     async def close(self) -> None:
@@ -216,7 +226,14 @@ class HybridRetriever:
         except Exception as fb_err:
             logger.debug(f"反馈质量评估跳过: {fb_err}")
 
-        results.sort(key=lambda x: x.get("score", 0), reverse=True)
+        # Cross-encoder 精排
+        if self.reranker and results:
+            try:
+                results = await self.reranker.rerank(query, results, top_k=top_k)
+            except Exception as re_err:
+                logger.warning(f"Reranker 精排失败，使用 RRF 原始排序: {re_err}")
+
+        results.sort(key=lambda x: x.get("rerank_score", x.get("score", 0)), reverse=True)
 
         logger.info(
             f"混合检索: query='{query}', vector={len(vector_results)}, "

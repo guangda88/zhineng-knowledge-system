@@ -8,15 +8,15 @@ services:
     command:
     - postgres
     - -c
-    - shared_buffers=4GB
+    - shared_buffers=2GB
     - -c
-    - work_mem=128MB
+    - work_mem=64MB
     - -c
-    - maintenance_work_mem=1GB
+    - maintenance_work_mem=512MB
     - -c
-    - effective_cache_size=24GB
+    - effective_cache_size=12GB
     - -c
-    - max_wal_size=4GB
+    - max_wal_size=2GB
     - -c
     - min_wal_size=1GB
     - -c
@@ -47,10 +47,10 @@ services:
       resources:
         limits:
           cpus: '4.0'
-          memory: 8G
+          memory: 4G
         reservations:
           cpus: '1.0'
-          memory: 4G
+          memory: 2G
 
   redis:
     image: redis:7-alpine
@@ -273,6 +273,27 @@ services:
         reservations:
           memory: 32M
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: tcm-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    networks:
+    - zhineng-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 2G
+
 volumes:
   postgres_data:
     driver: local
@@ -281,6 +302,8 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  es_data:
     driver: local
   embedding_cache:
     driver: local

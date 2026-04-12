@@ -2,10 +2,11 @@
 
 提供对 guoxue_content（26.3万条）和 guoxue_books（109部典籍）的搜索、浏览功能。
 LingFlow 增强功能：
-- 多模式全文搜索（精确/模糊/宽泛）
+- 多模式全文搜索（精确/模糊/宽泛/语义）
 - 跨典籍联合搜索
 - 上下文片段高亮
 - 相关性评分
+- 语义向量搜索 + Cross-encoder 精排
 """
 
 import logging
@@ -187,16 +188,17 @@ async def get_content(content_id: int):
 async def search_content(
     q: str = Query(..., min_length=1, max_length=200, description="搜索关键词"),
     book_id: Optional[int] = Query(None, description="限定典籍ID"),
-    mode: str = Query("fulltext", pattern="^(fulltext|fuzzy|broad)$", description="搜索模式"),
+    mode: str = Query("fulltext", pattern="^(fulltext|fuzzy|broad|semantic)$", description="搜索模式"),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
     """LingFlow 增强全文搜索
 
-    支持三种搜索模式：
+    支持四种搜索模式：
     - fulltext: 三元组全文搜索（默认，精确匹配优先）
     - fuzzy: 模糊搜索（容错匹配，适合错别字场景）
     - broad: 宽泛搜索（典籍级别匹配，适合探索性搜索）
+    - semantic: 语义向量搜索（pgvector + reranker 精排）
 
     使用 CTE 避免重复扫描，estimated count 提升性能。
     """

@@ -61,8 +61,8 @@ _ALLOWED_QUERY_KEYWORDS: Set[str] = {
 _SAFE_FIELD_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
-async def require_pool(
-    pool_getter: Callable[[], Any],
+def require_pool(
+    pool_getter: Callable[[], Any] = None,
 ) -> Any:
     """确保数据库连接池可用
 
@@ -72,7 +72,9 @@ async def require_pool(
     Returns:
         数据库连接池
     """
-    return await pool_getter()
+    if pool_getter is None:
+        raise HTTPException(status_code=503, detail="数据库连接池未配置")
+    return pool_getter()
 
 
 def row_to_dict(row: asyncpg.Record) -> Dict[str, Any]:
