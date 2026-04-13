@@ -1,6 +1,8 @@
 """GPU-accelerated embedding generation for documents and guoxue_content.
 
-Uses CUDA GPU (GTX 1660 Ti) for 10-100x faster embeddings vs CPU service.
+Uses CUDA GPU (GTX 1660 Ti) for fast embeddings.
+Writes to a staging table on NVMe SSD tablespace for fast I/O,
+then bulk-updates the target table.
 
 Usage:
     python scripts/gpu_embed.py --table documents --categories 佛家,道家,武术,哲学,科学,心理学
@@ -23,7 +25,9 @@ logger = logging.getLogger(__name__)
 DB_URL = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
 MODEL_NAME = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
 MAX_TEXT_LENGTH = 512
-PROGRESS_INTERVAL = 1000
+STAGING_TABLE = "doc_embeddings_staging"
+GUOXUE_STAGING = "guoxue_embeddings_staging"
+CONTENT_COL = {"documents": "content", "guoxue_content": "body"}
 
 
 def load_model():
@@ -32,6 +36,20 @@ def load_model():
     model = SentenceTransformer(MODEL_NAME, device=device)
     logger.info(f"Model loaded on {device}: {next(model.parameters()).device}")
     return model
+
+
+async def ensure_staging_table(pool, table):
+    staging = GUOXUE_STAGING if table == "guoxue_content" else STAGING_TABLE
+    async with pool.acquire() as conn:
+        await conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS {staging} (
+                id INT PRIMARY KEY,
+                embedding vector(512)
+            ) TABLESPACE nvme
+        """)
+        await conn.execute(f"TRUNCATE {staging}")
+    logger.info(f"Staging table {staging} ready on NVMe tablespace")
+    return staging
 
 
 async def embed_table(model, table: str, categories: list[str] | None, batch_size: int):
@@ -50,6 +68,8 @@ async def embed_table(model, table: str, categories: list[str] | None, batch_siz
             where = "embedding IS NULL"
             args = []
 
+        content_col = CONTENT_COL.get(table, "content")
+
         total = await pool.fetchval(f"SELECT count(*) FROM {table} WHERE {where}", *args)
         logger.info(f"{table}: {total} rows to embed (batch_size={batch_size})")
 
@@ -57,59 +77,72 @@ async def embed_table(model, table: str, categories: list[str] | None, batch_siz
             logger.info("Nothing to do")
             return
 
+        staging = await ensure_staging_table(pool, table)
+
         updated = 0
         failed = 0
         t0 = time.time()
+        batch_num = 0
 
         while True:
             rows = await pool.fetch(
-                f"SELECT id, content FROM {table} WHERE {where} ORDER BY id LIMIT {batch_size}",
+                f"SELECT id, {content_col} FROM {table} WHERE {where} "
+                f"AND id NOT IN (SELECT id FROM {staging}) "
+                f"ORDER BY id LIMIT {batch_size}",
                 *args,
             )
             if not rows:
                 break
 
-            texts = []
-            for row in rows:
-                text = row["content"] or ""
-                texts.append(text[:MAX_TEXT_LENGTH])
+            texts = [(row[content_col] or "")[:MAX_TEXT_LENGTH] for row in rows]
 
             try:
                 embeddings = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
                 async with pool.acquire() as conn:
-                    for i, (row, emb) in enumerate(zip(rows, embeddings)):
-                        vec_str = "[" + ",".join(map(str, emb.tolist())) + "]"
-                        try:
-                            await conn.execute(
-                                f"UPDATE {table} SET embedding = $1::vector WHERE id = $2",
-                                vec_str,
-                                row["id"],
-                            )
-                        except Exception as e3:
-                            logger.error(f"Single update failed id={row['id']}: {e3}")
-                            failed += 1
-                            continue
-                        updated += 1
-                        if updated % 500 == 0:
-                            logger.info(f"  ... {updated}/{total} embedded so far")
+                    async with conn.transaction():
+                        for row, emb in zip(rows, embeddings):
+                            vec_str = "[" + ",".join(map(str, emb.tolist())) + "]"
+                            try:
+                                await conn.execute(
+                                    f"INSERT INTO {staging} (id, embedding) VALUES ($1, $2::vector) "
+                                    f"ON CONFLICT (id) DO UPDATE SET embedding = $2::vector",
+                                    row["id"],
+                                    vec_str,
+                                )
+                                updated += 1
+                            except Exception as e3:
+                                logger.error(f"Insert failed id={row['id']}: {e3}")
+                                failed += 1
+
+                batch_num += 1
+                elapsed = time.time() - t0
+                rate = updated / elapsed if elapsed > 0 else 0
+                logger.info(
+                    f"  batch {batch_num}: {updated}/{total} ({updated*100//total}%) "
+                    f"rate={rate:.1f}/s"
+                )
             except Exception as e:
                 logger.error(f"Batch failed: {e}")
                 failed += len(rows)
 
-            if updated % PROGRESS_INTERVAL < batch_size:
-                elapsed = time.time() - t0
-                rate = updated / elapsed if elapsed > 0 else 0
-                eta = (total - updated) / rate if rate > 0 else 0
-                logger.info(
-                    f"Progress: {updated}/{total} "
-                    f"({updated * 100 // total}%) "
-                    f"rate={rate:.1f}/s "
-                    f"ETA={eta / 60:.1f}min "
-                    f"failed={failed}"
-                )
+        # Bulk update from staging
+        logger.info(f"Bulk updating {table} from staging table...")
+        bulk_t0 = time.time()
+        async with pool.acquire() as conn:
+            result = await conn.execute(
+                f"UPDATE {table} t SET embedding = s.embedding "
+                f"FROM {staging} s WHERE t.id = s.id"
+            )
+            bulk_count = int(result.split()[-1])
+        bulk_time = time.time() - bulk_t0
+        logger.info(f"Bulk update: {bulk_count} rows in {bulk_time:.1f}s ({bulk_count/bulk_time:.1f}/s)")
+
+        # Clean up staging
+        async with pool.acquire() as conn:
+            await conn.execute(f"TRUNCATE {staging}")
 
         elapsed = time.time() - t0
-        logger.info(f"Done: {updated} updated, {failed} failed in {elapsed:.0f}s")
+        logger.info(f"Done: {bulk_count} updated, {failed} failed in {elapsed:.0f}s")
     finally:
         await pool.close()
 

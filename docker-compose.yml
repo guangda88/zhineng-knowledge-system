@@ -35,6 +35,7 @@ services:
     volumes:
     - postgres_data:/var/lib/postgresql/data
     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    - /home/ai/pg_tablespace:/var/lib/postgresql/nvme
     healthcheck:
       test: [CMD-SHELL, pg_isready -U zhineng -d zhineng_kb]
       interval: 10s
