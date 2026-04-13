@@ -44,7 +44,7 @@ class GujiMapper:
         """初始化连接"""
         self.session = aiohttp.ClientSession()
         self.conn = await asyncpg.connect(
-            "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
+            "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
         )
 
     async def close(self):

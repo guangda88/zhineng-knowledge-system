@@ -10,7 +10,7 @@ import asyncpg
 
 SQLITE_PATH = "/home/ai/zhineng-knowledge-system/lingzhi_ubuntu/database/guoxue.db"
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
+    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
 )
 BATCH_SIZE = 100
 

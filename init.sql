@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS documents (
     id SERIAL PRIMARY KEY,
     title VARCHAR(500) NOT NULL,
     content TEXT NOT NULL,
-    category VARCHAR(50) NOT NULL CHECK (category IN ('气功', '中医', '儒家')),
+    category VARCHAR(50) NOT NULL CHECK (category IN ('气功', '中医', '儒家', '佛家', '道家', '武术', '哲学', '科学', '心理学')),
     tags TEXT[] DEFAULT '{}',
     embedding vector(512),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

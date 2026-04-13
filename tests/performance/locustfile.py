@@ -72,7 +72,7 @@ QUESTIONS = [
 ]
 
 # 分类样本
-CATEGORIES = ["气功", "中医", "儒家"]
+CATEGORIES = ["气功", "中医", "儒家", "佛家", "道家", "武术", "哲学", "科学", "心理学"]
 
 
 class KnowledgeAPIUser(HttpUser):

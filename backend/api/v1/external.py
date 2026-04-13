@@ -426,7 +426,7 @@ def _analyze_sentiment(text: str) -> Dict[str, Any]:
 
 async def _analyze_category(text: str, pool) -> Dict[str, Any]:
     """Classify text by matching against document categories in DB"""
-    categories = ["气功", "中医", "儒家"]
+    categories = ["气功", "中医", "儒家", "佛家", "道家", "武术", "哲学", "科学", "心理学"]
     best_cat, best_score = "通用", 0.0
     keywords = jieba.analyse.extract_tags(text, topK=20)
     for cat in categories:

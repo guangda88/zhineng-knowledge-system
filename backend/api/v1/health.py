@@ -29,7 +29,7 @@ async def root() -> Dict[str, Any]:
     return {
         "status": "ok",
         "message": "智能知识系统运行中",
-        "categories": ["气功", "中医", "儒家"],
+        "categories": ["气功", "中医", "儒家", "佛家", "道家", "武术", "哲学", "科学", "心理学"],
         "version": "1.0.0",
         "stats": request_stats,
     }
