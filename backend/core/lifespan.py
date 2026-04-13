@@ -62,6 +62,61 @@ async def _init_cache_system(config, cache_service):
     logger.info("Cache system initialized")
 
 
+async def _warm_up_cache(config, db_service):
+    """缓存预热：预加载常用查询结果到 Redis"""
+    if not db_service or not db_service.pool:
+        return
+    try:
+        from backend.cache import get_cache_manager
+
+        cache_manager = get_cache_manager()
+        if not cache_manager._l2_cache:
+            return
+
+        db_pool = db_service.pool
+
+        async def _preload_categories():
+            rows = await db_pool.fetch(
+                "SELECT category, count(*) as cnt FROM documents GROUP BY category ORDER BY cnt DESC"
+            )
+            data = {row["category"]: row["cnt"] for row in rows}
+            await cache_manager.set("categories", data, namespace="api_categories", ttl=1800)
+            return len(data)
+
+        async def _preload_domain_stats():
+            rows = await db_pool.fetch(
+                "SELECT category, count(*) as total, "
+                "count(embedding) as embedded, "
+                "avg(length(content))::int as avg_len "
+                "FROM documents GROUP BY category"
+            )
+            data = {row["category"]: dict(row) for row in rows}
+            await cache_manager.set("domain_stats", data, namespace="api_domain_stats", ttl=600)
+            return len(data)
+
+        async def _preload_total_stats():
+            total = await db_pool.fetchval("SELECT count(*) FROM documents")
+            embedded = await db_pool.fetchval(
+                "SELECT count(*) FROM documents WHERE embedding IS NOT NULL"
+            )
+            data = {"total": total, "embedded": embedded}
+            await cache_manager.set("stats", data, namespace="api_stats", ttl=300)
+            return 1
+
+        import asyncio
+
+        results = await asyncio.gather(
+            _preload_categories(),
+            _preload_domain_stats(),
+            _preload_total_stats(),
+            return_exceptions=True,
+        )
+        ok = sum(1 for r in results if not isinstance(r, Exception))
+        logger.info(f"Cache warm-up: {ok} groups preloaded")
+    except Exception as e:
+        logger.warning(f"Cache warm-up skipped: {e}")
+
+
 async def _init_sqlalchemy():
     """初始化 SQLAlchemy ORM"""
     from backend.core.database import init_async_engine
@@ -220,6 +275,7 @@ async def lifespan(app: FastAPI):
         raise
 
     await _safe_init("Cache system")(_init_cache_system)(config, cache_service)
+    await _safe_init("Cache warm-up")(_warm_up_cache)(config, db_service)
     await _safe_init("SQLAlchemy")(_init_sqlalchemy)()
     await _safe_init("Domains")(_init_domains)(db_service)
     await _safe_init("Health checks")(_init_health_checks)(db_service)

@@ -81,7 +81,7 @@ class HybridSearchResult:
 
 
 class FullTextRetriever:
-    """全文检索器"""
+    """全文检索器 — 使用 jieba 预分词的 search_vector 列 + GIN 索引"""
 
     def __init__(self, db_pool):
         """初始化全文检索器
@@ -90,11 +90,47 @@ class FullTextRetriever:
             db_pool: 数据库连接池
         """
         self.db_pool = db_pool
+        self._jieba_ready = False
+
+    def _ensure_jieba(self):
+        if self._jieba_ready:
+            return
+        try:
+            from pathlib import Path
+
+            import jieba
+
+            jieba.setLogLevel(logging.WARNING)
+            custom_dict = Path(__file__).parent / "retrieval" / "custom_dict.txt"
+            if custom_dict.exists():
+                jieba.load_userdict(str(custom_dict))
+            self._jieba_ready = True
+        except ImportError:
+            pass
+
+    # 高频单字领域词，允许通过 len>1 过滤
+    _SINGLE_CHAR_DOMAIN_WORDS = frozenset("仁义礼智信道德气心神精")
+
+    def _segment_query(self, query: str) -> str:
+        self._ensure_jieba()
+        try:
+            import jieba
+
+            words = jieba.lcut(query)
+            return " ".join(
+                w.strip()
+                for w in words
+                if w.strip() and (len(w.strip()) > 1 or w.strip() in self._SINGLE_CHAR_DOMAIN_WORDS)
+            )
+        except ImportError:
+            return query
 
     async def search(
-        self, query: str, category: Optional[str] = None, top_k: int = 10, threshold: float = 0.1
+        self, query: str, category: Optional[str] = None, top_k: int = 10, threshold: float = 0.001
     ) -> List[RetrievalResult]:
         """全文检索
+
+        使用 jieba 分词后的 search_vector 列 + GIN 索引，避免运行时 to_tsvector 计算。
 
         Args:
             query: 查询文本
@@ -109,28 +145,31 @@ class FullTextRetriever:
 
         start_time = time.time()
 
-        # 使用PostgreSQL的全文搜索
+        segmented = self._segment_query(query)
+        if not segmented.strip():
+            return []
+
         if category:
             sql = """
                 SELECT id, title, content, category,
-                       ts_rank(to_tsvector('chinese', content), to_tsquery('chinese', $1)) as rank
+                       ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
                 FROM documents
                 WHERE category = $2
-                  AND to_tsvector('chinese', content) @@ to_tsquery('chinese', $1)
+                  AND search_vector @@ plainto_tsquery('simple', $1)
                 ORDER BY rank DESC
                 LIMIT $3
             """
-            params = [query, category, top_k]
+            params = [segmented, category, top_k]
         else:
             sql = """
                 SELECT id, title, content, category,
-                       ts_rank(to_tsvector('chinese', content), to_tsquery('chinese', $1)) as rank
+                       ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
                 FROM documents
-                WHERE to_tsvector('chinese', content) @@ to_tsquery('chinese', $1)
+                WHERE search_vector @@ plainto_tsquery('simple', $1)
                 ORDER BY rank DESC
                 LIMIT $2
             """
-            params = [query, top_k]
+            params = [segmented, top_k]
 
         try:
             async with self.db_pool.acquire() as conn:
@@ -152,13 +191,14 @@ class FullTextRetriever:
                     )
 
             elapsed = time.time() - start_time
-            logger.info(f"全文检索: query='{query}', found={len(results)}, time={elapsed:.3f}s")
+            logger.info(
+                f"全文检索: query='{query}', seg='{segmented}', found={len(results)}, time={elapsed:.3f}s"
+            )
 
             return results
 
         except Exception as e:
             logger.error(f"全文检索失败: {e}")
-            # 如果全文搜索失败（可能是中文分词问题），回退到LIKE搜索
             return await self._search_by_like(query, category, top_k)
 
     async def _search_by_like(

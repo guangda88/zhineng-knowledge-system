@@ -43,7 +43,7 @@ class BM25Retriever:
     使用 BM25 算法进行相关性排序的关键词搜索
     """
 
-    _MAX_INIT_DOCS = 50000
+    _MAX_INIT_DOCS = 200000
 
     def __init__(self, db_pool: asyncpg.Pool, k1: float = 1.2, b: float = 0.75):
         """
@@ -193,10 +193,8 @@ class BM25Retriever:
                     category,
                 )
             else:
-                rows = await conn.fetch(
-                    """SELECT id, title, content, category
-                       FROM documents"""
-                )
+                rows = await conn.fetch("""SELECT id, title, content, category
+                       FROM documents""")
 
         scores = []
         for row in rows:

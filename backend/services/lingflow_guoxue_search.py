@@ -1,7 +1,7 @@
 """LingFlow 国学古籍搜索服务
 
 提供国学古籍（guoxue_content / guoxue_books）的高级搜索功能：
-- 全文三元组搜索（利用 pg_trgm 索引）
+- jieba 预分词全文搜索（search_vector + GIN 索引）
 - 模糊匹配（pg_trgm similarity）
 - 语义向量搜索（pgvector + BGE embedding）
 - Cross-encoder 精排（Reranker）
@@ -39,6 +39,7 @@ class LingFlowGuoxueSearchService:
         if self._reranker is None:
             try:
                 from backend.services.retrieval.reranker import create_reranker
+
                 self._reranker = create_reranker()
             except ImportError:
                 logger.info("sentence_transformers 不可用，跳过 reranker")
@@ -80,6 +81,35 @@ class LingFlowGuoxueSearchService:
         else:
             return await self._fulltext_search(keyword, book_id, page, size)
 
+    _SINGLE_CHAR_DOMAIN_WORDS = frozenset("仁义礼智信道德气心神精")
+    _jieba_ready = False
+
+    def _segment_query(self, query: str) -> str:
+        if not self._jieba_ready:
+            try:
+                from pathlib import Path
+
+                import jieba
+
+                jieba.setLogLevel(logging.WARNING)
+                custom_dict = Path(__file__).parent / "retrieval" / "custom_dict.txt"
+                if custom_dict.exists():
+                    jieba.load_userdict(str(custom_dict))
+                self._jieba_ready = True
+            except ImportError:
+                pass
+        try:
+            import jieba
+
+            words = jieba.lcut(query)
+            return " ".join(
+                w.strip()
+                for w in words
+                if w.strip() and (len(w.strip()) > 1 or w.strip() in self._SINGLE_CHAR_DOMAIN_WORDS)
+            )
+        except ImportError:
+            return query
+
     async def _fulltext_search(
         self,
         keyword: str,
@@ -87,13 +117,17 @@ class LingFlowGuoxueSearchService:
         page: int,
         size: int,
     ) -> Dict[str, Any]:
-        """三元组全文搜索（精确匹配优先）
+        """jieba 预分词全文搜索（利用 search_vector GIN 索引）
 
-        利用 pg_trgm 索引在 body 全文范围内搜索，
-        按匹配位置（越靠前权重越高）和章节顺序排序。
+        使用 jieba 分词后的 search_vector 列 + GIN 索引，
+        比 pg_trgm 更快且中文召回率更高。
         """
-        conditions = ["body % $1"]
-        params: list = [keyword]
+        segmented = self._segment_query(keyword)
+        if not segmented.strip():
+            return {"total": 0, "page": page, "size": size, "results": []}
+
+        conditions = ["gc.search_vector @@ plainto_tsquery('simple', $1)"]
+        params: list = [segmented]
         idx = 2
 
         if book_id is not None:
@@ -110,16 +144,10 @@ class LingFlowGuoxueSearchService:
                 SELECT gc.id, gc.book_id, gc.chapter_id,
                        gc.body, gc.body_length, gc.source_table,
                        gc.created_at,
-                       similarity(body, $1) AS sim_score,
-                       CASE
-                           WHEN body LIKE $1 || '%%' THEN 0
-                           WHEN position($1 in body) > 0
-                               THEN position($1 in body)
-                           ELSE 999999
-                       END AS match_pos
+                       ts_rank(gc.search_vector, plainto_tsquery('simple', $1)) AS rank_score
                 FROM guoxue_content gc
                 WHERE {where_clause}
-                ORDER BY sim_score DESC, match_pos, gc.chapter_id, gc.id
+                ORDER BY rank_score DESC, gc.chapter_id, gc.id
                 LIMIT ${idx} OFFSET ${idx + 1}
             )
             SELECT m.*, gb.title AS book_title
@@ -136,7 +164,7 @@ class LingFlowGuoxueSearchService:
 
         results = []
         for r in rows:
-            snippet = self._make_snippet(r["body"], keyword, max_len=300)
+            snippet = self._make_snippet(r["body"], keyword, max_len=300, segmented=segmented)
             results.append(
                 {
                     "id": r["id"],
@@ -145,8 +173,8 @@ class LingFlowGuoxueSearchService:
                     "chapter_id": r["chapter_id"],
                     "snippet": snippet,
                     "body_length": r["body_length"],
-                    "sim_score": round(float(r["sim_score"]), 4),
-                    "match_pos": r["match_pos"],
+                    "sim_score": round(float(r["rank_score"]), 4),
+                    "match_pos": 0,
                     "source_table": r["source_table"],
                 }
             )
@@ -490,22 +518,30 @@ class LingFlowGuoxueSearchService:
         where_clause: str,
         params: list,
     ) -> int:
-        """估算匹配总数（使用 pg_class.reltuples）"""
+        """估算匹配总数"""
         try:
-            estimate = await self.pool.fetchrow(
-                "SELECT reltuples::bigint AS estimate FROM pg_class WHERE oid = 'guoxue_content'::regclass",
+            count = await self.pool.fetchval(
+                f"SELECT count(*) FROM guoxue_content gc WHERE {where_clause}",
+                *params,
+                timeout=30,
             )
-            return estimate["estimate"] if estimate else 263767
+            return count or 0
         except Exception:
-            return 263767
+            estimate = await self.pool.fetchval(
+                "SELECT reltuples::bigint FROM pg_class WHERE oid = 'guoxue_content'::regclass"
+            )
+            return estimate or 263767
 
-    def _make_snippet(self, body: str, keyword: str, max_len: int = 300) -> str:
+    def _make_snippet(
+        self, body: str, keyword: str, max_len: int = 300, segmented: str = ""
+    ) -> str:
         """生成高亮上下文片段
 
         Args:
             body: 原文
-            keyword: 关键词
+            keyword: 用户原始查询
             max_len: 片段最大长度
+            segmented: jieba 分词后的空格分隔词列表
 
         Returns:
             包含 **keyword** 高亮的片段
@@ -513,16 +549,25 @@ class LingFlowGuoxueSearchService:
         if not body:
             return ""
 
-        pos = body.find(keyword)
-        if pos == -1:
-            pos_lower = body.lower().find(keyword.lower())
-            if pos_lower != -1:
-                pos = pos_lower
+        highlight_words = [keyword]
+        if segmented:
+            highlight_words = [w for w in segmented.split() if w] or [keyword]
 
-        if pos == -1:
+        best_pos = -1
+        for hw in sorted(highlight_words, key=len, reverse=True):
+            pos = body.find(hw)
+            if pos != -1:
+                best_pos = pos
+                break
+            pos_lower = body.lower().find(hw.lower())
+            if pos_lower != -1:
+                best_pos = pos_lower
+                break
+
+        if best_pos == -1:
             return body[:max_len] + "..." if len(body) > max_len else body
 
-        start = max(0, pos - max_len // 3)
+        start = max(0, best_pos - max_len // 3)
         end = min(len(body), start + max_len)
 
         snippet = body[start:end]
@@ -532,5 +577,6 @@ class LingFlowGuoxueSearchService:
         if snippet != body[-len(snippet) :]:
             snippet = snippet + "..."
 
-        snippet = snippet.replace(keyword, f"**{keyword}**", 1)
+        for hw in sorted(highlight_words, key=len, reverse=True):
+            snippet = snippet.replace(hw, f"**{hw}**")
         return snippet
