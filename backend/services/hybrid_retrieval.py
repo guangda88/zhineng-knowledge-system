@@ -151,23 +151,33 @@ class FullTextRetriever:
 
         if category:
             sql = """
-                SELECT id, title, content, category,
-                       ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
-                FROM documents
-                WHERE category = $2
-                  AND search_vector @@ plainto_tsquery('simple', $1)
-                ORDER BY rank DESC
-                LIMIT $3
+                WITH ranked AS MATERIALIZED (
+                    SELECT id,
+                           ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
+                    FROM documents
+                    WHERE category = $2
+                      AND search_vector @@ plainto_tsquery('simple', $1)
+                    LIMIT 5000
+                )
+                SELECT d.id, d.title, d.content, d.category, r.rank
+                FROM (SELECT id, rank FROM ranked ORDER BY rank DESC LIMIT $3) r
+                JOIN documents d ON d.id = r.id
+                ORDER BY r.rank DESC
             """
             params = [segmented, category, top_k]
         else:
             sql = """
-                SELECT id, title, content, category,
-                       ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
-                FROM documents
-                WHERE search_vector @@ plainto_tsquery('simple', $1)
-                ORDER BY rank DESC
-                LIMIT $2
+                WITH ranked AS MATERIALIZED (
+                    SELECT id,
+                           ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
+                    FROM documents
+                    WHERE search_vector @@ plainto_tsquery('simple', $1)
+                    LIMIT 5000
+                )
+                SELECT d.id, d.title, d.content, d.category, r.rank
+                FROM (SELECT id, rank FROM ranked ORDER BY rank DESC LIMIT $2) r
+                JOIN documents d ON d.id = r.id
+                ORDER BY r.rank DESC
             """
             params = [segmented, top_k]
 

@@ -1,49 +1,40 @@
 """
 BM25 关键词检索服务模块
-遵循开发规则：异步优先、类型注解、错误处理
+
+内存安全设计：
+- initialize(): 仅加载 doc_count + avg_doc_length，不加载词频字典
+- IDF 按需查询: 从物化视图 mv_bm25_word_stats 获取，避免 2GB+ 内存占用
+- search() 两阶段: 先用 GIN 索引 + sv_text 打分，再加载 top_k 内容
 """
 
 import logging
 import math
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
+from typing import Counter as CounterType
+from typing import Dict, List, Optional, Tuple
 
 import asyncpg
 
 logger = logging.getLogger(__name__)
 
-_CUSTOM_DICT_LOADED = False
 _CUSTOM_DICT_PATH = Path(__file__).parent / "custom_dict.txt"
-
-try:
-    import jieba
-
-    _JIEBA_AVAILABLE = True
-except ImportError:
-    _JIEBA_AVAILABLE = False
-    logger.warning("jieba 未安装，BM25 将使用基础分词。请安装: pip install jieba")
-
-
-def _ensure_custom_dict() -> None:
-    global _CUSTOM_DICT_LOADED
-    if _CUSTOM_DICT_LOADED:
-        return
-    if _JIEBA_AVAILABLE and _CUSTOM_DICT_PATH.exists():
-        jieba.load_userdict(str(_CUSTOM_DICT_PATH))
-        logger.info(f"已加载自定义词典: {_CUSTOM_DICT_PATH}")
-    _CUSTOM_DICT_LOADED = True
+_SINGLE_CHAR_DOMAIN_WORDS = frozenset("仁义礼智信道德气心神精")
+_TSVECTOR_WORD_RE = re.compile(r"'([^']+)':([0-9A-Za-z,]+)")
+_CANDIDATE_CAP = 5000
 
 
 class BM25Retriever:
-    """
-    BM25 关键词检索服务
+    """BM25 关键词检索服务
 
-    使用 BM25 算法进行相关性排序的关键词搜索
-    """
+    使用物化视图 mv_bm25_word_stats 按需查询 IDF，
+    避免将 1170 万词加载到内存。
 
-    _MAX_INIT_DOCS = 200000
+    initialize(): 秒级完成，仅查询 doc_count + avg_doc_length
+    search(): GIN 预过滤 → sv_text 解析词频 → BM25 打分 → 加载 top_k 内容
+    """
 
     def __init__(self, db_pool: asyncpg.Pool, k1: float = 1.2, b: float = 0.75):
         """
@@ -58,104 +49,144 @@ class BM25Retriever:
         self.k1 = k1
         self.b = b
         self.doc_count: int = 0
-        self.doc_lengths: Dict[int, int] = {}
         self.avg_doc_length: float = 0.0
-        self.document_frequencies: Dict[str, int] = {}
+        self._jieba_ready = False
+
+    def _ensure_jieba(self) -> None:
+        if self._jieba_ready:
+            return
+        try:
+            import jieba
+
+            jieba.setLogLevel(logging.WARNING)
+            if _CUSTOM_DICT_PATH.exists():
+                jieba.load_userdict(str(_CUSTOM_DICT_PATH))
+            self._jieba_ready = True
+        except ImportError:
+            pass
+
+    def _segment_query(self, query: str) -> str:
+        self._ensure_jieba()
+        try:
+            import jieba
+
+            words = jieba.lcut(query)
+            return " ".join(
+                w.strip()
+                for w in words
+                if w.strip() and (len(w.strip()) > 1 or w.strip() in _SINGLE_CHAR_DOMAIN_WORDS)
+            )
+        except ImportError:
+            return query
 
     async def initialize(self) -> None:
-        """初始化索引统计"""
+        """初始化 BM25 统计信息
+
+        仅查询文档数和平均长度（毫秒级）。
+        IDF 通过物化视图 mv_bm25_word_stats 按需查询，不加载到内存。
+        如果物化视图不存在则自动创建（首次约 30 秒）。
+        """
         async with self.db_pool.acquire() as conn:
+            await self._ensure_materialized_view(conn)
+
             self.doc_count = await conn.fetchval("SELECT COUNT(*) FROM documents")
 
-            rows = await conn.fetch(
-                f"SELECT id, title, content FROM documents LIMIT {self._MAX_INIT_DOCS}"
-            )
+            avg_len = await conn.fetchval("SELECT AVG(LENGTH(content)) FROM documents")
+            self.avg_doc_length = float(avg_len) if avg_len else 100.0
 
-            total_length = 0
-            for row in rows:
-                text = f"{row['title']} {row['content']}"
-                words = self._tokenize(text)
-                length = len(words)
-                self.doc_lengths[row["id"]] = length
-                total_length += length
-
-            self.avg_doc_length = total_length / self.doc_count if self.doc_count > 0 else 0
-
-            word_docs: Dict[str, Set[int]] = defaultdict(set)
-            for row in rows:
-                text = f"{row['title']} {row['content']}"
-                words = set(self._tokenize(text))
-                for word in words:
-                    word_docs[word].add(row["id"])
-
-            self.document_frequencies = {word: len(doc_ids) for word, doc_ids in word_docs.items()}
-
-        tokenizer = "jieba" if _JIEBA_AVAILABLE else "basic"
         logger.info(
-            f"BM25索引初始化完成: {self.doc_count}个文档, 平均长度={self.avg_doc_length:.1f}, 分词器={tokenizer}"
+            f"BM25索引初始化完成: {self.doc_count}个文档, " f"平均长度={self.avg_doc_length:.1f}"
         )
 
-    def _tokenize(self, text: str) -> List[str]:
-        """
-        中文分词
+    async def _ensure_materialized_view(self, conn: asyncpg.Connection) -> None:
+        """确保物化视图存在，不存在则创建"""
+        exists = await conn.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM pg_matviews WHERE matviewname = 'mv_bm25_word_stats')"
+        )
+        if not exists:
+            logger.info("创建 mv_bm25_word_stats 物化视图（首次约 30 秒）...")
+            await conn.execute("""
+                CREATE MATERIALIZED VIEW mv_bm25_word_stats AS
+                SELECT word, ndoc
+                FROM ts_stat('SELECT search_vector FROM documents')
+                WHERE ndoc >= 2
+                """)
+            await conn.execute(
+                "CREATE UNIQUE INDEX idx_mv_bm25_word_stats ON mv_bm25_word_stats(word)"
+            )
+            logger.info("mv_bm25_word_stats 物化视图创建完成")
 
-        优先使用 jieba 进行专业中文分词，
-        支持自定义词典（气功、中医、儒家术语）。
-        jieba 不可用时回退到基础分词。
+    async def refresh_stats(self) -> None:
+        """刷新物化视图（文档变更后调用）"""
+        async with self.db_pool.acquire() as conn:
+            await conn.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_bm25_word_stats")
+        logger.info("mv_bm25_word_stats 物化视图已刷新")
+
+    async def _get_idf_map(self, conn: asyncpg.Connection, words: List[str]) -> Dict[str, float]:
+        """从物化视图按需查询 IDF
 
         Args:
-            text: 输入文本
+            conn: 数据库连接
+            words: 查询词列表
 
         Returns:
-            分词列表
+            {word: idf_value} 字典，仅包含物化视图中存在的词
         """
-        if _JIEBA_AVAILABLE:
-            _ensure_custom_dict()
-            words = jieba.lcut(text)
-            return [w.strip().lower() for w in words if w.strip() and len(w.strip()) > 1]
+        rows = await conn.fetch(
+            "SELECT word, ndoc FROM mv_bm25_word_stats WHERE word = ANY($1)", words
+        )
+        result = {}
+        for r in rows:
+            df = r["ndoc"]
+            result[r["word"]] = math.log((self.doc_count - df + 0.5) / (df + 0.5) + 1.0)
+        return result
 
-        text = re.sub(r"[^\w\s\u4e00-\u9fff]", " ", text)
-        words = text.lower().split()
-        return [w for w in words if len(w) > 1]
-
-    def _idf(self, word: str) -> float:
-        """
-        计算逆文档频率
+    @staticmethod
+    def _parse_tsvector(sv_text: str) -> Tuple[CounterType[str], int]:
+        """从 tsvector 文本表示解析词频
 
         Args:
-            word: 词语
+            sv_text: tsvector::text 输出，格式如 "'word1':1,3 'word2':2"
 
         Returns:
-            IDF值
+            (词频 Counter, 文档总位置数)
         """
-        df = self.document_frequencies.get(word, 0)
-        if df == 0:
-            return 0.0
-        return math.log((self.doc_count - df + 0.5) / (df + 0.5) + 1.0)
+        freqs: CounterType[str] = Counter()
+        total = 0
+        for match in _TSVECTOR_WORD_RE.finditer(sv_text):
+            word = match.group(1)
+            n = len(match.group(2).split(","))
+            freqs[word] = n
+            total += n
+        return freqs, total
 
-    def _score(self, query_words: List[str], doc_id: int, doc_text: str) -> float:
-        """
-        计算BM25得分
+    def _score_with_idf(
+        self,
+        query_words: List[str],
+        freqs: CounterType[str],
+        idf_map: Dict[str, float],
+        doc_length: int,
+    ) -> float:
+        """使用按需 IDF 和预计算词频计算 BM25 分数
 
         Args:
             query_words: 查询词列表
-            doc_id: 文档ID
-            doc_text: 文档文本
+            freqs: 文档词频统计（从 tsvector 解析）
+            idf_map: 查询词的 IDF 值（从物化视图查询）
+            doc_length: 文档长度（字符数）
 
         Returns:
-            BM25得分
+            BM25 分数
         """
-        doc_words = self._tokenize(doc_text)
-        doc_length = len(doc_words)
-        word_counts = Counter(doc_words)
-
         score = 0.0
         for word in query_words:
-            if word not in word_counts:
+            idf = idf_map.get(word)
+            if idf is None:
                 continue
 
-            tf = word_counts[word]
-            idf = self._idf(word)
+            tf = freqs.get(word, 0)
+            if tf == 0:
+                continue
 
             numerator = tf * (self.k1 + 1)
             denominator = tf + self.k1 * (1 - self.b + self.b * (doc_length / self.avg_doc_length))
@@ -166,8 +197,11 @@ class BM25Retriever:
     async def search(
         self, query: str, category: Optional[str] = None, top_k: int = 10
     ) -> List[Dict[str, Any]]:
-        """
-        BM25关键词搜索
+        """BM25 关键词搜索（两阶段，内存安全）
+
+        Phase 1: GIN 索引预过滤候选 → 获取 id + sv_text + content_len（不含 content）
+        Phase 2: Python 端 BM25 打分
+        Phase 3: 仅加载 top_k 候选的 content
 
         Args:
             query: 查询文本
@@ -180,41 +214,75 @@ class BM25Retriever:
         if self.doc_count == 0:
             await self.initialize()
 
-        query_words = self._tokenize(query)
-        if not query_words:
+        segmented = self._segment_query(query)
+        if not segmented.strip():
             return []
 
+        query_words = segmented.split()
+
         async with self.db_pool.acquire() as conn:
+            idf_map = await self._get_idf_map(conn, query_words)
+            if not idf_map:
+                return []
+
             if category:
                 rows = await conn.fetch(
-                    """SELECT id, title, content, category
-                       FROM documents
-                       WHERE category = $1""",
+                    """
+                    SELECT id, search_vector::text AS sv_text, length(content) AS content_len
+                    FROM documents
+                    WHERE category = $2
+                      AND search_vector @@ plainto_tsquery('simple', $1)
+                    LIMIT $3
+                    """,
+                    segmented,
                     category,
+                    _CANDIDATE_CAP,
                 )
             else:
-                rows = await conn.fetch("""SELECT id, title, content, category
-                       FROM documents""")
-
-        scores = []
-        for row in rows:
-            text = f"{row['title']} {row['content']}"
-            score = self._score(query_words, row["id"], text)
-
-            if score > 0:
-                scores.append(
-                    {
-                        "id": row["id"],
-                        "title": row["title"],
-                        "content": row["content"],
-                        "category": row["category"],
-                        "score": score,
-                        "method": "bm25",
-                    }
+                rows = await conn.fetch(
+                    """
+                    SELECT id, search_vector::text AS sv_text, length(content) AS content_len
+                    FROM documents
+                    WHERE search_vector @@ plainto_tsquery('simple', $1)
+                    LIMIT $2
+                    """,
+                    segmented,
+                    _CANDIDATE_CAP,
                 )
 
-        scores.sort(key=lambda x: x["score"], reverse=True)
-        results = scores[:top_k]
+            scored: List[Tuple[int, float]] = []
+            for row in rows:
+                freqs, _ = self._parse_tsvector(row["sv_text"])
+                doc_length = row["content_len"] or 1
+                score = self._score_with_idf(query_words, freqs, idf_map, doc_length)
+                if score > 0:
+                    scored.append((row["id"], score))
 
-        logger.info(f"BM25搜索: query='{query}', found={len(results)}")
+            if not scored:
+                return []
+
+            scored.sort(key=lambda x: x[1], reverse=True)
+            top_ids = [s[0] for s in scored[:top_k]]
+            top_scores = {s[0]: s[1] for s in scored[:top_k]}
+
+            content_rows = await conn.fetch(
+                "SELECT id, title, content, category FROM documents WHERE id = ANY($1)",
+                top_ids,
+            )
+
+        results = []
+        for row in content_rows:
+            results.append(
+                {
+                    "id": row["id"],
+                    "title": row["title"],
+                    "content": row["content"],
+                    "category": row["category"],
+                    "score": top_scores[row["id"]],
+                    "method": "bm25",
+                }
+            )
+
+        results.sort(key=lambda x: x["score"], reverse=True)
+        logger.info(f"BM25搜索: query='{query}', candidates={len(rows)}, found={len(results)}")
         return results

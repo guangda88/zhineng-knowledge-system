@@ -62,13 +62,30 @@ class TestBM25Retriever:
     async def mock_pool(self):
         """模拟数据库连接池"""
         pool = AsyncMock(spec=asyncpg.Pool)
-        # 创建正确的上下文管理器mock
         mock_conn = AsyncMock()
-        mock_conn.fetchval.return_value = 1  # 文档数量
-        mock_conn.fetch.return_value = [
-            {"id": 1, "title": "八段锦", "content": "八段锦是一种气功功法", "category": "气功"}
+        mock_conn.fetchval.side_effect = [
+            True,
+            1,
+            100.0,
         ]
-        # 使用 MagicMock 作为 acquire 返回的上下文管理器
+        mock_conn.fetch.side_effect = [
+            [{"word": "八段锦", "ndoc": 1}],
+            [
+                {
+                    "id": 1,
+                    "sv_text": "'一种':3 '八段锦':1 '功法':5 '气功':4 '是':2",
+                    "content_len": 10,
+                }
+            ],
+            [
+                {
+                    "id": 1,
+                    "title": "八段锦",
+                    "content": "八段锦是一种气功功法",
+                    "category": "气功",
+                }
+            ],
+        ]
         acquire_context = MagicMock()
         acquire_context.__aenter__.return_value = mock_conn
         pool.acquire.return_value = acquire_context

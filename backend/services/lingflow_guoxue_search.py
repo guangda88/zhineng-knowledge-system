@@ -140,19 +140,23 @@ class LingFlowGuoxueSearchService:
 
         rows = await self.pool.fetch(
             f"""
-            WITH matches AS MATERIALIZED (
-                SELECT gc.id, gc.book_id, gc.chapter_id,
-                       gc.body, gc.body_length, gc.source_table,
-                       gc.created_at,
+            WITH ranked_ids AS MATERIALIZED (
+                SELECT gc.id,
                        ts_rank(gc.search_vector, plainto_tsquery('simple', $1)) AS rank_score
                 FROM guoxue_content gc
                 WHERE {where_clause}
-                ORDER BY rank_score DESC, gc.chapter_id, gc.id
-                LIMIT ${idx} OFFSET ${idx + 1}
+                LIMIT 5000
             )
-            SELECT m.*, gb.title AS book_title
-            FROM matches m
-            LEFT JOIN guoxue_books gb ON gb.book_id = m.book_id
+            SELECT gc.id, gc.book_id, gc.chapter_id,
+                   gc.body, gc.body_length, gc.source_table,
+                   ri.rank_score,
+                   gb.title AS book_title
+            FROM (SELECT id, rank_score FROM ranked_ids
+                  ORDER BY rank_score DESC
+                  LIMIT ${idx} OFFSET ${idx + 1}) ri
+            JOIN guoxue_content gc ON gc.id = ri.id
+            LEFT JOIN guoxue_books gb ON gb.book_id = gc.book_id
+            ORDER BY ri.rank_score DESC
             """,
             *params,
             size,
