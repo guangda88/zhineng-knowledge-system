@@ -232,6 +232,9 @@ class BM25Retriever:
                     FROM documents
                     WHERE category = $2
                       AND search_vector @@ plainto_tsquery('simple', $1)
+                      AND length(content) > 100
+                      AND content NOT LIKE '来源: %'
+                      AND content NOT LIKE '文件名: %'
                     LIMIT $3
                     """,
                     segmented,
@@ -244,6 +247,9 @@ class BM25Retriever:
                     SELECT id, search_vector::text AS sv_text, length(content) AS content_len
                     FROM documents
                     WHERE search_vector @@ plainto_tsquery('simple', $1)
+                      AND length(content) > 100
+                      AND content NOT LIKE '来源: %'
+                      AND content NOT LIKE '文件名: %'
                     LIMIT $2
                     """,
                     segmented,

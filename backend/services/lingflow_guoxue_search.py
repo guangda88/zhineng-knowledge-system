@@ -19,7 +19,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-_EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://zhineng-embedding:8001")
+_EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://embedding:8001")
 
 
 class LingFlowGuoxueSearchService:

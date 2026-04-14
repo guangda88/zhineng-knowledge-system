@@ -157,6 +157,9 @@ class FullTextRetriever:
                     FROM documents
                     WHERE category = $2
                       AND search_vector @@ plainto_tsquery('simple', $1)
+                      AND length(content) > 100
+                      AND content NOT LIKE '来源: %'
+                      AND content NOT LIKE '文件名: %'
                     LIMIT 5000
                 )
                 SELECT d.id, d.title, d.content, d.category, r.rank
@@ -172,6 +175,9 @@ class FullTextRetriever:
                            ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
                     FROM documents
                     WHERE search_vector @@ plainto_tsquery('simple', $1)
+                      AND length(content) > 100
+                      AND content NOT LIKE '来源: %'
+                      AND content NOT LIKE '文件名: %'
                     LIMIT 5000
                 )
                 SELECT d.id, d.title, d.content, d.category, r.rank
@@ -219,7 +225,11 @@ class FullTextRetriever:
             sql = """
                 SELECT id, title, content, category
                 FROM documents
-                WHERE category = $1 AND (title LIKE $2 OR content LIKE $2)
+                WHERE category = $1
+                  AND (title LIKE $2 OR content LIKE $2)
+                  AND length(content) > 100
+                  AND content NOT LIKE '来源: %'
+                  AND content NOT LIKE '文件名: %'
                 LIMIT $3
             """
             params = [category, f"%{query}%", top_k]
@@ -227,7 +237,10 @@ class FullTextRetriever:
             sql = """
                 SELECT id, title, content, category
                 FROM documents
-                WHERE title LIKE $1 OR content LIKE $1
+                WHERE (title LIKE $1 OR content LIKE $1)
+                  AND length(content) > 100
+                  AND content NOT LIKE '来源: %'
+                  AND content NOT LIKE '文件名: %'
                 LIMIT $2
             """
             params = [f"%{query}%", top_k]
