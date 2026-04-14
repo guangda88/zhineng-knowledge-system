@@ -206,15 +206,21 @@ class VectorRetriever:
         query_vector = await self.embed_text(query)
         vector_str = "[" + ",".join(map(str, query_vector)) + "]"
 
+        content_filter = (
+            "length(content) > 100"
+            " AND content NOT LIKE '来源: %'"
+            " AND content NOT LIKE '文件名: %'"
+        )
         if category:
             sql = """
                 SELECT id, title, content, category,
                        1 - (embedding <=> $1::vector) as similarity
                 FROM documents
                 WHERE category = $2 AND embedding IS NOT NULL
+                      AND {}
                 ORDER BY embedding <=> $1::vector
                 LIMIT $3
-            """
+            """.format(content_filter)
             params = [vector_str, category, top_k]
         else:
             sql = """
@@ -222,9 +228,10 @@ class VectorRetriever:
                        1 - (embedding <=> $1::vector) as similarity
                 FROM documents
                 WHERE embedding IS NOT NULL
+                      AND {}
                 ORDER BY embedding <=> $1::vector
                 LIMIT $2
-            """
+            """.format(content_filter)
             params = [vector_str, top_k]
 
         async with self.db_pool.acquire() as conn:

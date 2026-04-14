@@ -135,6 +135,28 @@ async def _init_domains(db_service):
         logger.info("Domains initialized")
 
 
+async def _init_embedding_service_check():
+    """检查远程嵌入服务可达性"""
+    import os
+
+    url = os.getenv("EMBEDDING_SERVICE_URL", "")
+    if not url:
+        logger.info("EMBEDDING_SERVICE_URL not set, skipping embedding health check")
+        return
+
+    import httpx
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{url}/health")
+            if resp.status_code == 200:
+                logger.info(f"Embedding service reachable at {url}")
+            else:
+                logger.warning(f"Embedding service at {url} returned status {resp.status_code}")
+    except Exception as e:
+        logger.warning(f"Embedding service at {url} unreachable: {e}")
+
+
 async def _init_health_checks(db_service):
     """初始化健康检查"""
     from monitoring import get_health_checker
@@ -279,6 +301,7 @@ async def lifespan(app: FastAPI):
     await _safe_init("SQLAlchemy")(_init_sqlalchemy)()
     await _safe_init("Domains")(_init_domains)(db_service)
     await _safe_init("Health checks")(_init_health_checks)(db_service)
+    await _safe_init("Embedding service check")(_init_embedding_service_check)()
     await _safe_init("Metrics")(_init_metrics)()
     await _safe_init("Learning scheduler")(_init_learning_scheduler)(app)
 
