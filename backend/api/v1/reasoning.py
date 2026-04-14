@@ -143,17 +143,29 @@ async def reasoning_answer(request: ReasoningRequest) -> JSONResponse:
         context = await retrieve_context(request.question, request.category)
 
     # 根据模式执行推理
-    if mode == "cot":
-        reasoner = await get_cot_reasoner()
-        result = await reasoner.reason(question=request.question, context=context)
-    elif mode == "react":
-        reasoner = await get_react_reasoner()
-        result = await reasoner.reason(question=request.question, context=context)
-    elif mode == "graph_rag":
-        reasoner = await get_graph_rag_reasoner()
-        result = await reasoner.reason(question=request.question, context=context)
-    else:
-        raise HTTPException(status_code=400, detail=f"不支持的推理模式: {mode}")
+    try:
+        if mode == "cot":
+            reasoner = await get_cot_reasoner()
+            result = await reasoner.reason(question=request.question, context=context)
+        elif mode == "react":
+            reasoner = await get_react_reasoner()
+            result = await reasoner.reason(question=request.question, context=context)
+        elif mode == "graph_rag":
+            reasoner = await get_graph_rag_reasoner()
+            result = await reasoner.reason(question=request.question, context=context)
+        else:
+            raise HTTPException(status_code=400, detail=f"不支持的推理模式: {mode}")
+    except RuntimeError as e:
+        error_msg = str(e).lower()
+        if "rate limit" in error_msg or "429" in error_msg:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "rate_limit_exceeded",
+                    "message": "LLM API调用过于频繁，请稍后重试",
+                },
+            ) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     session_id = request.session_id or datetime.now().strftime("%Y%m%d%H%M%S")
 

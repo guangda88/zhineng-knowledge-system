@@ -3,14 +3,11 @@
 实现基于知识图谱的增强检索和推理
 """
 
-import asyncio
 import logging
 import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
-
-import httpx
 
 from .base import BaseReasoner, ReasoningResult, ReasoningStep
 
@@ -220,25 +217,10 @@ class GraphRAGReasoner(BaseReasoner):
         self.model_name = "deepseek-chat"
         self.kg = KnowledgeGraph()
         self.extractor = EntityExtractor()
-        self._http_client: Optional[httpx.AsyncClient] = None
-        self._client_lock = asyncio.Lock()
-
-    async def _get_client(self) -> httpx.AsyncClient:
-        """获取或创建HTTP客户端（使用连接池）"""
-        if self._http_client is None:
-            async with self._client_lock:
-                if self._http_client is None:
-                    self._http_client = httpx.AsyncClient(
-                        timeout=60.0,
-                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
-                    )
-        return self._http_client
 
     async def close(self) -> None:
-        """关闭HTTP客户端连接"""
-        if self._http_client:
-            await self._http_client.aclose()
-            self._http_client = None
+        """关闭资源"""
+        pass
 
     async def __aenter__(self):
         return self
@@ -447,65 +429,35 @@ class GraphRAGReasoner(BaseReasoner):
 请给出详细的答案：
 """
 
-        # 调用LLM生成答案（使用速率限制器）
-        if self.llm_client:
-            try:
-                from backend.common.llm_api_wrapper import GLMRateLimitException
+        # 调用LLM生成答案（使用速率限制+重试）
+        if not self.llm_client:
+            raise RuntimeError(
+                "LLM client not initialized. "
+                "Set DEEPSEEK_API_KEY environment variable to enable LLM reasoning."
+            )
 
-                response = await self.llm_client.call_api(
-                    messages=[
-                        {"role": "system", "content": "你是一个基于知识图谱的推理助手。"},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=0.7,
-                    max_tokens=1500,
-                )
-                return response["choices"][0]["message"]["content"]
+        from backend.common.llm_api_wrapper import GLMRateLimitException
 
-            except GLMRateLimitException as e:
-                logger.error(f"Rate limit exceeded: {e}")
-                # 继续到模拟答案
+        try:
+            response = await self.llm_client.call_api(
+                messages=[
+                    {"role": "system", "content": "你是一个基于知识图谱的推理助手。"},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.7,
+                max_tokens=1500,
+            )
+            return response["choices"][0]["message"]["content"]
 
-            except Exception as e:
-                logger.error(f"LLM API call failed: {e}")
-                # 继续到模拟答案
+        except GLMRateLimitException as e:
+            logger.error(f"Rate limit exceeded after retries: {e}")
+            raise RuntimeError("LLM API rate limit exceeded. Please retry later.") from e
 
-        # 降级到原始HTTP客户端
-        elif self.api_key:
-            try:
-                client = await self._get_client()
-                response = await client.post(
-                    self.api_url or "https://api.deepseek.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": self.model_name,
-                        "messages": [
-                            {"role": "system", "content": "你是一个基于知识图谱的推理助手。"},
-                            {"role": "user", "content": prompt},
-                        ],
-                        "temperature": 0.7,
-                        "max_tokens": 1500,
-                    },
-                )
-                response.raise_for_status()
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
-            except Exception as e:
-                logger.error(f"LLM API call failed: {e}")
-
-        # 模拟答案
-        answer = f"""基于知识图谱的分析：
-
-{chr(10).join([f'{i + 1}. {step}' for i, step in enumerate(reasoning_steps)])}
-
-结论：
-通过图谱推理，发现{' → '.join([e.name for e in query_entities[:3]])}之间存在关联关系。
-"""
-
-        return answer
+        except Exception as e:
+            logger.error(f"LLM API call failed: {e}")
+            raise RuntimeError(
+                f"LLM API call failed: {e}. Please check DEEPSEEK_API_KEY configuration."
+            ) from e
 
     def _calculate_confidence(
         self, subgraph: Dict[str, Any], query_entities: List[Entity]

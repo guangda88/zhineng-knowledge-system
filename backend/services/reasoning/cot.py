@@ -3,12 +3,9 @@
 实现链式推理，让模型逐步思考问题
 """
 
-import asyncio
 import logging
 import time
 from typing import Any, Dict, List, Optional
-
-import httpx
 
 from .base import BaseReasoner, QueryType, ReasoningResult, ReasoningStep
 
@@ -24,25 +21,10 @@ class CoTReasoner(BaseReasoner):
     def __init__(self, api_key: str = "", api_url: str = ""):
         super().__init__(api_key, api_url)
         self.model_name = "deepseek-chat"
-        self._http_client: Optional[httpx.AsyncClient] = None
-        self._client_lock = asyncio.Lock()
-
-    async def _get_client(self) -> httpx.AsyncClient:
-        """获取或创建HTTP客户端（使用连接池）"""
-        if self._http_client is None:
-            async with self._client_lock:
-                if self._http_client is None:
-                    self._http_client = httpx.AsyncClient(
-                        timeout=60.0,
-                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
-                    )
-        return self._http_client
 
     async def close(self) -> None:
-        """关闭HTTP客户端连接"""
-        if self._http_client:
-            await self._http_client.aclose()
-            self._http_client = None
+        """关闭资源"""
+        pass
 
     async def __aenter__(self):
         return self
@@ -208,75 +190,38 @@ class CoTReasoner(BaseReasoner):
         Returns:
             模型响应文本
         """
-        # 优先使用LLM API包装器（带速率限制）
-        if self.llm_client:
-            try:
-                from backend.common.llm_api_wrapper import GLMRateLimitException
-
-                response = await self.llm_client.call_api(
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。",
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-                return response["choices"][0]["message"]["content"]
-
-            except GLMRateLimitException as e:
-                logger.error(f"Rate limit exceeded: {e}")
-                raise RuntimeError(
-                    "LLM API rate limit exceeded. "
-                    "Please retry later or configure DEEPSEEK_API_KEY."
-                ) from e
-
-            except Exception as e:
-                logger.error(f"LLM API call failed: {e}")
-                raise RuntimeError(
-                    f"LLM API call failed: {e}. " "Please check DEEPSEEK_API_KEY configuration."
-                ) from e
-
-        # 降级到原始HTTP客户端
-        if not self.api_key:
+        # 优先使用LLM API包装器（带速率限制+重试）
+        if not self.llm_client:
             raise RuntimeError(
-                "No API key configured. "
+                "LLM client not initialized. "
                 "Set DEEPSEEK_API_KEY environment variable to enable LLM reasoning."
             )
 
-        try:
-            client = await self._get_client()
-            response = await client.post(
-                self.api_url or "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self.model_name,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。",
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": temperature,
-                    "max_tokens": max_tokens,
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
+        from backend.common.llm_api_wrapper import GLMRateLimitException
 
-        except httpx.HTTPStatusError as e:
-            logger.error(f"LLM API returned HTTP {e.response.status_code}: {e}")
-            raise RuntimeError(f"LLM API HTTP error {e.response.status_code}") from e
-        except httpx.RequestError as e:
-            logger.error(f"LLM API request failed: {e}")
-            raise RuntimeError(f"LLM API request failed: {e}") from e
+        try:
+            response = await self.llm_client.call_api(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "你是一个专业的知识问答助手，擅长逐步推理分析问题。",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            return response["choices"][0]["message"]["content"]
+
+        except GLMRateLimitException as e:
+            logger.error(f"Rate limit exceeded after retries: {e}")
+            raise RuntimeError("LLM API rate limit exceeded. Please retry later.") from e
+
+        except Exception as e:
+            logger.error(f"LLM API call failed: {e}")
+            raise RuntimeError(
+                f"LLM API call failed: {e}. Please check DEEPSEEK_API_KEY configuration."
+            ) from e
 
     def _build_fallback_response(self) -> str:
         """构建降级响应模板（仅用于已知 API 不可用时的开发调试）"""

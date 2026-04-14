@@ -129,7 +129,21 @@ class LLMAPIClient:
         raise GLMRateLimitException(f"API call failed after retries: {last_exception}")
 
     def _is_rate_limit_error(self, error_msg: str) -> bool:
-        return "1302" in error_msg or "rate limit" in error_msg.lower() or "速率限制" in error_msg
+        patterns = (
+            "1302",
+            "rate limit",
+            "rate_limit",
+            "速率限制",
+            "too many requests",
+            "too_many_requests",
+            "api rate limit 429",
+            "insufficient_quota",
+            "quota exceeded",
+            "api server error 502",
+            "api server error 503",
+        )
+        error_lower = error_msg.lower()
+        return any(p in error_lower for p in patterns)
 
     def _calc_retry_delay(self, attempt: int) -> float:
         base_delay = self.RETRY_CONFIG["initial_delay"]
@@ -193,6 +207,12 @@ class LLMAPIClient:
         ) as response:
             if response.status == 200:
                 return await response.json()
+            elif response.status == 429:
+                error_text = await response.text()
+                raise Exception(f"API rate limit 429: {error_text}")
+            elif response.status == 502 or response.status == 503:
+                error_text = await response.text()
+                raise Exception(f"API server error {response.status}: {error_text}")
             else:
                 error_text = await response.text()
                 raise Exception(f"API error {response.status}: {error_text}")
