@@ -155,7 +155,7 @@ async def reasoning_answer(request: ReasoningRequest) -> JSONResponse:
             result = await reasoner.reason(question=request.question, context=context)
         else:
             raise HTTPException(status_code=400, detail=f"不支持的推理模式: {mode}")
-    except RuntimeError as e:
+    except (RuntimeError, ValueError) as e:
         error_msg = str(e).lower()
         if "rate limit" in error_msg or "429" in error_msg:
             raise HTTPException(
@@ -163,6 +163,14 @@ async def reasoning_answer(request: ReasoningRequest) -> JSONResponse:
                 detail={
                     "error": "rate_limit_exceeded",
                     "message": "LLM API调用过于频繁，请稍后重试",
+                },
+            ) from e
+        if "api_key" in error_msg or "not initialized" in error_msg:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "service_unavailable",
+                    "message": "推理服务未配置，请设置DEEPSEEK_API_KEY",
                 },
             ) from e
         raise HTTPException(status_code=500, detail=str(e)) from e

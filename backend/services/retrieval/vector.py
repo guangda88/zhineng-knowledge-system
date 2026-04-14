@@ -1,6 +1,7 @@
 """
 向量检索服务模块
 使用 BGE 嵌入模型 (本地 sentence-transformers) 和 pgvector 进行语义搜索
+当本地模型不可用时，降级到远程 EMBEDDING_SERVICE_URL
 """
 
 import asyncio
@@ -9,40 +10,92 @@ import os
 from typing import Any, Dict, List, Optional
 
 import asyncpg
+import httpx
 
 logger = logging.getLogger(__name__)
 
 _MODEL_INSTANCE = None
 _MODEL_DIM = 512
 _MODEL_LOCK = asyncio.Lock()
+_USE_REMOTE = False
+_EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "")
+_HTTP_CLIENT: Optional[httpx.AsyncClient] = None
+
+
+async def _get_http_client() -> httpx.AsyncClient:
+    global _HTTP_CLIENT
+    if _HTTP_CLIENT is None or _HTTP_CLIENT.is_closed:
+        _HTTP_CLIENT = httpx.AsyncClient(timeout=15)
+    return _HTTP_CLIENT
+
+
+async def _remote_embed(text: str) -> List[float]:
+    """调用远程嵌入服务"""
+    client = await _get_http_client()
+    url = f"{_EMBEDDING_SERVICE_URL}/embed"
+    resp = await client.post(url, json={"text": text})
+    if resp.status_code == 200:
+        return resp.json()["embedding"]
+    raise RuntimeError(f"Remote embedding service error {resp.status_code}: {resp.text}")
+
+
+async def _remote_embed_batch(texts: List[str]) -> List[List[float]]:
+    """调用远程嵌入服务（批量）"""
+    client = await _get_http_client()
+    url = f"{_EMBEDDING_SERVICE_URL}/embed_batch"
+    resp = await client.post(url, json={"texts": texts}, timeout=30)
+    if resp.status_code == 200:
+        return resp.json()["embeddings"]
+    raise RuntimeError(f"Remote embedding service error {resp.status_code}: {resp.text}")
 
 
 async def _get_model():
-    global _MODEL_INSTANCE, _MODEL_DIM
+    global _MODEL_INSTANCE, _MODEL_DIM, _USE_REMOTE
     if _MODEL_INSTANCE is not None:
         return _MODEL_INSTANCE
+
+    if _USE_REMOTE:
+        return None
 
     async with _MODEL_LOCK:
         if _MODEL_INSTANCE is not None:
             return _MODEL_INSTANCE
 
         model_name = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
-        logger.info(f"Loading local embedding model: {model_name}")
 
-        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
-        os.environ.setdefault("HF_HUB_OFFLINE", "1")
+        try:
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
-        loop = asyncio.get_running_loop()
+            loop = asyncio.get_running_loop()
 
-        def _load():
-            from sentence_transformers import SentenceTransformer
+            def _load():
+                from sentence_transformers import SentenceTransformer
 
-            model = SentenceTransformer(model_name, device="cpu")
-            return model
+                model = SentenceTransformer(model_name, device="cpu")
+                return model
 
-        _MODEL_INSTANCE = await loop.run_in_executor(None, _load)
-        _MODEL_DIM = _MODEL_INSTANCE.get_sentence_embedding_dimension()
-        logger.info(f"Embedding model loaded: dim={_MODEL_DIM}")
+            _MODEL_INSTANCE = await loop.run_in_executor(None, _load)
+            _MODEL_DIM = _MODEL_INSTANCE.get_sentence_embedding_dimension()
+            logger.info(f"Local embedding model loaded: dim={_MODEL_DIM}")
+        except ImportError:
+            if _EMBEDDING_SERVICE_URL:
+                _USE_REMOTE = True
+                logger.info(
+                    f"sentence_transformers not available, "
+                    f"using remote embedding service: {_EMBEDDING_SERVICE_URL}"
+                )
+            else:
+                raise
+        except Exception as e:
+            if _EMBEDDING_SERVICE_URL:
+                _USE_REMOTE = True
+                logger.warning(
+                    f"Local model load failed ({e}), "
+                    f"falling back to remote embedding service: {_EMBEDDING_SERVICE_URL}"
+                )
+            else:
+                raise
 
     return _MODEL_INSTANCE
 
@@ -72,10 +125,10 @@ class VectorRetriever:
         self._model = None
 
     async def _ensure_model(self):
-        if self._model is None:
-            self._model = await _get_model()
-            self.embedding_dim = _MODEL_DIM
-        return self._model
+        await _get_model()
+        self._model = _MODEL_INSTANCE
+        self.embedding_dim = _MODEL_DIM
+        return _MODEL_INSTANCE
 
     async def close(self) -> None:
         pass
@@ -89,18 +142,19 @@ class VectorRetriever:
 
     async def embed_text(self, text: str) -> List[float]:
         """
-        生成文本嵌入向量（使用本地 BGE 模型）
+        生成文本嵌入向量
 
-        Args:
-            text: 输入文本
-
-        Returns:
-            嵌入向量
+        优先使用本地 BGE 模型，不可用时降级到远程嵌入服务
         """
         if not text or not text.strip():
             raise ValueError("输入文本不能为空")
 
-        model = await self._ensure_model()
+        await _get_model()
+
+        if _USE_REMOTE:
+            return await _remote_embed(text)
+
+        model = _MODEL_INSTANCE
         loop = asyncio.get_event_loop()
 
         def _encode():
@@ -109,15 +163,7 @@ class VectorRetriever:
         return await loop.run_in_executor(None, _encode)
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        """
-        批量生成嵌入向量
-
-        Args:
-            texts: 输入文本列表
-
-        Returns:
-            嵌入向量列表
-        """
+        """批量生成嵌入向量"""
         if not texts:
             raise ValueError("文本列表不能为空")
 
@@ -125,7 +171,12 @@ class VectorRetriever:
         if not valid_texts:
             return []
 
-        model = await self._ensure_model()
+        await _get_model()
+
+        if _USE_REMOTE:
+            return await _remote_embed_batch(valid_texts)
+
+        model = _MODEL_INSTANCE
         loop = asyncio.get_event_loop()
 
         def _encode_batch():
@@ -240,12 +291,10 @@ class VectorRetriever:
             统计信息
         """
         async with self.db_pool.acquire() as conn:
-            rows = await conn.fetch(
-                """SELECT id, title, content
+            rows = await conn.fetch("""SELECT id, title, content
                    FROM documents
                    WHERE embedding IS NULL
-                   ORDER BY id"""
-            )
+                   ORDER BY id""")
 
         total = len(rows)
         updated = 0
