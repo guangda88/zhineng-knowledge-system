@@ -13,6 +13,8 @@ import logging
 import random
 from typing import Any, Dict, Optional
 
+import httpx
+
 from backend.common.rate_limiter import DistributedRateLimiter
 
 logger = logging.getLogger(__name__)
@@ -183,8 +185,6 @@ class LLMAPIClient:
         # 这里需要根据实际使用的API实现
         # 示例使用OpenAI兼容的API
 
-        import aiohttp
-
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
 
         payload = {
@@ -195,27 +195,22 @@ class LLMAPIClient:
             **kwargs,
         }
 
-        if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=timeout, connect=10)
-            )
+        if self._session is None or self._session.is_closed:
+            self._session = httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=10))
 
-        async with self._session.post(
+        response = await self._session.post(
             self.api_url,
             json=payload,
             headers=headers,
-        ) as response:
-            if response.status == 200:
-                return await response.json()
-            elif response.status == 429:
-                error_text = await response.text()
-                raise Exception(f"API rate limit 429: {error_text}")
-            elif response.status == 502 or response.status == 503:
-                error_text = await response.text()
-                raise Exception(f"API server error {response.status}: {error_text}")
-            else:
-                error_text = await response.text()
-                raise Exception(f"API error {response.status}: {error_text}")
+        )
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 429:
+            raise Exception(f"API rate limit 429: {response.text}")
+        elif response.status_code in (502, 503):
+            raise Exception(f"API server error {response.status_code}: {response.text}")
+        else:
+            raise Exception(f"API error {response.status_code}: {response.text}")
 
     def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
@@ -231,9 +226,9 @@ class LLMAPIClient:
         }
 
     async def close(self):
-        """关闭底层 aiohttp 会话"""
-        if self._session is not None and not self._session.closed:
-            await self._session.close()
+        """关闭底层 httpx 会话"""
+        if self._session is not None and not self._session.is_closed:
+            await self._session.aclose()
             self._session = None
 
 

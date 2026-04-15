@@ -131,6 +131,7 @@ services:
       LOG_LEVEL: INFO
       ENVIRONMENT: production
       EMBEDDING_SERVICE_URL: http://embedding:8001
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       JWT_PRIVATE_KEY_FILE: /app/jwt_private.pem
       JWT_PUBLIC_KEY_FILE: /app/jwt_public.pem
     volumes:

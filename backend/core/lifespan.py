@@ -5,6 +5,7 @@
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -181,6 +182,66 @@ async def _init_health_checks(db_service):
                 )
 
         health_checker.register("database", check_database, interval=30)
+
+        async def check_embedding_service():
+            from backend.monitoring.health import HealthCheckResult, HealthStatus
+
+            url = os.getenv("EMBEDDING_SERVICE_URL", "")
+            if not url:
+                return HealthCheckResult(
+                    name="embedding", status=HealthStatus.HEALTHY, message="未配置远程嵌入服务"
+                )
+            try:
+                import httpx
+
+                async with httpx.AsyncClient(timeout=5) as client:
+                    resp = await client.get(f"{url}/health")
+                if resp.status_code == 200:
+                    return HealthCheckResult(
+                        name="embedding", status=HealthStatus.HEALTHY, message="嵌入服务正常"
+                    )
+                return HealthCheckResult(
+                    name="embedding",
+                    status=HealthStatus.UNHEALTHY,
+                    message=f"嵌入服务返回 {resp.status_code}",
+                )
+            except Exception as e:
+                return HealthCheckResult(
+                    name="embedding",
+                    status=HealthStatus.UNHEALTHY,
+                    message=f"嵌入服务不可达: {e}",
+                )
+
+        health_checker.register("embedding", check_embedding_service, interval=60)
+
+        async def check_data_quality():
+            from backend.monitoring.health import HealthCheckResult, HealthStatus
+
+            try:
+                total = await db_pool.fetchval("SELECT count(*) FROM documents")
+                has_content = await db_pool.fetchval(
+                    "SELECT count(*) FROM documents "
+                    "WHERE length(content) > 100 "
+                    "AND content NOT LIKE '来源: %' "
+                    "AND content NOT LIKE '文件名: %'"
+                )
+                ratio = has_content / total if total > 0 else 0
+                msg = f"有效内容: {has_content}/{total} ({ratio:.1%})"
+                status = (
+                    HealthStatus.HEALTHY
+                    if ratio > 0.3
+                    else (HealthStatus.DEGRADED if ratio > 0.05 else HealthStatus.UNHEALTHY)
+                )
+                return HealthCheckResult(name="data_quality", status=status, message=msg)
+            except Exception as e:
+                return HealthCheckResult(
+                    name="data_quality",
+                    status=HealthStatus.UNHEALTHY,
+                    message=f"数据质量检查失败: {e}",
+                )
+
+        health_checker.register("data_quality", check_data_quality, interval=300)
+
         await health_checker.start_background_checks()
         logger.info("Health checks started")
 
