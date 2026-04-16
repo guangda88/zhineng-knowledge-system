@@ -194,6 +194,8 @@ class VectorRetriever:
         """
         向量相似度搜索
 
+        同时搜索 documents 和 guoxue_content 两张表，合并结果。
+
         Args:
             query: 查询文本
             category: 分类筛选
@@ -206,52 +208,110 @@ class VectorRetriever:
         query_vector = await self.embed_text(query)
         vector_str = "[" + ",".join(map(str, query_vector)) + "]"
 
-        content_filter = (
+        doc_filter = (
             "length(content) > 100"
             " AND content NOT LIKE '来源: %'"
             " AND content NOT LIKE '文件名: %'"
         )
+        gx_filter = "body_length > 100"
+
+        # Documents query
         if category:
-            sql = """
+            doc_sql = f"""
                 SELECT id, title, content, category,
-                       1 - (embedding <=> $1::vector) as similarity
+                       1 - (embedding <=> $1::vector) as similarity,
+                       'documents' as source_table
                 FROM documents
                 WHERE category = $2 AND embedding IS NOT NULL
-                      AND {}
+                      AND {doc_filter}
                 ORDER BY embedding <=> $1::vector
                 LIMIT $3
-            """.format(content_filter)
-            params = [vector_str, category, top_k]
+            """
+            doc_params = [vector_str, category, top_k]
         else:
-            sql = """
+            doc_sql = f"""
                 SELECT id, title, content, category,
-                       1 - (embedding <=> $1::vector) as similarity
+                       1 - (embedding <=> $1::vector) as similarity,
+                       'documents' as source_table
                 FROM documents
                 WHERE embedding IS NOT NULL
-                      AND {}
+                      AND {doc_filter}
                 ORDER BY embedding <=> $1::vector
                 LIMIT $2
-            """.format(content_filter)
-            params = [vector_str, top_k]
+            """
+            doc_params = [vector_str, top_k]
 
-        async with self.db_pool.acquire() as conn:
-            rows = await conn.fetch(sql, *params)
+        # Guoxue_content query — two-phase: vector search first, then resolve titles
+        # Phase 1: fast HNSW search without JOIN
+        gx_phase1_sql = f"""
+            SELECT gc.id, gc.body as content, gc.book_id,
+                   1 - (gc.embedding <=> $1::vector) as similarity,
+                   'guoxue_content' as source_table
+            FROM guoxue_content gc
+            WHERE gc.embedding IS NOT NULL
+                  AND {gx_filter}
+            ORDER BY gc.embedding <=> $1::vector
+            LIMIT $2
+        """
+        gx_params = [vector_str, top_k]
+
+        async with self.db_pool.acquire() as conn1, self.db_pool.acquire() as conn2:
+            doc_rows, gx_rows = await asyncio.gather(
+                conn1.fetch(doc_sql, *doc_params),
+                conn2.fetch(gx_phase1_sql, *gx_params),
+            )
+
+        # Phase 2: batch resolve book titles for guoxue results
+        book_titles = {}
+        if gx_rows:
+            book_ids = list(set(r["book_id"] for r in gx_rows if r["book_id"]))
+            if book_ids:
+                async with self.db_pool.acquire() as conn:
+                    title_rows = await conn.fetch(
+                        "SELECT book_id, title FROM guoxue_books WHERE book_id = ANY($1::int[])",
+                        book_ids,
+                    )
+                    book_titles = {r["book_id"]: r["title"] for r in title_rows}
+
+        # Build normalized result dicts (unify documents and guoxue schemas)
+        normalized = []
+        for r in doc_rows:
+            normalized.append({
+                "id": r["id"],
+                "title": r["title"],
+                "content": r["content"],
+                "category": r["category"],
+                "similarity": float(r["similarity"]),
+                "source_table": r["source_table"],
+            })
+        for r in gx_rows:
+            normalized.append({
+                "id": r["id"],
+                "title": book_titles.get(r["book_id"], "古籍"),
+                "content": r["content"],
+                "category": "古籍",
+                "similarity": float(r["similarity"]),
+                "source_table": r["source_table"],
+            })
+
+        normalized.sort(key=lambda r: r["similarity"], reverse=True)
 
         results = []
-        for row in rows:
+        for row in normalized[:top_k]:
             if row["similarity"] >= threshold:
-                results.append(
-                    {
-                        "id": row["id"],
-                        "title": row["title"],
-                        "content": row["content"],
-                        "category": row["category"],
-                        "similarity": float(row["similarity"]),
-                        "method": "vector",
-                    }
-                )
+                results.append({
+                    "id": row["id"],
+                    "title": row["title"],
+                    "content": row["content"],
+                    "category": row["category"],
+                    "similarity": row["similarity"],
+                    "method": "vector",
+                    "source_table": row["source_table"],
+                })
 
-        logger.info(f"向量搜索: query='{query}', found={len(results)}")
+        logger.info(
+            f"向量搜索: query='{query}', docs={len(doc_rows)}, guoxue={len(gx_rows)}, found={len(results)}"
+        )
         return results
 
     async def update_embedding(self, doc_id: int) -> bool:

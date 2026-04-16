@@ -226,7 +226,7 @@ class BM25Retriever:
                 return []
 
             if category:
-                rows = await conn.fetch(
+                doc_rows = await conn.fetch(
                     """
                     SELECT id, search_vector::text AS sv_text, length(content) AS content_len
                     FROM documents
@@ -242,7 +242,7 @@ class BM25Retriever:
                     _CANDIDATE_CAP,
                 )
             else:
-                rows = await conn.fetch(
+                doc_rows = await conn.fetch(
                     """
                     SELECT id, search_vector::text AS sv_text, length(content) AS content_len
                     FROM documents
@@ -256,39 +256,84 @@ class BM25Retriever:
                     _CANDIDATE_CAP,
                 )
 
-            scored: List[Tuple[int, float]] = []
-            for row in rows:
+            # Also search guoxue_content (263K rows, fully indexed)
+            gx_rows = await conn.fetch(
+                """
+                SELECT gc.id, gc.search_vector::text AS sv_text,
+                       gc.body_length AS content_len,
+                       COALESCE(gb.title, '古籍') as title,
+                       gc.body as content
+                FROM guoxue_content gc
+                LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
+                WHERE gc.search_vector @@ plainto_tsquery('simple', $1)
+                  AND gc.body_length > 100
+                LIMIT $2
+                """,
+                segmented,
+                _CANDIDATE_CAP,
+            )
+
+            scored: List[Tuple[int, float, str]] = []  # (id, score, source_table)
+            for row in doc_rows:
                 freqs, _ = self._parse_tsvector(row["sv_text"])
                 doc_length = row["content_len"] or 1
                 score = self._score_with_idf(query_words, freqs, idf_map, doc_length)
                 if score > 0:
-                    scored.append((row["id"], score))
+                    scored.append((row["id"], score, "documents"))
+
+            for row in gx_rows:
+                freqs, _ = self._parse_tsvector(row["sv_text"])
+                doc_length = row["content_len"] or 1
+                score = self._score_with_idf(query_words, freqs, idf_map, doc_length)
+                if score > 0:
+                    scored.append((row["id"], score, "guoxue_content"))
 
             if not scored:
                 return []
 
             scored.sort(key=lambda x: x[1], reverse=True)
-            top_ids = [s[0] for s in scored[:top_k]]
-            top_scores = {s[0]: s[1] for s in scored[:top_k]}
+            top_ids = [(s[0], s[2]) for s in scored[:top_k]]
+            top_scores = {(s[0], s[2]): s[1] for s in scored[:top_k]}
 
-            content_rows = await conn.fetch(
-                "SELECT id, title, content, category FROM documents WHERE id = ANY($1)",
-                top_ids,
-            )
+            # Load content for documents
+            doc_ids = [t[0] for t in top_ids if t[1] == "documents"]
+            gx_ids = [t[0] for t in top_ids if t[1] == "guoxue_content"]
+
+            content_rows = []
+            if doc_ids:
+                rows = await conn.fetch(
+                    "SELECT id, title, content, category FROM documents WHERE id = ANY($1)",
+                    doc_ids,
+                )
+                content_rows.extend([(r, "documents") for r in rows])
+
+            if gx_ids:
+                rows = await conn.fetch(
+                    """
+                    SELECT gc.id, COALESCE(gb.title, '古籍') as title,
+                           gc.body as content, '古籍' as category
+                    FROM guoxue_content gc
+                    LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
+                    WHERE gc.id = ANY($1)
+                    """,
+                    gx_ids,
+                )
+                content_rows.extend([(r, "guoxue_content") for r in rows])
 
         results = []
-        for row in content_rows:
+        for row, source in content_rows:
             results.append(
                 {
                     "id": row["id"],
                     "title": row["title"],
                     "content": row["content"],
                     "category": row["category"],
-                    "score": top_scores[row["id"]],
+                    "score": top_scores[(row["id"], source)],
                     "method": "bm25",
+                    "source_table": source,
                 }
             )
 
         results.sort(key=lambda x: x["score"], reverse=True)
-        logger.info(f"BM25搜索: query='{query}', candidates={len(rows)}, found={len(results)}")
+        logger.info(f"BM25搜索: query='{query}', docs={len(doc_rows)}, guoxue={len(gx_rows)}, found={len(results)}")
         return results

@@ -150,7 +150,7 @@ class FullTextRetriever:
             return []
 
         if category:
-            sql = """
+            doc_sql = """
                 WITH ranked AS MATERIALIZED (
                     SELECT id,
                            ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
@@ -162,14 +162,15 @@ class FullTextRetriever:
                       AND content NOT LIKE '文件名: %'
                     LIMIT 5000
                 )
-                SELECT d.id, d.title, d.content, d.category, r.rank
+                SELECT d.id, d.title, d.content, d.category, r.rank,
+                       'documents' as source_table
                 FROM (SELECT id, rank FROM ranked ORDER BY rank DESC LIMIT $3) r
                 JOIN documents d ON d.id = r.id
                 ORDER BY r.rank DESC
             """
-            params = [segmented, category, top_k]
+            doc_params = [segmented, category, top_k]
         else:
-            sql = """
+            doc_sql = """
                 WITH ranked AS MATERIALIZED (
                     SELECT id,
                            ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
@@ -180,19 +181,46 @@ class FullTextRetriever:
                       AND content NOT LIKE '文件名: %'
                     LIMIT 5000
                 )
-                SELECT d.id, d.title, d.content, d.category, r.rank
+                SELECT d.id, d.title, d.content, d.category, r.rank,
+                       'documents' as source_table
                 FROM (SELECT id, rank FROM ranked ORDER BY rank DESC LIMIT $2) r
                 JOIN documents d ON d.id = r.id
                 ORDER BY r.rank DESC
             """
-            params = [segmented, top_k]
+            doc_params = [segmented, top_k]
+
+        # Guoxue_content fulltext search
+        gx_sql = """
+            WITH ranked AS MATERIALIZED (
+                SELECT id,
+                       ts_rank(search_vector, plainto_tsquery('simple', $1)) as rank
+                FROM guoxue_content
+                WHERE search_vector @@ plainto_tsquery('simple', $1)
+                  AND body_length > 100
+                LIMIT 5000
+            )
+            SELECT gc.id, COALESCE(gb.title, '古籍') as title,
+                   gc.body as content, '古籍' as category, r.rank,
+                   'guoxue_content' as source_table
+            FROM (SELECT id, rank FROM ranked ORDER BY rank DESC LIMIT $2) r
+            JOIN guoxue_content gc ON gc.id = r.id
+            LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
+            ORDER BY r.rank DESC
+        """
+        gx_params = [segmented, top_k]
 
         try:
-            async with self.db_pool.acquire() as conn:
-                rows = await conn.fetch(sql, *params)
+            async with self.db_pool.acquire() as conn1, self.db_pool.acquire() as conn2:
+                doc_rows, gx_rows = await asyncio.gather(
+                    conn1.fetch(doc_sql, *doc_params),
+                    conn2.fetch(gx_sql, *gx_params),
+                )
+
+            all_rows = list(doc_rows) + list(gx_rows)
+            all_rows.sort(key=lambda r: float(r["rank"]), reverse=True)
 
             results = []
-            for i, row in enumerate(rows):
+            for i, row in enumerate(all_rows[:top_k]):
                 if row["rank"] >= threshold:
                     results.append(
                         RetrievalResult(
@@ -208,7 +236,8 @@ class FullTextRetriever:
 
             elapsed = time.time() - start_time
             logger.info(
-                f"全文检索: query='{query}', seg='{segmented}', found={len(results)}, time={elapsed:.3f}s"
+                f"全文检索: query='{query}', seg='{segmented}', docs={len(doc_rows)}, "
+                f"guoxue={len(gx_rows)}, found={len(results)}, time={elapsed:.3f}s"
             )
 
             return results
@@ -222,8 +251,8 @@ class FullTextRetriever:
     ) -> List[RetrievalResult]:
         """使用LIKE搜索（后备方案）"""
         if category:
-            sql = """
-                SELECT id, title, content, category
+            doc_sql = """
+                SELECT id, title, content, category, 'documents' as source_table
                 FROM documents
                 WHERE category = $1
                   AND (title LIKE $2 OR content LIKE $2)
@@ -232,10 +261,10 @@ class FullTextRetriever:
                   AND content NOT LIKE '文件名: %'
                 LIMIT $3
             """
-            params = [category, f"%{query}%", top_k]
+            doc_params = [category, f"%{query}%", top_k]
         else:
-            sql = """
-                SELECT id, title, content, category
+            doc_sql = """
+                SELECT id, title, content, category, 'documents' as source_table
                 FROM documents
                 WHERE (title LIKE $1 OR content LIKE $1)
                   AND length(content) > 100
@@ -243,20 +272,37 @@ class FullTextRetriever:
                   AND content NOT LIKE '文件名: %'
                 LIMIT $2
             """
-            params = [f"%{query}%", top_k]
+            doc_params = [f"%{query}%", top_k]
 
-        async with self.db_pool.acquire() as conn:
-            rows = await conn.fetch(sql, *params)
+        gx_sql = """
+            SELECT gc.id, COALESCE(gb.title, '古籍') as title,
+                   gc.body as content, '古籍' as category,
+                   'guoxue_content' as source_table
+            FROM guoxue_content gc
+            LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
+            WHERE gc.body LIKE $1
+              AND gc.body_length > 100
+            LIMIT $2
+        """
+        gx_params = [f"%{query}%", top_k]
+
+        async with self.db_pool.acquire() as conn1, self.db_pool.acquire() as conn2:
+            doc_rows, gx_rows = await asyncio.gather(
+                conn1.fetch(doc_sql, *doc_params),
+                conn2.fetch(gx_sql, *gx_params),
+            )
+
+        all_rows = list(doc_rows) + list(gx_rows)
 
         results = []
-        for i, row in enumerate(rows):
+        for i, row in enumerate(all_rows[:top_k]):
             results.append(
                 RetrievalResult(
                     id=row["id"],
                     title=row["title"],
                     content=row["content"],
                     category=row["category"],
-                    score=0.5,  # LIKE搜索没有相关性分数，使用默认值
+                    score=0.5,
                     method=RetrievalMethod.FULLTEXT,
                     rank=i + 1,
                 )

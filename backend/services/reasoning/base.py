@@ -86,6 +86,7 @@ class BaseReasoner(ABC):
 
         # 初始化LLM客户端（带速率限制）
         self.llm_client = None
+        self.init_error = None
         try:
             from backend.common.llm_api_wrapper import get_llm_client
 
@@ -94,7 +95,8 @@ class BaseReasoner(ABC):
             )
             logger.info("LLM client initialized with rate limiting")
         except Exception as e:
-            logger.warning(f"Failed to initialize LLM client: {e}")
+            self.init_error = str(e)
+            logger.error(f"Failed to initialize LLM client: {e}", exc_info=True)
 
     def _get_default_api_key(self) -> str:
         """获取默认API密钥"""

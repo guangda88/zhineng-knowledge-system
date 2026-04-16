@@ -75,7 +75,7 @@ async def record_gap(
                     SET hit_count = hit_count + 1,
                         last_seen = CURRENT_TIMESTAMP,
                         best_score = CASE
-                            WHEN $1 IS NOT NULL AND (best_score IS NULL OR $1 > best_score)
+                            WHEN $1::double precision IS NOT NULL AND (best_score IS NULL OR $1 > best_score)
                             THEN $1 ELSE best_score
                         END,
                         metadata = metadata || $2::jsonb
@@ -231,7 +231,7 @@ async def get_gaps_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
             await conn.fetchval(
                 """
             SELECT COUNT(*) FROM knowledge_gaps
-            WHERE created_at > CURRENT_TIMESTAMP - INTERVAL '7 days'
+            WHERE first_seen > CURRENT_TIMESTAMP - INTERVAL '7 days'
             """
             )
             or 0
