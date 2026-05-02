@@ -4,15 +4,8 @@
 提供维度解析、批量打标、覆盖率统计等功能
 """
 
-from .batch_tagger import (
-    QigongBatchTagger,
-    batch_tag_qigong_docs,
-    get_tagging_coverage,
-)
-from .content_parser import (
-    QigongContentParser,
-    parse_qigong_from_content,
-)
+from .batch_tagger import QigongBatchTagger, batch_tag_qigong_docs, get_tagging_coverage
+from .content_parser import QigongContentParser, parse_qigong_from_content
 from .path_parser import (
     DimensionResult,
     Discipline,

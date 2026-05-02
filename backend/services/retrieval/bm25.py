@@ -7,6 +7,7 @@ BM25 关键词检索服务模块
 - search() 两阶段: 先用 GIN 索引 + sv_text 打分，再加载 top_k 内容
 """
 
+import asyncio
 import logging
 import math
 import re
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 _CUSTOM_DICT_PATH = Path(__file__).parent / "custom_dict.txt"
 _SINGLE_CHAR_DOMAIN_WORDS = frozenset("仁义礼智信道德气心神精")
 _TSVECTOR_WORD_RE = re.compile(r"'([^']+)':([0-9A-Za-z,]+)")
-_CANDIDATE_CAP = 5000
+_CANDIDATE_CAP = 1000
 
 
 class BM25Retriever:
@@ -51,6 +52,7 @@ class BM25Retriever:
         self.doc_count: int = 0
         self.avg_doc_length: float = 0.0
         self._jieba_ready = False
+        self._tbv_has_search_vector: Optional[bool] = None
 
     def _ensure_jieba(self) -> None:
         if self._jieba_ready:
@@ -105,12 +107,14 @@ class BM25Retriever:
         )
         if not exists:
             logger.info("创建 mv_bm25_word_stats 物化视图（首次约 30 秒）...")
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE MATERIALIZED VIEW mv_bm25_word_stats AS
                 SELECT word, ndoc
                 FROM ts_stat('SELECT search_vector FROM documents')
                 WHERE ndoc >= 2
-                """)
+                """
+            )
             await conn.execute(
                 "CREATE UNIQUE INDEX idx_mv_bm25_word_stats ON mv_bm25_word_stats(word)"
             )
@@ -197,11 +201,11 @@ class BM25Retriever:
     async def search(
         self, query: str, category: Optional[str] = None, top_k: int = 10
     ) -> List[Dict[str, Any]]:
-        """BM25 关键词搜索（两阶段，内存安全）
+        """BM25 关键词搜索（SQL-side scoring + parallel content load）
 
-        Phase 1: GIN 索引预过滤候选 → 获取 id + sv_text + content_len（不含 content）
-        Phase 2: Python 端 BM25 打分
-        Phase 3: 仅加载 top_k 候选的 content
+        Phase 1: Build tsquery, get IDF map
+        Phase 2: SQL-side ts_rank scoring across 4 tables in parallel
+        Phase 3: Load content for top_k candidates only
 
         Args:
             query: 查询文本
@@ -219,96 +223,170 @@ class BM25Retriever:
             return []
 
         query_words = segmented.split()
+        tsq = " & ".join(query_words)
 
+        # Phase 1: Get IDF map (fast, single connection)
         async with self.db_pool.acquire() as conn:
             idf_map = await self._get_idf_map(conn, query_words)
-            if not idf_map:
-                return []
+        if not idf_map:
+            return []
 
-            if category:
-                doc_rows = await conn.fetch(
+        # Compute IDF weight multiplier for ts_rank normalization
+        avg_idf = sum(idf_map.values()) / len(idf_map) if idf_map else 1.0
+        idf_weight = min(avg_idf, 4.0)
+
+        # Check textbook_blocks_v2 search_vector availability (once)
+        if self._tbv_has_search_vector is None:
+            try:
+                async with self.db_pool.acquire() as conn:
+                    has_sv = await conn.fetchval(
+                        "SELECT EXISTS(SELECT 1 FROM textbook_blocks_v2 WHERE search_vector IS NOT NULL LIMIT 1)"
+                    )
+                    self._tbv_has_search_vector = bool(has_sv)
+            except Exception:
+                self._tbv_has_search_vector = False
+
+        # Phase 2: SQL-side scoring with ts_rank across all 4 tables in parallel
+        async def _score_docs():
+            async with self.db_pool.acquire() as c:
+                if category:
+                    return await c.fetch(
+                        """
+                        SELECT id, ts_rank_cd(search_vector, query) * $3 AS score
+                        FROM documents, plainto_tsquery('simple', $1) query
+                        WHERE category = $2
+                          AND search_vector @@ query
+                          AND length(content) > 100
+                          AND content NOT LIKE '来源: %%'
+                          AND content NOT LIKE '文件名: %%'
+                        ORDER BY score DESC
+                        LIMIT $4
+                        """,
+                        segmented,
+                        category,
+                        idf_weight,
+                        top_k,
+                    )
+                return await c.fetch(
                     """
-                    SELECT id, search_vector::text AS sv_text, length(content) AS content_len
-                    FROM documents
-                    WHERE category = $2
-                      AND search_vector @@ plainto_tsquery('simple', $1)
+                    SELECT id, ts_rank_cd(search_vector, query) * $2 AS score
+                    FROM documents, plainto_tsquery('simple', $1) query
+                    WHERE search_vector @@ query
                       AND length(content) > 100
-                      AND content NOT LIKE '来源: %'
-                      AND content NOT LIKE '文件名: %'
+                      AND content NOT LIKE '来源: %%'
+                      AND content NOT LIKE '文件名: %%'
+                    ORDER BY score DESC
                     LIMIT $3
                     """,
                     segmented,
-                    category,
-                    _CANDIDATE_CAP,
+                    idf_weight,
+                    top_k,
                 )
-            else:
-                doc_rows = await conn.fetch(
+
+        async def _score_gx():
+            async with self.db_pool.acquire() as c:
+                return await c.fetch(
                     """
-                    SELECT id, search_vector::text AS sv_text, length(content) AS content_len
-                    FROM documents
-                    WHERE search_vector @@ plainto_tsquery('simple', $1)
-                      AND length(content) > 100
-                      AND content NOT LIKE '来源: %'
-                      AND content NOT LIKE '文件名: %'
-                    LIMIT $2
+                    SELECT gc.id, ts_rank_cd(gc.search_vector, query) * $2 AS score
+                    FROM guoxue_content gc, plainto_tsquery('simple', $1) query
+                    WHERE gc.search_vector @@ query
+                      AND gc.body_length > 100
+                    ORDER BY score DESC
+                    LIMIT $3
                     """,
                     segmented,
-                    _CANDIDATE_CAP,
+                    idf_weight,
+                    top_k,
                 )
 
-            # Also search guoxue_content (263K rows, fully indexed)
-            gx_rows = await conn.fetch(
-                """
-                SELECT gc.id, gc.search_vector::text AS sv_text,
-                       gc.body_length AS content_len,
-                       COALESCE(gb.title, '古籍') as title,
-                       gc.body as content
-                FROM guoxue_content gc
-                LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
-                WHERE gc.search_vector @@ plainto_tsquery('simple', $1)
-                  AND gc.body_length > 100
-                LIMIT $2
-                """,
-                segmented,
-                _CANDIDATE_CAP,
-            )
-
-            scored: List[Tuple[int, float, str]] = []  # (id, score, source_table)
-            for row in doc_rows:
-                freqs, _ = self._parse_tsvector(row["sv_text"])
-                doc_length = row["content_len"] or 1
-                score = self._score_with_idf(query_words, freqs, idf_map, doc_length)
-                if score > 0:
-                    scored.append((row["id"], score, "documents"))
-
-            for row in gx_rows:
-                freqs, _ = self._parse_tsvector(row["sv_text"])
-                doc_length = row["content_len"] or 1
-                score = self._score_with_idf(query_words, freqs, idf_map, doc_length)
-                if score > 0:
-                    scored.append((row["id"], score, "guoxue_content"))
-
-            if not scored:
+        async def _score_tbv():
+            if not self._tbv_has_search_vector:
                 return []
-
-            scored.sort(key=lambda x: x[1], reverse=True)
-            top_ids = [(s[0], s[2]) for s in scored[:top_k]]
-            top_scores = {(s[0], s[2]): s[1] for s in scored[:top_k]}
-
-            # Load content for documents
-            doc_ids = [t[0] for t in top_ids if t[1] == "documents"]
-            gx_ids = [t[0] for t in top_ids if t[1] == "guoxue_content"]
-
-            content_rows = []
-            if doc_ids:
-                rows = await conn.fetch(
-                    "SELECT id, title, content, category FROM documents WHERE id = ANY($1)",
-                    doc_ids,
+            async with self.db_pool.acquire() as c:
+                return await c.fetch(
+                    """
+                    SELECT tbv.id, ts_rank_cd(tbv.search_vector, query) * $2 AS score
+                    FROM textbook_blocks_v2 tbv, plainto_tsquery('simple', $1) query
+                    WHERE tbv.search_vector @@ query
+                      AND length(tbv.content) > 20
+                    ORDER BY score DESC
+                    LIMIT $3
+                    """,
+                    segmented,
+                    idf_weight,
+                    top_k,
                 )
-                content_rows.extend([(r, "documents") for r in rows])
 
-            if gx_ids:
-                rows = await conn.fetch(
+        async def _score_chunks():
+            async with self.db_pool.acquire() as c:
+                return await c.fetch(
+                    """
+                    SELECT dc.id, ts_rank_cd(dc.search_vector, query) * $2 AS score
+                    FROM doc_chunks dc, plainto_tsquery('simple', $1) query
+                    WHERE dc.search_vector @@ query
+                    ORDER BY score DESC
+                    LIMIT $3
+                    """,
+                    segmented,
+                    idf_weight,
+                    top_k,
+                )
+
+        doc_scored, gx_scored, tbv_scored, chunk_scored = await asyncio.gather(
+            _score_docs(),
+            _score_gx(),
+            _score_tbv(),
+            _score_chunks(),
+            return_exceptions=True,
+        )
+
+        doc_scored = doc_scored if isinstance(doc_scored, list) else []
+        gx_scored = gx_scored if isinstance(gx_scored, list) else []
+        tbv_scored = tbv_scored if isinstance(tbv_scored, list) else []
+        chunk_scored = chunk_scored if isinstance(chunk_scored, list) else []
+
+        # Merge all scored results and sort globally
+        all_scored: List[Tuple[int, float, str]] = []
+        for r in doc_scored:
+            all_scored.append((r["id"], float(r["score"]), "documents"))
+        for r in gx_scored:
+            all_scored.append((r["id"], float(r["score"]), "guoxue_content"))
+        for r in tbv_scored:
+            all_scored.append((r["id"], float(r["score"]), "textbook_blocks_v2"))
+        for r in chunk_scored:
+            all_scored.append((r["id"], float(r["score"]), "doc_chunks"))
+
+        if not all_scored:
+            return []
+
+        all_scored.sort(key=lambda x: x[1], reverse=True)
+        all_scored = all_scored[:top_k]
+        top_scores = {(s[0], s[2]): s[1] for s in all_scored}
+
+        doc_ids = [s[0] for s in all_scored if s[2] == "documents"]
+        gx_ids = [s[0] for s in all_scored if s[2] == "guoxue_content"]
+        tbv_ids = [s[0] for s in all_scored if s[2] == "textbook_blocks_v2"]
+        chunk_ids = [s[0] for s in all_scored if s[2] == "doc_chunks"]
+
+        # Phase 3: Load content for top_k in parallel
+
+        async def _load_doc_content():
+            if not doc_ids:
+                return []
+            async with self.db_pool.acquire() as c:
+                return [
+                    (r, "documents")
+                    for r in await c.fetch(
+                        "SELECT id, title, content, category FROM documents WHERE id = ANY($1)",
+                        doc_ids,
+                    )
+                ]
+
+        async def _load_gx_content():
+            if not gx_ids:
+                return []
+            async with self.db_pool.acquire() as c:
+                rows = await c.fetch(
                     """
                     SELECT gc.id, COALESCE(gb.title, '古籍') as title,
                            gc.body as content, '古籍' as category
@@ -318,22 +396,88 @@ class BM25Retriever:
                     """,
                     gx_ids,
                 )
-                content_rows.extend([(r, "guoxue_content") for r in rows])
+                return [(r, "guoxue_content") for r in rows]
+
+        async def _load_tbv_content():
+            if not tbv_ids:
+                return []
+            async with self.db_pool.acquire() as c:
+                rows = await c.fetch(
+                    """
+                    SELECT tbv.id, tbv.content,
+                           COALESCE(tn.name, '教材') as title,
+                           '教材' as category,
+                           tn.path
+                    FROM textbook_blocks_v2 tbv
+                    LEFT JOIN textbook_nodes tn ON tbv.node_id = tn.id
+                    WHERE tbv.id = ANY($1)
+                    """,
+                    tbv_ids,
+                )
+                results = []
+                for r in rows:
+                    title = r["title"]
+                    if r.get("path"):
+                        title = f"{r['path']} → {title}"
+                    results.append(
+                        (
+                            {
+                                "id": r["id"],
+                                "title": title,
+                                "content": r["content"],
+                                "category": r["category"],
+                            },
+                            "textbook_blocks_v2",
+                        )
+                    )
+                return results
+
+        async def _load_chunk_content():
+            if not chunk_ids:
+                return []
+            async with self.db_pool.acquire() as c:
+                rows = await c.fetch(
+                    """
+                    SELECT dc.id, dc.content, d.title, d.category, dc.doc_id
+                    FROM doc_chunks dc
+                    JOIN documents d ON d.id = dc.doc_id
+                    WHERE dc.id = ANY($1)
+                    """,
+                    chunk_ids,
+                )
+                return [(r, "doc_chunks") for r in rows]
+
+        content_row_sets = await asyncio.gather(
+            _load_doc_content(),
+            _load_gx_content(),
+            _load_tbv_content(),
+            _load_chunk_content(),
+            return_exceptions=True,
+        )
+
+        content_rows = []
+        for crs in content_row_sets:
+            if isinstance(crs, list):
+                content_rows.extend(crs)
 
         results = []
         for row, source in content_rows:
+            score_key = (row["id"], source)
             results.append(
                 {
                     "id": row["id"],
                     "title": row["title"],
                     "content": row["content"],
                     "category": row["category"],
-                    "score": top_scores[(row["id"], source)],
+                    "score": top_scores.get(score_key, 0),
                     "method": "bm25",
                     "source_table": source,
                 }
             )
 
         results.sort(key=lambda x: x["score"], reverse=True)
-        logger.info(f"BM25搜索: query='{query}', docs={len(doc_rows)}, guoxue={len(gx_rows)}, found={len(results)}")
+        logger.info(
+            f"BM25搜索: query='{query}', docs={len(doc_scored)}, guoxue={len(gx_scored)}, "
+            f"blocks={len(tbv_scored)}, chunks={len(chunk_scored)}, found={len(results)}"
+        )
         return results

@@ -170,24 +170,36 @@ async def list_audio_files(
 @router.get("/files/{file_id}")
 async def get_audio_file(file_id: int):
     """获取音频文件详情"""
-    from backend.services.audio import AudioService
+    try:
+        from backend.services.audio import AudioService
 
-    service = AudioService()
+        service = AudioService()
 
-    result = await service.get_file(file_id)
-    if not result:
-        raise HTTPException(status_code=404, detail="音频文件不存在")
-    return {"status": "ok", "data": result}
+        result = await service.get_file(file_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="音频文件不存在")
+        return {"status": "ok", "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_audio_file failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取音频文件详情失败")
 
 
 @router.get("/files/{file_id}/segments")
 async def get_audio_segments(file_id: int):
     """获取音频分段列表"""
-    from backend.services.audio import AudioService
+    try:
+        from backend.services.audio import AudioService
 
-    service = AudioService()
-    segments = await service.get_segments(file_id)
-    return {"status": "ok", "data": segments}
+        service = AudioService()
+        segments = await service.get_segments(file_id)
+        return {"status": "ok", "data": segments}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_audio_segments failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取音频分段失败")
 
 
 @router.delete("/files/{file_id}")
@@ -243,61 +255,68 @@ async def import_with_transcript(request: ImportRequest):
 @router.post("/annotations")
 async def create_annotation(request: AnnotationCreate):
     """创建标注"""
-    from backend.core.database import init_db_pool
+    try:
+        from backend.core.database import init_db_pool
 
-    valid_types = {
-        "correction",
-        "segment_label",
-        "highlight",
-        "knowledge_link",
-        "teaching_point",
-        "timestamp_note",
-    }
-    if request.annotation_type not in valid_types:
-        raise HTTPException(
-            status_code=400,
-            detail=f"无效的标注类型: {request.annotation_type}. " f"支持: {', '.join(valid_types)}",
+        valid_types = {
+            "correction",
+            "segment_label",
+            "highlight",
+            "knowledge_link",
+            "teaching_point",
+            "timestamp_note",
+        }
+        if request.annotation_type not in valid_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"无效的标注类型: {request.annotation_type}. "
+                f"支持: {', '.join(valid_types)}",
+            )
+
+        pool = await init_db_pool()
+
+        file_exists = await pool.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM audio_files WHERE id = $1)",
+            request.audio_file_id,
+        )
+        if not file_exists:
+            raise HTTPException(status_code=404, detail="音频文件不存在")
+
+        row = await pool.fetchrow(
+            """
+            INSERT INTO audio_annotations
+                (audio_file_id, segment_id, annotation_type, start_time, end_time,
+                 content, metadata, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id, annotation_type, content, created_at
+            """,
+            request.audio_file_id,
+            request.segment_id,
+            request.annotation_type,
+            request.start_time,
+            request.end_time,
+            request.content,
+            request.metadata,
+            request.created_by,
         )
 
-    pool = await init_db_pool()
+        await pool.execute(
+            """
+            INSERT INTO annotation_history
+                (annotation_id, action, new_value, changed_by)
+            VALUES ($1, 'created', $2, $3)
+            """,
+            row["id"],
+            {"annotation_type": request.annotation_type, "content": request.content},
+            request.created_by,
+        )
 
-    file_exists = await pool.fetchval(
-        "SELECT EXISTS(SELECT 1 FROM audio_files WHERE id = $1)",
-        request.audio_file_id,
-    )
-    if not file_exists:
-        raise HTTPException(status_code=404, detail="音频文件不存在")
-
-    row = await pool.fetchrow(
-        """
-        INSERT INTO audio_annotations
-            (audio_file_id, segment_id, annotation_type, start_time, end_time,
-             content, metadata, created_by)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, annotation_type, content, created_at
-        """,
-        request.audio_file_id,
-        request.segment_id,
-        request.annotation_type,
-        request.start_time,
-        request.end_time,
-        request.content,
-        request.metadata,
-        request.created_by,
-    )
-
-    await pool.execute(
-        """
-        INSERT INTO annotation_history
-            (annotation_id, action, new_value, changed_by)
-        VALUES ($1, 'created', $2, $3)
-        """,
-        row["id"],
-        {"annotation_type": request.annotation_type, "content": request.content},
-        request.created_by,
-    )
-
-    return {"status": "ok", "data": dict(row)}
+        return {"status": "ok", "data": dict(row)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"create_annotation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="创建标注失败")
 
 
 @router.get("/annotations/audio/{file_id}")
@@ -307,138 +326,156 @@ async def get_annotations(
     status: Optional[str] = None,
 ):
     """获取文件的标注列表"""
-    from backend.core.database import init_db_pool
+    try:
+        from backend.core.database import init_db_pool
 
-    pool = await init_db_pool()
+        pool = await init_db_pool()
 
-    conditions = ["audio_file_id = $1"]
-    params: list = [file_id]
-    idx = 2
+        conditions = ["audio_file_id = $1"]
+        params: list = [file_id]
+        idx = 2
 
-    if annotation_type:
-        conditions.append(f"annotation_type = ${idx}")
-        params.append(annotation_type)
-        idx += 1
+        if annotation_type:
+            conditions.append(f"annotation_type = ${idx}")
+            params.append(annotation_type)
+            idx += 1
 
-    if status:
-        conditions.append(f"status = ${idx}")
-        params.append(status)
-        idx += 1
+        if status:
+            conditions.append(f"status = ${idx}")
+            params.append(status)
+            idx += 1
 
-    where = " AND ".join(conditions)
+        where = " AND ".join(conditions)
 
-    rows = await pool.fetch(
-        f"""
-        SELECT id, audio_file_id, segment_id, annotation_type,
-               start_time, end_time, content, metadata, status,
-               verified, created_by, created_at, updated_at, version
-        FROM audio_annotations
-        WHERE {where}
-        ORDER BY created_at DESC
-        """,
-        *params,
-    )
+        rows = await pool.fetch(
+            f"""
+            SELECT id, audio_file_id, segment_id, annotation_type,
+                   start_time, end_time, content, metadata, status,
+                   verified, created_by, created_at, updated_at, version
+            FROM audio_annotations
+            WHERE {where}
+            ORDER BY created_at DESC
+            """,
+            *params,
+        )
 
-    return {"status": "ok", "data": [dict(r) for r in rows]}
+        return {"status": "ok", "data": [dict(r) for r in rows]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_annotations failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取标注列表失败")
 
 
 @router.put("/annotations/{annotation_id}")
 async def update_annotation(annotation_id: int, request: AnnotationUpdate):
     """更新标注"""
-    from backend.core.database import init_db_pool
+    try:
+        from backend.core.database import init_db_pool
 
-    pool = await init_db_pool()
+        pool = await init_db_pool()
 
-    old_row = await pool.fetchrow(
-        "SELECT content, metadata, status FROM audio_annotations WHERE id = $1",
-        annotation_id,
-    )
-    if not old_row:
-        raise HTTPException(status_code=404, detail="标注不存在")
+        old_row = await pool.fetchrow(
+            "SELECT content, metadata, status FROM audio_annotations WHERE id = $1",
+            annotation_id,
+        )
+        if not old_row:
+            raise HTTPException(status_code=404, detail="标注不存在")
 
-    updates = []
-    params: list = []
-    idx = 1
+        updates = []
+        params: list = []
+        idx = 1
 
-    if request.content is not None:
-        updates.append(f"content = ${idx}")
-        params.append(request.content)
-        idx += 1
+        if request.content is not None:
+            updates.append(f"content = ${idx}")
+            params.append(request.content)
+            idx += 1
 
-    if request.metadata is not None:
-        updates.append(f"metadata = ${idx}")
-        params.append(request.metadata)
-        idx += 1
+        if request.metadata is not None:
+            updates.append(f"metadata = ${idx}")
+            params.append(request.metadata)
+            idx += 1
 
-    if request.status is not None:
-        updates.append(f"status = ${idx}")
-        params.append(request.status)
-        idx += 1
+        if request.status is not None:
+            updates.append(f"status = ${idx}")
+            params.append(request.status)
+            idx += 1
 
-    if not updates:
-        return {"status": "ok", "data": {"updated": False}}
+        if not updates:
+            return {"status": "ok", "data": {"updated": False}}
 
-    updates.append("version = version + 1")
-    updates.append("updated_at = NOW()")
+        updates.append("version = version + 1")
+        updates.append("updated_at = NOW()")
 
-    params.append(annotation_id)
+        params.append(annotation_id)
 
-    await pool.execute(
-        f"""
-        UPDATE audio_annotations
-        SET {', '.join(updates)}
-        WHERE id = ${idx}
-        """,
-        *params,
-    )
+        await pool.execute(
+            f"""
+            UPDATE audio_annotations
+            SET {', '.join(updates)}
+            WHERE id = ${idx}
+            """,
+            *params,
+        )
 
-    await pool.execute(
-        """
-        INSERT INTO annotation_history
-            (annotation_id, action, old_value, new_value, changed_by)
-        VALUES ($1, 'updated', $2, $3, 'system')
-        """,
-        annotation_id,
-        {"content": old_row["content"], "metadata": old_row["metadata"]},
-        {"content": request.content, "metadata": request.metadata},
-    )
+        await pool.execute(
+            """
+            INSERT INTO annotation_history
+                (annotation_id, action, old_value, new_value, changed_by)
+            VALUES ($1, 'updated', $2, $3, 'system')
+            """,
+            annotation_id,
+            {"content": old_row["content"], "metadata": old_row["metadata"]},
+            {"content": request.content, "metadata": request.metadata},
+        )
 
-    return {"status": "ok", "data": {"updated": True}}
+        return {"status": "ok", "data": {"updated": True}}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"update_annotation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="更新标注失败")
 
 
 @router.delete("/annotations/{annotation_id}")
 async def delete_annotation(annotation_id: int):
     """软删除标注"""
-    from backend.core.database import init_db_pool
+    try:
+        from backend.core.database import init_db_pool
 
-    pool = await init_db_pool()
+        pool = await init_db_pool()
 
-    exists = await pool.fetchval(
-        "SELECT EXISTS(SELECT 1 FROM audio_annotations WHERE id = $1)",
-        annotation_id,
-    )
-    if not exists:
-        raise HTTPException(status_code=404, detail="标注不存在")
+        exists = await pool.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM audio_annotations WHERE id = $1)",
+            annotation_id,
+        )
+        if not exists:
+            raise HTTPException(status_code=404, detail="标注不存在")
 
-    await pool.execute(
-        """
-        UPDATE audio_annotations
-        SET status = 'deleted', updated_at = NOW()
-        WHERE id = $1
-        """,
-        annotation_id,
-    )
+        await pool.execute(
+            """
+            UPDATE audio_annotations
+            SET status = 'deleted', updated_at = NOW()
+            WHERE id = $1
+            """,
+            annotation_id,
+        )
 
-    await pool.execute(
-        """
-        INSERT INTO annotation_history
-            (annotation_id, action, changed_by)
-        VALUES ($1, 'deleted', 'system')
-        """,
-        annotation_id,
-    )
+        await pool.execute(
+            """
+            INSERT INTO annotation_history
+                (annotation_id, action, changed_by)
+            VALUES ($1, 'deleted', 'system')
+            """,
+            annotation_id,
+        )
 
-    return {"status": "ok", "data": {"deleted": True}}
+        return {"status": "ok", "data": {"deleted": True}}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"delete_annotation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="删除标注失败")
 
 
 # ==================== 导出 ====================
@@ -450,77 +487,83 @@ async def export_annotations(
     format: str = Query(default="json", description="导出格式: json/srt/csv"),
 ):
     """导出标注数据"""
-    from backend.core.database import init_db_pool
+    try:
+        from backend.core.database import init_db_pool
 
-    pool = await init_db_pool()
+        pool = await init_db_pool()
 
-    annotations = await pool.fetch(
-        """
-        SELECT id, annotation_type, start_time, end_time,
-               content, metadata, created_by, created_at
-        FROM audio_annotations
-        WHERE audio_file_id = $1 AND status = 'active'
-        ORDER BY start_time NULLS LAST, created_at
-        """,
-        file_id,
-    )
+        annotations = await pool.fetch(
+            """
+            SELECT id, annotation_type, start_time, end_time,
+                   content, metadata, created_by, created_at
+            FROM audio_annotations
+            WHERE audio_file_id = $1 AND status = 'active'
+            ORDER BY start_time NULLS LAST, created_at
+            """,
+            file_id,
+        )
 
-    segments = await pool.fetch(
-        """
-        SELECT segment_index, start_time, end_time, text, speaker
-        FROM audio_segments
-        WHERE audio_file_id = $1
-        ORDER BY segment_index
-        """,
-        file_id,
-    )
+        segments = await pool.fetch(
+            """
+            SELECT segment_index, start_time, end_time, text, speaker
+            FROM audio_segments
+            WHERE audio_file_id = $1
+            ORDER BY segment_index
+            """,
+            file_id,
+        )
 
-    if format == "srt":
-        lines = []
-        for i, seg in enumerate(segments, 1):
-            start = _format_srt_time(seg["start_time"])
-            end = _format_srt_time(seg["end_time"])
-            lines.append(f"{i}")
-            lines.append(f"{start} --> {end}")
-            lines.append(seg["text"])
-            lines.append("")
-        return {
-            "status": "ok",
-            "data": {"format": "srt", "content": "\n".join(lines)},
-        }
+        if format == "srt":
+            lines = []
+            for i, seg in enumerate(segments, 1):
+                start = _format_srt_time(seg["start_time"])
+                end = _format_srt_time(seg["end_time"])
+                lines.append(f"{i}")
+                lines.append(f"{start} --> {end}")
+                lines.append(seg["text"])
+                lines.append("")
+            return {
+                "status": "ok",
+                "data": {"format": "srt", "content": "\n".join(lines)},
+            }
 
-    elif format == "csv":
-        import csv
-        from io import StringIO
+        elif format == "csv":
+            import csv
+            from io import StringIO
 
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(["id", "type", "start_time", "end_time", "content", "created_by"])
-        for ann in annotations:
-            writer.writerow(
-                [
-                    ann["id"],
-                    ann["annotation_type"],
-                    ann["start_time"],
-                    ann["end_time"],
-                    ann["content"],
-                    ann["created_by"],
-                ]
-            )
-        return {
-            "status": "ok",
-            "data": {"format": "csv", "content": output.getvalue()},
-        }
+            output = StringIO()
+            writer = csv.writer(output)
+            writer.writerow(["id", "type", "start_time", "end_time", "content", "created_by"])
+            for ann in annotations:
+                writer.writerow(
+                    [
+                        ann["id"],
+                        ann["annotation_type"],
+                        ann["start_time"],
+                        ann["end_time"],
+                        ann["content"],
+                        ann["created_by"],
+                    ]
+                )
+            return {
+                "status": "ok",
+                "data": {"format": "csv", "content": output.getvalue()},
+            }
 
-    else:
-        return {
-            "status": "ok",
-            "data": {
-                "format": "json",
-                "annotations": [dict(a) for a in annotations],
-                "segments": [dict(s) for s in segments],
-            },
-        }
+        else:
+            return {
+                "status": "ok",
+                "data": {
+                    "format": "json",
+                    "annotations": [dict(a) for a in annotations],
+                    "segments": [dict(s) for s in segments],
+                },
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"export_annotations failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="导出标注失败")
 
 
 def _format_srt_time(seconds: float) -> str:

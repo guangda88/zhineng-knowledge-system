@@ -66,14 +66,17 @@ class CacheConfig:
     # 各类资源的TTL配置
     ttl_config: Dict[str, int] = field(
         default_factory=lambda: {
-            "query_result": 3600,  # 查询结果缓存1小时
-            "vector_search": 1800,  # 向量搜索缓存30分钟
+            "query_result": 1800,  # 查询结果缓存30分钟（原3600s）
+            "vector_search": 900,  # 向量搜索缓存15分钟（原1800s）
+            "api_hybrid_search": 600,  # 新增：混合搜索缓存10分钟
             "llm_response": 7200,  # LLM响应缓存2小时
             "document": 86400,  # 文档内容缓存1天
             "domain_stats": 300,  # 领域统计缓存5分钟
             "health_check": 60,  # 健康检查缓存1分钟
             "embedding": 604800,  # 嵌入向量缓存7天
             "bm25_index": 86400,  # BM25索引缓存1天
+            "snippet": 1800,  # 新增：片段缓存30分钟
+            "regex_search": 900,  # 新增：正则搜索缓存15分钟
         }
     )
 

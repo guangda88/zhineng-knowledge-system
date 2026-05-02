@@ -70,87 +70,93 @@ class KGBuildRequest(BaseModel):
 @router.get("/stats")
 async def get_pipeline_stats():
     """Phase 2/3 管道总览统计（使用 pg_class 快速估算大表）"""
-    pool = _pool()
+    try:
+        pool = _pool()
 
-    async with pool.acquire() as conn:
-        # sys_books total — use pg_class estimate for 3M+ row table
-        total = (
-            await conn.fetchval(
-                "SELECT reltuples::bigint FROM pg_class WHERE relname = 'sys_books'"
+        async with pool.acquire() as conn:
+            # sys_books total — use pg_class estimate for 3M+ row table
+            total = (
+                await conn.fetchval(
+                    "SELECT reltuples::bigint FROM pg_class WHERE relname = 'sys_books'"
+                )
+                or 3024428
             )
-            or 3024428
-        )
 
-        # sys_books extraction stats — use pg_class estimate
-        extraction = await conn.fetch(
+            # sys_books extraction stats — use pg_class estimate
+            extraction = await conn.fetch(
+                """
+                SELECT extraction_status, COUNT(*) as cnt
+                FROM sys_books
+                GROUP BY extraction_status
+                ORDER BY cnt DESC
             """
-            SELECT extraction_status, COUNT(*) as cnt
-            FROM sys_books
-            GROUP BY extraction_status
-            ORDER BY cnt DESC
-        """
-        )
+            )
 
-        # sys_books tagging — partial GIN index makes this fast
-        tagged = await conn.fetchval(
-            "SELECT COUNT(*) FROM sys_books WHERE qigong_dims != '{}'::jsonb"
-        )
+            # sys_books tagging — partial GIN index makes this fast
+            tagged = await conn.fetchval(
+                "SELECT COUNT(*) FROM sys_books WHERE qigong_dims != '{}'::jsonb"
+            )
 
-        # Cross-reference stats
-        cross_ref = await conn.fetch(
+            # Cross-reference stats
+            cross_ref = await conn.fetch(
+                """
+                SELECT cross_ref_status, COUNT(*) as cnt
+                FROM sys_books
+                GROUP BY cross_ref_status
+                ORDER BY cnt DESC
             """
-            SELECT cross_ref_status, COUNT(*) as cnt
-            FROM sys_books
-            GROUP BY cross_ref_status
-            ORDER BY cnt DESC
-        """
-        )
+            )
 
-        # Content stats
-        contents = await conn.fetchval("SELECT COUNT(*) FROM sys_book_contents")
-        total_chars = await conn.fetchval(
-            "SELECT COALESCE(SUM(char_count), 0) FROM sys_book_contents"
-        )
+            # Content stats
+            contents = await conn.fetchval("SELECT COUNT(*) FROM sys_book_contents")
+            total_chars = await conn.fetchval(
+                "SELECT COALESCE(SUM(char_count), 0) FROM sys_book_contents"
+            )
 
-        # KG stats
-        entities = await conn.fetchval("SELECT COUNT(*) FROM kg_entities")
-        relations = await conn.fetchval("SELECT COUNT(*) FROM kg_relations")
+            # KG stats
+            entities = await conn.fetchval("SELECT COUNT(*) FROM kg_entities")
+            relations = await conn.fetchval("SELECT COUNT(*) FROM kg_relations")
 
-        # Recent tasks
-        tasks = await conn.fetch(
+            # Recent tasks
+            tasks = await conn.fetch(
+                """
+                SELECT id, task_type, status, total_items, processed_items,
+                       failed_items, created_at, completed_at
+                FROM extraction_tasks
+                ORDER BY created_at DESC
+                LIMIT 5
             """
-            SELECT id, task_type, status, total_items, processed_items,
-                   failed_items, created_at, completed_at
-            FROM extraction_tasks
-            ORDER BY created_at DESC
-            LIMIT 5
-        """
-        )
+            )
 
-        return {
-            "status": "ok",
-            "data": {
-                "sys_books": {
-                    "total": total,
-                    "extraction": {r["extraction_status"]: r["cnt"] for r in extraction},
-                    "tagging": {
-                        "tagged": tagged,
-                        "untagged": total - tagged,
-                        "coverage_percent": round(tagged / total * 100, 1) if total else 0,
+            return {
+                "status": "ok",
+                "data": {
+                    "sys_books": {
+                        "total": total,
+                        "extraction": {r["extraction_status"]: r["cnt"] for r in extraction},
+                        "tagging": {
+                            "tagged": tagged,
+                            "untagged": total - tagged,
+                            "coverage_percent": round(tagged / total * 100, 1) if total else 0,
+                        },
+                        "cross_reference": {r["cross_ref_status"]: r["cnt"] for r in cross_ref},
                     },
-                    "cross_reference": {r["cross_ref_status"]: r["cnt"] for r in cross_ref},
+                    "contents": {
+                        "extracted_books": contents,
+                        "total_chars": total_chars,
+                    },
+                    "knowledge_graph": {
+                        "entities": entities,
+                        "relations": relations,
+                    },
+                    "recent_tasks": [row_to_dict(t) for t in tasks],
                 },
-                "contents": {
-                    "extracted_books": contents,
-                    "total_chars": total_chars,
-                },
-                "knowledge_graph": {
-                    "entities": entities,
-                    "relations": relations,
-                },
-                "recent_tasks": [row_to_dict(t) for t in tasks],
-            },
-        }
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_pipeline_stats failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取管道统计失败")
 
 
 # ============================================================
@@ -164,29 +170,35 @@ async def trigger_extraction(
     background_tasks: BackgroundTasks,
 ):
     """触发内容提取（后台任务）"""
-    from backend.services.content_extraction.extractor import BatchExtractionService
+    try:
+        from backend.services.content_extraction.extractor import BatchExtractionService
 
-    service = BatchExtractionService(DB_URL)
+        service = BatchExtractionService(DB_URL)
 
-    async def run():
-        try:
-            await service.extract_batch(
-                extensions=req.extensions,
-                domain=req.domain,
-                limit=req.limit,
-            )
-        except Exception as e:
-            logger.error(f"Extraction failed: {e}", exc_info=True)
-        finally:
-            await service.close()
+        async def run():
+            try:
+                await service.extract_batch(
+                    extensions=req.extensions,
+                    domain=req.domain,
+                    limit=req.limit,
+                )
+            except Exception as e:
+                logger.error(f"Extraction failed: {e}", exc_info=True)
+            finally:
+                await service.close()
 
-    background_tasks.add_task(run)
+        background_tasks.add_task(run)
 
-    return {
-        "status": "ok",
-        "message": f"Extraction started: limit={req.limit}, domain={req.domain}",
-        "data": {"extensions": req.extensions, "domain": req.domain, "limit": req.limit},
-    }
+        return {
+            "status": "ok",
+            "message": f"Extraction started: limit={req.limit}, domain={req.domain}",
+            "data": {"extensions": req.extensions, "domain": req.domain, "limit": req.limit},
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"trigger_extraction failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="触发内容提取失败")
 
 
 # ============================================================
@@ -200,41 +212,53 @@ async def trigger_tagging(
     background_tasks: BackgroundTasks,
 ):
     """触发维度标注（后台任务）"""
-    from backend.services.content_extraction.sysbooks_tagger import SysBooksDimensionTagger
+    try:
+        from backend.services.content_extraction.sysbooks_tagger import SysBooksDimensionTagger
 
-    tagger = SysBooksDimensionTagger(DB_URL)
+        tagger = SysBooksDimensionTagger(DB_URL)
 
-    async def run():
-        try:
-            await tagger.tag_batch(
-                domain=req.domain,
-                limit=req.limit,
-                dry_run=req.dry_run,
-            )
-        except Exception as e:
-            logger.error(f"Tagging failed: {e}", exc_info=True)
-        finally:
-            await tagger.close()
+        async def run():
+            try:
+                await tagger.tag_batch(
+                    domain=req.domain,
+                    limit=req.limit,
+                    dry_run=req.dry_run,
+                )
+            except Exception as e:
+                logger.error(f"Tagging failed: {e}", exc_info=True)
+            finally:
+                await tagger.close()
 
-    background_tasks.add_task(run)
+        background_tasks.add_task(run)
 
-    return {
-        "status": "ok",
-        "message": f"Tagging started: limit={req.limit}, domain={req.domain}, dry_run={req.dry_run}",
-    }
+        return {
+            "status": "ok",
+            "message": f"Tagging started: limit={req.limit}, domain={req.domain}, dry_run={req.dry_run}",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"trigger_tagging failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="触发维度标注失败")
 
 
 @router.get("/tag/stats")
 async def get_tagging_stats():
     """获取标注统计详情"""
-    from backend.services.content_extraction.sysbooks_tagger import SysBooksDimensionTagger
-
-    tagger = SysBooksDimensionTagger(DB_URL)
     try:
-        stats = await tagger.get_tagging_stats()
-        return {"status": "ok", "data": stats}
-    finally:
-        await tagger.close()
+        from backend.services.content_extraction.sysbooks_tagger import SysBooksDimensionTagger
+
+        tagger = SysBooksDimensionTagger(DB_URL)
+        try:
+            stats = await tagger.get_tagging_stats()
+            return {"status": "ok", "data": stats}
+        finally:
+            await tagger.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_tagging_stats failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取标注统计失败")
 
 
 # ============================================================
@@ -248,39 +272,51 @@ async def trigger_kg_build(
     background_tasks: BackgroundTasks,
 ):
     """触发知识图谱构建（后台任务）"""
-    from backend.services.knowledge_graph.builder import KnowledgeGraphBuilder
+    try:
+        from backend.services.knowledge_graph.builder import KnowledgeGraphBuilder
 
-    builder = KnowledgeGraphBuilder(DB_URL)
+        builder = KnowledgeGraphBuilder(DB_URL)
 
-    async def run():
-        try:
-            await builder.build_from_metadata(domain=req.domain, limit=req.limit)
-            await builder.build_path_hierarchy()
-            await builder.build_domain_associations()
-        except Exception as e:
-            logger.error(f"KG build failed: {e}", exc_info=True)
-        finally:
-            await builder.close()
+        async def run():
+            try:
+                await builder.build_from_metadata(domain=req.domain, limit=req.limit)
+                await builder.build_path_hierarchy()
+                await builder.build_domain_associations()
+            except Exception as e:
+                logger.error(f"KG build failed: {e}", exc_info=True)
+            finally:
+                await builder.close()
 
-    background_tasks.add_task(run)
+        background_tasks.add_task(run)
 
-    return {
-        "status": "ok",
-        "message": f"Knowledge graph build started: limit={req.limit}, domain={req.domain}",
-    }
+        return {
+            "status": "ok",
+            "message": f"Knowledge graph build started: limit={req.limit}, domain={req.domain}",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"trigger_kg_build failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="触发知识图谱构建失败")
 
 
 @router.get("/kg/stats")
 async def get_kg_stats():
     """知识图谱统计"""
-    from backend.services.knowledge_graph.builder import KnowledgeGraphBuilder
-
-    builder = KnowledgeGraphBuilder(DB_URL)
     try:
-        stats = await builder.get_graph_stats()
-        return {"status": "ok", "data": stats}
-    finally:
-        await builder.close()
+        from backend.services.knowledge_graph.builder import KnowledgeGraphBuilder
+
+        builder = KnowledgeGraphBuilder(DB_URL)
+        try:
+            stats = await builder.get_graph_stats()
+            return {"status": "ok", "data": stats}
+        finally:
+            await builder.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_kg_stats failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取知识图谱统计失败")
 
 
 @router.get("/kg/entities")
@@ -290,41 +326,47 @@ async def search_entities(
     limit: int = Query(20, ge=1, le=100),
 ):
     """搜索知识图谱实体"""
-    pool = _pool()
+    try:
+        pool = _pool()
 
-    conditions = []
-    params: list = []
-    idx = 1
+        conditions = []
+        params: list = []
+        idx = 1
 
-    if q and q.strip():
-        conditions.append(f"name LIKE ${idx}")
-        params.append(f"%{q.strip()}%")
-        idx += 1
+        if q and q.strip():
+            conditions.append(f"name LIKE ${idx}")
+            params.append(f"%{q.strip()}%")
+            idx += 1
 
-    if entity_type:
-        conditions.append(f"entity_type = ${idx}")
-        params.append(entity_type)
-        idx += 1
+        if entity_type:
+            conditions.append(f"entity_type = ${idx}")
+            params.append(entity_type)
+            idx += 1
 
-    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-    async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            f"""
-            SELECT id, name, entity_type, description, mention_count, properties
-            FROM kg_entities
-            {where}
-            ORDER BY mention_count DESC
-            LIMIT ${idx}
-            """,
-            *params,
-            limit,
-        )
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                f"""
+                SELECT id, name, entity_type, description, mention_count, properties
+                FROM kg_entities
+                {where}
+                ORDER BY mention_count DESC
+                LIMIT ${idx}
+                """,
+                *params,
+                limit,
+            )
 
-    return {
-        "status": "ok",
-        "data": [row_to_dict(r) for r in rows],
-    }
+        return {
+            "status": "ok",
+            "data": [row_to_dict(r) for r in rows],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"search_entities failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="搜索知识图谱实体失败")
 
 
 @router.get("/kg/graph")
@@ -333,75 +375,81 @@ async def get_subgraph(
     depth: int = Query(2, ge=1, le=3, description="扩展深度"),
 ):
     """获取实体周围的子图"""
-    pool = _pool()
+    try:
+        pool = _pool()
 
-    async with pool.acquire() as conn:
-        # Get center entity
-        center = await conn.fetchrow(
-            "SELECT id, name, entity_type FROM kg_entities WHERE id = $1",
-            entity_id,
-        )
-        if not center:
-            raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found")
+        async with pool.acquire() as conn:
+            # Get center entity
+            center = await conn.fetchrow(
+                "SELECT id, name, entity_type FROM kg_entities WHERE id = $1",
+                entity_id,
+            )
+            if not center:
+                raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found")
 
-        # BFS to find neighbors
-        visited = {entity_id}
-        current_level = [entity_id]
-        all_entity_ids = {entity_id}
-        all_relations: list = []
+            # BFS to find neighbors
+            visited = {entity_id}
+            current_level = [entity_id]
+            all_entity_ids = {entity_id}
+            all_relations: list = []
 
-        for d in range(depth):
-            next_level = set()
-            for eid in current_level:
-                rels = await conn.fetch(
-                    """
-                    SELECT r.id, r.source_entity_id, r.target_entity_id,
-                           r.relation_type, r.weight,
-                           se.name as source_name, se.entity_type as source_type,
-                           te.name as target_name, te.entity_type as target_type
-                    FROM kg_relations r
-                    JOIN kg_entities se ON r.source_entity_id = se.id
-                    JOIN kg_entities te ON r.target_entity_id = te.id
-                    WHERE r.source_entity_id = $1 OR r.target_entity_id = $1
-                    """,
-                    eid,
-                )
-
-                for rel in rels:
-                    all_relations.append(row_to_dict(rel))
-                    neighbor = (
-                        rel["target_entity_id"]
-                        if rel["source_entity_id"] == eid
-                        else rel["source_entity_id"]
+            for d in range(depth):
+                next_level = set()
+                for eid in current_level:
+                    rels = await conn.fetch(
+                        """
+                        SELECT r.id, r.source_entity_id, r.target_entity_id,
+                               r.relation_type, r.weight,
+                               se.name as source_name, se.entity_type as source_type,
+                               te.name as target_name, te.entity_type as target_type
+                        FROM kg_relations r
+                        JOIN kg_entities se ON r.source_entity_id = se.id
+                        JOIN kg_entities te ON r.target_entity_id = te.id
+                        WHERE r.source_entity_id = $1 OR r.target_entity_id = $1
+                        """,
+                        eid,
                     )
-                    if neighbor not in visited:
-                        visited.add(neighbor)
-                        next_level.add(neighbor)
-                        all_entity_ids.add(neighbor)
 
-            current_level = list(next_level)
+                    for rel in rels:
+                        all_relations.append(row_to_dict(rel))
+                        neighbor = (
+                            rel["target_entity_id"]
+                            if rel["source_entity_id"] == eid
+                            else rel["source_entity_id"]
+                        )
+                        if neighbor not in visited:
+                            visited.add(neighbor)
+                            next_level.add(neighbor)
+                            all_entity_ids.add(neighbor)
 
-        # Get all entities in subgraph
-        entities = await conn.fetch(
-            """
-            SELECT id, name, entity_type, mention_count
-            FROM kg_entities
-            WHERE id = ANY($1::bigint[])
-            """,
-            list(all_entity_ids),
-        )
+                current_level = list(next_level)
 
-        return {
-            "status": "ok",
-            "data": {
-                "center": row_to_dict(center),
-                "entities": [row_to_dict(e) for e in entities],
-                "relations": all_relations,
-                "depth": depth,
-                "total_entities": len(entities),
-                "total_relations": len(all_relations),
-            },
-        }
+            # Get all entities in subgraph
+            entities = await conn.fetch(
+                """
+                SELECT id, name, entity_type, mention_count
+                FROM kg_entities
+                WHERE id = ANY($1::bigint[])
+                """,
+                list(all_entity_ids),
+            )
+
+            return {
+                "status": "ok",
+                "data": {
+                    "center": row_to_dict(center),
+                    "entities": [row_to_dict(e) for e in entities],
+                    "relations": all_relations,
+                    "depth": depth,
+                    "total_entities": len(entities),
+                    "total_relations": len(all_relations),
+                },
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_subgraph failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取子图数据失败")
 
 
 # ============================================================
@@ -412,28 +460,34 @@ async def get_subgraph(
 @router.post("/cross-ref")
 async def trigger_cross_ref(background_tasks: BackgroundTasks):
     """触发 data.db ↔ sys_books 对账（后台任务）"""
-    script_path = os.path.join(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        ),
-        "scripts",
-        "cross_reference_data.py",
-    )
-
-    async def run():
-        proc = await asyncio.create_subprocess_exec(
-            "python3",
-            script_path,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+    try:
+        script_path = os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            ),
+            "scripts",
+            "cross_reference_data.py",
         )
-        stdout, stderr = await proc.communicate()
-        if proc.returncode != 0:
-            logger.error(f"Cross-reference failed: {stderr.decode()}")
 
-    background_tasks.add_task(run)
+        async def run():
+            proc = await asyncio.create_subprocess_exec(
+                "python3",
+                script_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                logger.error(f"Cross-reference failed: {stderr.decode()}")
 
-    return {"status": "ok", "message": "Cross-reference started in background"}
+        background_tasks.add_task(run)
+
+        return {"status": "ok", "message": "Cross-reference started in background"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"trigger_cross_ref failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="触发对账失败")
 
 
 # ============================================================
@@ -448,63 +502,75 @@ async def list_tasks(
     limit: int = Query(20, ge=1, le=100),
 ):
     """获取任务列表"""
-    pool = _pool()
+    try:
+        pool = _pool()
 
-    conditions = []
-    params: list = []
-    idx = 1
+        conditions = []
+        params: list = []
+        idx = 1
 
-    if task_type:
-        conditions.append(f"task_type = ${idx}")
-        params.append(task_type)
-        idx += 1
+        if task_type:
+            conditions.append(f"task_type = ${idx}")
+            params.append(task_type)
+            idx += 1
 
-    if status:
-        conditions.append(f"status = ${idx}")
-        params.append(status)
-        idx += 1
+        if status:
+            conditions.append(f"status = ${idx}")
+            params.append(status)
+            idx += 1
 
-    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-    async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            f"""
-            SELECT id, task_type, status, total_items, processed_items,
-                   failed_items, config, result_summary, error_message,
-                   started_at, completed_at, created_at
-            FROM extraction_tasks
-            {where}
-            ORDER BY created_at DESC
-            LIMIT ${idx}
-            """,
-            *params,
-            limit,
-        )
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                f"""
+                SELECT id, task_type, status, total_items, processed_items,
+                       failed_items, config, result_summary, error_message,
+                       started_at, completed_at, created_at
+                FROM extraction_tasks
+                {where}
+                ORDER BY created_at DESC
+                LIMIT ${idx}
+                """,
+                *params,
+                limit,
+            )
 
-    return {
-        "status": "ok",
-        "data": [row_to_dict(r) for r in rows],
-    }
+        return {
+            "status": "ok",
+            "data": [row_to_dict(r) for r in rows],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"list_tasks failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取任务列表失败")
 
 
 @router.get("/tasks/{task_id}")
 async def get_task(task_id: int):
     """获取任务详情"""
-    pool = _pool()
+    try:
+        pool = _pool()
 
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            """
-            SELECT id, task_type, status, total_items, processed_items,
-                   failed_items, config, result_summary, error_message,
-                   started_at, completed_at, created_at
-            FROM extraction_tasks
-            WHERE id = $1
-            """,
-            task_id,
-        )
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT id, task_type, status, total_items, processed_items,
+                       failed_items, config, result_summary, error_message,
+                       started_at, completed_at, created_at
+                FROM extraction_tasks
+                WHERE id = $1
+                """,
+                task_id,
+            )
 
-    if not row:
-        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
 
-    return {"status": "ok", "data": row_to_dict(row)}
+        return {"status": "ok", "data": row_to_dict(row)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_task failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取任务详情失败")

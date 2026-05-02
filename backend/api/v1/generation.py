@@ -192,8 +192,9 @@ async def generate_report(request: ReportRequest, background_tasks: BackgroundTa
             message=f"报告生成任务已启动: {request.topic}",
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error(f"generate_report failed for topic={request.topic}", exc_info=True)
+        raise HTTPException(status_code=500, detail="报告生成失败，请稍后重试")
 
 
 @router.post("/ppt", response_model=GenerationTaskResponse)
@@ -245,8 +246,9 @@ async def generate_ppt(
             message=f"PPT生成任务已启动: {request.topic}",
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error(f"generate_ppt failed for topic={request.topic}", exc_info=True)
+        raise HTTPException(status_code=500, detail="PPT生成失败，请稍后重试")
 
 
 @router.post("/audio", response_model=GenerationTaskResponse)
@@ -291,8 +293,9 @@ async def generate_audio(
             task_id=gen_request.task_id, status="started", message="音频生成任务已启动"
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error("generate_audio failed", exc_info=True)
+        raise HTTPException(status_code=500, detail="音频生成失败，请稍后重试")
 
 
 @router.post("/video", response_model=GenerationTaskResponse)
@@ -343,8 +346,9 @@ async def generate_video(
             message=f"视频生成任务已启动: {request.topic}",
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error(f"generate_video failed for topic={request.topic}", exc_info=True)
+        raise HTTPException(status_code=500, detail="视频生成失败，请稍后重试")
 
 
 @router.post("/course", response_model=GenerationTaskResponse)
@@ -401,8 +405,9 @@ async def generate_course(
             message=f"课程生成任务已启动: {request.title}",
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error(f"generate_course failed for title={request.title}", exc_info=True)
+        raise HTTPException(status_code=500, detail="课程生成失败，请稍后重试")
 
 
 @router.post("/analyze")
@@ -438,8 +443,11 @@ async def analyze_data(request: AnalysisRequest) -> dict:
             "generated_at": result.get("generated_at"),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"analyze_data failed for type={request.analysis_type}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="数据分析失败，请稍后重试")
 
 
 @router.get("/status/{task_id}")
@@ -449,22 +457,28 @@ async def get_generation_status(task_id: str) -> dict:
 
     返回任务的当前状态、进度和结果
     """
-    pool = await get_db_pool()
-    row = await pool.fetchrow(
-        """SELECT task_id, content_type, topic, status, progress,
-                  output_path, output_format, error_message,
-                  created_at, started_at, completed_at
-           FROM generation_tasks WHERE task_id = $1""",
-        task_id,
-    )
-    if not row:
-        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    try:
+        pool = await get_db_pool()
+        row = await pool.fetchrow(
+            """SELECT task_id, content_type, topic, status, progress,
+                      output_path, output_format, error_message,
+                      created_at, started_at, completed_at
+               FROM generation_tasks WHERE task_id = $1""",
+            task_id,
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
 
-    result = dict(row)
-    for key in ("created_at", "started_at", "completed_at"):
-        if result[key]:
-            result[key] = result[key].isoformat()
-    return result
+        result = dict(row)
+        for key in ("created_at", "started_at", "completed_at"):
+            if result[key]:
+                result[key] = result[key].isoformat()
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_generation_status failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="查询任务状态失败")
 
 
 @router.get("/templates")
@@ -509,37 +523,41 @@ async def list_outputs(content_type: Optional[str] = None, limit: int = 20) -> d
     - **content_type**: 内容类型（report, ppt, audio, video, course）
     - **limit**: 返回数量限制
     """
-    pool = await get_db_pool()
+    try:
+        pool = await get_db_pool()
 
-    if content_type:
-        rows = await pool.fetch(
-            """SELECT task_id, content_type, topic, status, output_path, output_format,
-                      created_at, completed_at
-               FROM generation_tasks
-               WHERE content_type = $1
-               ORDER BY created_at DESC LIMIT $2""",
-            content_type,
-            limit,
-        )
-        total = await pool.fetchval(
-            "SELECT COUNT(*) FROM generation_tasks WHERE content_type = $1", content_type
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT task_id, content_type, topic, status, output_path, output_format,
-                      created_at, completed_at
-               FROM generation_tasks
-               ORDER BY created_at DESC LIMIT $1""",
-            limit,
-        )
-        total = await pool.fetchval("SELECT COUNT(*) FROM generation_tasks")
+        if content_type:
+            rows = await pool.fetch(
+                """SELECT task_id, content_type, topic, status, output_path, output_format,
+                          created_at, completed_at
+                   FROM generation_tasks
+                   WHERE content_type = $1
+                   ORDER BY created_at DESC LIMIT $2""",
+                content_type,
+                limit,
+            )
+            total = await pool.fetchval(
+                "SELECT COUNT(*) FROM generation_tasks WHERE content_type = $1", content_type
+            )
+        else:
+            rows = await pool.fetch(
+                """SELECT task_id, content_type, topic, status, output_path, output_format,
+                          created_at, completed_at
+                   FROM generation_tasks
+                   ORDER BY created_at DESC LIMIT $1""",
+                limit,
+            )
+            total = await pool.fetchval("SELECT COUNT(*) FROM generation_tasks")
 
-    outputs = []
-    for r in rows:
-        item = dict(r)
-        for key in ("created_at", "completed_at"):
-            if item[key]:
-                item[key] = item[key].isoformat()
-        outputs.append(item)
+        outputs = []
+        for r in rows:
+            item = dict(r)
+            for key in ("created_at", "completed_at"):
+                if item[key]:
+                    item[key] = item[key].isoformat()
+            outputs.append(item)
 
-    return {"outputs": outputs, "total": total}
+        return {"outputs": outputs, "total": total}
+    except Exception as e:
+        logger.error(f"list_outputs failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取生成内容列表失败")

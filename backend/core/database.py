@@ -60,13 +60,13 @@ async def init_db_pool() -> asyncpg.Pool:
             database_url,
             min_size=min_size,
             max_size=max_size,
-            command_timeout=10,
+            command_timeout=30,
             timeout=5,
             max_inactive_connection_lifetime=300,
         )
         logger.info(
             f"Database pool initialized (min={min_size}, max={max_size}, "
-            f"command_timeout=10s, timeout=5s)"
+            f"command_timeout=30s, timeout=5s)"
         )
     return db_pool
 

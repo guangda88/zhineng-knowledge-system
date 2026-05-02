@@ -196,26 +196,28 @@ async def lingflow_unified_search(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
 ):
-    """LingFlow 统一搜索
+    """LingFlow 统一搜索"""
+    try:
+        pool = _get_di_db_pool()
+        if pool is None:
+            raise HTTPException(status_code=503, detail="数据库连接池未初始化")
 
-    同时检索 books、sys_books、guoxue_books 三个数据源，
-    合并结果按相关性排序返回。
-    """
-    pool = _get_di_db_pool()
-    if pool is None:
-        raise HTTPException(status_code=503, detail="数据库连接池未初始化")
-
-    service = LingFlowBookSearchService(pool)
-    result = await service.unified_search(
-        query=q,
-        category=category,
-        dynasty=dynasty,
-        author=author,
-        source=source,
-        page=page,
-        size=size,
-    )
-    return {"status": "ok", "data": result}
+        service = LingFlowBookSearchService(pool)
+        result = await service.unified_search(
+            query=q,
+            category=category,
+            dynasty=dynasty,
+            author=author,
+            source=source,
+            page=page,
+            size=size,
+        )
+        return {"status": "ok", "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"lingflow_unified_search failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="统一搜索失败")
 
 
 @router.get("/lingflow/fulltext")
@@ -225,19 +227,22 @@ async def lingflow_fulltext_search(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
 ):
-    """LingFlow 书籍全文搜索
+    """LingFlow 书籍全文搜索"""
+    try:
+        pool = _get_di_db_pool()
+        if pool is None:
+            raise HTTPException(status_code=503, detail="数据库连接池未初始化")
 
-    在 book_chapters 中搜索，返回带上下文片段的结果。
-    """
-    pool = _get_di_db_pool()
-    if pool is None:
-        raise HTTPException(status_code=503, detail="数据库连接池未初始化")
-
-    service = LingFlowBookSearchService(pool)
-    result = await service.search_books_fulltext(
-        query=q,
-        book_id=book_id,
-        page=page,
-        size=size,
-    )
-    return {"status": "ok", "data": result}
+        service = LingFlowBookSearchService(pool)
+        result = await service.search_books_fulltext(
+            query=q,
+            book_id=book_id,
+            page=page,
+            size=size,
+        )
+        return {"status": "ok", "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"lingflow_fulltext_search failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="全文搜索失败")

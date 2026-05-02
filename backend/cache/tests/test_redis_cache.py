@@ -11,12 +11,7 @@ import pytest
 # 尝试导入redis相关模块
 try:
     from backend.cache.manager import CacheConfig, CacheManager
-    from backend.cache.redis_cache import (
-        RedisCache,
-        RedisConfig,
-        RedisConnectionPool,
-        RedisStatus,
-    )
+    from backend.cache.redis_cache import RedisCache, RedisConfig, RedisConnectionPool, RedisStatus
 
     REDIS_AVAILABLE = True
 except ImportError as e:

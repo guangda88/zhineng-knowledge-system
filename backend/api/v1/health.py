@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 from backend.core.database import init_db_pool
 from backend.core.dependency_injection import require_admin_api_key
@@ -22,17 +22,31 @@ router = APIRouter(tags=["health"])
 @router.get("/")
 async def root() -> Dict[str, Any]:
     """根路径 - 系统信息"""
-    from backend.core.request_stats import get_request_stats
+    try:
+        from backend.core.request_stats import get_request_stats
 
-    request_stats = get_request_stats()
+        request_stats = get_request_stats()
 
-    return {
-        "status": "ok",
-        "message": "智能知识系统运行中",
-        "categories": ["气功", "中医", "儒家", "佛家", "道家", "武术", "哲学", "科学", "心理学"],
-        "version": "1.0.0",
-        "stats": request_stats,
-    }
+        return {
+            "status": "ok",
+            "message": "智能知识系统运行中",
+            "categories": [
+                "气功",
+                "中医",
+                "儒家",
+                "佛家",
+                "道家",
+                "武术",
+                "哲学",
+                "科学",
+                "心理学",
+            ],
+            "version": "1.0.0",
+            "stats": request_stats,
+        }
+    except Exception as e:
+        logger.error(f"root failed: {e}", exc_info=True)
+        return {"status": "ok", "message": "智能知识系统运行中", "version": "1.0.0"}
 
 
 @router.get("/health")
@@ -56,30 +70,26 @@ async def health_check() -> Dict[str, Any]:
 
 @router.get("/api/v1/health")
 async def api_v1_health_check(detailed: bool = False) -> Dict[str, Any]:
-    """
-    系统健康检查
+    """系统健康检查"""
+    try:
+        health_checker = get_health_checker()
+        registry = get_registry()
 
-    Args:
-        detailed: 是否返回详细信息
+        summary = health_checker.get_summary()
+        domain_health = await registry.health_check()
 
-    Returns:
-        健康状态
-    """
-    health_checker = get_health_checker()
-    registry = get_registry()
+        if not detailed:
+            return {"status": summary["status"], "timestamp": summary["timestamp"]}
 
-    summary = health_checker.get_summary()
-    domain_health = await registry.health_check()
-
-    if not detailed:
-        return {"status": summary["status"], "timestamp": summary["timestamp"]}
-
-    return {
-        "status": summary["status"],
-        "timestamp": summary["timestamp"],
-        "domains": domain_health,
-        "checks": summary["checks"],
-    }
+        return {
+            "status": summary["status"],
+            "timestamp": summary["timestamp"],
+            "domains": domain_health,
+            "checks": summary["checks"],
+        }
+    except Exception as e:
+        logger.error(f"api_v1_health_check failed: {e}", exc_info=True)
+        return {"status": "unknown", "error": str(e), "timestamp": datetime.now().isoformat()}
 
 
 @router.get("/api/v1/health/db")
@@ -108,19 +118,14 @@ async def health_check_db() -> Dict[str, Any]:
 
 @router.get("/api/v1/health/{check_name}")
 async def health_check_detail(check_name: str) -> Dict[str, Any]:
-    """
-    获取特定健康检查的详细信息
-
-    Args:
-        check_name: 检查名称
-
-    Returns:
-        检查结果详情
-    """
-    health_checker = get_health_checker()
-    result = await health_checker.check(check_name)
-
-    return result.to_dict()
+    """获取特定健康检查的详细信息"""
+    try:
+        health_checker = get_health_checker()
+        result = await health_checker.check(check_name)
+        return result.to_dict()
+    except Exception as e:
+        logger.error(f"health_check_detail failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"健康检查失败: {e}")
 
 
 @router.get("/api/v1/cache/stats")

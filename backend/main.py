@@ -18,10 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.api.v1 import api_router
 from backend.api.v2 import api_router_v2
 from backend.auth.middleware import AuthConfig, AuthMiddleware
-from backend.core import (
-    get_allowed_origins,
-    log_requests,
-)
+from backend.core import get_allowed_origins, log_requests
 from backend.core.lifespan import lifespan
 from backend.middleware import RateLimitMiddleware
 from backend.middleware.security_headers import SecurityHeadersMiddleware
@@ -92,6 +89,8 @@ def create_app(lifespan_ctx=None) -> FastAPI:
             "/api/v1/sysbooks",
             "/api/v1/discuss",
             "/api/v1/lingmessage",
+            "/api/v1/sessions",
+            "/api/v1/context",
             "/api/v2/library",
         },
     )

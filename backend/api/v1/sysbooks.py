@@ -188,7 +188,8 @@ async def get_domains():
             WHERE domain IS NOT NULL
             GROUP BY domain, subcategory
             ORDER BY domain, cnt DESC
-            """
+            """,
+            timeout=120,
         )
 
         tree: Dict[str, Any] = {}

@@ -46,26 +46,10 @@
 """
 
 from .jwt import AuthConfig as JWTAuthConfig
-from .jwt import (
-    JWTAuth,
-    TokenBlacklist,
-    TokenPair,
-    TokenPayload,
-    TokenType,
-    get_auth,
-    reset_auth,
-)
+from .jwt import JWTAuth, TokenBlacklist, TokenPair, TokenPayload, TokenType, get_auth, reset_auth
 
 # 从重构后的rbac子模块导入
-from .rbac import (
-    Permission,
-    RBACManager,
-    Role,
-    User,
-    get_rbac,
-    require_permission,
-    reset_rbac,
-)
+from .rbac import Permission, RBACManager, Role, User, get_rbac, require_permission, reset_rbac
 
 # 向后兼容的别名
 RequirePermission = require_permission

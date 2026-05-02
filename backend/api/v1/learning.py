@@ -126,96 +126,82 @@ async def get_innovation_proposals() -> dict:
 
 @router.post("/updates/{proposal_id}/branch")
 async def create_experiment_branch(proposal_id: str, request: ExperimentBranchRequest) -> dict:
-    """
-    创建实验分支
+    """创建实验分支"""
+    try:
+        manager = InnovationManager()
+        result = await manager.create_experiment_branch(proposal_id)
 
-    为选定的创新提案创建实验分支，用于MVP验证
+        if result["status"] == "error":
+            raise HTTPException(status_code=400, detail=result["error"])
 
-    - **proposal_id**: 提案ID
-    - 自动创建 `exp/{proposal_id}` 分支
-
-    返回分支创建结果
-    """
-    manager = InnovationManager()
-    result = await manager.create_experiment_branch(proposal_id)
-
-    if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["error"])
-
-    return result
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"create_experiment_branch failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="创建实验分支失败")
 
 
 @router.post("/updates/{proposal_id}/test")
 async def run_mvp_test(
     proposal_id: str, request: MVPTestRequest, background_tasks: BackgroundTasks
 ) -> dict:
-    """
-    运行MVP测试
+    """运行MVP测试（后台执行）"""
+    try:
+        manager = InnovationManager()
 
-    在实验分支上运行测试命令，验证新技术的可行性
+        async def run_test():
+            result = await manager.run_mvp_test(proposal_id, request.test_commands)
+            return result
 
-    - **proposal_id**: 提案ID
-    - **test_commands**: 测试命令列表
+        background_tasks.add_task(run_test)
 
-    在后台异步执行测试
-    """
-    manager = InnovationManager()
-
-    # 在后台运行测试
-    async def run_test():
-        result = await manager.run_mvp_test(proposal_id, request.test_commands)
-        # 这里可以保存结果到数据库或发送通知
-        return result
-
-    # 添加到后台任务
-    background_tasks.add_task(run_test)
-
-    return {
-        "status": "started",
-        "message": f"MVP测试已启动，提案ID: {proposal_id}",
-        "test_commands_count": len(request.test_commands),
-    }
+        return {
+            "status": "started",
+            "message": f"MVP测试已启动，提案ID: {proposal_id}",
+            "test_commands_count": len(request.test_commands),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"run_mvp_test failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="启动MVP测试失败")
 
 
 @router.post("/updates/{proposal_id}/merge")
 async def merge_to_main(proposal_id: str, request: MergeToMainRequest) -> dict:
-    """
-    合并到主分支
+    """合并实验分支到主分支"""
+    try:
+        manager = InnovationManager()
+        result = await manager.merge_to_main(proposal_id)
 
-    将通过验证的实验分支合并到主分支
+        if result["status"] == "error":
+            raise HTTPException(status_code=400, detail=result["message"])
 
-    - **proposal_id**: 提案ID
-
-    返回合并结果
-    """
-    manager = InnovationManager()
-    result = await manager.merge_to_main(proposal_id)
-
-    if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
-
-    return result
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"merge_to_main failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="合并分支失败")
 
 
 @router.post("/updates/{proposal_id}/reject")
 async def reject_proposal(proposal_id: str, request: RejectProposalRequest) -> dict:
-    """
-    拒绝创新提案
+    """拒绝创新提案"""
+    try:
+        manager = InnovationManager()
+        result = await manager.reject_proposal(proposal_id, request.reason)
 
-    拒绝一个创新提案，记录拒绝原因
+        if result["status"] == "error":
+            raise HTTPException(status_code=400, detail=result["message"])
 
-    - **proposal_id**: 提案ID
-    - **reason**: 拒绝原因
-
-    返回操作结果
-    """
-    manager = InnovationManager()
-    result = await manager.reject_proposal(proposal_id, request.reason)
-
-    if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
-
-    return result
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"reject_proposal failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="拒绝提案失败")
 
 
 @router.post("/search/autonomous", response_model=SearchResponse)

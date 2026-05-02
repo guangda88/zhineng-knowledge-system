@@ -28,27 +28,28 @@ async def trigger_collection(
         description="采集来源: github, npm, huggingface。为空时采集全部",
     ),
 ):
-    """触发情报采集（后台执行）
+    """触发情报采集（后台执行）"""
+    try:
+        if source and source not in ("github", "npm", "huggingface"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"不支持的来源: {source}，可选: github, npm, huggingface",
+            )
 
-    Args:
-        source: 可选，指定采集来源
-    """
-    sources = [source] if source else None
+        sources = [source] if source else None
+        service = _get_service()
+        background_tasks.add_task(service.collect_all, sources)
 
-    if source and source not in ("github", "npm", "huggingface"):
-        raise HTTPException(
-            status_code=400,
-            detail=f"不支持的来源: {source}，可选: github, npm, huggingface",
-        )
-
-    service = _get_service()
-    background_tasks.add_task(service.collect_all, sources)
-
-    return {
-        "status": "ok",
-        "message": f"情报采集任务已提交{'(来源: ' + source + ')' if source else '(全部来源)'}",
-        "source": source or "all",
-    }
+        return {
+            "status": "ok",
+            "message": f"情报采集任务已提交{'(来源: ' + source + ')' if source else '(全部来源)'}",
+            "source": source or "all",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"trigger_collection failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="触发情报采集失败")
 
 
 @router.get("/items")
@@ -64,27 +65,39 @@ async def list_items(
     offset: int = Query(0, ge=0, description="偏移量"),
 ):
     """查询情报条目列表"""
-    service = _get_service()
-    result = await service.get_items(
-        source=source,
-        relevance_category=relevance_category,
-        is_read=is_read,
-        starred=starred,
-        search=search,
-        limit=limit,
-        offset=offset,
-    )
-    return {"status": "ok", "data": result}
+    try:
+        service = _get_service()
+        result = await service.get_items(
+            source=source,
+            relevance_category=relevance_category,
+            is_read=is_read,
+            starred=starred,
+            search=search,
+            limit=limit,
+            offset=offset,
+        )
+        return {"status": "ok", "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"list_items failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="查询情报列表失败")
 
 
 @router.get("/items/{item_id}")
 async def get_item(item_id: int):
     """获取情报条目详情"""
-    service = _get_service()
-    item = await service.get_item(item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="情报条目不存在")
-    return {"status": "ok", "data": item}
+    try:
+        service = _get_service()
+        item = await service.get_item(item_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="情报条目不存在")
+        return {"status": "ok", "data": item}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_item failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取情报详情失败")
 
 
 @router.post("/items/{item_id}/mark-read")
@@ -93,21 +106,33 @@ async def mark_item_read(
     is_read: bool = Query(True, description="是否已读"),
 ):
     """标记情报条目为已读/未读"""
-    service = _get_service()
-    success = await service.mark_read(item_id, is_read)
-    if not success:
-        raise HTTPException(status_code=404, detail="情报条目不存在")
-    return {"status": "ok", "message": f"已{'标记为已读' if is_read else '标记为未读'}"}
+    try:
+        service = _get_service()
+        success = await service.mark_read(item_id, is_read)
+        if not success:
+            raise HTTPException(status_code=404, detail="情报条目不存在")
+        return {"status": "ok", "message": f"已{'标记为已读' if is_read else '标记为未读'}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"mark_item_read failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="标记已读状态失败")
 
 
 @router.post("/items/{item_id}/star")
 async def toggle_star(item_id: int):
     """切换情报条目收藏状态"""
-    service = _get_service()
-    result = await service.toggle_star(item_id)
-    if result is None:
-        raise HTTPException(status_code=404, detail="情报条目不存在")
-    return {"status": "ok", "data": {"starred": result}}
+    try:
+        service = _get_service()
+        result = await service.toggle_star(item_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="情报条目不存在")
+        return {"status": "ok", "data": {"starred": result}}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"toggle_star failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="切换收藏状态失败")
 
 
 @router.put("/items/{item_id}/notes")
@@ -116,19 +141,31 @@ async def update_notes(
     notes: str = Query(..., description="备注内容"),
 ):
     """更新情报条目备注"""
-    service = _get_service()
-    success = await service.update_notes(item_id, notes)
-    if not success:
-        raise HTTPException(status_code=404, detail="情报条目不存在")
-    return {"status": "ok", "message": "备注已更新"}
+    try:
+        service = _get_service()
+        success = await service.update_notes(item_id, notes)
+        if not success:
+            raise HTTPException(status_code=404, detail="情报条目不存在")
+        return {"status": "ok", "message": "备注已更新"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"update_notes failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="更新备注失败")
 
 
 @router.get("/dashboard")
 async def get_dashboard():
     """获取情报仪表盘摘要"""
-    service = _get_service()
-    data = await service.get_dashboard()
-    return {"status": "ok", "data": data}
+    try:
+        service = _get_service()
+        data = await service.get_dashboard()
+        return {"status": "ok", "data": data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_dashboard failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取情报仪表盘失败")
 
 
 @router.post("/refresh")

@@ -129,7 +129,7 @@ class Reranker:
 
         reranked = candidates[:top_k]
 
-        remaining = results[self.top_n:]
+        remaining = results[self.top_n :]
         reranked.extend(remaining)
 
         logger.info(
@@ -141,14 +141,22 @@ class Reranker:
         return reranked
 
 
-def create_reranker(top_n: Optional[int] = None) -> Reranker:
+def create_reranker(top_n: Optional[int] = None) -> Optional["Reranker"]:
     """
     创建 Reranker 实例
 
     自动检测 CPU/GPU 环境调整 top_n：
     - 有 GPU：top_n=20（默认）
     - 纯 CPU：top_n=10（降级，减少延迟）
+
+    Returns None if sentence_transformers is not installed.
     """
+    try:
+        from sentence_transformers import CrossEncoder  # noqa: F401
+    except ImportError:
+        logger.debug("sentence_transformers not installed, reranker disabled")
+        return None
+
     if top_n is None:
         try:
             import torch

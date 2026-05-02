@@ -8,6 +8,8 @@ from . import (
     audio,
     books,
     context,
+    corrections,
+    discuss,
     documents,
     evolution,
     external,
@@ -25,6 +27,7 @@ from . import (
     pipeline,
     reasoning,
     search,
+    sessions,
     staging,
     sysbooks,
     textbook_processing,
@@ -61,6 +64,9 @@ api_router.include_router(knowledge_gaps.router)  # 知识缺口感知
 api_router.include_router(staging.router)  # 知识临时区
 api_router.include_router(feedback.router)  # 检索反馈闭环
 api_router.include_router(user_profiles.router)  # 用户画像与评估系统
+api_router.include_router(corrections.router)  # 纠错向量库
+api_router.include_router(sessions.router)  # 会话持久化
+api_router.include_router(discuss.router)  # 灵知讨论
 
 # 健康检查路由不使用prefix
 api_router.include_router(health.router)

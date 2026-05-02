@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import text
 
 from backend.models.book import Book, BookChapter
@@ -217,7 +218,9 @@ class BookSearchService:
         Returns:
             书籍详情字典，如果不存在返回None
         """
-        book = await self.db.get(Book, book_id)
+        stmt = select(Book).options(selectinload(Book.chapters)).where(Book.id == book_id)
+        result_q = await self.db.execute(stmt)
+        book = result_q.scalar_one_or_none()
         if not book:
             return None
 

@@ -6,6 +6,49 @@
 
 ---
 
+## [Unreleased]
+
+### 诚实纠错系统 (2026-04-22)
+
+#### 新增 (Added)
+
+**纠错向量库**
+- ✅ `corrections` 表 (PostgreSQL + pgvector) — 存储历史纠错记录及向量
+- ✅ `/api/v1/corrections/search` — 检索相似纠错记录
+- ✅ `/api/v1/corrections/check` — 输出自检（规则检查+向量检索双层）
+- ✅ `/api/v1/corrections/stats` — 纠错库统计
+- ✅ `/api/v1/corrections/add` — 新增纠错记录
+- ✅ 导入10条初始纠错数据（来源于2026-04-22诚实对话）
+
+**确定性规则检查器** (`backend/services/output_rules.py`)
+- ✅ 猜测性措辞检测（我推测、应该是、可能是...导致）
+- ✅ 未验证数字检测
+- ✅ 轻率承诺检测（保证、确保、我改）
+- ✅ 逃避型检测
+- ✅ 减轻倾向检测（只是...而已、不是故意的）
+- ✅ 前后矛盾检测（与历史输出对比）
+
+**自动采集钩子** (`backend/services/correction_collector.py`)
+- ✅ `record_correction()` 异步接口，自动生成向量存入数据库
+
+**诚实规则** (写入 CRUSH.md)
+- ✅ 7条诚实优先规则（来源于真实对话教训）
+
+**训练数据准备**
+- ✅ `honesty_corrections_v1.jsonl` — 13条纠错训练样本
+- ✅ `thinking_training_set_v4.jsonl` — 合并后9604条训练数据
+
+**其他**
+- ✅ 输出自检脚本 (`scripts/output_checker.py`) — 基于微调1.5B模型
+- ✅ 纠错数据导入脚本 (`scripts/import_corrections.py`)
+- ✅ 训练数据生成脚本 (`scripts/prepare_honesty_training.py`)
+
+#### 暂缓
+
+- 云端3090微调7B模型 — 等纠错数据积累到200条以上
+
+---
+
 ## [1.3.0] - 2026-03-31
 
 ### 深度安全审计修复

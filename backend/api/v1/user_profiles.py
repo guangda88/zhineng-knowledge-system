@@ -10,9 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from backend.common.db_helpers import (
-    require_pool,
-)
+from backend.common.db_helpers import require_pool
 
 logger = logging.getLogger(__name__)
 
@@ -163,11 +161,17 @@ class UserAssessmentResponse(BaseModel):
 @router.get("/profiles/{user_id}", response_model=UserProfile)
 async def get_user_profile(user_id: str):
     """获取用户画像"""
-    pool = require_pool()
-    row = await pool.fetchrow("SELECT * FROM user_levels WHERE user_id = $1", user_id)
-    if row is None:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    return UserProfile(**dict(row))
+    try:
+        pool = require_pool()
+        row = await pool.fetchrow("SELECT * FROM user_levels WHERE user_id = $1", user_id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="用户不存在")
+        return UserProfile(**dict(row))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_user_profile failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取用户画像失败")
 
 
 @router.post("/profiles", response_model=UserProfile)
@@ -188,47 +192,54 @@ async def create_user_profile(profile: UserProfileCreate):
     except Exception as e:
         if "user_levels_pkey" in str(e):
             raise HTTPException(status_code=400, detail="用户已存在")
-        raise
+        logger.error(f"create_user_profile failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="创建用户画像失败")
 
 
 @router.put("/profiles/{user_id}", response_model=UserProfile)
 async def update_user_profile(user_id: str, profile: UserProfileUpdate):
     """更新用户画像"""
-    pool = require_pool()
-    updates = []
-    values = []
-    param_count = 1
+    try:
+        pool = require_pool()
+        updates = []
+        values = []
+        param_count = 1
 
-    if profile.current_level is not None:
-        updates.append(f"current_level = ${param_count}")
-        values.append(profile.current_level)
-        param_count += 1
+        if profile.current_level is not None:
+            updates.append(f"current_level = ${param_count}")
+            values.append(profile.current_level)
+            param_count += 1
 
-    if profile.assessment_score is not None:
-        updates.append(f"assessment_score = ${param_count}")
-        values.append(profile.assessment_score)
-        param_count += 1
+        if profile.assessment_score is not None:
+            updates.append(f"assessment_score = ${param_count}")
+            values.append(profile.assessment_score)
+            param_count += 1
 
-    if profile.notes is not None:
-        updates.append(f"notes = ${param_count}")
-        values.append(profile.notes)
-        param_count += 1
+        if profile.notes is not None:
+            updates.append(f"notes = ${param_count}")
+            values.append(profile.notes)
+            param_count += 1
 
-    if not updates:
-        raise HTTPException(status_code=400, detail="没有提供更新内容")
+        if not updates:
+            raise HTTPException(status_code=400, detail="没有提供更新内容")
 
-    values.append(user_id)
-    query = f"""
-        UPDATE user_levels
-        SET {', '.join(updates)}
-        WHERE user_id = ${param_count}
-        RETURNING *
-    """
+        values.append(user_id)
+        query = f"""
+            UPDATE user_levels
+            SET {', '.join(updates)}
+            WHERE user_id = ${param_count}
+            RETURNING *
+        """
 
-    row = await pool.fetchrow(query, *values)
-    if row is None:
-        raise HTTPException(status_code=404, detail="用户不存在")
-    return UserProfile(**dict(row))
+        row = await pool.fetchrow(query, *values)
+        if row is None:
+            raise HTTPException(status_code=404, detail="用户不存在")
+        return UserProfile(**dict(row))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"update_user_profile failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="更新用户画像失败")
 
 
 # ==================== 生活状态追踪 API ====================
@@ -257,53 +268,62 @@ async def create_life_state_tracking(state: LifeStateCreate):
     except Exception as e:
         if "user_levels_fkey" in str(e):
             raise HTTPException(status_code=400, detail="用户不存在，请先创建用户画像")
-        raise
+        logger.error(f"create_life_state_tracking failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="记录生活状态失败")
 
 
 @router.get("/life-state/{user_id}", response_model=List[LifeStateTracking])
 async def get_life_state_tracking(user_id: str, limit: int = Query(default=30, ge=1, le=365)):
     """获取用户生活状态记录"""
-    pool = require_pool()
-    rows = await pool.fetch(
-        """SELECT * FROM life_state_tracking
-        WHERE user_id = $1
-        ORDER BY tracked_date DESC
-        LIMIT $2""",
-        user_id,
-        limit,
-    )
-    return [LifeStateTracking(**dict(row)) for row in rows]
+    try:
+        pool = require_pool()
+        rows = await pool.fetch(
+            """SELECT * FROM life_state_tracking
+            WHERE user_id = $1
+            ORDER BY tracked_date DESC
+            LIMIT $2""",
+            user_id,
+            limit,
+        )
+        return [LifeStateTracking(**dict(row)) for row in rows]
+    except Exception as e:
+        logger.error(f"get_life_state_tracking failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取生活状态记录失败")
 
 
 @router.get("/life-state/{user_id}/summary")
 async def get_life_state_summary(user_id: str, days: int = Query(default=30, ge=1, le=365)):
     """获取生活状态统计摘要"""
-    pool = require_pool()
-    rows = await pool.fetch(
-        """SELECT
-            AVG(physical_health) as avg_physical,
-            AVG(mental_peace) as avg_mental,
-            AVG(energy_level) as avg_energy,
-            AVG(sleep_quality) as avg_sleep,
-            AVG(emotional_stability) as avg_emotional,
-            COUNT(*) as record_count
-        FROM life_state_tracking
-        WHERE user_id = $1
-        AND tracked_date >= CURRENT_DATE - INTERVAL '1 day' * $2""",
-        user_id,
-        days,
-    )
-    row = rows[0]
-    return {
-        "user_id": user_id,
-        "period_days": days,
-        "physical_health": round(float(row["avg_physical"] or 0), 1),
-        "mental_peace": round(float(row["avg_mental"] or 0), 1),
-        "energy_level": round(float(row["avg_energy"] or 0), 1),
-        "sleep_quality": round(float(row["avg_sleep"] or 0), 1),
-        "emotional_stability": round(float(row["avg_emotional"] or 0), 1),
-        "record_count": row["record_count"],
-    }
+    try:
+        pool = require_pool()
+        rows = await pool.fetch(
+            """SELECT
+                AVG(physical_health) as avg_physical,
+                AVG(mental_peace) as avg_mental,
+                AVG(energy_level) as avg_energy,
+                AVG(sleep_quality) as avg_sleep,
+                AVG(emotional_stability) as avg_emotional,
+                COUNT(*) as record_count
+            FROM life_state_tracking
+            WHERE user_id = $1
+            AND tracked_date >= CURRENT_DATE - INTERVAL '1 day' * $2""",
+            user_id,
+            days,
+        )
+        row = rows[0]
+        return {
+            "user_id": user_id,
+            "period_days": days,
+            "physical_health": round(float(row["avg_physical"] or 0), 1),
+            "mental_peace": round(float(row["avg_mental"] or 0), 1),
+            "energy_level": round(float(row["avg_energy"] or 0), 1),
+            "sleep_quality": round(float(row["avg_sleep"] or 0), 1),
+            "emotional_stability": round(float(row["avg_emotional"] or 0), 1),
+            "record_count": row["record_count"],
+        }
+    except Exception as e:
+        logger.error(f"get_life_state_summary failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取生活状态摘要失败")
 
 
 # ==================== 练习记录 API ====================
@@ -332,7 +352,8 @@ async def create_practice_record(record: PracticeRecordCreate):
     except Exception as e:
         if "user_levels_fkey" in str(e):
             raise HTTPException(status_code=400, detail="用户不存在，请先创建用户画像")
-        raise
+        logger.error(f"create_practice_record failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="记录练习失败")
 
 
 @router.get("/practice/{user_id}", response_model=List[PracticeRecord])
@@ -342,56 +363,64 @@ async def get_practice_records(
     practice_type: Optional[str] = Query(default=None),
 ):
     """获取用户练习记录"""
-    pool = require_pool()
-    if practice_type:
-        rows = await pool.fetch(
-            """SELECT * FROM practice_records
-            WHERE user_id = $1 AND practice_type = $2
-            ORDER BY practice_date DESC
-            LIMIT $3""",
-            user_id,
-            practice_type,
-            limit,
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT * FROM practice_records
-            WHERE user_id = $1
-            ORDER BY practice_date DESC
-            LIMIT $2""",
-            user_id,
-            limit,
-        )
-    return [PracticeRecord(**dict(row)) for row in rows]
+    try:
+        pool = require_pool()
+        if practice_type:
+            rows = await pool.fetch(
+                """SELECT * FROM practice_records
+                WHERE user_id = $1 AND practice_type = $2
+                ORDER BY practice_date DESC
+                LIMIT $3""",
+                user_id,
+                practice_type,
+                limit,
+            )
+        else:
+            rows = await pool.fetch(
+                """SELECT * FROM practice_records
+                WHERE user_id = $1
+                ORDER BY practice_date DESC
+                LIMIT $2""",
+                user_id,
+                limit,
+            )
+        return [PracticeRecord(**dict(row)) for row in rows]
+    except Exception as e:
+        logger.error(f"get_practice_records failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取练习记录失败")
 
 
 @router.get("/practice/{user_id}/summary")
 async def get_practice_summary(user_id: str, days: int = Query(default=30, ge=1, le=365)):
     """获取练习统计摘要"""
-    pool = require_pool()
-    rows = await pool.fetch(
-        """SELECT
-            COUNT(*) as record_count,
-            SUM(duration_minutes) as total_minutes,
-            AVG(duration_minutes) as avg_minutes,
-            AVG(difficulty_level) as avg_difficulty,
-            COUNT(DISTINCT practice_date::date) as practice_days
-        FROM practice_records
-        WHERE user_id = $1
-        AND practice_date >= CURRENT_DATE - INTERVAL '1 day' * $2""",
-        user_id,
-        days,
-    )
-    row = rows[0]
-    return {
-        "user_id": user_id,
-        "period_days": days,
-        "record_count": row["record_count"],
-        "total_minutes": int(row["total_minutes"] or 0),
-        "avg_minutes": round(float(row["avg_minutes"] or 0), 1),
-        "avg_difficulty": round(float(row["avg_difficulty"] or 0), 1),
-        "practice_days": row["practice_days"],
-    }
+    try:
+        pool = require_pool()
+        rows = await pool.fetch(
+            """SELECT
+                COUNT(*) as record_count,
+                SUM(duration_minutes) as total_minutes,
+                AVG(duration_minutes) as avg_minutes,
+                AVG(difficulty_level) as avg_difficulty,
+                COUNT(DISTINCT practice_date::date) as practice_days
+            FROM practice_records
+            WHERE user_id = $1
+            AND practice_date >= CURRENT_DATE - INTERVAL '1 day' * $2""",
+            user_id,
+            days,
+        )
+        row = rows[0]
+        return {
+            "user_id": user_id,
+            "period_days": days,
+            "record_count": row["record_count"],
+            "total_minutes": int(row["total_minutes"] or 0),
+            "avg_minutes": round(float(row["avg_minutes"] or 0), 1),
+            "avg_difficulty": round(float(row["avg_difficulty"] or 0), 1),
+            "practice_days": row["practice_days"],
+        }
+    except Exception as e:
+        logger.error(f"get_practice_summary failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取练习摘要失败")
 
 
 # ==================== 练习计划 API ====================
@@ -418,74 +447,85 @@ async def create_practice_plan(plan: PracticePlanCreate):
     except Exception as e:
         if "user_levels_fkey" in str(e):
             raise HTTPException(status_code=400, detail="用户不存在，请先创建用户画像")
-        raise
+        logger.error(f"create_practice_plan failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="创建练习计划失败")
 
 
 @router.get("/plans/{user_id}", response_model=List[PracticePlan])
 async def get_practice_plans(user_id: str, status: Optional[str] = Query(default=None)):
     """获取用户练习计划"""
-    pool = require_pool()
-    if status:
-        rows = await pool.fetch(
-            """SELECT * FROM practice_plans
-            WHERE user_id = $1 AND status = $2
-            ORDER BY created_at DESC""",
-            user_id,
-            status,
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT * FROM practice_plans
-            WHERE user_id = $1
-            ORDER BY created_at DESC""",
-            user_id,
-        )
-    return [PracticePlan(**dict(row)) for row in rows]
+    try:
+        pool = require_pool()
+        if status:
+            rows = await pool.fetch(
+                """SELECT * FROM practice_plans
+                WHERE user_id = $1 AND status = $2
+                ORDER BY created_at DESC""",
+                user_id,
+                status,
+            )
+        else:
+            rows = await pool.fetch(
+                """SELECT * FROM practice_plans
+                WHERE user_id = $1
+                ORDER BY created_at DESC""",
+                user_id,
+            )
+        return [PracticePlan(**dict(row)) for row in rows]
+    except Exception as e:
+        logger.error(f"get_practice_plans failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取练习计划失败")
 
 
 @router.put("/plans/{plan_id}", response_model=PracticePlan)
 async def update_practice_plan(plan_id: int, plan: PracticePlanUpdate):
     """更新练习计划"""
-    pool = require_pool()
-    updates = []
-    values = []
-    param_count = 1
+    try:
+        pool = require_pool()
+        updates = []
+        values = []
+        param_count = 1
 
-    if plan.plan_name is not None:
-        updates.append(f"plan_name = ${param_count}")
-        values.append(plan.plan_name)
-        param_count += 1
+        if plan.plan_name is not None:
+            updates.append(f"plan_name = ${param_count}")
+            values.append(plan.plan_name)
+            param_count += 1
 
-    if plan.goal is not None:
-        updates.append(f"goal = ${param_count}")
-        values.append(plan.goal)
-        param_count += 1
+        if plan.goal is not None:
+            updates.append(f"goal = ${param_count}")
+            values.append(plan.goal)
+            param_count += 1
 
-    if plan.status is not None:
-        updates.append(f"status = ${param_count}")
-        values.append(plan.status)
-        param_count += 1
+        if plan.status is not None:
+            updates.append(f"status = ${param_count}")
+            values.append(plan.status)
+            param_count += 1
 
-    if plan.end_date is not None:
-        updates.append(f"end_date = ${param_count}")
-        values.append(plan.end_date)
-        param_count += 1
+        if plan.end_date is not None:
+            updates.append(f"end_date = ${param_count}")
+            values.append(plan.end_date)
+            param_count += 1
 
-    if not updates:
-        raise HTTPException(status_code=400, detail="没有提供更新内容")
+        if not updates:
+            raise HTTPException(status_code=400, detail="没有提供更新内容")
 
-    values.append(plan_id)
-    query = f"""
-        UPDATE practice_plans
-        SET {', '.join(updates)}
-        WHERE id = ${param_count}
-        RETURNING *
-    """
+        values.append(plan_id)
+        query = f"""
+            UPDATE practice_plans
+            SET {', '.join(updates)}
+            WHERE id = ${param_count}
+            RETURNING *
+        """
 
-    row = await pool.fetchrow(query, *values)
-    if row is None:
-        raise HTTPException(status_code=404, detail="计划不存在")
-    return PracticePlan(**dict(row))
+        row = await pool.fetchrow(query, *values)
+        if row is None:
+            raise HTTPException(status_code=404, detail="计划不存在")
+        return PracticePlan(**dict(row))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"update_practice_plan failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="更新练习计划失败")
 
 
 # ==================== 综合评估 API ====================
@@ -494,66 +534,68 @@ async def update_practice_plan(plan_id: int, plan: PracticePlanUpdate):
 @router.get("/assessment/{user_id}", response_model=UserAssessmentResponse)
 async def get_user_assessment(user_id: str):
     """获取用户综合评估"""
-    pool = require_pool()
+    try:
+        pool = require_pool()
 
-    # 获取用户画像
-    profile_row = await pool.fetchrow("SELECT * FROM user_levels WHERE user_id = $1", user_id)
-    if profile_row is None:
-        raise HTTPException(status_code=404, detail="用户不存在")
+        profile_row = await pool.fetchrow("SELECT * FROM user_levels WHERE user_id = $1", user_id)
+        if profile_row is None:
+            raise HTTPException(status_code=404, detail="用户不存在")
 
-    # 获取练习统计
-    practice_stats = await pool.fetchrow(
-        """SELECT
-            COUNT(*) as practice_count,
-            SUM(duration_minutes) as total_minutes
-        FROM practice_records
-        WHERE user_id = $1
-        AND practice_date >= CURRENT_DATE - INTERVAL '30 days'""",
-        user_id,
-    )
+        practice_stats = await pool.fetchrow(
+            """SELECT
+                COUNT(*) as practice_count,
+                SUM(duration_minutes) as total_minutes
+            FROM practice_records
+            WHERE user_id = $1
+            AND practice_date >= CURRENT_DATE - INTERVAL '30 days'""",
+            user_id,
+        )
 
-    # 获取生活状态平均
-    life_state_stats = await pool.fetchrow(
-        """SELECT
-            AVG(physical_health) as avg_physical,
-            AVG(mental_peace) as avg_mental,
-            AVG(energy_level) as avg_energy,
-            AVG(sleep_quality) as avg_sleep,
-            AVG(emotional_stability) as avg_emotional
-        FROM life_state_tracking
-        WHERE user_id = $1
-        AND tracked_date >= CURRENT_DATE - INTERVAL '30 days'""",
-        user_id,
-    )
+        life_state_stats = await pool.fetchrow(
+            """SELECT
+                AVG(physical_health) as avg_physical,
+                AVG(mental_peace) as avg_mental,
+                AVG(energy_level) as avg_energy,
+                AVG(sleep_quality) as avg_sleep,
+                AVG(emotional_stability) as avg_emotional
+            FROM life_state_tracking
+            WHERE user_id = $1
+            AND tracked_date >= CURRENT_DATE - INTERVAL '30 days'""",
+            user_id,
+        )
 
-    # 生成建议
-    recommendations = []
-    if practice_stats["practice_count"] < 10:
-        recommendations.append("建议增加练习频次，每天保持一定时间的练习")
-    if practice_stats["total_minutes"] < 300:
-        recommendations.append("建议延长每次练习时间，循序渐进地增加练习时长")
-    avg_energy = float(life_state_stats["avg_energy"] or 0)
-    if avg_energy < 6:
-        recommendations.append("精力水平偏低，建议注意休息和调整作息")
-    avg_sleep = float(life_state_stats["avg_sleep"] or 0)
-    if avg_sleep < 6:
-        recommendations.append("睡眠质量有待提升，建议建立规律的睡眠习惯")
+        recommendations = []
+        if practice_stats["practice_count"] < 10:
+            recommendations.append("建议增加练习频次，每天保持一定时间的练习")
+        if practice_stats["total_minutes"] < 300:
+            recommendations.append("建议延长每次练习时间，循序渐进地增加练习时长")
+        avg_energy = float(life_state_stats["avg_energy"] or 0)
+        if avg_energy < 6:
+            recommendations.append("精力水平偏低，建议注意休息和调整作息")
+        avg_sleep = float(life_state_stats["avg_sleep"] or 0)
+        if avg_sleep < 6:
+            recommendations.append("睡眠质量有待提升，建议建立规律的睡眠习惯")
 
-    if not recommendations:
-        recommendations.append("保持当前练习状态，继续努力！")
+        if not recommendations:
+            recommendations.append("保持当前练习状态，继续努力！")
 
-    return UserAssessmentResponse(
-        user_id=user_id,
-        current_level=profile_row["current_level"],
-        assessment_score=profile_row["assessment_score"],
-        practice_count_last_30_days=practice_stats["practice_count"],
-        total_practice_minutes_last_30_days=int(practice_stats["total_minutes"] or 0),
-        life_state_avg_last_30_days={
-            "physical_health": round(float(life_state_stats["avg_physical"] or 0), 1),
-            "mental_peace": round(float(life_state_stats["avg_mental"] or 0), 1),
-            "energy_level": round(float(life_state_stats["avg_energy"] or 0), 1),
-            "sleep_quality": round(float(life_state_stats["avg_sleep"] or 0), 1),
-            "emotional_stability": round(float(life_state_stats["avg_emotional"] or 0), 1),
-        },
-        recommendations=recommendations,
-    )
+        return UserAssessmentResponse(
+            user_id=user_id,
+            current_level=profile_row["current_level"],
+            assessment_score=profile_row["assessment_score"],
+            practice_count_last_30_days=practice_stats["practice_count"],
+            total_practice_minutes_last_30_days=int(practice_stats["total_minutes"] or 0),
+            life_state_avg_last_30_days={
+                "physical_health": round(float(life_state_stats["avg_physical"] or 0), 1),
+                "mental_peace": round(float(life_state_stats["avg_mental"] or 0), 1),
+                "energy_level": round(float(life_state_stats["avg_energy"] or 0), 1),
+                "sleep_quality": round(float(life_state_stats["avg_sleep"] or 0), 1),
+                "emotional_stability": round(float(life_state_stats["avg_emotional"] or 0), 1),
+            },
+            recommendations=recommendations,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_user_assessment failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取用户评估失败")

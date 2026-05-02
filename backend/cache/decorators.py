@@ -9,16 +9,7 @@ import json
 import logging
 from enum import Enum
 from functools import wraps
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Dict,
-    List,
-    Optional,
-    ParamSpec,
-    TypeVar,
-)
+from typing import Any, Callable, Coroutine, Dict, List, Optional, ParamSpec, TypeVar
 
 from .manager import CacheManager
 

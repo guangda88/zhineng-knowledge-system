@@ -215,27 +215,33 @@ async def get_task_status(task_id: str):
     if not LINGFLOW_AGENTS_AVAILABLE:
         raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
 
-    service = get_agents_service()
-    task = service.get_task_status(task_id)
+    try:
+        service = get_agents_service()
+        task = service.get_task_status(task_id)
 
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+        if task is None:
+            raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
 
-    return TaskStatusResponse(
-        task_id=task.task_id,
-        textbook_id=task.textbook_id,
-        textbook_title=task.textbook_title,
-        status=task.status,
-        stage=task.stage,
-        started_at=task.started_at.isoformat() if task.started_at else None,
-        completed_at=task.completed_at.isoformat() if task.completed_at else None,
-        toc_items_count=task.toc_items_count,
-        text_blocks_count=task.text_blocks_count,
-        quality_score=task.quality_score,
-        statistics=task.statistics,
-        issues=task.issues,
-        error=task.error,
-    )
+        return TaskStatusResponse(
+            task_id=task.task_id,
+            textbook_id=task.textbook_id,
+            textbook_title=task.textbook_title,
+            status=task.status,
+            stage=task.stage,
+            started_at=task.started_at.isoformat() if task.started_at else None,
+            completed_at=task.completed_at.isoformat() if task.completed_at else None,
+            toc_items_count=task.toc_items_count,
+            text_blocks_count=task.text_blocks_count,
+            quality_score=task.quality_score,
+            statistics=task.statistics,
+            issues=task.issues,
+            error=task.error,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_task_status failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="查询任务状态失败")
 
 
 @router.get("/tasks", response_model=List[TaskStatusResponse])
@@ -244,8 +250,14 @@ async def list_all_tasks():
     if not LINGFLOW_AGENTS_AVAILABLE:
         raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
 
-    service = get_agents_service()
-    tasks = service.get_all_tasks()
+    try:
+        service = get_agents_service()
+        tasks = service.get_all_tasks()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"list_all_tasks failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="查询任务列表失败")
 
     return [
         TaskStatusResponse(

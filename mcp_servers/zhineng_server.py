@@ -1081,4 +1081,9 @@ async def content_extract(
 
 
 if __name__ == "__main__":
+    try:
+        from lingmessage.registry import register_fastmcp_server
+        register_fastmcp_server("lingzhi", "灵知", mcp, "知识中枢")
+    except Exception:
+        pass
     mcp.run()

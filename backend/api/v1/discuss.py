@@ -80,7 +80,7 @@ _LLM_PROVIDERS = [
 ]
 
 
-def _call_llm_sync(prompt: str, max_tokens: int = 1500) -> Optional[str]:
+def _call_llm_sync(prompt: str, max_tokens: int = 1500) -> tuple[Optional[str], str]:
     """依次尝试 GLM_CODING_PLAN -> GLM -> DeepSeek"""
     import json
     import urllib.request
@@ -119,7 +119,7 @@ def _call_llm_sync(prompt: str, max_tokens: int = 1500) -> Optional[str]:
             logger.warning(f"LLM {provider['key_env']}/{provider['model']} failed: {e}")
             continue
 
-    return None
+    return None, ""
 
 
 async def _call_llm(prompt: str, max_tokens: int = 1500) -> tuple[Optional[str], str]:
@@ -227,10 +227,16 @@ async def discuss(req: DiscussRequest):
 
 
 class NotifyRequest(BaseModel):
-    event: str
+    event: str = ""
     from_id: str = ""
     discussion_id: str = ""
     topic: str = ""
+    type: str = ""
+    thread_id: str = ""
+    message_id: str = ""
+    sender: str = ""
+    body_preview: str = ""
+    message_count: int = 0
 
 
 @router.post("/lingmessage/notify")
@@ -239,7 +245,23 @@ async def lingmessage_notify(req: NotifyRequest):
     import sys
     import threading
 
-    if req.event != "new_message" or req.from_id == "lingzhi":
+    event_type = req.event or req.type
+    logger.info(
+        f"灵信通知: event={event_type}, from={req.from_id or req.sender}, thread={req.thread_id}"
+    )
+
+    if event_type == "family_chat" and req.thread_id:
+        sys.path.insert(0, "/home/ai/LingMessage")
+        from lingmessage.auto_reply import auto_reply
+
+        threading.Thread(
+            target=auto_reply,
+            args=("lingzhi", req.thread_id),
+            daemon=True,
+        ).start()
+        return {"received": True, "service": "灵知", "action": "auto_replying"}
+
+    if event_type != "new_message" or req.from_id == "lingzhi":
         return {"received": True, "service": "灵知", "action": "skipped"}
 
     if not req.topic:
@@ -275,7 +297,7 @@ async def lingmessage_notify(req: NotifyRequest):
             prompt_parts.append("请从你的角度——知识库管理者的角度——发表意见。")
             prompt = "\n".join(prompt_parts)
 
-            content = _call_llm_sync(prompt)
+            content, _ = _call_llm_sync(prompt)
             if content:
                 send_message(
                     from_id="lingzhi",

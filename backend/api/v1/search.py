@@ -1,6 +1,7 @@
 """搜索API路由"""
 
 import html
+import json
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -8,13 +9,19 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from backend.cache.decorators import cached_api_categories, cached_api_search, cached_api_stats
+from backend.cache.decorators import (
+    cached,
+    cached_api_categories,
+    cached_api_search,
+    cached_api_stats,
+)
 from backend.common import get_document_stats, rows_to_list, search_documents
 from backend.common.typing import JSONResponse
 from backend.core.database import init_db_pool
 from backend.core.request_stats import get_request_stats
 from backend.services.retrieval import HybridRetriever
 from backend.services.retrieval.gap_tracker import record_search_outcome
+from backend.services.retrieval.regex_searcher import RegexSearcher
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +56,7 @@ class HybridSearchRequest(BaseModel):
     top_k: int = Field(10, ge=1, le=50, description="返回数量")
     use_vector: bool = Field(True, description="是否使用向量检索")
     use_bm25: bool = Field(True, description="是否使用BM25检索")
+    use_query_expansion: bool = Field(True, description="是否使用查询扩展")
 
 
 class EmbeddingUpdateRequest(BaseModel):
@@ -64,6 +72,19 @@ class ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=1000, description="用户问题")
     category: Optional[str] = Field(None, pattern="^(气功|中医|儒家)$", description="指定分类")
     session_id: Optional[str] = Field(None, description="会话ID")
+
+
+class RegexSearchRequest(BaseModel):
+    """正则搜索请求模型"""
+
+    pattern: str = Field(..., min_length=1, max_length=500, description="正则表达式模式")
+    tables: Optional[List[str]] = Field(None, description="搜索的表列表，默认所有表")
+    category: Optional[str] = Field(
+        None, pattern="^(气功|中医|儒家|佛家|道家|武术|哲学|科学|心理学)$", description="分类筛选"
+    )
+    limit: int = Field(50, ge=1, le=200, description="返回数量限制")
+    case_sensitive: bool = Field(False, description="是否区分大小写")
+    with_context: bool = Field(True, description="是否返回匹配上下文片段")
 
 
 class ChatResponse(BaseModel):
@@ -95,7 +116,8 @@ async def search_endpoint(
 
 
 @router.post("/hybrid", response_model=JSONResponse)
-async def hybrid_search(request: HybridSearchRequest) -> JSONResponse:
+@cached(namespace="api_hybrid_search", ttl=600, key_prefix="hybrid", skip_cache_param="skip_cache")
+async def hybrid_search(request: HybridSearchRequest, skip_cache: bool = False) -> JSONResponse:
     """
     混合检索API
 
@@ -110,12 +132,66 @@ async def hybrid_search(request: HybridSearchRequest) -> JSONResponse:
             top_k=request.top_k,
             use_vector=request.use_vector,
             use_bm25=request.use_bm25,
+            use_query_expansion=request.use_query_expansion,
         )
 
         return {"query": request.query, "total": len(results), "results": results}
     except Exception as e:
         logger.error(f"混合检索失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"混合检索失败: {e}")
+
+
+@router.post("/regex", response_model=JSONResponse)
+async def regex_search(request: RegexSearchRequest) -> JSONResponse:
+    """
+    正则表达式搜索
+
+    支持 PCRE 正则表达式语法，提供多表搜索和匹配位置信息。
+    """
+    try:
+        # 验证正则表达式
+        pool = await init_db_pool()
+        searcher = RegexSearcher(pool)
+
+        # 验证模式有效性
+        is_valid = await searcher.validate_pattern(request.pattern)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail="无效的正则表达式模式")
+
+        # 执行搜索
+        if request.with_context:
+            results = await searcher.search_with_context(
+                pattern=request.pattern,
+                tables=request.tables,
+                category=request.category,
+                limit=request.limit,
+                case_sensitive=request.case_sensitive,
+            )
+        else:
+            results = await searcher.search(
+                pattern=request.pattern,
+                tables=request.tables,
+                category=request.category,
+                limit=request.limit,
+                case_sensitive=request.case_sensitive,
+            )
+
+        # 统计各表匹配数量
+        counts = await searcher.count_matches(
+            pattern=request.pattern, tables=request.tables, case_sensitive=request.case_sensitive
+        )
+
+        return {
+            "pattern": request.pattern,
+            "total": len(results),
+            "table_counts": counts,
+            "results": results,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"正则搜索失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"正则搜索失败: {e}")
 
 
 @router.post("/embeddings/update", response_model=JSONResponse)
@@ -223,6 +299,59 @@ async def ask_question(request: ChatRequest) -> ChatResponse:
             )
 
         session_id = request.session_id or datetime.now().strftime("%Y%m%d%H%M%S")
+
+        # 自动保存到 chat_history + 上下文元数据
+        try:
+            async with pool.acquire() as conn:
+                # 确保会话存在，首次创建 message_count=2
+                await conn.execute(
+                    """
+                    INSERT INTO sessions (id, title, status, message_count, last_message_at)
+                    VALUES ($1, $2, 'active', 2, CURRENT_TIMESTAMP)
+                    ON CONFLICT (id) DO UPDATE SET
+                        message_count = sessions.message_count + 2,
+                        last_message_at = CURRENT_TIMESTAMP,
+                        status = 'active'
+                    """,
+                    session_id,
+                    f"会话 {session_id[:10]}",
+                )
+                # 保存用户消息
+                await conn.execute(
+                    """
+                    INSERT INTO chat_history (session_id, role, content)
+                    VALUES ($1, 'user', $2)
+                    """,
+                    session_id,
+                    request.question,
+                )
+                # 保存助手回复
+                await conn.execute(
+                    """
+                    INSERT INTO chat_history (session_id, role, content, metadata)
+                    VALUES ($1, 'assistant', $2, $3)
+                    """,
+                    session_id,
+                    answer,
+                    json.dumps({"sources_count": len(sources)}),
+                )
+                # 更新上下文元数据到 sessions.metadata
+                context_meta = {
+                    "last_question": request.question[:200],
+                    "last_sources_count": len(sources),
+                    "last_activity": datetime.now().isoformat(),
+                }
+                # 合并已有 metadata，保留 tasks/decisions 等字段
+                await conn.execute(
+                    """
+                    UPDATE sessions SET metadata = COALESCE(metadata, '{}') || $1::jsonb
+                    WHERE id = $2
+                    """,
+                    json.dumps({"context": context_meta}),
+                    session_id,
+                )
+        except Exception as save_err:
+            logger.warning(f"保存聊天历史失败（不影响回复）: {save_err}")
 
         return ChatResponse(answer=answer, sources=sources, session_id=session_id)
     except Exception as e:

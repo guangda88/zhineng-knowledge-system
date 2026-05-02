@@ -5,14 +5,14 @@
 2. 消息评分
 3. 上下文压缩
 4. 会话状态管理
-5. 持久化存储
+5. 持久化存储（PostgreSQL sessions.metadata + 本地 JSON 备份）
 """
 
 import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -112,15 +112,22 @@ class ContextService:
     WARNING_THRESHOLD = 0.85
     COMPRESS_THRESHOLD = 0.90
 
-    def __init__(self, storage_dir: Optional[str] = None, token_limit: int = DEFAULT_TOKEN_LIMIT):
+    def __init__(
+        self,
+        storage_dir: Optional[str] = None,
+        token_limit: int = DEFAULT_TOKEN_LIMIT,
+        pool: Any = None,
+        session_id: Optional[str] = None,
+    ):
         """初始化上下文服务
 
         Args:
             storage_dir: 上下文存储目录
             token_limit: Token 限制
+            pool: asyncpg 连接池（可选，用于 PostgreSQL 持久化）
+            session_id: 外部会话 ID（可选，用于关联 sessions 表）
         """
         if storage_dir is None:
-            # 使用项目的 data/context 目录
             self.storage_dir = Path.cwd() / "data" / "context"
         else:
             self.storage_dir = Path(storage_dir)
@@ -128,7 +135,8 @@ class ContextService:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
         self.token_limit = token_limit
-        self.session_id = self._generate_session_id()
+        self.session_id = session_id or self._generate_session_id()
+        self.pool = pool
         self.message_count = 0
         self.estimated_tokens = 0
 
@@ -141,10 +149,15 @@ class ContextService:
         # 尝试加载 LingFlow 组件
         self._load_lingflow_components()
 
-        # 加载上次上下文
-        self._load_last_context()
+        # 从 PostgreSQL 加载（如果 pool 可用），否则从本地 JSON
+        if self.pool and session_id:
+            self._load_from_db_sync(session_id)
+        else:
+            self._load_last_context()
 
-        logger.info(f"ContextService initialized: session={self.session_id}")
+        logger.info(
+            f"ContextService initialized: session={self.session_id}, db={'yes' if self.pool else 'no'}"
+        )
 
     def _generate_session_id(self) -> str:
         """生成会话 ID"""
@@ -186,6 +199,57 @@ class ContextService:
                 self.last_context = None
         else:
             self.last_context = None
+
+    def _load_from_db_sync(self, session_id: str):
+        """从 PostgreSQL sessions.metadata 加载上下文快照（同步包装）
+
+        由于 asyncpg 是异步的，此处仅标记需要加载，实际加载在首次
+        async 上下文中完成。作为回退，也从本地 JSON 加载。
+        """
+        self.last_context = None
+        self._pending_db_load = session_id
+        self._load_last_context()
+
+    async def load_from_db(self, session_id: str):
+        """从 PostgreSQL sessions.metadata 异步加载上下文快照"""
+        if not self.pool:
+            return
+        try:
+            async with self.pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT metadata FROM sessions WHERE id = $1",
+                    session_id,
+                )
+                if row and row["metadata"]:
+                    meta = dict(row["metadata"])
+                    snapshot_data = meta.get("context_snapshot")
+                    if snapshot_data:
+                        self.snapshot = ContextSnapshot(**snapshot_data)
+                        self.session_id = session_id
+                        logger.info(f"Loaded context snapshot from DB for session {session_id}")
+                    return meta
+        except Exception as e:
+            logger.warning(f"Failed to load context from DB: {e}")
+        return None
+
+    async def save_snapshot_to_db(self):
+        """将当前上下文快照保存到 PostgreSQL sessions.metadata"""
+        if not self.pool:
+            return
+        try:
+            snapshot_json = self.snapshot.model_dump()
+            async with self.pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE sessions SET metadata = COALESCE(metadata, '{}') || $1::jsonb
+                    WHERE id = $2
+                    """,
+                    json.dumps({"context_snapshot": snapshot_json}),
+                    self.session_id,
+                )
+                logger.debug(f"Saved context snapshot to DB for session {self.session_id}")
+        except Exception as e:
+            logger.warning(f"Failed to save context snapshot to DB: {e}")
 
     def estimate_tokens(self, text: str, model: str = "claude-opus-4") -> TokenEstimate:
         """估算 Token 数量
@@ -355,7 +419,7 @@ class ContextService:
             logger.warning(f"Token usage {ratio:.1%}, approaching limit")
 
     def _save_snapshot(self) -> None:
-        """保存当前快照"""
+        """保存当前快照到本地 JSON（DB 持久化在 async 上下文中调用 save_snapshot_to_db）"""
         self.snapshot.timestamp = datetime.now().isoformat()
 
         snapshot_file = self.storage_dir / f"{self.session_id}.json"
@@ -458,9 +522,21 @@ class ContextService:
 _context_service: Optional[ContextService] = None
 
 
-def get_context_service() -> ContextService:
-    """获取上下文服务实例（单例）"""
+def get_context_service(pool: Any = None, session_id: Optional[str] = None) -> ContextService:
+    """获取上下文服务实例（单例）
+
+    Args:
+        pool: asyncpg 连接池（可选）
+        session_id: 关联的会话 ID（可选）
+    """
     global _context_service
     if _context_service is None:
-        _context_service = ContextService()
+        _context_service = ContextService(pool=pool, session_id=session_id)
+    return _context_service
+
+
+def reset_context_service(pool: Any = None, session_id: Optional[str] = None) -> ContextService:
+    """重置上下文服务实例（用于新会话）"""
+    global _context_service
+    _context_service = ContextService(pool=pool, session_id=session_id)
     return _context_service

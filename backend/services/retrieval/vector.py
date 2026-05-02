@@ -180,34 +180,90 @@ class VectorRetriever:
         loop = asyncio.get_event_loop()
 
         def _encode_batch():
-            return model.encode(valid_texts, normalize_embeddings=True, batch_size=32).tolist()
+            return model.encode(valid_texts, normalize_embeddings=True, batch_size=64).tolist()
 
         return await loop.run_in_executor(None, _encode_batch)
 
-    async def search(
+    async def _search_textbook_blocks(
         self,
-        query: str,
+        query_vector: str,
+        top_k: int,
+    ) -> List[Dict[str, Any]]:
+        """搜索 textbook_blocks_v2 分块（已有 64K+ 条带 embedding 的分块）"""
+        sql = """
+            SELECT tbv.id, tbv.content, tbv.node_id,
+                   1 - (tbv.embedding <=> $1::vector) as similarity,
+                   tn.name as node_title, tn.path as node_path
+            FROM textbook_blocks_v2 tbv
+            LEFT JOIN textbook_nodes tn ON tbv.node_id = tn.id
+            WHERE tbv.embedding IS NOT NULL
+                  AND length(tbv.content) > 20
+            ORDER BY tbv.embedding <=> $1::vector
+            LIMIT $2
+        """
+        rows = await self.db_pool.fetch(sql, query_vector, top_k)
+        results = []
+        for r in rows:
+            title = r["node_title"] or "教材"
+            if r["node_path"]:
+                title = f"{r['node_path']} → {title}"
+            results.append(
+                {
+                    "id": f"tbv_{r['id']}",
+                    "title": title,
+                    "content": r["content"],
+                    "category": "教材",
+                    "similarity": float(r["similarity"]),
+                    "method": "vector",
+                    "source_table": "textbook_blocks_v2",
+                }
+            )
+        return results
+
+    async def _search_doc_chunks(
+        self,
+        query_vector: str,
+        top_k: int,
+    ) -> List[Dict[str, Any]]:
+        """搜索 doc_chunks 分块"""
+        sql = """
+            SELECT dc.id, dc.content, dc.doc_id,
+                   1 - (dc.embedding <=> $1::vector) as similarity,
+                   d.title as doc_title, d.category
+            FROM doc_chunks dc
+            JOIN documents d ON d.id = dc.doc_id
+            WHERE dc.embedding IS NOT NULL
+            ORDER BY dc.embedding <=> $1::vector
+            LIMIT $2
+        """
+        rows = await self.db_pool.fetch(sql, query_vector, top_k)
+        results = []
+        for r in rows:
+            results.append(
+                {
+                    "id": f"chunk_{r['id']}",
+                    "title": r["doc_title"],
+                    "content": r["content"],
+                    "category": r["category"],
+                    "similarity": float(r["similarity"]),
+                    "method": "vector",
+                    "source_table": "doc_chunks",
+                    "doc_id": r["doc_id"],
+                }
+            )
+        return results
+
+    async def search_by_vector(
+        self,
+        vector_str: str,
         category: Optional[str] = None,
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[Dict[str, Any]]:
+        """向量搜索（接受预计算的 vector string，跳过 embed 步骤）
+
+        同时搜索 documents、guoxue_content、textbook_blocks_v2、doc_chunks 四张表，合并结果。
         """
-        向量相似度搜索
-
-        同时搜索 documents 和 guoxue_content 两张表，合并结果。
-
-        Args:
-            query: 查询文本
-            category: 分类筛选
-            top_k: 返回数量
-            threshold: 相似度阈值
-
-        Returns:
-            检索结果列表
-        """
-        query_vector = await self.embed_text(query)
-        vector_str = "[" + ",".join(map(str, query_vector)) + "]"
-
         doc_filter = (
             "length(content) > 100"
             " AND content NOT LIKE '来源: %'"
@@ -215,7 +271,6 @@ class VectorRetriever:
         )
         gx_filter = "body_length > 100"
 
-        # Documents query
         if category:
             doc_sql = f"""
                 SELECT id, title, content, category,
@@ -241,13 +296,13 @@ class VectorRetriever:
             """
             doc_params = [vector_str, top_k]
 
-        # Guoxue_content query — two-phase: vector search first, then resolve titles
-        # Phase 1: fast HNSW search without JOIN
-        gx_phase1_sql = f"""
+        gx_sql = f"""
             SELECT gc.id, gc.body as content, gc.book_id,
                    1 - (gc.embedding <=> $1::vector) as similarity,
-                   'guoxue_content' as source_table
+                   'guoxue_content' as source_table,
+                   gb.title as book_title
             FROM guoxue_content gc
+            LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
             WHERE gc.embedding IS NOT NULL
                   AND {gx_filter}
             ORDER BY gc.embedding <=> $1::vector
@@ -255,64 +310,100 @@ class VectorRetriever:
         """
         gx_params = [vector_str, top_k]
 
-        async with self.db_pool.acquire() as conn1, self.db_pool.acquire() as conn2:
-            doc_rows, gx_rows = await asyncio.gather(
-                conn1.fetch(doc_sql, *doc_params),
-                conn2.fetch(gx_phase1_sql, *gx_params),
-            )
+        async def _fetch_doc():
+            async with self.db_pool.acquire() as conn:
+                return await conn.fetch(doc_sql, *doc_params)
 
-        # Phase 2: batch resolve book titles for guoxue results
-        book_titles = {}
-        if gx_rows:
-            book_ids = list(set(r["book_id"] for r in gx_rows if r["book_id"]))
-            if book_ids:
-                async with self.db_pool.acquire() as conn:
-                    title_rows = await conn.fetch(
-                        "SELECT book_id, title FROM guoxue_books WHERE book_id = ANY($1::int[])",
-                        book_ids,
-                    )
-                    book_titles = {r["book_id"]: r["title"] for r in title_rows}
+        async def _fetch_gx():
+            async with self.db_pool.acquire() as conn:
+                return await conn.fetch(gx_sql, *gx_params)
 
-        # Build normalized result dicts (unify documents and guoxue schemas)
+        doc_rows_raw, gx_rows_raw, tbv_rows_raw, chunk_rows_raw = await asyncio.gather(
+            _fetch_doc(),
+            _fetch_gx(),
+            self._search_textbook_blocks(vector_str, top_k),
+            self._search_doc_chunks(vector_str, top_k),
+            return_exceptions=True,
+        )
+
+        doc_rows = doc_rows_raw if isinstance(doc_rows_raw, list) else []
+        gx_rows = gx_rows_raw if isinstance(gx_rows_raw, list) else []
+        if isinstance(tbv_rows_raw, Exception):
+            logger.warning(f"textbook_blocks_v2 搜索失败: {tbv_rows_raw}")
+        if isinstance(chunk_rows_raw, Exception):
+            logger.warning(f"doc_chunks 搜索失败: {chunk_rows_raw}")
+        tbv_rows = tbv_rows_raw if isinstance(tbv_rows_raw, list) else []
+        chunk_rows = chunk_rows_raw if isinstance(chunk_rows_raw, list) else []
+
+        # Build normalized results
         normalized = []
         for r in doc_rows:
-            normalized.append({
-                "id": r["id"],
-                "title": r["title"],
-                "content": r["content"],
-                "category": r["category"],
-                "similarity": float(r["similarity"]),
-                "source_table": r["source_table"],
-            })
+            normalized.append(
+                {
+                    "id": r["id"],
+                    "title": r["title"],
+                    "content": r["content"],
+                    "category": r["category"],
+                    "similarity": float(r["similarity"]),
+                    "source_table": r["source_table"],
+                }
+            )
         for r in gx_rows:
-            normalized.append({
-                "id": r["id"],
-                "title": book_titles.get(r["book_id"], "古籍"),
-                "content": r["content"],
-                "category": "古籍",
-                "similarity": float(r["similarity"]),
-                "source_table": r["source_table"],
-            })
+            normalized.append(
+                {
+                    "id": r["id"],
+                    "title": r.get("book_title", "古籍"),
+                    "content": r["content"],
+                    "category": "古籍",
+                    "similarity": float(r["similarity"]),
+                    "source_table": r["source_table"],
+                }
+            )
+        normalized.extend(tbv_rows)
+        normalized.extend(chunk_rows)
 
         normalized.sort(key=lambda r: r["similarity"], reverse=True)
 
         results = []
         for row in normalized[:top_k]:
             if row["similarity"] >= threshold:
-                results.append({
-                    "id": row["id"],
-                    "title": row["title"],
-                    "content": row["content"],
-                    "category": row["category"],
-                    "similarity": row["similarity"],
-                    "method": "vector",
-                    "source_table": row["source_table"],
-                })
-
-        logger.info(
-            f"向量搜索: query='{query}', docs={len(doc_rows)}, guoxue={len(gx_rows)}, found={len(results)}"
-        )
+                results.append(
+                    {
+                        "id": row["id"],
+                        "title": row["title"],
+                        "content": row["content"],
+                        "category": row["category"],
+                        "similarity": row["similarity"],
+                        "method": "vector",
+                        "source_table": row.get("source_table", ""),
+                    }
+                )
         return results
+
+    async def search(
+        self,
+        query: str,
+        category: Optional[str] = None,
+        top_k: int = 10,
+        threshold: float = 0.0,
+    ) -> List[Dict[str, Any]]:
+        """
+        向量相似度搜索
+
+        同时搜索 documents、guoxue_content、textbook_blocks_v2、doc_chunks 四张表，合并结果。
+
+        Args:
+            query: 查询文本
+            category: 分类筛选
+            top_k: 返回数量
+            threshold: 相似度阈值
+
+        Returns:
+            检索结果列表
+        """
+        query_vector = await self.embed_text(query)
+        vector_str = "[" + ",".join(map(str, query_vector)) + "]"
+        return await self.search_by_vector(vector_str, category, top_k, threshold)
 
     async def update_embedding(self, doc_id: int) -> bool:
         """
@@ -358,10 +449,12 @@ class VectorRetriever:
             统计信息
         """
         async with self.db_pool.acquire() as conn:
-            rows = await conn.fetch("""SELECT id, title, content
+            rows = await conn.fetch(
+                """SELECT id, title, content
                    FROM documents
                    WHERE embedding IS NULL
-                   ORDER BY id""")
+                   ORDER BY id"""
+            )
 
         total = len(rows)
         updated = 0
@@ -376,19 +469,28 @@ class VectorRetriever:
             try:
                 embeddings = await self.embed_batch(texts)
 
+                # Batch update using UNNEST to reduce N+1 queries
                 async with self.db_pool.acquire() as conn:
+                    values_list = []
+                    params = []
+                    param_idx = 1
                     for row, embedding in zip(batch, embeddings):
-                        try:
-                            vector_str = "[" + ",".join(map(str, embedding)) + "]"
-                            await conn.execute(
-                                "UPDATE documents SET embedding = $1::vector WHERE id = $2",
-                                vector_str,
-                                row["id"],
-                            )
-                            updated += 1
-                        except Exception as e:
-                            logger.error(f"更新文档 {row['id']} 失败: {e}")
-                            failed += 1
+                        vector_str = "[" + ",".join(map(str, embedding)) + "]"
+                        values_list.append(f"(${param_idx}::int, ${param_idx+1}::vector)")
+                        params.extend([row["id"], vector_str])
+                        param_idx += 2
+
+                    values_sql = ", ".join([f"({v})" for v in values_list])
+                    await conn.execute(
+                        f"""
+                        UPDATE documents AS d
+                        SET embedding = v.embedding
+                        FROM (VALUES {values_sql}) AS v(id, embedding)
+                        WHERE d.id = v.id
+                        """,
+                        *params,
+                    )
+                    updated += len(batch)
             except Exception as e:
                 logger.error(f"批处理嵌入失败 (batch {i}): {e}")
                 failed += len(batch)

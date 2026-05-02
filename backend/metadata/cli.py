@@ -8,11 +8,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import (
-    get_all_workflows,
-    get_completed_workflows,
-    load_manifest,
-)
+from . import get_all_workflows, get_completed_workflows, load_manifest
 from .manifest import find_workflows, generate_status_report
 
 

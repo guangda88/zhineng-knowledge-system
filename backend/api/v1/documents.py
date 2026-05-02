@@ -1,6 +1,5 @@
 """文档管理API路由"""
 
-import json
 import logging
 from typing import List, Optional
 
@@ -42,57 +41,75 @@ async def list_documents(
     offset: int = Query(0, ge=0),
 ) -> JSONResponse:
     """获取文档列表"""
-    pool = await init_db_pool()
+    try:
+        pool = await init_db_pool()
 
-    if category:
-        rows = await pool.fetch(
-            """SELECT id, title, category, tags, created_at
-               FROM documents WHERE category = $1
-               ORDER BY id LIMIT $2 OFFSET $3""",
-            category,
-            limit,
-            offset,
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT id, title, category, tags, created_at
-               FROM documents ORDER BY id LIMIT $1 OFFSET $2""",
-            limit,
-            offset,
-        )
+        if category:
+            rows = await pool.fetch(
+                """SELECT id, title, category, tags, created_at
+                   FROM documents WHERE category = $1
+                   ORDER BY id LIMIT $2 OFFSET $3""",
+                category,
+                limit,
+                offset,
+            )
+        else:
+            rows = await pool.fetch(
+                """SELECT id, title, category, tags, created_at
+                   FROM documents ORDER BY id LIMIT $1 OFFSET $2""",
+                limit,
+                offset,
+            )
 
-    return {"total": len(rows), "documents": rows_to_list(rows)}
+        return {"total": len(rows), "documents": rows_to_list(rows)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"list_documents failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="查询文档列表失败")
 
 
 @router.get("/{doc_id}")
 async def get_document(doc_id: int) -> JSONResponse:
     """获取单个文档"""
-    pool = await init_db_pool()
-    return await fetch_one_or_404(
-        pool,
-        """SELECT id, title, content, category, tags, created_at
-           FROM documents WHERE id = $1""",
-        doc_id,
-        error_message="文档不存在",
-    )
+    try:
+        pool = await init_db_pool()
+        return await fetch_one_or_404(
+            pool,
+            """SELECT id, title, content, category, tags, created_at
+               FROM documents WHERE id = $1""",
+            doc_id,
+            error_message="文档不存在",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_document failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取文档详情失败")
 
 
 @router.post("", status_code=201)
 async def create_document(doc: DocumentCreate) -> JSONResponse:
     """创建文档"""
-    pool = await init_db_pool()
+    try:
+        pool = await init_db_pool()
 
-    if len(doc.tags) > 10:
-        raise HTTPException(status_code=400, detail="标签数量不能超过10个")
+        if len(doc.tags) > 10:
+            raise HTTPException(status_code=400, detail="标签数量不能超过10个")
 
-    doc_id = await pool.fetchval(
-        """INSERT INTO documents (title, content, category, tags)
-           VALUES ($1, $2, $3, $4::jsonb) RETURNING id""",
-        doc.title,
-        doc.content,
-        doc.category,
-        json.dumps(doc.tags),
-    )
+        doc_id = await pool.fetchval(
+            """INSERT INTO documents (title, content, category, tags)
+               VALUES ($1, $2, $3, $4) RETURNING id""",
+            doc.title,
+            doc.content,
+            doc.category,
+            doc.tags,
+        )
 
-    logger.info(f"Created document: {doc_id} - {doc.title}")
-    return {"id": doc_id, "message": "文档创建成功"}
+        logger.info(f"Created document: {doc_id} - {doc.title}")
+        return {"id": doc_id, "message": "文档创建成功"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"create_document failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="创建文档失败")

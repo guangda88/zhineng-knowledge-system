@@ -18,10 +18,7 @@ from backend.cache.decorators import (
     cached_api_stats,
     memoize_async,
 )
-from backend.cache.manager import (
-    CacheConfig,
-    CacheManager,
-)
+from backend.cache.manager import CacheConfig, CacheManager
 from backend.cache.memory_cache import MemoryCache
 from backend.cache.redis_cache import RedisCache, RedisConfig
 

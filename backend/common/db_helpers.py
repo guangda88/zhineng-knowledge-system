@@ -245,7 +245,7 @@ async def search_documents(
         """
         rows = await pool.fetch(query, search_pattern, limit)
 
-    return rows_to_list(rows)
+    return [{"source_table": "documents", **d} for d in rows_to_list(rows)]
 
 
 async def get_document_stats(

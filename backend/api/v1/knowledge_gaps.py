@@ -11,11 +11,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from backend.core.database import init_db_pool
-from backend.services.retrieval.gap_tracker import (
-    get_gaps,
-    get_gaps_stats,
-    update_gap_status,
-)
+from backend.services.retrieval.gap_tracker import get_gaps, get_gaps_stats, update_gap_status
 
 logger = logging.getLogger(__name__)
 

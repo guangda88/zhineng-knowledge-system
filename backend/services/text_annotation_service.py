@@ -21,11 +21,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from backend.models.text_annotation import (
-    AnnotationComment,
-    AnnotationTag,
-    TextAnnotation,
-)
+from backend.models.text_annotation import AnnotationComment, AnnotationTag, TextAnnotation
 
 logger = logging.getLogger(__name__)
 

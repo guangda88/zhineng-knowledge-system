@@ -188,7 +188,9 @@ async def get_content(content_id: int):
 async def search_content(
     q: str = Query(..., min_length=1, max_length=200, description="搜索关键词"),
     book_id: Optional[int] = Query(None, description="限定典籍ID"),
-    mode: str = Query("fulltext", pattern="^(fulltext|fuzzy|broad|semantic)$", description="搜索模式"),
+    mode: str = Query(
+        "fulltext", pattern="^(fulltext|fuzzy|broad|semantic)$", description="搜索模式"
+    ),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
