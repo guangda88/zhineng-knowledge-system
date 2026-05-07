@@ -105,7 +105,7 @@ class TestDocumentParser:
         result = await parser.parse_file(temp_text_file, extract_metadata=False)
 
         assert result["status"] == "success"
-        assert result["metadata"] == {}
+        assert result["metadata"] == {"title": "test.txt", "encoding": "utf-8"}
 
     @pytest.mark.asyncio
     async def test_parse_batch(self, tmp_path):
