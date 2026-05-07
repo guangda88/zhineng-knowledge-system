@@ -24,8 +24,8 @@ import time
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
-DEFAULT_DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
-MAX_CHUNK_SIZE = 50000
+DEFAULT_DB_URL = os.getenv("DATABASE_URL")
+MAX_CHUNK_SIZE = 30000
 
 BUDDHIST_KEYWORDS = [
     "佛", "禅", "般若", "阿含", "法华", "华严", "涅槃", "净土", "维摩",
@@ -177,38 +177,17 @@ def chunk_chapters(book: dict, chapters: list, max_size: int) -> list[dict]:
 
 async def _insert_batch(conn, batch: list[dict]):
     """Insert batch of documents."""
-    titles = [d["title"] for d in batch]
-    contents = [d["content"] for d in batch]
-    categories = [d["category"] for d in batch]
-    tags = [d["tags"] for d in batch]
-
-    try:
-        await conn.execute(
-            """
-            INSERT INTO documents (title, content, category, tags)
-            SELECT * FROM UNNEST(
-                $1::varchar(500)[], $2::text[], $3::varchar(50)[], $4::text[][]
+    for d in batch:
+        try:
+            await conn.execute(
+                "INSERT INTO documents (title, content, category, tags) VALUES ($1,$2,$3,$4) ON CONFLICT (title) DO NOTHING",
+                d["title"],
+                d["content"],
+                d["category"],
+                d["tags"],
             )
-            ON CONFLICT (title) DO NOTHING
-            """,
-            titles,
-            contents,
-            categories,
-            tags,
-        )
-    except Exception as e:
-        logger.error(f"Batch insert error: {e}")
-        for d in batch:
-            try:
-                await conn.execute(
-                    "INSERT INTO documents (title, content, category, tags) VALUES ($1,$2,$3,$4) ON CONFLICT (title) DO NOTHING",
-                    d["title"],
-                    d["content"],
-                    d["category"],
-                    d["tags"],
-                )
-            except Exception as e2:
-                logger.error(f"  Row error: {d['title'][:50]}: {e2}")
+        except Exception as e:
+            logger.error(f"  Row error: {d['title'][:60]}: {e}")
 
 
 def main():

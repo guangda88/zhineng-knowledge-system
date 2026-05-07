@@ -23,10 +23,7 @@ import httpx
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-DB_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb",
-)
+DB_URL = os.getenv("DATABASE_URL")
 UA = "ZhiNengKnowledgeSystem/1.0 (educational use; https://github.com/zhineng)"
 
 WIKISOURCE_API = "https://zh.wikisource.org/w/api.php"
@@ -187,7 +184,7 @@ DOMAINS = {
 }
 
 
-async def fetch_wikitext(client: httpx.AsyncClient, title: str) -> str | None:
+async def fetch_wikitext(client: httpx.AsyncClient, title: str, max_retries: int = 3) -> str | None:
     params = {
         "action": "query",
         "titles": title,
@@ -195,18 +192,27 @@ async def fetch_wikitext(client: httpx.AsyncClient, title: str) -> str | None:
         "rvprop": "content",
         "format": "json",
     }
-    try:
-        resp = await client.get(WIKISOURCE_API, params=params)
-        data = resp.json()
-        pages = data.get("query", {}).get("pages", {})
-        for pid, page in pages.items():
-            if "missing" in page:
-                return None
-            revs = page.get("revisions", [])
-            if revs:
-                return revs[0]["*"]
-    except Exception as e:
-        logger.error(f"Failed to fetch '{title}': {e}")
+    for attempt in range(max_retries):
+        try:
+            await asyncio.sleep(1.5)
+            resp = await client.get(WIKISOURCE_API, params=params)
+            if resp.status_code == 429:
+                wait = int(resp.headers.get("Retry-After", "5"))
+                logger.warning(f"Rate limited on '{title}', waiting {wait}s (attempt {attempt+1}/{max_retries})")
+                await asyncio.sleep(wait)
+                continue
+            data = resp.json()
+            pages = data.get("query", {}).get("pages", {})
+            for pid, page in pages.items():
+                if "missing" in page:
+                    return None
+                revs = page.get("revisions", [])
+                if revs:
+                    return revs[0]["*"]
+        except Exception as e:
+            logger.error(f"Failed to fetch '{title}': {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(3)
     return None
 
 
@@ -225,7 +231,11 @@ async def get_subpages(client: httpx.AsyncClient, parent_title: str) -> list[str
         if sroffset:
             params["apcontinue"] = sroffset
         try:
+            await asyncio.sleep(1.5)
             resp = await client.get(WIKISOURCE_API, params=params)
+            if resp.status_code == 429:
+                await asyncio.sleep(int(resp.headers.get("Retry-After", "5")))
+                continue
             data = resp.json()
             for page in data.get("query", {}).get("allpages", []):
                 title = page["title"]
@@ -303,7 +313,7 @@ async def import_domain(
                     except Exception as e:
                         logger.error(f"Insert failed for {doc_title}: {e}")
 
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1.5)
         else:
             logger.info(f"[{domain}] Fetching {text_info['wiki_title']}")
             wikitext = await fetch_wikitext(client, text_info["wiki_title"])
@@ -333,7 +343,7 @@ async def import_domain(
                 except Exception as e:
                     logger.error(f"Insert failed for {main_title}: {e}")
 
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.5)
 
     return imported
 

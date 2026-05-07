@@ -1,26 +1,19 @@
 #!/usr/bin/env python3
 """
-从 zh.wikisource.org 导入道家核心典籍到 documents 表
+从 zh.wikisource.org 导入武术典籍到 documents 表
 
-通过 MediaWiki API 获取 维基文库 中道家典籍原文，清洗 wikitext 标记后导入。
+覆盖传统武术经典著作
 
 用法:
-    python scripts/import_daoist_wikisource.py --dry-run    # 预览
-    python scripts/import_daoist_wikisource.py              # 执行导入
+    python scripts/import_martial_arts_wikisource.py --dry-run
+    python scripts/import_martial_arts_wikisource.py
 
-文本来源:
-    - 老子 (匯校版) — 道德经全文 81 章
-    - 莊子 — 33 篇 (內篇7 + 外篇15 + 雜篇11)
-    - 列子 — 8 篇
-    - 淮南子 — 21 篇
-    - 文子 — 12 篇
-
+数据来源: zh.wikisource.org
 License: 维基文库内容为公共领域
 """
 
 import argparse
 import asyncio
-import json
 import logging
 import re
 
@@ -30,92 +23,84 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 DEFAULT_DB_URL = os.getenv("DATABASE_URL")
-CATEGORY = "道家"
+CATEGORY = "武术"
 API_BASE = "https://zh.wikisource.org/w/api.php"
-UA = "ZhiNengKnowledgeSystem/1.0 (educational use; zhineng-knowledge-system)"
+UA = "ZhiNengKnowledgeSystem/1.0 (educational use)"
 
-
-def clean_wikitext(wikitext: str) -> str:
-    """Remove wikitext markup and extract pure Chinese text."""
-    text = wikitext
-    # Remove HTML comments
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    # Remove template calls like {{參|...}}, {{另|...}}
-    text = re.sub(r"\{\{参\|", "", text)
-    text = re.sub(r"\{\{另\|", "", text)
-    # Remove other template calls
-    text = re.sub(r"\{\{[^}]*\}\}", "", text)
-    # Remove category links
-    text = re.sub(r"\[\[Category:[^\]]*\]\]", "", text)
-    # Convert wikilinks [[target|display]] → display
-    text = re.sub(r"\[\[[^|\]]*\|([^\]]*)\]\]", r"\1", text)
-    text = re.sub(r"\[\[([^\]]*)\]\]", r"\1", text)
-    # Remove HTML tags
-    text = re.sub(r"<[^>]+>", "", text)
-    # Remove __TOC__ and similar
-    text = re.sub(r"__[A-Z]+__", "", text)
-    # Remove section headers markers (keep text)
-    text = re.sub(r"^=+\s*", "", text, flags=re.MULTILINE)
-    text = re.sub(r"\s*=+$", "", text, flags=re.MULTILINE)
-    # Remove remaining markup
-    text = re.sub(r"'''", "", text)
-    text = re.sub(r"''", "", text)
-    # Clean up whitespace
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    text = text.strip()
-    return text
-
-
-# Texts to import: (wikisource title, display title, tags, has subpages)
-TEXTS_TO_IMPORT = [
+TEXTS = [
     {
-        "wiki_title": "老子 (匯校版)",
-        "display_title": "道德经",
-        "tags": ["道德经", "老子", "先秦", "匯校版"],
+        "wiki_title": "太极拳论",
+        "display_title": "太極拳論",
+        "tags": ["太極拳", "武禹襄", "清代"],
         "subpages": False,
     },
     {
-        "wiki_title": "莊子",
-        "display_title": "莊子",
-        "tags": ["莊子", "先秦"],
+        "wiki_title": "紀效新書",
+        "display_title": "紀效新書",
+        "tags": ["戚繼光", "明代", "兵器"],
         "subpages": True,
         "subpage_list": [
-            "逍遙遊", "齊物論", "養生主", "人間世", "德充符", "大宗師", "應帝王",
-            "駢拇", "馬蹄", "胠篋", "在宥", "天地", "天道", "天運",
-            "刻意", "繕性", "秋水", "至樂", "達生", "山木", "田子方", "知北遊",
-            "庚桑楚", "徐無鬼", "則陽", "外物", "寓言", "讓王", "盜跖",
-            "說劍", "漁父", "列禦寇", "天下",
+            "束伍篇", "操令篇", "陣令篇", "諭兵篇", "法禁篇",
+            "比較篇", "營陣篇", "行營篇", "練營陣篇",
+            "戰約篇", "賞罰篇", "儲練通論", "手足篇",
+            "短兵長用說", "長兵短用說", "射法篇", "拳經捷要篇",
         ],
     },
     {
-        "wiki_title": "列子",
-        "display_title": "列子",
-        "tags": ["列子", "先秦"],
+        "wiki_title": "劍經",
+        "display_title": "劍經",
+        "tags": ["俞大猷", "明代", "劍法"],
+        "subpages": False,
+    },
+    {
+        "wiki_title": "少林拳術秘訣",
+        "display_title": "少林拳術秘訣",
+        "tags": ["少林", "民國", "拳法"],
         "subpages": True,
         "subpage_list": [
-            "天瑞篇", "黃帝篇", "周穆王篇", "仲尼篇", "湯問篇", "力命篇", "楊朱篇", "說符篇",
+            "第一章 緣起", "第二章 少林拳法之真諦",
+            "第三章 少林拳之練法", "第四章 少林拳之手法",
         ],
     },
     {
-        "wiki_title": "淮南子",
-        "display_title": "淮南子",
-        "tags": ["淮南子", "西漢", "劉安"],
+        "wiki_title": "手臂錄",
+        "display_title": "手臂錄",
+        "tags": ["吳殳", "明代", "槍法"],
+        "subpages": False,
+    },
+    {
+        "wiki_title": "練兵實紀",
+        "display_title": "練兵實紀",
+        "tags": ["戚繼光", "明代", "軍事"],
         "subpages": True,
         "subpage_list": [
-            "原道訓", "俶真訓", "天文訓", "墬形訓", "時則訓", "覽冥訓",
-            "精神訓", "本經訓", "主術訓", "繆稱訓", "齊俗訓", "道應訓",
-            "氾論訓", "詮言訓", "兵略訓", "說山訓", "說林訓", "人間訓",
-            "修務訓", "泰族訓", "要略",
+            "練伍法", "練膽氣", "練耳目", "練手足", "練營陣",
         ],
     },
 ]
 
 
+def clean_wikitext(wikitext: str) -> str:
+    text = wikitext
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    text = re.sub(r"\{\{[^}]*\}\}", "", text)
+    text = re.sub(r"\[\[Category:[^\]]*\]\]", "", text)
+    text = re.sub(r"\[\[[^|\]]*\|([^\]]*)\]\]", r"\1", text)
+    text = re.sub(r"\[\[([^\]]*)\]\]", r"\1", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"__[A-Z]+__", "", text)
+    text = re.sub(r"^=+\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\s*=+$", "", text, flags=re.MULTILINE)
+    text = re.sub(r"'''", "", text)
+    text = re.sub(r"''", "", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 async def fetch_wikitext(client: httpx.AsyncClient, title: str, max_retries: int = 3) -> str | None:
-    """Fetch wikitext content from Wikisource API with retry on 429."""
     for attempt in range(max_retries):
         try:
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(2.5)
             r = await client.get(
                 API_BASE,
                 params={
@@ -127,8 +112,8 @@ async def fetch_wikitext(client: httpx.AsyncClient, title: str, max_retries: int
                 },
             )
             if r.status_code == 429:
-                wait = int(r.headers.get("Retry-After", "5"))
-                logger.warning(f"Rate limited on '{title}', waiting {wait}s (attempt {attempt+1}/{max_retries})")
+                wait = int(r.headers.get("Retry-After", "10"))
+                logger.warning(f"Rate limited on '{title}', waiting {wait}s")
                 await asyncio.sleep(wait)
                 continue
             data = r.json()
@@ -142,12 +127,11 @@ async def fetch_wikitext(client: httpx.AsyncClient, title: str, max_retries: int
         except Exception as e:
             logger.error(f"Failed to fetch '{title}': {e}")
             if attempt < max_retries - 1:
-                await asyncio.sleep(3)
+                await asyncio.sleep(5)
     return None
 
 
-async def import_daoist(db_url: str, dry_run: bool):
-    """Main import logic."""
+async def import_martial(db_url: str, dry_run: bool):
     import asyncpg
 
     pool = await asyncpg.create_pool(db_url, min_size=1, max_size=2)
@@ -156,13 +140,23 @@ async def import_daoist(db_url: str, dry_run: bool):
     async with httpx.AsyncClient(
         timeout=30, follow_redirects=True, headers={"User-Agent": UA}
     ) as client:
-        for text_info in TEXTS_TO_IMPORT:
+        for text_info in TEXTS:
             main_title = text_info["display_title"]
 
             if text_info["subpages"]:
-                # Fetch each subpage separately
                 for subpage in text_info["subpage_list"]:
                     full_title = f"{text_info['wiki_title']}/{subpage}"
+                    doc_title = f"{main_title}·{subpage}"
+
+                    async with pool.acquire() as conn:
+                        existing = await conn.fetchval(
+                            "SELECT 1 FROM documents WHERE title = $1", doc_title
+                        )
+                    if existing:
+                        logger.info(f"  Skip (exists): {doc_title}")
+                        imported += 1
+                        continue
+
                     logger.info(f"Fetching {full_title}")
                     wikitext = await fetch_wikitext(client, full_title)
                     if not wikitext:
@@ -180,6 +174,7 @@ async def import_daoist(db_url: str, dry_run: bool):
 
                     if dry_run:
                         logger.info(f"  {doc_title}: {ch_chars} Chinese chars")
+                        imported += 1
                         continue
 
                     async with pool.acquire() as conn:
@@ -190,17 +185,22 @@ async def import_daoist(db_url: str, dry_run: bool):
                                 VALUES ($1, $2, $3, $4)
                                 ON CONFLICT (title) DO NOTHING
                                 """,
-                                doc_title,
-                                content,
-                                CATEGORY,
-                                tags,
+                                doc_title, content, CATEGORY, tags,
                             )
                             imported += 1
                             logger.info(f"  Imported: {doc_title} ({ch_chars} chars)")
                         except Exception as e:
                             logger.error(f"  Insert error: {e}")
             else:
-                # Single page text
+                async with pool.acquire() as conn:
+                    existing = await conn.fetchval(
+                        "SELECT 1 FROM documents WHERE title = $1", main_title
+                    )
+                if existing:
+                    logger.info(f"  Skip (exists): {main_title}")
+                    imported += 1
+                    continue
+
                 logger.info(f"Fetching {text_info['wiki_title']}")
                 wikitext = await fetch_wikitext(client, text_info["wiki_title"])
                 if not wikitext:
@@ -215,6 +215,7 @@ async def import_daoist(db_url: str, dry_run: bool):
 
                 if dry_run:
                     logger.info(f"  {main_title}: {ch_chars} Chinese chars")
+                    imported += 1
                     continue
 
                 async with pool.acquire() as conn:
@@ -225,10 +226,7 @@ async def import_daoist(db_url: str, dry_run: bool):
                             VALUES ($1, $2, $3, $4)
                             ON CONFLICT (title) DO NOTHING
                             """,
-                            main_title,
-                            content,
-                            CATEGORY,
-                            text_info["tags"],
+                            main_title, content, CATEGORY, text_info["tags"],
                         )
                         imported += 1
                         logger.info(f"  Imported: {main_title} ({ch_chars} chars)")
@@ -236,20 +234,15 @@ async def import_daoist(db_url: str, dry_run: bool):
                         logger.error(f"  Insert error: {e}")
 
     await pool.close()
-    if dry_run:
-        print("\n=== Dry Run Summary ===")
-        print(f"Texts to import: {sum(len(t.get('subpage_list', [])) if t['subpages'] else 1 for t in TEXTS_TO_IMPORT)}")
-    else:
-        print(f"\n=== Import Summary ===")
-        print(f"Docs imported: {imported}")
+    print(f"\n{'Dry run' if dry_run else 'Import'} summary: {imported} documents")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import Daoist texts from zh.wikisource.org")
+    parser = argparse.ArgumentParser(description="Import Martial Arts texts from zh.wikisource.org")
     parser.add_argument("--db-url", default=DEFAULT_DB_URL)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    asyncio.run(import_daoist(args.db_url, args.dry_run))
+    asyncio.run(import_martial(args.db_url, args.dry_run))
 
 
 if __name__ == "__main__":
