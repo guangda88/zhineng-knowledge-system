@@ -16,6 +16,7 @@ License: OpenAlex 数据以 CC0 许可发布
 """
 
 import argparse
+import os
 import asyncio
 import json
 import logging

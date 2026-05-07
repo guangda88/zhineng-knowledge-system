@@ -13,6 +13,7 @@ License: 维基文库内容为公共领域
 """
 
 import argparse
+import os
 import asyncio
 import logging
 import re
@@ -102,20 +103,13 @@ TEXTS = [
         "wiki_title": "孫子兵法",
         "display_title": "孫子兵法",
         "tags": ["孫子", "兵家", "先秦"],
-        "subpages": True,
-        "subpage_list": [
-            "始計", "作戰", "謀攻", "軍形", "兵勢", "虛實",
-            "軍爭", "九變", "行軍", "地形", "九地", "火攻", "用間",
-        ],
+        "subpages": False,
     },
     {
         "wiki_title": "公孫龍子",
         "display_title": "公孫龍子",
         "tags": ["公孫龍", "名家", "先秦"],
-        "subpages": True,
-        "subpage_list": [
-            "跡府", "白馬論", "指物論", "通變論", "堅白論", "名實論",
-        ],
+        "subpages": False,
     },
     {
         "wiki_title": "鬼谷子",
@@ -123,8 +117,8 @@ TEXTS = [
         "tags": ["鬼谷子", "纵横家", "先秦"],
         "subpages": True,
         "subpage_list": [
-            "捭闔", "反應", "內揵", "抵巇", "飛箝", "忤合",
-            "揣篇", "摩篇", "權篇", "謀篇", "決篇", "符言",
+            "序", "卷01", "卷02", "卷03",
+            "鬼谷子附録", "鬼谷子篇目考", "跋",
         ],
     },
 ]

@@ -19,6 +19,7 @@ License: 维基文库内容为公共领域
 """
 
 import argparse
+import os
 import asyncio
 import json
 import logging
