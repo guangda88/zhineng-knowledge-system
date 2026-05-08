@@ -51,6 +51,8 @@ DB_URL = os.getenv(
     "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
 )
 TRAINING_SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "prepare_training_data.py"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+ALLOWED_OUTPUT_BASES = {PROJECT_ROOT / "data", PROJECT_ROOT / "output", PROJECT_ROOT / "tmp"}
 
 READONLY_TABLES = {
     "documents",
@@ -87,7 +89,7 @@ async def knowledge_search(
     Returns:
         搜索结果列表，包含文档标题、内容摘要、相关性分数
     """
-    async with httpx.AsyncClient(base_url=BASE_URL, timeout=30.0) as client:
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=60.0) as client:
         if use_hybrid:
             payload: Dict[str, Any] = {"query": query, "top_k": top_k}
             if category:
@@ -447,6 +449,10 @@ async def generate_training_data(
     valid_types = {"intent_classifier", "embedding_pairs", "qa_benchmark", "all"}
     if data_type not in valid_types:
         return {"error": f"Invalid data_type: {data_type}. Must be one of {valid_types}"}
+
+    resolved = (PROJECT_ROOT / output_dir).resolve()
+    if not any(resolved == b or resolved.is_relative_to(b) for b in ALLOWED_OUTPUT_BASES):
+        return {"error": f"output_dir must be under data/, output/, or tmp/ (got: {output_dir})"}
 
     script_path = str(TRAINING_SCRIPT)
     if not Path(script_path).exists():

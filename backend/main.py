@@ -87,6 +87,7 @@ def create_app(lifespan_ctx=None) -> FastAPI:
             "/api/v1/graph",
             "/api/v1/guoxue",
             "/api/v1/sysbooks",
+            "/api/v1/domains",
             "/api/v1/discuss",
             "/api/v1/lingmessage",
             "/api/v1/sessions",

@@ -74,6 +74,7 @@ class HybridRetriever:
         k: int = 60,
         use_reranker: bool = True,
         use_highlighter: bool = True,
+        search_timeout: float = 20.0,
     ):
         """
         初始化混合检索器
@@ -85,6 +86,7 @@ class HybridRetriever:
             k: RRF参数
             use_reranker: 是否启用 cross-encoder 精排
             use_highlighter: 是否启用结果片段高亮
+            search_timeout: 并行检索超时秒数（防止大数据集卡死）
         """
         self.db_pool = db_pool
         self.vector_weight = vector_weight
@@ -92,6 +94,7 @@ class HybridRetriever:
         self.k = k
         self.use_reranker = use_reranker
         self.use_highlighter = use_highlighter
+        self.search_timeout = search_timeout
 
         self.vector_retriever: Optional[VectorRetriever] = None
         self.bm25_retriever: Optional[BM25Retriever] = None
@@ -274,7 +277,14 @@ class HybridRetriever:
         else:
             coros.append(_empty_coro())
 
-        v_res, b_res, a_res = await asyncio.gather(*coros, return_exceptions=True)
+        try:
+            v_res, b_res, a_res = await asyncio.wait_for(
+                asyncio.gather(*coros, return_exceptions=True),
+                timeout=self.search_timeout,
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"混合检索并行搜索超时({self.search_timeout}s)，返回已有结果")
+            v_res, b_res, a_res = [], [], []
         if isinstance(v_res, Exception):
             logger.warning(f"向量检索全部失败: {type(v_res).__name__}: {v_res}")
         else:
