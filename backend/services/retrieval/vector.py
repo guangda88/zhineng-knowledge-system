@@ -362,10 +362,42 @@ class VectorRetriever:
         normalized.extend(tbv_rows)
         normalized.extend(chunk_rows)
 
+        # Table-aware merge: each source table gets a minimum allocation
+        # to prevent high-similarity tables (e.g. guoxue_content) from
+        # crowding out lower-similarity but more relevant tables (e.g. doc_chunks).
+        per_table_limit = max(top_k // 4, 2)
+
+        by_table: dict[str, list] = {}
+        for row in normalized:
+            tbl = row.get("source_table", "unknown")
+            by_table.setdefault(tbl, []).append(row)
+        for tbl in by_table:
+            by_table[tbl].sort(key=lambda r: r["similarity"], reverse=True)
+
+        selected: list[dict] = []
+        selected_ids: set = set()
+        for table_rows in by_table.values():
+            for row in table_rows[:per_table_limit]:
+                rid = row["id"]
+                if rid not in selected_ids:
+                    selected.append(row)
+                    selected_ids.add(rid)
+
         normalized.sort(key=lambda r: r["similarity"], reverse=True)
+        remaining = top_k - len(selected)
+        if remaining > 0:
+            for row in normalized:
+                if remaining <= 0:
+                    break
+                if row["id"] not in selected_ids:
+                    selected.append(row)
+                    selected_ids.add(row["id"])
+                    remaining -= 1
+
+        selected.sort(key=lambda r: r["similarity"], reverse=True)
 
         results = []
-        for row in normalized[:top_k]:
+        for row in selected:
             if row["similarity"] >= threshold:
                 results.append(
                     {

@@ -217,6 +217,49 @@ class HybridRetriever:
 
         return results
 
+    def _ensure_table_diversity(
+        self, results: List[Dict[str, Any]], top_k: int
+    ) -> List[Dict[str, Any]]:
+        """确保最终结果中每个 source_table 至少占据 min_per_table 个名额。
+
+        策略：按 relevance 排序依次填充，但为每个 table 保留最低保障位。
+        """
+        if not results or top_k <= 0:
+            return results
+
+        tables = set(r.get("source_table", "") for r in results)
+        tables.discard("")
+        n_tables = len(tables)
+        if n_tables <= 1:
+            return results
+
+        min_per_table = max(top_k // n_tables, 2)
+        quota = {t: min_per_table for t in tables}
+        total_quota = min_per_table * n_tables
+        if total_quota > top_k:
+            scale = top_k / total_quota
+            quota = {t: max(1, int(v * scale)) for t, v in quota.items()}
+
+        selected: List[Dict[str, Any]] = []
+        table_count: Dict[str, int] = {t: 0 for t in tables}
+        remaining: List[Dict[str, Any]] = []
+
+        for r in results:
+            tbl = r.get("source_table", "")
+            if tbl in quota and table_count.get(tbl, 0) < quota[tbl]:
+                selected.append(r)
+                table_count[tbl] = table_count.get(tbl, 0) + 1
+            elif tbl not in quota:
+                selected.append(r)
+            else:
+                remaining.append(r)
+
+        fill = top_k - len(selected)
+        if fill > 0 and remaining:
+            selected.extend(remaining[:fill])
+
+        return selected
+
     async def search(
         self,
         query: str,
@@ -344,6 +387,9 @@ class HybridRetriever:
             key=lambda x: x.get("rerank_score", x.get("score", x.get("similarity", 0))),
             reverse=True,
         )
+
+        # 表来源多样性保障：确保每个 source_table 在 top_k 中有最低名额
+        results = self._ensure_table_diversity(results, top_k)
 
         # 为分块结果补充上下文窗口
         results = await self._enrich_chunk_context(results)
