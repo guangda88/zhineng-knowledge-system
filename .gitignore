@@ -108,3 +108,30 @@ data/context/
 
 # OWData 运行时日志
 store/OWData/*/ownbsv/
+
+# Security - private keys
+*.pem
+
+# Security - credential files
+data/config.json
+.claude/settings.local.json
+**/alist_storages_backup.json
+data/tingwu_exports/fetch_tingwu*.py
+data/textbooks/ima_cookies*.json
+data/textbooks/ima_cookies_selenium.json
+mcp_servers/mcp_config.json
+*.secret
+**/secrets/
+
+# 运行时/临时文件
+nohup.out
+handoff.json
+coverage.json
+typescript
+book4_gen/
+run_lingzhi_http.py
+scripts/cleanup_disk_only.sh.disabled
+scripts/emergency_memory_recovery.sh.disabled
+
+# 垃圾文件（误创建的中文文件名）
+灵知介绍.md
