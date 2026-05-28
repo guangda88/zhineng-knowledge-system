@@ -15,7 +15,8 @@ from pathlib import Path
 os.environ["ALLOWED_ORIGINS"] = (
     '["http://localhost:3000","http://localhost:8008","http://localhost:8000"]'
 )
-os.environ.setdefault("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+if "DATABASE_URL" not in os.environ:
+    raise RuntimeError("DATABASE_URL environment variable is required (set in .env)")
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

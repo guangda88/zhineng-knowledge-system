@@ -347,7 +347,7 @@ analytics/
 
 ```bash
 # 1. 确保所有服务正在运行
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 docker-compose up -d
 
 # 2. 等待服务就绪
@@ -426,7 +426,7 @@ PERFORMANCE_TEST_CONFIG = {
 **Q1: 脚本执行失败，提示找不到模块**
 ```bash
 A: 确保Python路径正确
-   export PYTHONPATH=/home/ai/zhineng-knowledge-system/services
+   export PYTHONPATH=/home/ai/lingzhi/services
 ```
 
 **Q2: 数据库连接失败**
@@ -452,9 +452,9 @@ A: 减少生成的数据量
 ## 📞 联系信息
 
 如有问题，请参考：
-- 项目README: `/home/ai/zhineng-knowledge-system/README.md`
-- 数据分析文档: `/home/ai/zhineng-knowledge-system/analytics/README.md`
-- 数据库文档: `/home/ai/zhineng-knowledge-system/services/web_app/backend/database/README.md`
+- 项目README: `/home/ai/lingzhi/README.md`
+- 数据分析文档: `/home/ai/lingzhi/analytics/README.md`
+- 数据库文档: `/home/ai/lingzhi/services/web_app/backend/database/README.md`
 
 ---
 

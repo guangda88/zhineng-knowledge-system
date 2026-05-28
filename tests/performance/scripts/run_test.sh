@@ -18,7 +18,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 配置
-PROJECT_ROOT="/home/ai/zhineng-knowledge-system"
+PROJECT_ROOT="/home/ai/lingzhi"
 LOCUSTFILE="$PROJECT_ROOT/tests/performance/locustfile.py"
 REPORT_DIR="$PROJECT_ROOT/tests/performance/reports"
 HOST="${TARGET_HOST:-http://localhost:8000}"

@@ -14,9 +14,8 @@ from fastapi.responses import JSONResponse
 
 # 设置测试环境变量 - 必须在导入 backend 之前
 os.environ["ENVIRONMENT"] = "test"
-os.environ.setdefault(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
-)
+if "DATABASE_URL" not in os.environ:
+    raise RuntimeError("DATABASE_URL environment variable is required (set in .env)")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6381/0")
 os.environ.setdefault("DEEPSEEK_API_KEY", "test_api_key_for_testing")
 os.environ.setdefault(

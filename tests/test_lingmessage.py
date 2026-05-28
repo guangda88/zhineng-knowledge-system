@@ -1,6 +1,6 @@
 """灵信通信系统测试
 
-覆盖: LingMessageService 核心功能
+覆盖: lingmessageService 核心功能
 """
 
 import os
@@ -11,9 +11,9 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DB_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
-)
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required")
 
 
 @pytest.fixture
@@ -25,9 +25,9 @@ async def db_pool():
 
 @pytest.fixture
 def svc(db_pool):
-    from backend.services.lingmessage.service import LingMessageService
+    from backend.services.lingmessage.service import lingmessageService
 
-    service = LingMessageService()
+    service = lingmessageService()
 
     async def _get_pool():
         return db_pool
@@ -36,7 +36,7 @@ def svc(db_pool):
     return service
 
 
-class TestLingMessageService:
+class TestlingmessageService:
     """灵信服务测试（需数据库）"""
 
     @pytest.mark.asyncio

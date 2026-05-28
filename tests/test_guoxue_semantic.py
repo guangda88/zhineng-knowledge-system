@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestGuoxueSemanticSearch:
-    """Test _semantic_search method of LingFlowGuoxueSearchService"""
+    """Test _semantic_search method of lingflowGuoxueSearchService"""
 
     @pytest.fixture
     def mock_pool(self):
@@ -14,8 +14,8 @@ class TestGuoxueSemanticSearch:
 
     @pytest.fixture
     def service(self, mock_pool):
-        from backend.services.lingflow_guoxue_search import LingFlowGuoxueSearchService
-        return LingFlowGuoxueSearchService(mock_pool)
+        from backend.services.lingflow_guoxue_search import lingflowGuoxueSearchService
+        return lingflowGuoxueSearchService(mock_pool)
 
     @pytest.mark.asyncio
     async def test_semantic_search_falls_back_when_no_embeddings(self, service, mock_pool):
@@ -107,9 +107,9 @@ class TestGuoxueSearchModeRouting:
 
     @pytest.fixture
     def service(self):
-        from backend.services.lingflow_guoxue_search import LingFlowGuoxueSearchService
+        from backend.services.lingflow_guoxue_search import lingflowGuoxueSearchService
         pool = AsyncMock()
-        return LingFlowGuoxueSearchService(pool)
+        return lingflowGuoxueSearchService(pool)
 
     @pytest.mark.asyncio
     async def test_mode_semantic_routes_correctly(self, service):

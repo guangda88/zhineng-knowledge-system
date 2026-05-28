@@ -37,10 +37,10 @@ curl http://localhost:8000/health
 
 ### 2. 依赖安装
 
-所有脚本位于 `/home/ai/zhineng-knowledge-system/analytics/scripts/` 目录：
+所有脚本位于 `/home/ai/lingzhi/analytics/scripts/` 目录：
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 
 # 检查Python版本
 python3 --version  # 需要Python 3.12+
@@ -60,7 +60,7 @@ python3 --version  # 需要Python 3.12+
 ### 使用方法
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 data_generator.py
 ```
 
@@ -83,7 +83,7 @@ python3 data_generator.py
 ### 使用方法
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 data_validator.py
 ```
 
@@ -115,7 +115,7 @@ python3 data_validator.py
 ### 使用方法
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 performance_analyzer.py
 ```
 
@@ -147,7 +147,7 @@ python3 performance_analyzer.py
 ### 使用方法
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 data_importer.py
 ```
 
@@ -184,7 +184,7 @@ python3 data_importer.py
 使用主控制脚本执行所有分析任务：
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 ./run_analytics.sh
 ```
 
@@ -213,7 +213,7 @@ cd /home/ai/zhineng-knowledge-system/analytics/scripts
 
 ```bash
 # 1. 启动所有服务
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 docker-compose up -d
 
 # 2. 等待服务就绪
@@ -230,7 +230,7 @@ cat ../reports/summary_report_*.txt
 ### 示例2：仅生成测试数据
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 data_generator.py
 
 # 查看统计信息
@@ -240,7 +240,7 @@ cat ../data/statistics.json
 ### 示例3：仅验证数据质量
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 data_validator.py
 
 # 查看验证摘要
@@ -250,7 +250,7 @@ cat ../reports/validation_summary.txt
 ### 示例4：仅分析性能
 
 ```bash
-cd /home/ai/zhineng-knowledge-system/analytics/scripts
+cd /home/ai/lingzhi/analytics/scripts
 python3 performance_analyzer.py
 
 # 查看性能摘要

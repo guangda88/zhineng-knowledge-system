@@ -7,9 +7,10 @@ Data Importer
 """
 
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system/services/web_app/backend')
+sys.path.insert(0, '/home/ai/lingzhi/services/web_app/backend')
 
 import asyncio
+import os
 import logging
 import json
 import csv
@@ -36,8 +37,10 @@ logger = setup_logging(__name__)
 # 配置
 # =============================================================================
 
-DATABASE_URL = "postgresql+asyncpg://tcm_admin:tcm_secure_pass_2024@localhost:5432/tcm_kb"
-INPUT_DIR = Path("/home/ai/zhineng-knowledge-system/analytics/data")
+DATABASE_URL = os.environ.get("ANALYTICS_DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("ANALYTICS_DATABASE_URL not set")
+INPUT_DIR = Path("/home/ai/lingzhi/analytics/data")
 BATCH_SIZE = 100  # 每批处理数量
 MAX_CONCURRENT = 5  # 最大并发数
 

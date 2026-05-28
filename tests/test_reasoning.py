@@ -720,16 +720,16 @@ class TestEntityExtractor:
 
     def test_extract_entities_concept(self, extractor):
         """测试抽取概念实体"""
-        text = "气的运行与经络和阴阳平衡密切相关"
+        text = "阴阳与五行是中医的核心概念，气血运行离不开丹田"
 
         entities = extractor.extract_entities(text)
 
         concepts = [e for e in entities if e.type == "概念"]
         assert len(concepts) >= 3
         names = [e.name for e in concepts]
-        assert "气" in names
-        assert "经络" in names
         assert "阴阳" in names
+        assert "五行" in names
+        assert "丹田" in names
 
     def test_extract_entities_deduplication(self, extractor):
         """测试实体去重"""
@@ -900,6 +900,10 @@ class TestGraphRAGReasoner:
     @pytest.mark.asyncio
     async def test_reason_with_context(self, reasoner, sample_context):
         """测试带上下文的推理"""
+        reasoner.llm_client = AsyncMock()
+        reasoner.llm_client.call_api = AsyncMock(
+            return_value={"choices": [{"message": {"content": "八段锦和经络有密切关系..."}}]}
+        )
         result = await reasoner.reason("八段锦和经络有什么关系？", context=sample_context)
 
         assert isinstance(result, ReasoningResult)

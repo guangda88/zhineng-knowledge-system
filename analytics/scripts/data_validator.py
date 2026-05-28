@@ -7,9 +7,10 @@ Data Validator
 """
 
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system/services/web_app/backend')
+sys.path.insert(0, '/home/ai/lingzhi/services/web_app/backend')
 
 import asyncio
+import os
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -587,8 +588,10 @@ async def main():
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy.orm import sessionmaker
 
-    DATABASE_URL = "postgresql+asyncpg://tcm_admin:tcm_secure_pass_2024@localhost:5432/tcm_kb"
-    OUTPUT_DIR = Path("/home/ai/zhineng-knowledge-system/analytics/reports")
+    DATABASE_URL = os.environ.get("ANALYTICS_DATABASE_URL")
+    if not DATABASE_URL:
+        raise RuntimeError("ANALYTICS_DATABASE_URL not set")
+    OUTPUT_DIR = Path("/home/ai/lingzhi/analytics/reports")
 
     logger.info("=" * 50)
     logger.info("Starting Data Validation")

@@ -36,14 +36,18 @@ class TestVectorRetriever:
 
         # 模拟查询结果
         mock_conn = AsyncMock()
-        mock_conn.fetch.return_value = [
-            {
-                "id": 1,
-                "title": "测试文档",
-                "content": "测试内容",
-                "category": "气功",
-                "similarity": 0.85,
-            }
+        mock_conn.fetch.side_effect = [
+            [
+                {
+                    "id": 1,
+                    "title": "测试文档",
+                    "content": "测试内容",
+                    "category": "气功",
+                    "similarity": 0.85,
+                    "source_table": "documents",
+                }
+            ],
+            [],
         ]
         mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
 
@@ -63,28 +67,11 @@ class TestBM25Retriever:
         """模拟数据库连接池"""
         pool = AsyncMock(spec=asyncpg.Pool)
         mock_conn = AsyncMock()
+        mock_conn.fetch.return_value = []
         mock_conn.fetchval.side_effect = [
             True,
             1,
             100.0,
-        ]
-        mock_conn.fetch.side_effect = [
-            [{"word": "八段锦", "ndoc": 1}],
-            [
-                {
-                    "id": 1,
-                    "sv_text": "'一种':3 '八段锦':1 '功法':5 '气功':4 '是':2",
-                    "content_len": 10,
-                }
-            ],
-            [
-                {
-                    "id": 1,
-                    "title": "八段锦",
-                    "content": "八段锦是一种气功功法",
-                    "category": "气功",
-                }
-            ],
         ]
         acquire_context = MagicMock()
         acquire_context.__aenter__.return_value = mock_conn

@@ -1,7 +1,7 @@
-# 智能知识系统 - LingFlow 代码审查与测试报告
+# 智能知识系统 - lingflow 代码审查与测试报告
 
 **日期**: 2026-03-25
-**工具**: LingFlow + pytest
+**工具**: lingflow + pytest
 **审查范围**: backend/main.py
 
 ---
@@ -74,7 +74,7 @@
 
 ---
 
-## LingFlow 技能使用
+## lingflow 技能使用
 
 - ✅ code-analysis - 代码复杂度分析
 - ✅ code_optimization - 性能优化建议

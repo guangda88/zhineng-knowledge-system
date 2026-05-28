@@ -29,7 +29,7 @@ tests/performance/
 ### 1. 安装依赖
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 pip install -r tests/performance/requirements.txt
 ```
 
@@ -55,7 +55,7 @@ curl http://localhost:8000/health
 ### 方式1: Web UI 模式（推荐用于调试）
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 locust -f tests/performance/locustfile.py --host=http://localhost:8000
 ```
 

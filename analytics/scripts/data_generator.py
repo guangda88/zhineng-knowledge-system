@@ -7,9 +7,10 @@ Test Data Generator
 """
 
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system/services/web_app/backend')
+sys.path.insert(0, '/home/ai/lingzhi/services/web_app/backend')
 
 import asyncio
+import os
 import random
 import string
 import logging
@@ -35,8 +36,10 @@ logger = setup_logging(__name__)
 # 配置
 # =============================================================================
 
-DATABASE_URL = "postgresql+asyncpg://tcm_admin:tcm_secure_pass_2024@localhost:5432/tcm_kb"
-OUTPUT_DIR = Path("/home/ai/zhineng-knowledge-system/analytics/data")
+DATABASE_URL = os.environ.get("ANALYTICS_DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("ANALYTICS_DATABASE_URL not set")
+OUTPUT_DIR = Path("/home/ai/lingzhi/analytics/data")
 
 # =============================================================================
 # 中医相关内容

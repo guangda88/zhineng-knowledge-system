@@ -6,6 +6,7 @@ Data Analysis Configuration
 配置数据分析相关的参数，包括数据源、分析目标、输出格式等
 """
 
+import os
 from typing import Dict, List, Any
 from enum import Enum
 from pathlib import Path
@@ -24,11 +25,11 @@ class DataSourceType(Enum):
 
 DATA_SOURCES = {
     DataSourceType.POSTGRES: {
-        "host": "localhost",
-        "port": 5432,
-        "database": "tcm_knowledge",
-        "user": "tcmuser",
-        "password": "tcmpassword",
+        "host": os.environ.get("ANALYTICS_DB_HOST", "localhost"),
+        "port": int(os.environ.get("ANALYTICS_DB_PORT", "5432")),
+        "database": os.environ.get("ANALYTICS_DB_NAME", "tcm_knowledge"),
+        "user": os.environ.get("ANALYTICS_DB_USER", "tcmuser"),
+        "password": os.environ.get("ANALYTICS_DB_PASSWORD", ""),
         "pool_size": 10,
         "max_overflow": 20,
     },
@@ -152,8 +153,8 @@ class OutputFormat(Enum):
 
 OUTPUT_CONFIG = {
     "default_format": OutputFormat.JSON,
-    "report_dir": Path("/home/ai/zhineng-knowledge-system/analytics/reports"),
-    "data_dir": Path("/home/ai/zhineng-knowledge-system/analytics/data"),
+    "report_dir": Path("/home/ai/lingzhi/analytics/reports"),
+    "data_dir": Path("/home/ai/lingzhi/analytics/data"),
     "include_charts": True,
     "chart_format": "png",
     "chart_dpi": 300,
@@ -238,7 +239,7 @@ SAMPLING_CONFIG = {
 
 CACHE_CONFIG = {
     "enabled": True,
-    "cache_dir": Path("/home/ai/zhineng-knowledge-system/analytics/data/cache"),
+    "cache_dir": Path("/home/ai/lingzhi/analytics/data/cache"),
     "ttl_seconds": 3600,  # 1小时
     "max_size_mb": 1000,
 }
