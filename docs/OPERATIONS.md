@@ -268,7 +268,7 @@ docker-compose exec postgres cat /var/log/postgresql/postgresql-slow.log
 配置日志轮转（/etc/logrotate.d/zhineng-kb）：
 
 ```
-/home/ai/zhineng-knowledge-system/logs/*.log {
+/home/ai/lingzhi/logs/*.log {
     daily
     rotate 30
     compress
@@ -361,8 +361,8 @@ tar -czf backups/config_$(date +%Y%m%d_%H%M%S).tar.gz \
 crontab -e
 
 # 添加以下条目
-0 2 * * * cd /home/ai/zhineng-knowledge-system && ./scripts/backup.sh all
-0 3 * * 0 cd /home/ai/zhineng-knowledge-system && ./scripts/backup.sh clean
+0 2 * * * cd /home/ai/lingzhi && ./scripts/backup.sh all
+0 3 * * 0 cd /home/ai/lingzhi && ./scripts/backup.sh clean
 ```
 
 ### 数据恢复
@@ -483,7 +483,7 @@ docker stats
 docker-compose exec postgres cat /var/log/postgresql/postgresql-slow.log
 
 # 检查缓存命中率
-docker-compose exec redis redis-cli -a redis123 INFO stats
+docker-compose exec redis redis-cli -a "$REDIS_PASSWORD" INFO stats
 
 # 分析请求日志
 docker-compose logs api | grep "process_time" | \
@@ -509,7 +509,7 @@ VACUUM ANALYZE documents;
 
 ```bash
 # 增加缓存
-docker-compose exec redis redis-cli -a redis123 CONFIG SET maxmemory 1gb
+docker-compose exec redis redis-cli -a "$REDIS_PASSWORD" CONFIG SET maxmemory 1gb
 ```
 
 3. **连接池调优**

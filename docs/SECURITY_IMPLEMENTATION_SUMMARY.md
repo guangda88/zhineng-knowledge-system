@@ -166,16 +166,16 @@ build: {
 
 ```bash
 # 1. 检查.gitignore
-grep "*.map" /home/ai/zhineng-knowledge-system/.gitignore
+grep "*.map" /home/ai/lingzhi/.gitignore
 
 # 2. 运行安全检查
-/home/ai/zhineng-knowledge-system/scripts/security-check.sh
+/home/ai/lingzhi/scripts/security-check.sh
 
 # 3. 检查Vite配置
-cat /home/ai/zhineng-knowledge-system/frontend-vue/vite.config.ts | grep sourcemap
+cat /home/ai/lingzhi/frontend-vue/vite.config.ts | grep sourcemap
 
 # 4. 扫描项目Source Map
-find /home/ai/zhineng-knowledge-system \
+find /home/ai/lingzhi \
   -name "*.map" \
   -not -path "*/node_modules/*" \
   -not -path "*/.git/*"

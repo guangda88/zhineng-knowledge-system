@@ -73,10 +73,10 @@ jobs:
 
 ```bash
 # 已配置的监控任务
-*/10 * * * * /home/ai/zhineng-knowledge-system/scripts/emergency_memory_recovery.sh
-0 * * * * /home/ai/zhineng-knowledge-system/scripts/monitor_disk.sh
-*/30 * * * * /home/ai/zhineng-knowledge-system/scripts/monitor_docker.sh
-0 0 * * * /home/ai/zhineng-knowledge-system/scripts/daily_health_check.sh
+*/10 * * * * /home/ai/lingzhi/scripts/emergency_memory_recovery.sh
+0 * * * * /home/ai/lingzhi/scripts/monitor_disk.sh
+*/30 * * * * /home/ai/lingzhi/scripts/monitor_docker.sh
+0 0 * * * /home/ai/lingzhi/scripts/daily_health_check.sh
 ```
 
 **监控指标**:
@@ -291,10 +291,10 @@ fi
 
 ```bash
 # 每周资源审查
-0 9 * * 1 /home/ai/zhineng-knowledge-system/scripts/weekly_capacity_review.sh
+0 9 * * 1 /home/ai/lingzhi/scripts/weekly_capacity_review.sh
 
 # 每月安全审查
-0 9 1 * * /home/ai/zhineng-knowledge-system/scripts/monthly_security_review.sh
+0 9 1 * * /home/ai/lingzhi/scripts/monthly_security_review.sh
 
 # 每季度渗透测试
 # 使用专业工具或第三方服务

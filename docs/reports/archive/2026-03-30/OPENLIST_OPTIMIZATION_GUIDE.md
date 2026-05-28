@@ -29,7 +29,7 @@
 
 **执行命令**:
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db_quick.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db_quick.sh
 ```
 
 **效果**:
@@ -136,7 +136,7 @@ sudo systemctl start openlist
 ### 选项 A: 快速优化（无需释放空间）
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db_quick.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db_quick.sh
 ```
 
 **优点**:
@@ -163,7 +163,7 @@ docker system prune -a --volumes
 df -h /
 
 # 4. 如果有 60GB+ 空间，执行完整优化
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db.sh
 ```
 
 **优点**:
@@ -199,7 +199,7 @@ sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
 
 ```bash
 # 方案 A: 快速优化
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db_quick.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db_quick.sh
 ```
 
 ### 本周执行（有充足时间时）:
@@ -211,7 +211,7 @@ sudo journalctl --vacuum-time=3d
 docker system prune -a --volumes
 
 # 2. 执行完整 VACUUM
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db.sh
 ```
 
 ---

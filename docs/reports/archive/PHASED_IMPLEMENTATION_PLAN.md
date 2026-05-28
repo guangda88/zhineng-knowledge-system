@@ -184,7 +184,7 @@ zhineng-knowledge-system/
 ### 成果展示
 ```bash
 # 启动
-cd /home/ai/zhineng-knowledge-system && docker-compose up -d
+cd /home/ai/lingzhi && docker-compose up -d
 
 # 测试
 curl http://localhost:8001/api/v1/documents

@@ -202,8 +202,8 @@ services:
 **2.2.1 修改 cron 监控频率**：
 ```bash
 # 每小时执行监控（而非每周）
-0 * * * * /home/ai/zhineng-knowledge-system/scripts/monitor_disk.sh
-*/30 * * * * /home/ai/zhineng-knowledge-system/scripts/monitor_docker.sh
+0 * * * * /home/ai/lingzhi/scripts/monitor_disk.sh
+*/30 * * * * /home/ai/lingzhi/scripts/monitor_docker.sh
 ```
 
 **2.2.2 配置 Prometheus 告警规则**：
@@ -328,7 +328,7 @@ fi
 **添加到定时任务**：
 ```bash
 # 每小时检查一次
-0 * * * * /home/ai/zhineng-knowledge-system/scripts/cleanup_zombies.sh >> logs/cleanup_zombies.log 2>&1
+0 * * * * /home/ai/lingzhi/scripts/cleanup_zombies.sh >> logs/cleanup_zombies.log 2>&1
 ```
 
 ---
@@ -490,7 +490,7 @@ fi
 **8.2 设置应急触发器**：
 ```bash
 # 添加到 crontab，每 10 分钟检查一次
-*/10 * * * * /home/ai/zhineng-knowledge-system/scripts/emergency_memory_recovery.sh
+*/10 * * * * /home/ai/lingzhi/scripts/emergency_memory_recovery.sh
 ```
 
 ---

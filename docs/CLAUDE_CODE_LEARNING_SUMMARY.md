@@ -1,7 +1,7 @@
 # Claude Code还有哪些思想值得我们学习？完整答案
 
 **日期**: 2026-04-01
-**学习来源**: Claude Code + Claw Code + LingFlow分析
+**学习来源**: Claude Code + Claw Code + lingflow分析
 **核心发现**: 26大架构思想
 
 ---
@@ -241,7 +241,7 @@ class PermissionDenialTracker:
 
 5. **FINAL_LEARNING_SUMMARY_AND_LINGMINOPT.md** (400行)
    - 完整学习成果总结
-   - LingMinOpt自优化框架
+   - lingminopt自优化框架
 
 ### 实施指南
 

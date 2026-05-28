@@ -36,7 +36,7 @@
 ### 一键执行（推荐）
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_to_sda1.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_to_sda1.sh
 ```
 
 ---
@@ -119,13 +119,13 @@ sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_to_sda1.sh
 ### 完整流程（推荐）
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_to_sda1.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_to_sda1.sh
 ```
 
 ### 仅清理磁盘空间
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/cleanup_disk_only.sh
+sudo bash /home/ai/lingzhi/scripts/cleanup_disk_only.sh
 ```
 
 ---
@@ -192,14 +192,14 @@ sudo systemctl start openlist
 
 ```bash
 # 添加到 crontab
-0 2 * * 0 /home/ai/zhineng-knowledge-system/scripts/cleanup_disk_only.sh
+0 2 * * 0 /home/ai/lingzhi/scripts/cleanup_disk_only.sh
 ```
 
 ### 2. 定期 VACUUM（每月）
 
 ```bash
 # 添加到 crontab
-0 3 1 * * /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_to_sda1.sh
+0 3 1 * * /home/ai/lingzhi/scripts/optimize_openlist_to_sda1.sh
 ```
 
 ### 3. 清理旧备份（每周）
@@ -226,7 +226,7 @@ find /data/openlist_backup/ -name "data.db.*" -mtime +7 -delete
 **立即执行完整优化**：
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_to_sda1.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_to_sda1.sh
 ```
 
 **预计时间**: 22-55 分钟

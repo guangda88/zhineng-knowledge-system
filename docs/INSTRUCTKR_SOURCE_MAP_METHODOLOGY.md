@@ -401,7 +401,7 @@ class QueryEnginePort:
 from pathlib import Path
 from collections import Counter
 
-backend_root = Path('/home/ai/zhineng-knowledge-system/backend')
+backend_root = Path('/home/ai/lingzhi/backend')
 files = list(backend_root.rglob('*.py'))
 
 # 2. 按模块统计

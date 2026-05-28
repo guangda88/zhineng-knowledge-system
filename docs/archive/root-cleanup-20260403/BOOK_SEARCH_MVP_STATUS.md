@@ -152,7 +152,7 @@ SELECT id, title, author, category FROM books LIMIT 5;
 "
 
 # 2. 验证模型导入
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 python3 -c "
 from backend.models.book import Book
 from backend.services.book_search import BookSearchService
@@ -170,7 +170,7 @@ curl "http://localhost:8000/api/books/search?q=周易"
 ### 步骤1: 移动v2目录到正确位置
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 mv backend/api/v2 backend/api/
 ```
 

@@ -666,8 +666,8 @@ helm rollback zhineng-kb -n zhineng-kb
 # PostgreSQL 连接字符串格式
 postgresql://[user]:[password]@[host]:[port]/[database]
 
-# 示例
-DATABASE_URL=postgresql://zhineng:zhineng123@postgres:5432/zhineng_kb
+# 示例（密码通过环境变量注入）
+DATABASE_URL=postgresql://zhineng:${POSTGRES_PASSWORD}@postgres:5432/zhineng_kb
 ```
 
 ### Redis 配置
@@ -676,8 +676,8 @@ DATABASE_URL=postgresql://zhineng:zhineng123@postgres:5432/zhineng_kb
 # Redis 连接字符串格式
 redis://:[password]@[host]:[port]/[db]
 
-# 示例
-REDIS_URL=redis://:redis123@redis:6379/0
+# 示例（密码通过环境变量注入）
+REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
 ```
 
 ---
@@ -903,7 +903,7 @@ docker stats
 docker-compose exec postgres cat /var/log/postgresql/postgresql-slow.log
 
 # 检查缓存状态
-docker-compose exec redis redis-cli -a redis123 INFO stats
+docker-compose exec redis redis-cli -a "$REDIS_PASSWORD" INFO stats
 ```
 
 #### 4. 内存不足

@@ -54,7 +54,7 @@ Hooks是在特定事件时自动触发的脚本，用于强制执行规则。
   "hooks": {
     "pre-command": {
       "Bash(*sqlite3* *ALTER*|*DROP*|*DELETE*|*UPDATE*|*INSERT*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/db_write_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/db_write_check.py",
         "description": "检查数据库写操作是否已获批准"
       }
     }
@@ -119,7 +119,7 @@ if __name__ == "__main__":
   "hooks": {
     "pre-command": {
       "Bash(rm -rf *)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/file_delete_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/file_delete_check.py",
         "description": "检查文件删除操作是否安全"
       }
     }
@@ -138,7 +138,7 @@ if __name__ == "__main__":
   "hooks": {
     "pre-command": {
       "Bash(git commit *)": {
-        "command": "bash /home/ai/zhineng-knowledge-system/scripts/hooks/git_commit_check.sh",
+        "command": "bash /home/ai/lingzhi/scripts/hooks/git_commit_check.sh",
         "description": "检查Git提交是否符合规范"
       }
     }
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 {
   "hooks": {
     "session-start": {
-      "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/session_start.py",
+      "command": "python3 /home/ai/lingzhi/scripts/hooks/session_start.py",
       "description": "会话开始时提醒阅读规则"
     }
   }
@@ -197,14 +197,14 @@ if __name__ == "__main__":
 ### 第1步: 创建Hooks目录
 
 ```bash
-mkdir -p /home/ai/zhineng-knowledge-system/scripts/hooks
+mkdir -p /home/ai/lingzhi/scripts/hooks
 ```
 
 ### 第2步: 创建Hook脚本
 
 ```bash
 # 数据库写操作检查
-cat > /home/ai/zhineng-knowledge-system/scripts/hooks/db_write_check.py << 'EOF'
+cat > /home/ai/lingzhi/scripts/hooks/db_write_check.py << 'EOF'
 #!/usr/bin/env python3
 import sys
 import json
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     sys.exit(0)
 EOF
 
-chmod +x /home/ai/zhineng-knowledge-system/scripts/hooks/db_write_check.py
+chmod +x /home/ai/lingzhi/scripts/hooks/db_write_check.py
 ```
 
 ### 第3步: 配置Settings
@@ -244,20 +244,20 @@ chmod +x /home/ai/zhineng-knowledge-system/scripts/hooks/db_write_check.py
   "hooks": {
     "pre-command": {
       "Bash(*sqlite3* *ALTER*|*DROP*|*DELETE*|*UPDATE*|*INSERT*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/db_write_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/db_write_check.py",
         "description": "检查数据库写操作是否已获批准"
       },
       "Bash(rm -rf *)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/file_delete_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/file_delete_check.py",
         "description": "检查文件删除操作是否安全"
       },
       "Bash(git commit *)": {
-        "command": "bash /home/ai/zhineng-knowledge-system/scripts/hooks/git_commit_check.sh",
+        "command": "bash /home/ai/lingzhi/scripts/hooks/git_commit_check.sh",
         "description": "检查Git提交是否符合规范"
       }
     },
     "session-start": {
-      "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/session_start.py",
+      "command": "python3 /home/ai/lingzhi/scripts/hooks/session_start.py",
       "description": "会话开始时提醒阅读规则"
     }
   }
@@ -298,11 +298,11 @@ $ sqlite3 knowledge.db "DROP TABLE textbooks;"
 ### 场景2: 文件删除
 
 ```bash
-$ rm -rf /home/ai/zhineng-knowledge-system/data
+$ rm -rf /home/ai/lingzhi/data
 
 ⚠️  危险操作检测！
 
-您正在删除: /home/ai/zhineng-knowledge-system/data
+您正在删除: /home/ai/lingzhi/data
 请先生成预览脚本并确认
 ```
 

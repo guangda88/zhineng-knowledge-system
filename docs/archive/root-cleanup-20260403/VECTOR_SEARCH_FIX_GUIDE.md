@@ -61,7 +61,7 @@
 ### 步骤 1: 停止当前服务
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 docker-compose down
 ```
 

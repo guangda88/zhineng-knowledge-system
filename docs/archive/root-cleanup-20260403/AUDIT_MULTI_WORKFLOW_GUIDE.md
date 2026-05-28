@@ -132,7 +132,7 @@
 
 **问题描述**:
 检查清单缺少关键项：
-- [ ] LingFlow配置文件验证
+- [ ] lingflow配置文件验证
 - [ ] 数据库备份
 - [ ] 回滚计划确认
 - [ ] 应急联系人列表
@@ -161,7 +161,7 @@
   Team B Lead: <电话/Slack>
   ```
 
-- [ ] LingFlow配置文件验证
+- [ ] lingflow配置文件验证
   ```bash
   lingflow validate .lingflow/workflows/team_a_text_processing.yaml
   lingflow validate .lingflow/workflows/team_b_audio_processing.yaml
@@ -259,13 +259,13 @@ lingflow test --integration
 ```markdown
 ### 实时监控
 
-> **注意**: 以下命令假设 LingFlow 已安装并配置。如果使用其他工作流引擎，请相应调整命令。
+> **注意**: 以下命令假设 lingflow 已安装并配置。如果使用其他工作流引擎，请相应调整命令。
 
 ```bash
 # 查看所有工作流状态
 lingflow status
 
-# 如果LingFlow不可用，使用替代方法
+# 如果lingflow不可用，使用替代方法
 docker-compose ps
 docker logs backend --tail 100
 
@@ -279,7 +279,7 @@ docker stats --no-stream
 #### 问题7: 缺少版本兼容性说明
 
 **问题描述**:
-没有说明LingFlow版本要求、Python版本要求等
+没有说明lingflow版本要求、Python版本要求等
 
 **影响**: 环境不兼容导致启动失败
 
@@ -293,7 +293,7 @@ docker stats --no-stream
 | 组件 | 最低版本 | 推荐版本 | 说明 |
 |------|---------|---------|------|
 | Python | 3.10 | 3.12 | |
-| LingFlow | 0.9.0 | 最新版 | 工作流引擎 |
+| lingflow | 0.9.0 | 最新版 | 工作流引擎 |
 | Docker | 24.0 | 24.0+ | |
 | Docker Compose | 2.20 | 2.20+ | |
 | PostgreSQL | 14 | 16 | 数据库 |

@@ -22,7 +22,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wc -l /home/ai/zhineng-knowledge-system/data/ima_export/*.json)",
+      "Bash(wc -l /home/ai/lingzhi/data/ima_export/*.json)",
       "Bash(python -m pytest tests/test_retrieval.py -v --tb=short)",
       "Bash(docker exec:*)",
       "Bash(curl:*)",
@@ -44,7 +44,7 @@
 ### 应用到灵知系统
 
 ```python
-class LingZhiPermissionManager:
+class lingzhiPermissionManager:
     """灵知系统权限管理器"""
 
     PERMISSIONS = {
@@ -155,7 +155,7 @@ class LingZhiPermissionManager:
 ### 应用到灵知系统
 
 ```python
-class LingZhiSkillRegistry:
+class lingzhiSkillRegistry:
     """灵知技能注册中心"""
 
     def __init__(self):
@@ -210,7 +210,7 @@ class LingZhiSkillRegistry:
 
 
 # 注册技能
-registry = LingZhiSkillRegistry()
+registry = lingzhiSkillRegistry()
 
 # 技能1: 多AI对比
 @registry.register_skill(
@@ -410,7 +410,7 @@ class ContextCompressor:
 ### 应用到灵知系统
 
 ```python
-class LingZhiMemorySystem:
+class lingzhiMemorySystem:
     """灵知记忆系统"""
 
     def __init__(self, memory_dir: str):
@@ -548,7 +548,7 @@ class LingZhiMemorySystem:
 ### 应用到灵知系统
 
 ```python
-class LingZhiHookSystem:
+class lingzhiHookSystem:
     """灵知Hook系统"""
 
     def __init__(self):
@@ -882,7 +882,7 @@ feat({evolution['type']}): {evolution['title']}
 验证结果:
 {json.dumps(evolution['verification'], indent=2, ensure_ascii=False)}
 
-Co-Authored-by: LingZhi Evolution System <noreply@lingzhi.ai>
+Co-Authored-by: lingzhi Evolution System <noreply@lingzhi.ai>
         """.strip()
 
     async def create_evolution_pr(

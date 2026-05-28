@@ -393,7 +393,7 @@ try:
     print(f'Tasks: {len(tasks)}')
 except:
     print('No event loop')
-" >> /home/ai/zhineng-knowledge-system/logs/asyncio_tasks.log
+" >> /home/ai/lingzhi/logs/asyncio_tasks.log
 ```
 
 ### 2. 追踪 openlist 访问

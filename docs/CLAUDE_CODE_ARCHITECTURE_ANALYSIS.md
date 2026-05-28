@@ -82,7 +82,7 @@
 **应用于灵知系统**:
 ```python
 # 创建灵知的MCP式扩展架构
-class LingZhiMCPRegistry:
+class lingzhiMCPRegistry:
     """灵知MCP服务注册中心"""
 
     SERVICES = {

@@ -1,4 +1,4 @@
-# LingFlow 双团队并行工作流 - 启动指南
+# lingflow 双团队并行工作流 - 启动指南
 
 **创建日期**: 2026-03-31
 **版本**: 1.0.0
@@ -27,7 +27,7 @@ zhineng-knowledge-system/
 ### 方式1: 使用启动脚本（推荐）
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 
 # 启动协调器（会自动管理两个团队）
 ./start_parallel_workflows.sh
@@ -36,7 +36,7 @@ cd /home/ai/zhineng-knowledge-system
 ./start_parallel_workflows.sh --detach
 ```
 
-### 方式2: 使用LingFlow命令
+### 方式2: 使用lingflow命令
 
 ```bash
 # 仅启动协调器
@@ -310,7 +310,7 @@ DevOps:        - 环境和部署
 ### 环境准备
 - [ ] Docker Compose运行中
 - [ ] PostgreSQL数据库就绪
-- [ ] LingFlow已安装
+- [ ] lingflow已安装
 
 ### 文件准备
 - [ ] 工作流YAML文件已创建
@@ -327,11 +327,11 @@ DevOps:        - 环境和部署
 **准备就绪？运行启动命令：**
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 ./start_parallel_workflows.sh
 ```
 
 ---
 
 **最后更新**: 2026-03-31
-**创建者**: LingFlow 双团队并行工作流系统
+**创建者**: lingflow 双团队并行工作流系统

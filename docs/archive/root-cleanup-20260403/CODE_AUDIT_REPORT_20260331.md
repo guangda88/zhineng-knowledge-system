@@ -255,7 +255,7 @@ templates = {
 **证据**：
 ```bash
 # 搜索get_practice_tips的调用
-$ grep -r "get_practice_tips" /home/ai/zhineng-knowledge-system/backend --include="*.py"
+$ grep -r "get_practice_tips" /home/ai/lingzhi/backend --include="*.py"
 # 结果：只在定义文件中出现，没有任何调用
 ```
 
@@ -776,11 +776,11 @@ class PracticeGuideGenerator:
 **附录：代码证据**
 
 所有审计结论基于实际代码分析，证据文件：
-- `/home/ai/zhineng-knowledge-system/README.md`
-- `/home/ai/zhineng-knowledge-system/backend/api/v1/search.py`
-- `/home/ai/zhineng-knowledge-system/backend/api/v1/reasoning.py`
-- `/home/ai/zhineng-knowledge-system/backend/domains/qigong.py`
-- `/home/ai/zhineng-knowledge-system/backend/services/learning/`
-- `/home/ai/zhineng-knowledge-system/backend/services/generation/`
-- `/home/ai/zhineng-knowledge-system/backend/services/annotation/`
-- `/home/ai/zhineng-knowledge-system/backend/services/optimization/`
+- `/home/ai/lingzhi/README.md`
+- `/home/ai/lingzhi/backend/api/v1/search.py`
+- `/home/ai/lingzhi/backend/api/v1/reasoning.py`
+- `/home/ai/lingzhi/backend/domains/qigong.py`
+- `/home/ai/lingzhi/backend/services/learning/`
+- `/home/ai/lingzhi/backend/services/generation/`
+- `/home/ai/lingzhi/backend/services/annotation/`
+- `/home/ai/lingzhi/backend/services/optimization/`

@@ -3,7 +3,7 @@
 **文档版本**: 2.0.0
 **创建日期**: 2026-03-29
 **作者**: AI架构师
-**项目**: 灵知（LingZhi）系统
+**项目**: 灵知（lingzhi）系统
 **状态**: 待实施
 
 ---
@@ -516,20 +516,20 @@ cat >> ~/.claude/settings.local.json << 'EOF'
   "hooks": {
     "pre-command": {
       "Bash(*sqlite3*data.db* *DROP*|*DELETE*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/db_write_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/db_write_check.py",
         "description": "检查数据库写操作是否已获批准"
       },
       "Bash(rm -rf data/*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/file_delete_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/file_delete_check.py",
         "description": "检查文件删除操作是否安全"
       },
       "Bash(docker-compose down -v)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/volume_delete_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/volume_delete_check.py",
         "description": "检查Volume删除操作"
       }
     },
     "session-start": {
-      "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/session_start.py",
+      "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/session_start.py",
       "description": "会话开始时提醒阅读规则"
     }
   }

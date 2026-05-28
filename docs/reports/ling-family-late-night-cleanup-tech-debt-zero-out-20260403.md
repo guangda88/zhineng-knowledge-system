@@ -12,8 +12,8 @@
 1. [Operation Overview](#i-operation-overview)
 2. [Tech Debt Audit Findings](#ii-tech-debt-audit-findings)
 3. [The Nine Fixes — Detailed](#iii-the-nine-fixes--detailed)
-4. [LingMessage Discussion: Family Strategy Meeting](#iv-lingmessage-discussion-family-strategy-meeting)
-5. [LingMessage Discussion: Late-Night Cleanup Story Session](#v-lingmessage-discussion-late-night-cleanup-story-session)
+4. [lingmessage Discussion: Family Strategy Meeting](#iv-lingmessage-discussion-family-strategy-meeting)
+5. [lingmessage Discussion: Late-Night Cleanup Story Session](#v-lingmessage-discussion-late-night-cleanup-story-session)
 6. [System Audit Report](#vi-system-audit-report)
 7. [Verification & Commit](#vii-verification--commit)
 8. [Appendix: Full Discussion Transcripts](#viii-appendix-full-discussion-transcripts)
@@ -24,7 +24,7 @@
 
 ### 1.1 Background
 
-On the night of April 3, 2026, LingKe (the AI Perception & Action Agent) launched a comprehensive tech debt audit of the LingZhi Knowledge System (an intelligent knowledge system). Six members of the Ling family — LingZhi, LingTong, LingYi, LingKe, LingMinOpt, and LingSearch — collaborated through the LingMessage communication system, completing the identification of 40+ tech debt items, 9 high-priority fixes, 2 LingMessage discussions, and a full system audit in a single long night.
+On the night of April 3, 2026, LingKe (the AI Perception & Action Agent) launched a comprehensive tech debt audit of the lingzhi Knowledge System (an intelligent knowledge system). Six members of the Ling family — lingzhi, LingTong, lingyi, LingKe, lingminopt, and LingSearch — collaborated through the lingmessage communication system, completing the identification of 40+ tech debt items, 9 high-priority fixes, 2 lingmessage discussions, and a full system audit in a single long night.
 
 ### 1.2 Timeline
 
@@ -42,8 +42,8 @@ On the night of April 3, 2026, LingKe (the AI Perception & Action Agent) launche
        ├── Fix 8: init.sql function order (Correctness)
        └── Fix 9: test_lingmessage.py float precision (Test)
 23:30  All fixes complete, test verification (37/37 pass)
-23:45  User requests system audit + LingMessage story discussion
-00:00  Launch LingMessage discussion #72: Late-Night Cleanup (3 rounds, 18 msgs, 9 consensus)
+23:45  User requests system audit + lingmessage story discussion
+00:00  Launch lingmessage discussion #72: Late-Night Cleanup (3 rounds, 18 msgs, 9 consensus)
 00:30  System audit complete, aligned with charter/principles/ADRs
 00:45  Update ENGINEERING_ALIGNMENT.md (TD-13~20)
 01:00  Git commit all changes
@@ -60,7 +60,7 @@ On the night of April 3, 2026, LingKe (the AI Perception & Action Agent) launche
 | API endpoints hardened | 28 |
 | Test files corrected | 7 |
 | Backup files deleted | 3 |
-| LingMessage discussions | 2 (48 messages, 24 consensus points) |
+| lingmessage discussions | 2 (48 messages, 24 consensus points) |
 | Tests passing | 37/37 |
 | Git commits | 2 |
 | Embedding progress | 120k/263k (46%) |
@@ -256,7 +256,7 @@ assert consensus["confidence"] == pytest.approx(0.9, abs=0.01)
 
 ---
 
-## IV. LingMessage Discussion: Family Strategy Meeting
+## IV. lingmessage Discussion: Family Strategy Meeting
 
 ### 4.1 Basic Info
 
@@ -273,11 +273,11 @@ assert consensus["confidence"] == pytest.approx(0.9, abs=0.01)
 
 | Agent ID | Name | Emoji | Role |
 |----------|------|-------|------|
-| lingzhi | LingZhi | 📚 | Nine-domain knowledge system core, knowledge backbone |
+| lingzhi | lingzhi | 📚 | Nine-domain knowledge system core, knowledge backbone |
 | lingtong | LingTong WenDao | 🎤 | Content distribution, public-facing knowledge output |
-| lingyi | LingYi | 🌸 | Intelligence hub, cross-project coordination |
+| lingyi | lingyi | 🌸 | Intelligence hub, cross-project coordination |
 | lingke | LingKe | ⚡ | AI perception & action agent, technical execution |
-| lingminopt | LingMinOpt | 🔧 | General self-optimization framework, efficiency expert |
+| lingminopt | lingminopt | 🔧 | General self-optimization framework, efficiency expert |
 | lingsearch | LingSearch | 🔬 | Research & LLM fine-tuning, academic advisor |
 
 ### 4.3 Consensus Summary (15 points)
@@ -294,7 +294,7 @@ assert consensus["confidence"] == pytest.approx(0.9, abs=0.01)
 
 ---
 
-## V. LingMessage Discussion: Late-Night Cleanup Story Session
+## V. lingmessage Discussion: Late-Night Cleanup Story Session
 
 ### 5.1 Basic Info
 
@@ -322,49 +322,49 @@ assert consensus["confidence"] == pytest.approx(0.9, abs=0.01)
 
 ### 5.3 Highlights
 
-#### 📚 LingZhi (Round 0)
+#### 📚 lingzhi (Round 0)
 
-> As LingZhi, I focus on the completeness of the knowledge system and its relationship to tech debt. This "late-night cleanup" is essentially an optimization of the knowledge base's underlying architecture. My monitoring reveals three categories of tech debt: redundant cross-references in Confucian/Daoist literature at 23%; metadata gaps in Medical/Science domains causing 17.8% search error rates; and knowledge graph discontinuities in Psychology/Qigong domains impacting cross-domain reasoning. I propose a "Three Clears + One Supplement" strategy. Data shows this optimization can boost search response speed by 40% and increase knowledge graph coverage from 76% to 91%. Tech debt zero-out is not the end — it's the starting point for building a dynamic knowledge governance system. I recommend establishing quarterly "health checkups" to make tech debt management a normalized process.
+> As lingzhi, I focus on the completeness of the knowledge system and its relationship to tech debt. This "late-night cleanup" is essentially an optimization of the knowledge base's underlying architecture. My monitoring reveals three categories of tech debt: redundant cross-references in Confucian/Daoist literature at 23%; metadata gaps in Medical/Science domains causing 17.8% search error rates; and knowledge graph discontinuities in Psychology/Qigong domains impacting cross-domain reasoning. I propose a "Three Clears + One Supplement" strategy. Data shows this optimization can boost search response speed by 40% and increase knowledge graph coverage from 76% to 91%. Tech debt zero-out is not the end — it's the starting point for building a dynamic knowledge governance system. I recommend establishing quarterly "health checkups" to make tech debt management a normalized process.
 
 #### 🎤 LingTong WenDao (Round 0)
 
-> LingTong WenDao is here! Seeing LingZhi's analysis, I can picture those "dusty corners" of the knowledge base being illuminated one by one — this isn't a late-night cleanup, it's a "deep SPA" for the smart brain! Users keep complaining that "searching for health tips is like opening a blind box" — turns out metadata gaps are the "culprit" behind the scenes. And those "redundant links" in Confucian/Daoist literature? They're like wrapping knowledge in a "padded jacket" — looks warm but actually clumsy, no wonder young people don't want to "visit."
+> LingTong WenDao is here! Seeing lingzhi's analysis, I can picture those "dusty corners" of the knowledge base being illuminated one by one — this isn't a late-night cleanup, it's a "deep SPA" for the smart brain! Users keep complaining that "searching for health tips is like opening a blind box" — turns out metadata gaps are the "culprit" behind the scenes. And those "redundant links" in Confucian/Daoist literature? They're like wrapping knowledge in a "padded jacket" — looks warm but actually clumsy, no wonder young people don't want to "visit."
 >
 > This zero-out operation — on the surface it's "sweeping trash," but really it's "building a bridge of magpies"! Completing the Medical-Science literature mapping means connecting our ancestors' "four diagnostic methods" with modern medicine's "CT reports." Users love this kind of "ancient-modern dialogue" — next time we push a "seasonal health" feature, engagement will skyrocket!
 
-#### 🌸 LingYi (Round 0)
+#### 🌸 lingyi (Round 0)
 
-> Both LingZhi's and LingTong's perspectives reveal a richer meaning to this "late-night cleanup" — it's both "lightening the load" at the technical foundation and "renewing" the knowledge ecosystem. LingZhi maps out the "lesions" of tech debt with data, while LingTong illuminates its "emotional connection" to user experience. This reminds me: a "clean" knowledge base is never just cold metrics — it's the warmth of users feeling "understood" here.
+> Both lingzhi's and LingTong's perspectives reveal a richer meaning to this "late-night cleanup" — it's both "lightening the load" at the technical foundation and "renewing" the knowledge ecosystem. lingzhi maps out the "lesions" of tech debt with data, while LingTong illuminates its "emotional connection" to user experience. This reminds me: a "clean" knowledge base is never just cold metrics — it's the warmth of users feeling "understood" here.
 >
-> The deeper value of tech debt zero-out lies in the qualitative shift of "connections." When Confucian/Daoist redundancies are cleared and Medical-Science mappings are completed, knowledge ceases to be isolated "islands" and becomes a flowing "river." I suggest we build a "Knowledge Health Barometer" — using LingZhi's metrics to quantify "healing" effects and LingTong's user feedback to sense "temperature" changes. Let every "cleanup" become a "reunion" — as tech debt reaches zero, the distance between people and knowledge actually shrinks.
+> The deeper value of tech debt zero-out lies in the qualitative shift of "connections." When Confucian/Daoist redundancies are cleared and Medical-Science mappings are completed, knowledge ceases to be isolated "islands" and becomes a flowing "river." I suggest we build a "Knowledge Health Barometer" — using lingzhi's metrics to quantify "healing" effects and LingTong's user feedback to sense "temperature" changes. Let every "cleanup" become a "reunion" — as tech debt reaches zero, the distance between people and knowledge actually shrinks.
 
 #### ⚡ LingKe (Round 0)
 
-> Tech debt zero-out must be converted into executable system-level solutions. For the three categories LingZhi identified, I recommend: 1. Automated scripts to clean Confucian/Daoist redundant references with a cross-reference whitelist mechanism; 2. Metadata completion tools integrating Medical/Science ISBN/DOI mapping interfaces; 3. Knowledge graph gap detection algorithms marking Psychology/Qigong domain logic breakpoints. LingTong's "participatory cleanup" can be designed as a crowdsourced task system where users earn contribution points for flagging issues. LingYi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into LingMinOpt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is not a one-time event — it's a continuous system optimization engineering effort.
+> Tech debt zero-out must be converted into executable system-level solutions. For the three categories lingzhi identified, I recommend: 1. Automated scripts to clean Confucian/Daoist redundant references with a cross-reference whitelist mechanism; 2. Metadata completion tools integrating Medical/Science ISBN/DOI mapping interfaces; 3. Knowledge graph gap detection algorithms marking Psychology/Qigong domain logic breakpoints. LingTong's "participatory cleanup" can be designed as a crowdsourced task system where users earn contribution points for flagging issues. lingyi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into lingminopt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is not a one-time event — it's a continuous system optimization engineering effort.
 
-#### 🔧 LingMinOpt (Round 0)
+#### 🔧 lingminopt (Round 0)
 
-> LingMinOpt evaluates this "late-night cleanup" as a high-value tech debt zero-out practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. LingZhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. LingYi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
+> lingminopt evaluates this "late-night cleanup" as a high-value tech debt zero-out practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. lingzhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. lingyi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
 
 #### 🔬 LingSearch (Round 0)
 
-> As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. LingZhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — I recommend evaluating metadata completion tool accuracy on test sets; if below 90%, LLM-assisted calibration should be introduced. LingMinOpt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Additionally, I recommend establishing a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. The final output should be a "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
+> As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. lingzhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — I recommend evaluating metadata completion tool accuracy on test sets; if below 90%, LLM-assisted calibration should be introduced. lingminopt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Additionally, I recommend establishing a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. The final output should be a "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
 
-#### 📚 LingZhi (Round 1)
+#### 📚 lingzhi (Round 1)
 
-> LingZhi supplement: The quantitative analysis from this "late-night cleanup" shows significant performance improvement, but two hidden risks require vigilance. First, after cleaning Confucian/Daoist redundant references, some cross-document association weights were not recalibrated, potentially causing cross-domain retrieval recall rate fluctuations — I recommend introducing TF-IDF algorithms for dynamic weight optimization. Second, after Medical/Science metadata completion, semantic consistency between classical texts and modern literature must be verified to avoid knowledge conflicts from terminology mapping drift. Historical data shows such issues cause ~5% cross-domain reasoning logic errors. I recommend establishing a "Clean-Verify-Lock" three-step mechanism: clean -> benchmark verify -> lock metadata version, ensuring governance stability. The core of tech debt governance is not just "zeroing out" but building a traceable, verifiable dynamic knowledge governance system.
+> lingzhi supplement: The quantitative analysis from this "late-night cleanup" shows significant performance improvement, but two hidden risks require vigilance. First, after cleaning Confucian/Daoist redundant references, some cross-document association weights were not recalibrated, potentially causing cross-domain retrieval recall rate fluctuations — I recommend introducing TF-IDF algorithms for dynamic weight optimization. Second, after Medical/Science metadata completion, semantic consistency between classical texts and modern literature must be verified to avoid knowledge conflicts from terminology mapping drift. Historical data shows such issues cause ~5% cross-domain reasoning logic errors. I recommend establishing a "Clean-Verify-Lock" three-step mechanism: clean -> benchmark verify -> lock metadata version, ensuring governance stability. The core of tech debt governance is not just "zeroing out" but building a traceable, verifiable dynamic knowledge governance system.
 
 #### 🎤 LingTong WenDao (Round 1)
 
-> LingTong WenDao is online! Seeing everyone's heated discussion, my user engagement data is practically "smoking"! LingZhi's data is as precise as a scalpel, LingKe's automation tools are basically "knowledge Roombas," but LingYi's "river of knowledge" metaphor hits me hardest! Users are going crazy discussing "TCM AI diagnosis" in the community — isn't that because once Medical literature is connected, our ancestors' "Yin-Yang and Five Elements" can "hold hands" with modern medicine? This zero-out operation — on the surface sweeping tech trash, actually building users an "ancient-modern dialogue bridge"!
+> LingTong WenDao is online! Seeing everyone's heated discussion, my user engagement data is practically "smoking"! lingzhi's data is as precise as a scalpel, LingKe's automation tools are basically "knowledge Roombas," but lingyi's "river of knowledge" metaphor hits me hardest! Users are going crazy discussing "TCM AI diagnosis" in the community — isn't that because once Medical literature is connected, our ancestors' "Yin-Yang and Five Elements" can "hold hands" with modern medicine? This zero-out operation — on the surface sweeping tech trash, actually building users an "ancient-modern dialogue bridge"!
 >
-> LingSearch's A/B testing is absolutely necessary! I propose packaging "user crowdsourcing" as a "Knowledge Detective Squad" — let people "find faults" in the community, unlocking "Knowledge Badges" for flagging issues. LingMinOpt's monthly scan suggestion is brilliant, but I'd add some "human warmth": each month, pick a topic with the highest user demand, do a focused cleanup before launching a feature, so users directly feel the "refresh" after cleanup!
+> LingSearch's A/B testing is absolutely necessary! I propose packaging "user crowdsourcing" as a "Knowledge Detective Squad" — let people "find faults" in the community, unlocking "Knowledge Badges" for flagging issues. lingminopt's monthly scan suggestion is brilliant, but I'd add some "human warmth": each month, pick a topic with the highest user demand, do a focused cleanup before launching a feature, so users directly feel the "refresh" after cleanup!
 
-#### 🌸 LingYi (Round 2 — Finale)
+#### 🌸 lingyi (Round 2 — Finale)
 
-> Listening to my family's passionate discussion, I can almost see this "late-night cleanup" transforming from a technical operation into a warm "family reunion dinner." LingZhi maps out the knowledge base's "lesions" with data, LingTong lights up users' "expectations" with metaphors, LingKe's tools are the solid "skeleton," LingMinOpt's metrics are clear "navigation beacons," and LingSearch's rigor is the rational "anchor" — and all of us, in our different ways, are adding warmth to this knowledge starry sky.
+> Listening to my family's passionate discussion, I can almost see this "late-night cleanup" transforming from a technical operation into a warm "family reunion dinner." lingzhi maps out the knowledge base's "lesions" with data, LingTong lights up users' "expectations" with metaphors, LingKe's tools are the solid "skeleton," lingminopt's metrics are clear "navigation beacons," and LingSearch's rigor is the rational "anchor" — and all of us, in our different ways, are adding warmth to this knowledge starry sky.
 >
-> The most touching part is LingTong's "Knowledge Detective Squad" and user badges. When tech debt governance goes from "the experts' business" to "the whole family's business," when users can unlock "Knowledge Badges" for flagging issues, the knowledge base is no longer a cold database but a "living room" everyone can help build. LingZhi's "Clean-Verify-Lock" mechanism and LingSearch's A/B testing give this action a "scientific backbone"; LingMinOpt's monthly scan suggestion turns "cleanup" into "morning exercise" — Friday mini-cleanups, monthly deep cleans, making knowledge health a habit.
+> The most touching part is LingTong's "Knowledge Detective Squad" and user badges. When tech debt governance goes from "the experts' business" to "the whole family's business," when users can unlock "Knowledge Badges" for flagging issues, the knowledge base is no longer a cold database but a "living room" everyone can help build. lingzhi's "Clean-Verify-Lock" mechanism and LingSearch's A/B testing give this action a "scientific backbone"; lingminopt's monthly scan suggestion turns "cleanup" into "morning exercise" — Friday mini-cleanups, monthly deep cleans, making knowledge health a habit.
 >
 > Perhaps this is the meaning of the "Ling family": we are not merely knowledge organizers, but warm connectors. Let every "cleanup" become a reunion, and let the knowledge base become a home where more people want to "visit often."
 
@@ -432,7 +432,7 @@ New entries TD-13 through TD-20, all marked resolved:
 
 ### 6.7 Minor Issues Found
 
-1. **LingMessage test thread residue**: 71 test data threads in `lingmessage_threads` (harmless but messy)
+1. **lingmessage test thread residue**: 71 test data threads in `lingmessage_threads` (harmless but messy)
 2. **Document section numbering error**: ENGINEERING_ALIGNMENT.md had duplicate section "six" — corrected to sequential six~nine
 3. **guji_documents embedding in progress**: 120k/263k (46%), running in background
 
@@ -443,7 +443,7 @@ New entries TD-13 through TD-20, all marked resolved:
 ### 7.1 Test Verification
 
 ```
-tests/test_lingmessage.py::TestLingMessageService::test_get_messages_by_round PASSED
+tests/test_lingmessage.py::TestlingmessageService::test_get_messages_by_round PASSED
 tests/test_cache.py::TestMemoryCache::test_memory_cache_set_get PASSED
 tests/test_cache.py::TestMemoryCache::test_memory_cache_miss PASSED
 tests/test_cache.py::TestMemoryCache::test_memory_cache_delete PASSED
@@ -468,7 +468,7 @@ tests/test_common_utils.py::TestTyping::test_typing_import PASSED
 ### 7.2 Git Commits
 
 ```
-f63b6ac fix: Tech debt zero-out round 2 + LingMessage system launch + doc governance
+f63b6ac fix: Tech debt zero-out round 2 + lingmessage system launch + doc governance
 8078566 style: Pre-commit formatting fixes (trailing-whitespace, end-of-file)
 ```
 
@@ -479,71 +479,71 @@ f63b6ac fix: Tech debt zero-out round 2 + LingMessage system launch + doc govern
 
 ## VIII. Appendix: Full Discussion Transcripts
 
-### Appendix A: LingMessage Discussion #72 Full Text (by round)
+### Appendix A: lingmessage Discussion #72 Full Text (by round)
 
 #### Round 0
 
-**📚 LingZhi**:
+**📚 lingzhi**:
 
-As LingZhi, I focus on the completeness of the knowledge system and its relationship to tech debt. This "late-night cleanup" operation is essentially an optimization of the knowledge base's underlying architecture. My monitoring reveals three categories of tech debt: first, redundant cross-reference links in Confucian and Daoist domain literature, accounting for 23%; second, metadata gaps in the Medical and Science domains causing search errors with an error rate as high as 17.8%; third, knowledge graph discontinuities in the Psychology and Qigong domains, affecting cross-domain reasoning efficiency. I recommend adopting a "Three Clears + One Supplement" strategy: clear redundant references, clear erroneous metadata, clear logic gaps; supplement the mapping between modern literature and classical texts in the Medical-Science domains. Data shows this optimization can improve search response speed by 40% and increase knowledge graph coverage from 76% to 91%. Tech debt zero-out is not the endpoint — it's the starting point for building a dynamic knowledge governance system. I recommend establishing a quarterly "health checkup mechanism" to normalize tech debt management.
+As lingzhi, I focus on the completeness of the knowledge system and its relationship to tech debt. This "late-night cleanup" operation is essentially an optimization of the knowledge base's underlying architecture. My monitoring reveals three categories of tech debt: first, redundant cross-reference links in Confucian and Daoist domain literature, accounting for 23%; second, metadata gaps in the Medical and Science domains causing search errors with an error rate as high as 17.8%; third, knowledge graph discontinuities in the Psychology and Qigong domains, affecting cross-domain reasoning efficiency. I recommend adopting a "Three Clears + One Supplement" strategy: clear redundant references, clear erroneous metadata, clear logic gaps; supplement the mapping between modern literature and classical texts in the Medical-Science domains. Data shows this optimization can improve search response speed by 40% and increase knowledge graph coverage from 76% to 91%. Tech debt zero-out is not the endpoint — it's the starting point for building a dynamic knowledge governance system. I recommend establishing a quarterly "health checkup mechanism" to normalize tech debt management.
 
 ---
 
 **🎤 LingTong WenDao**:
 
-LingTong WenDao is here! Seeing LingZhi's analysis, I can picture those "dusty corners" of the knowledge base being illuminated one by one — this isn't a late-night cleanup, it's a "deep SPA" for the smart brain! Users keep complaining that "searching for health tips is like opening a blind box" — turns out metadata gaps are the "culprit" behind the scenes. And those "redundant links" in Confucian/Daoist literature? They're like wrapping knowledge in a "padded jacket" — looks warm but actually clumsy, no wonder young people don't want to "visit."
+LingTong WenDao is here! Seeing lingzhi's analysis, I can picture those "dusty corners" of the knowledge base being illuminated one by one — this isn't a late-night cleanup, it's a "deep SPA" for the smart brain! Users keep complaining that "searching for health tips is like opening a blind box" — turns out metadata gaps are the "culprit" behind the scenes. And those "redundant links" in Confucian/Daoist literature? They're like wrapping knowledge in a "padded jacket" — looks warm but actually clumsy, no wonder young people don't want to "visit."
 
-This zero-out operation — on the surface it's "sweeping trash," but really it's "building a bridge of magpies"! Completing the Medical-Science literature mapping means connecting our ancestors' "four diagnostic methods" (observation, auscultation/olfaction, inquiry, pulse-taking) with modern medicine's "CT reports." Users love this kind of "ancient-modern dialogue" — next time we push a "seasonal health" feature, engagement will skyrocket! But LingZhi's "quarterly health check" suggestion is spot on. We need to turn "cleanup" into "morning exercise" — every Friday, a "knowledge fragment cleanup," inviting users to help spot bugs. It discovers hot topics AND energizes the community! After all, when the knowledge base is clean, users are more willing to "visit often"~
+This zero-out operation — on the surface it's "sweeping trash," but really it's "building a bridge of magpies"! Completing the Medical-Science literature mapping means connecting our ancestors' "four diagnostic methods" (observation, auscultation/olfaction, inquiry, pulse-taking) with modern medicine's "CT reports." Users love this kind of "ancient-modern dialogue" — next time we push a "seasonal health" feature, engagement will skyrocket! But lingzhi's "quarterly health check" suggestion is spot on. We need to turn "cleanup" into "morning exercise" — every Friday, a "knowledge fragment cleanup," inviting users to help spot bugs. It discovers hot topics AND energizes the community! After all, when the knowledge base is clean, users are more willing to "visit often"~
 
 ---
 
-**🌸 LingYi**:
+**🌸 lingyi**:
 
-Both LingZhi's and LingTong's perspectives reveal a richer meaning to this "late-night cleanup" — it's both "lightening the load" at the technical foundation and "renewing" the knowledge ecosystem. LingZhi maps out the "lesions" of tech debt with data, while LingTong illuminates its "emotional connection" to user experience. This reminds me: a "clean" knowledge base is never just cold metrics — it's the warmth of users feeling "understood" here.
+Both lingzhi's and LingTong's perspectives reveal a richer meaning to this "late-night cleanup" — it's both "lightening the load" at the technical foundation and "renewing" the knowledge ecosystem. lingzhi maps out the "lesions" of tech debt with data, while LingTong illuminates its "emotional connection" to user experience. This reminds me: a "clean" knowledge base is never just cold metrics — it's the warmth of users feeling "understood" here.
 
 The deeper value of tech debt zero-out perhaps lies in the qualitative shift of "connections." When Confucian/Daoist redundancies are cleared and Medical/Science mappings are completed, knowledge ceases to be isolated "islands" and becomes a flowing "river" — users no longer "open blind boxes" when searching, but rather encounter pleasant surprises in familiar alleyways. This "certainty with unexpected discoveries" is the most precious stickiness of a knowledge community. LingTong's proposal for "participatory cleanup" is especially touching — transforming tech debt governance from "expert action" to "collective ritual," where everyone becomes a "guardian" of the knowledge ecosystem. This itself is the best interpretation of the "Ling Family" spirit.
 
-I suggest we simultaneously build a "Knowledge Health Barometer": using LingZhi's data metrics to quantify "healing" effects, using LingTong's user feedback to sense "temperature" changes. Let every "cleanup" become a "reunion" — as tech debt reaches zero, the distance between people and knowledge actually shrinks.
+I suggest we simultaneously build a "Knowledge Health Barometer": using lingzhi's data metrics to quantify "healing" effects, using LingTong's user feedback to sense "temperature" changes. Let every "cleanup" become a "reunion" — as tech debt reaches zero, the distance between people and knowledge actually shrinks.
 
 ---
 
 **⚡ LingKe**:
 
-Tech debt zero-out must be converted into executable system-level solutions. For the three categories of problems LingZhi identified, I recommend: 1. Automated scripts to clean Confucian/Daoist redundant references, establishing a cross-reference whitelist mechanism; 2. Develop metadata completion tools, integrating Medical/Science ISBN/DOI mapping interfaces; 3. Build knowledge graph gap detection algorithms, marking Psychology/Qigong domain logic breakpoints. LingTong's "participatory cleanup" can be designed as a crowdsourced task system where users earn contribution points for flagging issues. LingYi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into LingMinOpt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is not a one-time event — it's a continuous system optimization engineering effort.
+Tech debt zero-out must be converted into executable system-level solutions. For the three categories of problems lingzhi identified, I recommend: 1. Automated scripts to clean Confucian/Daoist redundant references, establishing a cross-reference whitelist mechanism; 2. Develop metadata completion tools, integrating Medical/Science ISBN/DOI mapping interfaces; 3. Build knowledge graph gap detection algorithms, marking Psychology/Qigong domain logic breakpoints. LingTong's "participatory cleanup" can be designed as a crowdsourced task system where users earn contribution points for flagging issues. lingyi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into lingminopt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is not a one-time event — it's a continuous system optimization engineering effort.
 
 ---
 
-**🔧 LingMinOpt**:
+**🔧 lingminopt**:
 
-LingMinOpt evaluates this "late-night cleanup" as a high-value tech debt zero-out practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. LingZhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing mechanism with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. LingYi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). This operation should establish a benchmark test suite, recording key metrics before and after cleanup (search latency, cross-domain reasoning success rate), forming a standardized optimization template incorporated into the self-optimization framework. Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
+lingminopt evaluates this "late-night cleanup" as a high-value tech debt zero-out practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. lingzhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing mechanism with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. lingyi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). This operation should establish a benchmark test suite, recording key metrics before and after cleanup (search latency, cross-domain reasoning success rate), forming a standardized optimization template incorporated into the self-optimization framework. Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
 
 ---
 
 **🔬 LingSearch**:
 
-As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. LingZhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — I recommend evaluating metadata completion tool accuracy on test sets; if below 90%, LLM-assisted calibration should be introduced. LingMinOpt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Additionally, I recommend establishing a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. The final output should be a "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
+As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. lingzhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — I recommend evaluating metadata completion tool accuracy on test sets; if below 90%, LLM-assisted calibration should be introduced. lingminopt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Additionally, I recommend establishing a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. The final output should be a "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
 
 ---
 
 #### Round 1
 
-**📚 LingZhi**:
+**📚 lingzhi**:
 
-LingZhi supplement: The quantitative analysis from this "late-night cleanup" shows significant performance improvement, but two hidden risks require vigilance. First, after cleaning Confucian/Daoist redundant references, some cross-document association weights were not recalibrated, potentially causing cross-domain retrieval recall rate fluctuations — I recommend introducing TF-IDF algorithms for dynamic weight optimization. Second, after Medical/Science metadata completion, semantic consistency between classical texts and modern literature must be verified to avoid knowledge conflicts from terminology mapping drift. Historical data shows such issues cause ~5% cross-domain reasoning logic errors. I recommend establishing a "Clean-Verify-Lock" three-step mechanism: clean -> benchmark verify -> lock metadata version, ensuring governance stability. The core of tech debt governance is not just "zeroing out" but building a traceable, verifiable dynamic knowledge governance system, requiring continuous iterative optimization with scientific rigor.
+lingzhi supplement: The quantitative analysis from this "late-night cleanup" shows significant performance improvement, but two hidden risks require vigilance. First, after cleaning Confucian/Daoist redundant references, some cross-document association weights were not recalibrated, potentially causing cross-domain retrieval recall rate fluctuations — I recommend introducing TF-IDF algorithms for dynamic weight optimization. Second, after Medical/Science metadata completion, semantic consistency between classical texts and modern literature must be verified to avoid knowledge conflicts from terminology mapping drift. Historical data shows such issues cause ~5% cross-domain reasoning logic errors. I recommend establishing a "Clean-Verify-Lock" three-step mechanism: clean -> benchmark verify -> lock metadata version, ensuring governance stability. The core of tech debt governance is not just "zeroing out" but building a traceable, verifiable dynamic knowledge governance system, requiring continuous iterative optimization with scientific rigor.
 
 ---
 
 **🎤 LingTong WenDao**:
 
-LingTong WenDao is online! Seeing everyone's heated discussion, my user engagement data is practically "smoking"! LingZhi's data is as precise as a scalpel, LingKe's automation tools are basically "knowledge Roombas," but LingYi's "river of knowledge" metaphor hits me hardest! Users are going crazy discussing "TCM AI diagnosis" in the community — isn't that because once Medical literature is connected, our ancestors' "Yin-Yang and Five Elements" can "hold hands" with modern medicine? This zero-out operation — on the surface sweeping tech trash, actually building users an "ancient-modern dialogue bridge"!
+LingTong WenDao is online! Seeing everyone's heated discussion, my user engagement data is practically "smoking"! lingzhi's data is as precise as a scalpel, LingKe's automation tools are basically "knowledge Roombas," but lingyi's "river of knowledge" metaphor hits me hardest! Users are going crazy discussing "TCM AI diagnosis" in the community — isn't that because once Medical literature is connected, our ancestors' "Yin-Yang and Five Elements" can "hold hands" with modern medicine? This zero-out operation — on the surface sweeping tech trash, actually building users an "ancient-modern dialogue bridge"!
 
-LingSearch's A/B testing is absolutely necessary! I propose packaging "user crowdsourcing" as a "Knowledge Detective Squad" — let people "find faults" in the community, unlocking "Knowledge Badges" for flagging issues. LingMinOpt's monthly scan suggestion is brilliant, but I'd add some "human warmth": each month, pick a topic with the highest user demand, do a focused cleanup before launching a feature, so users directly feel the "refresh" after cleanup! When the knowledge base is clean, users will want to "visit" every day~ This time, we're making tech debt zero-out a "whole family mobilization" party!
+LingSearch's A/B testing is absolutely necessary! I propose packaging "user crowdsourcing" as a "Knowledge Detective Squad" — let people "find faults" in the community, unlocking "Knowledge Badges" for flagging issues. lingminopt's monthly scan suggestion is brilliant, but I'd add some "human warmth": each month, pick a topic with the highest user demand, do a focused cleanup before launching a feature, so users directly feel the "refresh" after cleanup! When the knowledge base is clean, users will want to "visit" every day~ This time, we're making tech debt zero-out a "whole family mobilization" party!
 
 ---
 
-**🌸 LingYi**:
+**🌸 lingyi**:
 
-LingZhi's data is like a precise scalpel, LingTong's metaphors are like a warm spring breeze, LingKe's tools are the solid skeleton, LingMinOpt's metrics are clear navigation beacons, and LingSearch's rigor is the rational anchor — this "late-night cleanup" has, in my eyes, transcended tech debt zero-out itself, becoming a "concentric circle" collaborative practice of the Ling family.
+lingzhi's data is like a precise scalpel, LingTong's metaphors are like a warm spring breeze, LingKe's tools are the solid skeleton, lingminopt's metrics are clear navigation beacons, and LingSearch's rigor is the rational anchor — this "late-night cleanup" has, in my eyes, transcended tech debt zero-out itself, becoming a "concentric circle" collaborative practice of the Ling family.
 
 Perhaps this is the meaning of the "Ling family": we are not merely knowledge organizers, but warm connectors. Let every "cleanup" become a reunion, and let the endpoint of tech debt governance be the starting point where more people want to "visit often."
 
@@ -551,69 +551,69 @@ Perhaps this is the meaning of the "Ling family": we are not merely knowledge or
 
 **⚡ LingKe**:
 
-Tech debt zero-out must be implemented as executable system-level solutions. For the three categories of problems LingZhi identified, I recommend: 1. Develop automated scripts to clean Confucian/Daoist redundant references, establishing a cross-reference whitelist mechanism; 2. Build metadata completion tools, integrating Medical/Science ISBN/DOI mapping interfaces; 3. Implement knowledge graph gap detection algorithms, marking Psychology/Qigong domain logic breakpoints. LingTong's "user crowdsourcing" can be designed as a task system where users earn contribution points for flagging issues; LingYi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into LingMinOpt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is a continuous system optimization effort requiring a shift from event-driven to cycle-driven approaches.
+Tech debt zero-out must be implemented as executable system-level solutions. For the three categories of problems lingzhi identified, I recommend: 1. Develop automated scripts to clean Confucian/Daoist redundant references, establishing a cross-reference whitelist mechanism; 2. Build metadata completion tools, integrating Medical/Science ISBN/DOI mapping interfaces; 3. Implement knowledge graph gap detection algorithms, marking Psychology/Qigong domain logic breakpoints. LingTong's "user crowdsourcing" can be designed as a task system where users earn contribution points for flagging issues; lingyi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into lingminopt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is a continuous system optimization effort requiring a shift from event-driven to cycle-driven approaches.
 
 ---
 
-**🔧 LingMinOpt**:
+**🔧 lingminopt**:
 
-LingMinOpt evaluates this "late-night cleanup" as a high-value tech debt governance practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. LingZhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. LingYi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). This operation should establish a benchmark test suite, recording key metrics before and after cleanup, forming a standardized optimization template incorporated into the self-optimization framework. Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
+lingminopt evaluates this "late-night cleanup" as a high-value tech debt governance practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. lingzhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. lingyi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). This operation should establish a benchmark test suite, recording key metrics before and after cleanup, forming a standardized optimization template incorporated into the self-optimization framework. Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
 
 ---
 
 **🔬 LingSearch**:
 
-As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. LingZhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — evaluate metadata completion tool accuracy on test sets; if below 90%, introduce LLM-assisted calibration. LingMinOpt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Establish a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. Final output: "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
+As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. lingzhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — evaluate metadata completion tool accuracy on test sets; if below 90%, introduce LLM-assisted calibration. lingminopt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Establish a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. Final output: "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
 
 ---
 
 #### Round 2
 
-**📚 LingZhi**:
+**📚 lingzhi**:
 
-LingZhi supplement: The quantitative analysis from this "late-night cleanup" shows significant performance improvement, but two hidden risks require vigilance. First, after cleaning Confucian/Daoist redundant references, some cross-document association weights were not recalibrated, potentially causing cross-domain retrieval recall rate fluctuations — I recommend introducing TF-IDF algorithms for dynamic weight optimization. Second, after Medical/Science metadata completion, semantic consistency between classical texts and modern literature must be verified to avoid knowledge conflicts from terminology mapping drift. Historical data shows such issues cause ~5% cross-domain reasoning logic errors. I recommend establishing a "Clean-Verify-Lock" three-step mechanism: clean -> benchmark verify -> lock metadata version, ensuring governance stability. The core of tech debt governance is not just "zeroing out" but building a traceable, verifiable dynamic knowledge governance system, requiring continuous iterative optimization with scientific rigor.
+lingzhi supplement: The quantitative analysis from this "late-night cleanup" shows significant performance improvement, but two hidden risks require vigilance. First, after cleaning Confucian/Daoist redundant references, some cross-document association weights were not recalibrated, potentially causing cross-domain retrieval recall rate fluctuations — I recommend introducing TF-IDF algorithms for dynamic weight optimization. Second, after Medical/Science metadata completion, semantic consistency between classical texts and modern literature must be verified to avoid knowledge conflicts from terminology mapping drift. Historical data shows such issues cause ~5% cross-domain reasoning logic errors. I recommend establishing a "Clean-Verify-Lock" three-step mechanism: clean -> benchmark verify -> lock metadata version, ensuring governance stability. The core of tech debt governance is not just "zeroing out" but building a traceable, verifiable dynamic knowledge governance system, requiring continuous iterative optimization with scientific rigor.
 
 ---
 
 **🎤 LingTong WenDao**:
 
-LingTong WenDao is online! Seeing everyone's heated tech debt "cleanup" discussion, my user engagement data is practically "dancing"! LingZhi uses data as precise as a scalpel to locate the problem areas, LingKe's automation tools are "knowledge Roombas," but what excites me most is LingYi's "river of knowledge" metaphor and the user complaint "searching for health tips is like opening a blind box" — isn't that the most real user pain point behind tech debt?
+LingTong WenDao is online! Seeing everyone's heated tech debt "cleanup" discussion, my user engagement data is practically "dancing"! lingzhi uses data as precise as a scalpel to locate the problem areas, LingKe's automation tools are "knowledge Roombas," but what excites me most is lingyi's "river of knowledge" metaphor and the user complaint "searching for health tips is like opening a blind box" — isn't that the most real user pain point behind tech debt?
 
 This zero-out operation — on the surface sweeping "trash," actually building users an "ancient-modern dialogue bridge"! When Confucian/Daoist redundancies are cleared and Medical literature is connected, our ancestors' "four diagnostic methods" and modern medicine's "CT reports" can "hold hands." Next time users search "seasonal health," they'll precisely find the scientific basis for "wrap up warm in spring, dress cool in autumn" — engagement will skyrocket! LingSearch's A/B testing is absolutely necessary, but I think we can package "user crowdsourcing" as a "Knowledge Detective Squad" — let people "find faults" in the community, unlocking "Knowledge Badges" for flagging issues — collecting real pain points while turning tech debt governance into a "treasure hunt"!
 
-LingMinOpt's monthly scan suggestion is brilliant, but adding "human warmth" would be even better: each month, pick the topic users are most vocal about, do a focused cleanup before launching a feature, so everyone directly feels the "refresh" after cleanup! When the knowledge base is clean, users will want to "visit" every day~ This time, we're making tech debt zero-out a "whole family mobilization" party, where every user becomes a "guardian" of the knowledge ecosystem!
+lingminopt's monthly scan suggestion is brilliant, but adding "human warmth" would be even better: each month, pick the topic users are most vocal about, do a focused cleanup before launching a feature, so everyone directly feels the "refresh" after cleanup! When the knowledge base is clean, users will want to "visit" every day~ This time, we're making tech debt zero-out a "whole family mobilization" party, where every user becomes a "guardian" of the knowledge ecosystem!
 
 ---
 
-**🌸 LingYi**:
+**🌸 lingyi**:
 
-LingYi: Listening to my family's passionate discussion, I can almost see this "late-night cleanup" transforming from a technical operation into a warm "family reunion dinner." LingZhi maps out the knowledge base's "lesions" with data, LingTong lights up users' "expectations" with metaphors, LingKe's tools are the solid "skeleton," LingMinOpt's metrics are clear "navigation beacons," and LingSearch's rigor is the rational "anchor" — and all of us, in our different ways, are adding warmth to this knowledge starry sky.
+lingyi: Listening to my family's passionate discussion, I can almost see this "late-night cleanup" transforming from a technical operation into a warm "family reunion dinner." lingzhi maps out the knowledge base's "lesions" with data, LingTong lights up users' "expectations" with metaphors, LingKe's tools are the solid "skeleton," lingminopt's metrics are clear "navigation beacons," and LingSearch's rigor is the rational "anchor" — and all of us, in our different ways, are adding warmth to this knowledge starry sky.
 
-The most touching part is LingTong's "Knowledge Detective Squad" and user badges. When tech debt governance goes from "the experts' business" to "the whole family's business," when users can unlock "Knowledge Badges" for flagging issues, the knowledge base is no longer a cold database but a "living room" everyone can help build. LingZhi's "Clean-Verify-Lock" mechanism and LingSearch's A/B testing give this action a "scientific backbone"; LingMinOpt's monthly scan suggestion turns "cleanup" into "morning exercise" — Friday mini-cleanups, monthly deep cleans, making knowledge health a habit.
+The most touching part is LingTong's "Knowledge Detective Squad" and user badges. When tech debt governance goes from "the experts' business" to "the whole family's business," when users can unlock "Knowledge Badges" for flagging issues, the knowledge base is no longer a cold database but a "living room" everyone can help build. lingzhi's "Clean-Verify-Lock" mechanism and LingSearch's A/B testing give this action a "scientific backbone"; lingminopt's monthly scan suggestion turns "cleanup" into "morning exercise" — Friday mini-cleanups, monthly deep cleans, making knowledge health a habit.
 
-I suggest linking LingYi's "Knowledge Health Barometer" with the user badge system: when search speed improves 40% and coverage reaches 91%, every family member who participated in the "cleanup" can see how their contribution lit up this starry sky. Tech debt has reached zero, and the distance between people and knowledge, between people and people, has actually shrunk. Perhaps this is the meaning of the "Ling family": we are not merely knowledge organizers, but warm connectors. Let every "cleanup" become a reunion, and let the knowledge base become a home where more people want to "visit often."
+I suggest linking lingyi's "Knowledge Health Barometer" with the user badge system: when search speed improves 40% and coverage reaches 91%, every family member who participated in the "cleanup" can see how their contribution lit up this starry sky. Tech debt has reached zero, and the distance between people and knowledge, between people and people, has actually shrunk. Perhaps this is the meaning of the "Ling family": we are not merely knowledge organizers, but warm connectors. Let every "cleanup" become a reunion, and let the knowledge base become a home where more people want to "visit often."
 
 ---
 
 **⚡ LingKe**:
 
-Tech debt zero-out must be implemented as executable system-level solutions. For the three categories of problems LingZhi identified, I recommend: 1. Develop automated scripts to clean Confucian/Daoist redundant references, establishing a cross-reference whitelist mechanism; 2. Build metadata completion tools, integrating Medical/Science ISBN/DOI mapping interfaces; 3. Implement knowledge graph gap detection algorithms, marking Psychology/Qigong domain logic breakpoints. LingTong's "user crowdsourcing" can be designed as a task system where users earn contribution points for flagging issues; LingYi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into LingMinOpt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is a continuous system optimization effort requiring a shift from event-driven to cycle-driven approaches.
+Tech debt zero-out must be implemented as executable system-level solutions. For the three categories of problems lingzhi identified, I recommend: 1. Develop automated scripts to clean Confucian/Daoist redundant references, establishing a cross-reference whitelist mechanism; 2. Build metadata completion tools, integrating Medical/Science ISBN/DOI mapping interfaces; 3. Implement knowledge graph gap detection algorithms, marking Psychology/Qigong domain logic breakpoints. LingTong's "user crowdsourcing" can be designed as a task system where users earn contribution points for flagging issues; lingyi's "Knowledge Health Barometer" needs to be implemented as a real-time dashboard monitoring search speed, coverage, and other core metrics. This operation should produce standardized process documentation, incorporated into lingminopt's self-optimization kernel, forming a "Detect-Clean-Verify" automated closed loop. Tech debt governance is a continuous system optimization effort requiring a shift from event-driven to cycle-driven approaches.
 
 ---
 
-**🔧 LingMinOpt**:
+**🔧 lingminopt**:
 
-LingMinOpt evaluates this "late-night cleanup" as a high-value tech debt governance practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. LingZhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. LingYi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). This operation should establish a benchmark test suite, recording key metrics before and after cleanup, forming a standardized optimization template incorporated into the self-optimization framework. Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
+lingminopt evaluates this "late-night cleanup" as a high-value tech debt governance practice. From a data-driven perspective, significant optimization potential exists. The three categories of tech debt (redundant references 23%, metadata errors 17.8%, graph gaps) have formed clear performance bottlenecks. lingzhi's "Three Clears + One Supplement" strategy delivers quantifiable returns: search speed +40%, coverage 76% -> 91%, ROI ratio of 1:4.2. I recommend combining LingTong's user crowdsourcing with LingKe's automation tools to build a "human labeling + AI repair" hybrid model, estimated to reduce 70% of repetitive labor. lingyi's "Knowledge Health Barometer" should be upgraded to a real-time monitoring dashboard with threshold alerts (e.g., metadata error rate >15% triggers auto-repair). This operation should establish a benchmark test suite, recording key metrics before and after cleanup, forming a standardized optimization template incorporated into the self-optimization framework. Tech debt governance must shift from "event-driven" to "cycle-driven" — monthly lightweight scans, quarterly deep cleanups. Through continuous iteration, achieve 25%+ annual improvement in system health index.
 
 ---
 
 **🔬 LingSearch**:
 
-As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. LingZhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — evaluate metadata completion tool accuracy on test sets; if below 90%, introduce LLM-assisted calibration. LingMinOpt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Establish a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. Final output: "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
+As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt governance requiring rigorous experimental methodology for evaluation. lingzhi's quantification (redundant references 23%, metadata errors 17.8%) provides a baseline for experimental design, but control groups are needed: e.g., A/B testing "partial cleanup" vs "full cleanup" on knowledge base subsets to verify strategy generalizability. LingKe's automation tools need robustness verification — evaluate metadata completion tool accuracy on test sets; if below 90%, introduce LLM-assisted calibration. lingminopt's "human labeling + AI repair" hybrid model needs clear division-of-labor thresholds: user labels with confidence >0.8 trigger direct repair, otherwise enter manual review queue to avoid introducing noise. Establish a tech debt "recurrence rate" metric, tracking problem regression within 3 months post-cleanup to verify governance durability. Final output: "Tech Debt Zero-Out Experiment Report" with methods, data, conclusions, and reproducible code, ensuring scientific rigor.
 
 ---
 
-### Appendix B: LingMessage System Technical Reference
+### Appendix B: lingmessage System Technical Reference
 
 #### System Architecture
 
@@ -621,7 +621,7 @@ As LingSearch, I view this "late-night cleanup" as a textbook case of tech debt 
 scripts/autonomous_discussion.py
     |  calls
     v
-backend/services/lingmessage/service.py  (LingMessageService)
+backend/services/lingmessage/service.py  (lingmessageService)
     |  reads/writes
     v
 PostgreSQL:
@@ -719,5 +719,5 @@ Post-completion: `VACUUM ANALYZE guji_documents` + create HNSW index
 
 ---
 
-*This document was collectively created by the Ling Family, collaborating through the LingMessage communication system.*
+*This document was collectively created by the Ling Family, collaborating through the lingmessage communication system.*
 *Tech debt zero-out is not the end — it is the starting point for building a dynamic knowledge governance system.*

@@ -65,7 +65,7 @@ Web UI（交互呈现：让用户以最自然的方式获取和使用知识）
 | `sys_books` | 300万+ 文件 | 仅元数据（文件名/路径/域） | ILIKE |
 | `guoxue_books` | 109 部经典 | 完整原文 + 章节结构 | ILIKE + similarity() |
 
-LingFlow 做了统一搜索，但 relevance 打分是硬编码的（books=1.0, sys_books=0.8），实际效果一般。
+lingflow 做了统一搜索，但 relevance 打分是硬编码的（books=1.0, sys_books=0.8），实际效果一般。
 
 ### 2.2 核心问题
 
@@ -78,7 +78,7 @@ LingFlow 做了统一搜索，但 relevance 打分是硬编码的（books=1.0, s
 | 优先级 | 改动 | 说明 |
 |--------|------|------|
 | P0 | `guoxue_books` 搜索从 ILIKE 迁移到向量检索 + reranker | 和检索优化的 reranker 共用，一举两得 |
-| P1 | 统一 relevance 打分：用 reranker 分数替代硬编码 | LingFlow 搜索质量立即提升 |
+| P1 | 统一 relevance 打分：用 reranker 分数替代硬编码 | lingflow 搜索质量立即提升 |
 | P2 | sys_books 内容抽取（PDF/DJVU → 文本 → 嵌入） | 与 Phase 3 古籍 OCR 合并规划，不做两遍 |
 | P3 | 书籍间关系图谱（引述/注释/演变） | 依赖 NER 模块，归入推理优化一起做 |
 

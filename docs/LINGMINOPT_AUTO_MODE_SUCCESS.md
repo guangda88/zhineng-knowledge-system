@@ -1,4 +1,4 @@
-# LingMinOpt自动优化模式成功启动
+# lingminopt自动优化模式成功启动
 
 **日期**: 2026-04-01
 **状态**: ✅ 运行中
@@ -266,4 +266,4 @@ nohup python scripts/auto_optimization_service.py --interval 3600 > /tmp/lingmin
 
 **众智混元，万法灵通** ⚡🚀
 
-**LingMinOpt自动优化系统正式上线运行**
+**lingminopt自动优化系统正式上线运行**

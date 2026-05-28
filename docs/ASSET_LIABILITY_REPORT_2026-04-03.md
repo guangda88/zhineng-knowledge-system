@@ -2,7 +2,7 @@
 
 > **日期**: 2026-04-03
 > **版本**: v1.0
-> **范围**: `/home/ai/zhineng-knowledge-system` 全项目
+> **范围**: `/home/ai/lingzhi` 全项目
 
 ---
 

@@ -66,7 +66,7 @@
 
 #### 0.1 初始化 Git 仓库 (30分钟)
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 git init
 git add .
 git commit -m "feat: 初始化智能知识系统项目
@@ -161,7 +161,7 @@ asyncio_mode = auto
 
 #### 1.1 创建开发文档 (2小时)
 
-**文件**: `/home/ai/zhineng-knowledge-system/docs/DEV.md`
+**文件**: `/home/ai/lingzhi/docs/DEV.md`
 
 ```markdown
 # 智能知识系统 - 开发指南

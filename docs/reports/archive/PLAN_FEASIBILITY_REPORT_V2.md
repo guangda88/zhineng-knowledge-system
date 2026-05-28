@@ -15,7 +15,7 @@
 **审查日期**: 2026-03-25
 **审查人**: 项目管理专家
 **参考计划**: PHASED_IMPLEMENTATION_PLAN_V2.md
-**项目路径**: `/home/ai/zhineng-knowledge-system`
+**项目路径**: `/home/ai/lingzhi`
 
 ---
 

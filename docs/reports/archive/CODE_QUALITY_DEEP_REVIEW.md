@@ -13,7 +13,7 @@
 ---
 
 **审查日期**: 2026-03-25
-**审查范围**: /home/ai/zhineng-knowledge-system
+**审查范围**: /home/ai/lingzhi
 **审查文件总数**: 87个Python源文件
 **代码总行数**: 31,734行
 

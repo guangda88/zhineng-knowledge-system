@@ -202,7 +202,7 @@ frontend/
 ### 启动服务
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 docker-compose up -d
 ```
 

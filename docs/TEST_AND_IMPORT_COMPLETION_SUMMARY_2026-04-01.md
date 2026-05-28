@@ -130,7 +130,7 @@ python -m pytest tests/test_text_processor.py -v --tb=short
 
 **执行命令**:
 ```bash
-PYTHONPATH=/home/ai/zhineng-knowledge-system python3 scripts/import_textbooks.py --limit 10
+PYTHONPATH=/home/ai/lingzhi python3 scripts/import_textbooks.py --limit 10
 ```
 
 **处理结果**:
@@ -248,10 +248,10 @@ PYTHONPATH=/home/ai/zhineng-knowledge-system python3 scripts/import_textbooks.py
 **命令**:
 ```bash
 # 导入所有剩余文件
-PYTHONPATH=/home/ai/zhineng-knowledge-system python3 scripts/import_textbooks.py
+PYTHONPATH=/home/ai/lingzhi python3 scripts/import_textbooks.py
 
 # 或分批导入（每次50个）
-PYTHONPATH=/home/ai/zhineng-knowledge-system python3 scripts/import_textbooks.py --limit 50
+PYTHONPATH=/home/ai/lingzhi python3 scripts/import_textbooks.py --limit 50
 ```
 
 **建议**:

@@ -2,7 +2,7 @@
 
 **版本**: v1.0.0
 **日期**: 2026-03-31
-**基于**: LingFlow双工程流系统
+**基于**: lingflow双工程流系统
 **工程流**: 文字处理 + 音频处理并行
 **目标**: 28天完成双工程流集成
 
@@ -590,9 +590,9 @@ EOF
 
 ## 📚 相关文档
 
-### LingFlow文档
-- [MULTI_WORKFLOW_GUIDE.md](../../LingFlow/docs/architecture/MULTI_WORKFLOW_GUIDE.md)
-- [MULTI_WORKFLOW_DESIGN.md](../../LingFlow/docs/architecture/MULTI_WORKFLOW_DESIGN.md)
+### lingflow文档
+- [MULTI_WORKFLOW_GUIDE.md](../../lingflow/docs/architecture/MULTI_WORKFLOW_GUIDE.md)
+- [MULTI_WORKFLOW_DESIGN.md](../../lingflow/docs/architecture/MULTI_WORKFLOW_DESIGN.md)
 
 ### 项目文档
 - [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) - 编码规范

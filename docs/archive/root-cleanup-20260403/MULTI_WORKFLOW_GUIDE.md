@@ -585,7 +585,7 @@ docker stats --no-stream
   docker-compose exec postgres pg_isready -U lingzhi
   ```
 
-- [ ] LingFlow已安装
+- [ ] lingflow已安装
   ```bash
   which lingflow
   lingflow --version
@@ -745,7 +745,7 @@ lingflow stop --workflow workflow_name
 
 | 问题 | 可能原因 | 解决方案 |
 |------|---------|---------|
-| 工作流无法启动 | LingFlow未安装 | pip install lingflow |
+| 工作流无法启动 | lingflow未安装 | pip install lingflow |
 | Docker连接失败 | Docker未运行 | docker-compose up -d |
 | 数据库错误 | 数据库未就绪 | docker-compose exec postgres pg_isready |
 | 依赖包冲突 | 版本不兼容 | pip install --upgrade |

@@ -470,7 +470,7 @@ POST /api/v1/external/v1/search
 
 ---
 
-**项目地址**: `/home/ai/zhineng-knowledge-system`
+**项目地址**: `/home/ai/lingzhi`
 **技术栈**: FastAPI, PostgreSQL, pgvector, Redis, Docker
 **版本**: 2.0.0
 **最后更新**: 2026-03-31

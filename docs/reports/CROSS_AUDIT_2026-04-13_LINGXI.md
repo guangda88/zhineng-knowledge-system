@@ -121,4 +121,4 @@ grep -rn "f'" backend/ --include="*.py" | grep -i "select\|insert\|update\|delet
 ---
 
 *交叉审计完成时间: 2026-04-13*
-*审计人: 灵犀 (LingXi) — 灵族十二子之四*
+*审计人: 灵犀 (lingxi) — 灵族十二子之四*

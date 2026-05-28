@@ -28,14 +28,14 @@
 2. **自学习进化** - GitHub监控 + 自主搜索 + 实验验证
 3. **内容生成** - 报告/PPT/音频/视频/课程自动生成
 4. **外部集成** - 标准化API，支持第三方集成
-5. **自优化** - LingMinOpt框架，持续自我完善
+5. **自优化** - lingminopt框架，持续自我完善
 
 ---
 
 ## 📁 完整目录结构
 
 ```
-/home/ai/zhineng-knowledge-system/
+/home/ai/lingzhi/
 │
 ├── backend/                          # 后端服务
 │   ├── api/
@@ -97,7 +97,7 @@
 │   │   │   └── annotation_manager.py # 标注管理
 │   │   │
 │   │   └── optimization/           # 🆕 自优化服务
-│   │       ├── lingminopt.py       # LingMinOpt框架
+│   │       ├── lingminopt.py       # lingminopt框架
 │   │       ├── feedback_collector.py # 反馈收集
 │   │       ├── error_analyzer.py   # 错误分析
 │   │       └── auditor.py          # 系统审计
@@ -211,7 +211,7 @@ response = requests.post(
 results = response.json()
 ```
 
-### 5️⃣ 自优化（LingMinOpt框架）
+### 5️⃣ 自优化（lingminopt框架）
 
 **优化来源**：
 
@@ -491,7 +491,7 @@ CACHE_TTL = 3600  # 缓存过期时间
 - 持续优化识别精度
 - 质量保证体系
 
-### ✅ LingMinOpt自优化
+### ✅ lingminopt自优化
 - 多源反馈收集
 - 智能优化执行
 - 持续自我完善
@@ -500,7 +500,7 @@ CACHE_TTL = 3600  # 缓存过期时间
 
 **系统定位**: 不是一个简单的知识库，而是一个**能够自主学习和进化的活的知识有机体**！🌱
 
-**项目路径**: `/home/ai/zhineng-knowledge-system`
+**项目路径**: `/home/ai/lingzhi`
 **版本**: 2.0.0
 **最后更新**: 2026-03-31
 

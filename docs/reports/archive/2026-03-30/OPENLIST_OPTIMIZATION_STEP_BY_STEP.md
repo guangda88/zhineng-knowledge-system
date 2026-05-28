@@ -21,7 +21,7 @@
 ### 一键执行（推荐）
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_complete.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_complete.sh
 ```
 
 **脚本会自动执行**:
@@ -224,5 +224,5 @@ ls -lh /opt/openlist/data/data.db*
 **准备就绪？执行命令：**
 
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_complete.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_complete.sh
 ```

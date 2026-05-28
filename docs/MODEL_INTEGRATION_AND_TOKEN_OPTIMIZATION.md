@@ -635,7 +635,7 @@ class BatchProcessor:
 **第2周（P1）**:
 4. ✅ 实施分级调用策略
 5. ✅ 实施Prompt优化
-6. ✅ 集成到LingMinOpt自动优化
+6. ✅ 集成到lingminopt自动优化
 
 **第3-4周（P2）**:
 7. 📋 评估本地模型部署
@@ -697,7 +697,7 @@ class BatchProcessor:
 
 - 📋 部署本地模型（Qwen2.5-7B）
 - 📋 批处理优化（批量处理）
-- 📋 自适应优化（LingMinOpt自动调优）
+- 📋 自适应优化（lingminopt自动调优）
 
 ---
 

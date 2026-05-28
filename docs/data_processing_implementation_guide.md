@@ -150,7 +150,7 @@ source /data/venv/bin/activate
 pip install --upgrade pip
 
 # 安装核心依赖
-pip install -r /home/ai/zhineng-knowledge-system/services/ai_service/requirements.txt
+pip install -r /home/ai/lingzhi/services/ai_service/requirements.txt
 
 # 安装额外依赖
 pip install \

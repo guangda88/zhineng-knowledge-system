@@ -261,7 +261,7 @@ instructkr遵守的原则：
 
 ### 我们的项目
 
-- 仓库: `/home/ai/zhineng-knowledge-system`
+- 仓库: `/home/ai/lingzhi`
 - 元数据系统: `backend/metadata/`
 - 文档: `docs/`
 

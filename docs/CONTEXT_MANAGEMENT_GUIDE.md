@@ -1,6 +1,6 @@
 # 上下文管理系统集成指南
 
-本文档描述了集成自 [LingFlow](https://github.com/guangda88/LingFlow) 的上下文管理系统。
+本文档描述了集成自 [lingflow](https://github.com/guangda88/lingflow) 的上下文管理系统。
 
 ## 概述
 
@@ -320,7 +320,7 @@ print(recovery)
 │  └───────────────┬───────────────────────────┘  │
 │                  │                               │
 │  ┌───────────────▼───────────────────────────┐  │
-│  │   LingFlow Core (可选)                     │  │
+│  │   lingflow Core (可选)                     │  │
 │  │   - TokenEstimator (tiktoken)              │  │
 │  │   - MessageScorer (多维度评分)              │  │
 │  │   - CompressionStrategy (智能压缩)          │  │
@@ -351,9 +351,9 @@ pytest tests/test_context*.py -v
 
 ## 故障排除
 
-### LingFlow 组件不可用
+### lingflow 组件不可用
 
-如果看到警告 "LingFlow components not available"，系统会自动使用回退方案（简单 Token 估算和评分）。
+如果看到警告 "lingflow components not available"，系统会自动使用回退方案（简单 Token 估算和评分）。
 
 ### 上下文目录权限问题
 
@@ -370,6 +370,6 @@ chmod 755 data/context
 
 ## 参考资料
 
-- [LingFlow 项目](https://github.com/guangda88/LingFlow)
+- [lingflow 项目](https://github.com/guangda88/lingflow)
 - [FastAPI 文档](https://fastapi.tiangolo.com/)
 - [tiktoken 文档](https://github.com/openai/tiktoken)

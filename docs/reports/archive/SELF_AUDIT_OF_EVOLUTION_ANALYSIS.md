@@ -155,7 +155,7 @@ LingFlow 的功能 = Crush 的功能 + X
 
 **发现的事实**:
 ```bash
-$ ls /home/ai/LingFlow/*OPTIMIZATION*
+$ ls /home/ai/lingflow/*OPTIMIZATION*
 CODE_OPTIMIZATION_RECOMMENDATIONS.md
 OPTIMIZATION_IMPLEMENTATION_REPORT.md
 OPTIMIZATION_SUMMARY_2026_03_29.md

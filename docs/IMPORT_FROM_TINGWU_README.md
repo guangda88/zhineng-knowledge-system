@@ -276,7 +276,7 @@ ALIYUN_ACCESS_KEY_ID=your_access_key_id
 ALIYUN_ACCESS_KEY_SECRET=your_access_key_secret
 
 # 数据库配置
-DATABASE_URL=postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb
+DATABASE_URL=postgresql://zhineng:${POSTGRES_PASSWORD}@localhost:5436/zhineng_kb
 
 # Redis配置
 REDIS_URL=redis://localhost:6379/0

@@ -147,7 +147,7 @@ embedding:
 ### 方式 1: 一键部署（推荐）
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 bash deploy_vector_fix.sh
 ```
 

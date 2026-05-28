@@ -32,7 +32,7 @@
 项目在 `.git/hooks/pre-push` 中配置了审计守门钩子，要求推送前完成：
 
 1. **审计文件检查** — `docs/AUDIT_v0.16.md` 中 checklist 必须全部勾选
-2. **灵通 cross-review** — LingMessage 中审计讨论必须有灵通参与
+2. **灵通 cross-review** — lingmessage 中审计讨论必须有灵通参与
 
 ### 1.3 绕过原因
 

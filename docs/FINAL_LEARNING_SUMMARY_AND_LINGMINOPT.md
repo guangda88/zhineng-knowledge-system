@@ -1,4 +1,4 @@
-# 灵知系统Claude Code学习成果总结与应用LingMinOpt自优化框架
+# 灵知系统Claude Code学习成果总结与应用lingminopt自优化框架
 
 **日期**: 2026-04-01
 **版本**: v1.3.0-dev
@@ -14,7 +14,7 @@
 |------|------|--------------|------|
 | **Claude Code架构** | `CLAUDE_CODE_ARCHITECTURE_ANALYSIS.md` | 8大模式 | ✅ 完成 |
 | **Claw Code实现** | `CLAW_CODE_DEEP_INSIGHTS.md` | +8大模式 | ✅ 完成 |
-| **LingFlow深度分析** | `CLAUDE_CODE_ADDITIONAL_DESIGN_INSIGHTS.md` | +10大模式 | ✅ 完成 |
+| **lingflow深度分析** | `CLAUDE_CODE_ADDITIONAL_DESIGN_INSIGHTS.md` | +10大模式 | ✅ 完成 |
 | **实战计划** | `CLAUDE_CODE_PRACTICAL_LEARNING_PLAN.md` | 完整路线图 | ✅ 完成 |
 | **总计** | - | **26大核心思想** | ✅ 完成 |
 
@@ -85,11 +85,11 @@
 
 ---
 
-## 🔧 应用LingMinOpt自优化框架
+## 🔧 应用lingminopt自优化框架
 
-### 什么是LingMinOpt？
+### 什么是lingminopt？
 
-**LingMinOpt（灵极优）** = LingZhi（灵知）+ Minimal（极简）+ Optimal（最优）
+**lingminopt（灵极优）** = lingzhi（灵知）+ Minimal（极简）+ Optimal（最优）
 
 核心原则：
 1. **渐进式优化** - 不破坏现有功能
@@ -100,7 +100,7 @@
 ### 自优化框架架构
 
 ```python
-class LingMinOptFramework:
+class lingminoptFramework:
     """灵极优自优化框架"""
 
     def __init__(self):
@@ -150,7 +150,7 @@ class LingMinOptFramework:
 
 ```python
 # backend/core/permissions.py
-class LingZhiPermissionManager:
+class lingzhiPermissionManager:
     """灵知权限管理器"""
 
     PERMISSIONS = {
@@ -670,7 +670,7 @@ class DynamicPromptManager:
 2. **闭环反馈系统** - 持续学习和改进
 3. **数据驱动优化** - 基于真实指标决策
 
-### 2. LingMinOpt的核心价值
+### 2. lingminopt的核心价值
 
 1. **渐进式** - 不破坏现有功能
 2. **可观测** - 所有指标可追踪

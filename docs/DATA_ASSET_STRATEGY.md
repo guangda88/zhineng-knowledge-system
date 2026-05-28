@@ -411,7 +411,7 @@ knowledge_graph
 | P0-1: Sys_books.db → PostgreSQL `sys_books` 表 | ✅ 完成 | 3,024,428 行，5 B-tree + 2 GIN trigram 全部就绪 |
 | P0-2: 从 path 提取 domain 分类 | ✅ 完成 | 中医/道家/佛家/儒家/气功/古籍等分类自动提取 |
 | P0-3: 本地 TXT 导入 documents.content | ✅ 完成 | 168个文件(159已有 + 3新增 + 6空文件)，82条textbooks.db记录 |
-| P0-4: guoxue.db 残留配置清理 | ✅ 完成 | 移除 LingZhiConfig 中 guoxue.db 引用 |
+| P0-4: guoxue.db 残留配置清理 | ✅ 完成 | 移除 lingzhiConfig 中 guoxue.db 引用 |
 
 ### Phase 1: 结构化书目服务 — ✅ 完成
 

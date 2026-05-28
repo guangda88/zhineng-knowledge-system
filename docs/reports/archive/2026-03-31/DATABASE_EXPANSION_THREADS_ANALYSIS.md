@@ -454,7 +454,7 @@ After=network.target
 [Service]
 Type=notify
 User=zhineng
-WorkingDirectory=/home/ai/zhineng-knowledge-system
+WorkingDirectory=/home/ai/lingzhi
 ExecStart=/usr/local/bin/gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 Restart=always
 RestartSec=10
@@ -470,7 +470,7 @@ WantedBy=multi-user.target
 ```bash
 # /etc/logrotate.d/zhineng-api
 
-/home/ai/zhineng-knowledge-system/logs/*.log {
+/home/ai/lingzhi/logs/*.log {
     daily
     rotate 7
     compress

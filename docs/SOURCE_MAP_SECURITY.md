@@ -252,7 +252,7 @@ jobs:
 3. **项目检查**
    ```bash
    # 检查项目根目录和构建目录
-   find /home/ai/zhineng-knowledge-system \
+   find /home/ai/lingzhi \
      -name "*.map" \
      -not -path "*/node_modules/*" \
      -not -path "*/.git/*"

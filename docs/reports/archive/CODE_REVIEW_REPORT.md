@@ -15,7 +15,7 @@
 **审查日期**: 2026-03-25
 **审查范围**: 全项目代码深度审查
 **审查人**: Claude Code Agent Team
-**项目路径**: /home/ai/zhineng-knowledge-system
+**项目路径**: /home/ai/lingzhi
 
 ---
 

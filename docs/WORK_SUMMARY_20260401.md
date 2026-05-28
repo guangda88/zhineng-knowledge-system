@@ -30,7 +30,7 @@
 | 模式 | 核心思想 | 灵知应用 |
 |------|----------|----------|
 | **权限系统** | allowlist + risk_levels 分层控制 | API调用权限、敏感操作确认 |
-| **MCP集成** | 独立服务进程，协议通信 | LingZhiMCPRegistry统一接口 |
+| **MCP集成** | 独立服务进程，协议通信 | lingzhiMCPRegistry统一接口 |
 | **工具管理** | 8步流程（验证→权限→风险→hooks→执行→hooks→失败→上下文） | AIToolCallManager |
 | **验证Agent** | 多维度验证 + 综合判断 | EvolutionVerificationAgent |
 | **多Agent拆分** | 专用Agent（Explore/Plan/Execution） | 6个专用Agent |

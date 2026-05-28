@@ -173,7 +173,7 @@ sudo nano /etc/systemd/journald.conf
 ./scripts/maintain_openlist_db.sh
 
 # 添加到定期任务（每月执行一次）
-0 0 1 * * /home/ai/zhineng-knowledge-system/scripts/cleanup_disk_space.sh >> logs/cleanup_monthly.log 2>&1
+0 0 1 * * /home/ai/lingzhi/scripts/cleanup_disk_space.sh >> logs/cleanup_monthly.log 2>&1
 ```
 
 ---

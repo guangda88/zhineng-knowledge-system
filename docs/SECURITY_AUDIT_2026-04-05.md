@@ -106,7 +106,7 @@
 | 问题 | 修复 | 文件 |
 |------|------|------|
 | Nginx 无安全响应头 | 添加 X-Content-Type-Options, X-Frame-Options, CSP 等 | `nginx/nginx.conf` |
-| 硬编码绝对路径 `/home/ai/LingYi/src` | 改用环境变量 `LINGYI_SRC_PATH` | `backend/api/v1/discuss.py` |
+| 硬编码绝对路径 `/home/ai/lingyi/src` | 改用环境变量 `LINGYI_SRC_PATH` | `backend/api/v1/discuss.py` |
 | API 错误泄露内部信息 | 移除 `detail=f"...{e}"` 模式 | `backend/api/v1/audio.py` |
 | 响应消息泄露文件路径 | 移除响应中的路径信息 | `backend/api/v1/annotation.py` |
 

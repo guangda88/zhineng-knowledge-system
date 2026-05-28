@@ -9,7 +9,7 @@ zhineng-knowledge-system/
 │   │   ├── database.py        # DatabaseConfig
 │   │   ├── redis.py           # RedisConfig
 │   │   ├── security.py        # SecurityConfig
-│   │   └── lingzhi.py         # LingZhiConfig (legacy DB paths)
+│   │   └── lingzhi.py         # lingzhiConfig (legacy DB paths)
 │   ├── api/v1/                # API route modules
 │   │   ├── __init__.py        # Registers all sub-routers on api_router
 │   │   ├── documents.py       # CRUD /api/v1/documents
@@ -22,7 +22,7 @@ zhineng-knowledge-system/
 │   │   ├── retrieval/         # VectorRetriever, BM25Retriever, HybridRetriever
 │   │   ├── reasoning/         # BaseReasoner, CoTReasoner, ReactReasoner, GraphRAGReasoner
 │   │   ├── rag/               # RAG orchestration
-│   │   ├── lingzhi/           # Legacy LingZhi integration
+│   │   ├── lingzhi/           # Legacy lingzhi integration
 │   │   └── knowledge_base/    # Knowledge base processing
 │   ├── domains/               # Domain-specific handlers
 │   │   ├── base.py            # BaseDomain ABC, DomainConfig, QueryResult, DomainType

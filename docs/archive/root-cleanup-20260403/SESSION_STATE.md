@@ -19,7 +19,7 @@
 - **Blocker**: Another Claude session is running `import_guji_final()` which caused severe lock contention on PostgreSQL
 - **To retry**: After guji import locks clear, run:
 ```bash
-cd /home/ai/zhineng-knowledge-system && python3 -c "
+cd /home/ai/lingzhi && python3 -c "
 import asyncio, logging, json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 async def run():

@@ -129,7 +129,7 @@ git commit -m "your message"
 
 ---
 
-### 3. LingMinOpt 自动优化系统 ✅
+### 3. lingminopt 自动优化系统 ✅
 
 #### 系统架构
 
@@ -339,7 +339,7 @@ git commit -m "your message"
 - ✅ 持续监控改进
 
 **应用**:
-- LingMinOpt框架基于6大核心指标
+- lingminopt框架基于6大核心指标
 - 每次优化都有明确的目标和测量
 - 闭环反馈确保持续改进
 
@@ -446,7 +446,7 @@ git commit -m "your message"
    - 防止代码质量回退
    - 统一代码风格
 
-3. **✅ LingMinOpt 自动优化**
+3. **✅ lingminopt 自动优化**
    - 第一轮优化完成
    - API成功率提升30%
    - 持续自动运行

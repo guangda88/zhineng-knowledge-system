@@ -262,7 +262,7 @@ rclone lsd openlist:115
 ### 备份文件位置
 
 ```
-/home/ai/zhineng-knowledge-system/docs/alist_storages_backup.json
+/home/ai/lingzhi/docs/alist_storages_backup.json
 ```
 
 ### 备份内容
@@ -501,14 +501,14 @@ rclone copy openlist:115/国学大师 /data/original/guoxue/ --progress
 
 ```bash
 # 运行下载脚本
-python3 /home/ai/zhineng-knowledge-system/scripts/alist_downloader.py
+python3 /home/ai/lingzhi/scripts/alist_downloader.py
 ```
 
 ### 3. 查看存储配置
 
 ```bash
 # 查看备份文件
-cat /home/ai/zhineng-knowledge-system/docs/alist_storages_backup.json | jq '.'
+cat /home/ai/lingzhi/docs/alist_storages_backup.json | jq '.'
 ```
 
 ---
@@ -601,7 +601,7 @@ print("\n恢复完成，请重启Alist服务")
 
 - Alist官方文档: https://alist.nn.ci/zh/
 - rclone文档: https://rclone.org/
-- 项目文档: /home/ai/zhineng-knowledge-system/docs/
+- 项目文档: /home/ai/lingzhi/docs/
 
 ### 常见问题
 

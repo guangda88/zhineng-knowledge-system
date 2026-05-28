@@ -33,7 +33,7 @@
 
 ### 修改的文件
 
-#### 1. `/home/ai/zhineng-knowledge-system/backend/common/typing.py` (新建)
+#### 1. `/home/ai/lingzhi/backend/common/typing.py` (新建)
 创建了统一的类型定义模块，提供以下类型别名：
 - `JSONResponse` - API响应类型
 - `DocumentRecord` - 文档记录类型
@@ -57,10 +57,10 @@
 
 ### 创建的通用工具模块
 
-#### 1. `/home/ai/zhineng-knowledge-system/backend/common/__init__.py`
+#### 1. `/home/ai/lingzhi/backend/common/__init__.py`
 统一的工具模块导出
 
-#### 2. `/home/ai/zhineng-knowledge-system/backend/common/db_helpers.py`
+#### 2. `/home/ai/lingzhi/backend/common/db_helpers.py`
 数据库查询辅助函数模块，提供：
 - `row_to_dict()` - 将数据库行转换为字典
 - `rows_to_list()` - 将多行转换为字典列表
@@ -70,13 +70,13 @@
 - `get_document_stats()` - 获取文档统计
 - `check_database_health()` - 检查数据库健康状态
 
-#### 3. `/home/ai/zhineng-knowledge-system/backend/common/singleton.py`
+#### 3. `/home/ai/lingzhi/backend/common/singleton.py`
 单例模式工具模块，提供：
 - `@async_singleton` 装饰器 - 异步单例模式
 - `SingletonFactory` 类 - 灵活的单例工厂
 - `reset_all_singletons()` - 重置所有单例（用于测试）
 
-#### 4. `/home/ai/zhineng-knowledge-system/backend/domains/mixins.py`
+#### 4. `/home/ai/lingzhi/backend/domains/mixins.py`
 领域类混入模块，提供：
 - `DatabaseSearchMixin` - 数据库搜索功能
 - `QueryFormatterMixin` - 查询结果格式化

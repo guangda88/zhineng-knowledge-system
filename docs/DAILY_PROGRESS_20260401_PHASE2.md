@@ -28,7 +28,7 @@
 
 2. **MCP (Model Context Protocol) 集成**
    - 独立服务进程，协议通信
-   - 应用到灵知：`LingZhiMCPRegistry` 统一服务调用接口
+   - 应用到灵知：`lingzhiMCPRegistry` 统一服务调用接口
 
 3. **Agent工具调用管理**
    - 8步流程：输入验证 → 权限检查 → 风险评估 → Hooks → 执行 → Hooks → 失败处理 → 上下文补充

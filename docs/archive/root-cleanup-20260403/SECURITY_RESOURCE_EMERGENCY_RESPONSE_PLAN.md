@@ -168,7 +168,7 @@ DATABASE_URL = "postgresql://zhineng:zhineng123@..."
 
 ```bash
 # 1. 启用JWT认证（2小时）
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 
 # 生成RSA密钥对
 python -c "
@@ -202,8 +202,8 @@ print('JWT keys generated')
 
 # 2. 配置环境变量
 cat >> .env << EOF
-JWT_PRIVATE_KEY_PATH=/home/ai/zhineng-knowledge-system/jwt_private.pem
-JWT_PUBLIC_KEY_PATH=/home/ai/zhineng-knowledge-system/jwt_public.pem
+JWT_PRIVATE_KEY_PATH=/home/ai/lingzhi/jwt_private.pem
+JWT_PUBLIC_KEY_PATH=/home/ai/lingzhi/jwt_public.pem
 JWT_ALGORITHM=RS256
 JWT_EXPIRATION=3600
 EOF
@@ -230,13 +230,13 @@ curl -X POST http://localhost:8000/api/v1/gateway/query \
 
 ```bash
 # 1. 检查所有硬编码密码
-grep -r "zhineng123" /home/ai/zhineng-knowledge-system/backend
+grep -r "zhineng123" /home/ai/lingzhi/backend
 
 # 2. 修改 main_optimized.py
 cat > /tmp/fix_database_url.py << 'EOF'
 import sys
 
-file_path = "/home/ai/zhineng-knowledge-system/backend/main_optimized.py"
+file_path = "/home/ai/lingzhi/backend/main_optimized.py"
 
 with open(file_path, 'r') as f:
     content = f.read()
@@ -267,7 +267,7 @@ echo "DATABASE_URL=postgresql://zhineng:YOUR_SECURE_PASSWORD@localhost:5432/zhin
 **验证**:
 ```bash
 # 确认硬编码密码已删除
-grep -c "zhineng123" /home/ai/zhineng-knowledge-system/backend/main_optimized.py
+grep -c "zhineng123" /home/ai/lingzhi/backend/main_optimized.py
 # 预期结果: 0
 ```
 
@@ -280,7 +280,7 @@ grep -c "zhineng123" /home/ai/zhineng-knowledge-system/backend/main_optimized.py
 ```bash
 # 修改 main_optimized.py
 cat > /tmp/fix_cors.py << 'EOF'
-file_path = "/home/ai/zhineng-knowledge-system/backend/main_optimized.py"
+file_path = "/home/ai/lingzhi/backend/main_optimized.py"
 
 with open(file_path, 'r') as f:
     lines = f.readlines()
@@ -331,11 +331,11 @@ curl -X OPTIONS http://localhost:8000/api/v1/gateway/query \
 
 ```bash
 # 查找所有裸异常
-grep -rn "except:" /home/ai/zhineng-knowledge-system/backend --include="*.py"
+grep -rn "except:" /home/ai/lingzhi/backend --include="*.py"
 
 # 修复 main_optimized.py 中的裸异常
 cat > /tmp/fix_exceptions.py << 'EOF'
-file_path = "/home/ai/zhineng-knowledge-system/backend/main_optimized.py"
+file_path = "/home/ai/lingzhi/backend/main_optimized.py"
 
 with open(file_path, 'r') as f:
     content = f.read()
@@ -371,7 +371,7 @@ python3 /tmp/fix_exceptions.py
 cat > /tmp/verify_rate_limit.py << 'EOF'
 import re
 
-file_path = "/home/ai/zhineng-knowledge-system/backend/main.py"
+file_path = "/home/ai/lingzhi/backend/main.py"
 
 with open(file_path, 'r') as f:
     content = f.read()
@@ -425,7 +425,7 @@ EOF
 cat > /tmp/add_resource_limits.py << 'EOF'
 import yaml
 
-file_path = "/home/ai/zhineng-knowledge-system/docker-compose.yml"
+file_path = "/home/ai/lingzhi/docker-compose.yml"
 
 with open(file_path, 'r') as f:
     compose = yaml.safe_load(f)
@@ -484,9 +484,9 @@ docker-compose up -d
 
 ```bash
 # 修改crontab，增加监控频率
-(crontab -l 2>/dev/null; echo "*/10 * * * * /home/ai/zhineng-knowledge-system/scripts/emergency_memory_recovery.sh") | crontab -
-(crontab -l 2>/dev/null; echo "0 * * * * /home/ai/zhineng-knowledge-system/scripts/monitor_disk.sh") | crontab -
-(crontab -l 2>/dev/null; echo "*/30 * * * * /home/ai/zhineng-knowledge-system/scripts/monitor_docker.sh") | crontab -
+(crontab -l 2>/dev/null; echo "*/10 * * * * /home/ai/lingzhi/scripts/emergency_memory_recovery.sh") | crontab -
+(crontab -l 2>/dev/null; echo "0 * * * * /home/ai/lingzhi/scripts/monitor_disk.sh") | crontab -
+(crontab -l 2>/dev/null; echo "*/30 * * * * /home/ai/lingzhi/scripts/monitor_docker.sh") | crontab -
 
 # 验证crontab
 crontab -l
@@ -842,7 +842,7 @@ curl -X POST http://localhost:8000/api/v1/gateway/query \
 # 预期: 401 Unauthorized
 
 # 2. 验证硬编码密码已删除
-grep -r "zhineng123" /home/ai/zhineng-knowledge-system/backend
+grep -r "zhineng123" /home/ai/lingzhi/backend
 # 预期: 无结果
 
 # 3. 验证CORS配置
@@ -876,7 +876,7 @@ docker stats --no-stream
 # 预期: 所有容器都有资源限制
 
 # 3. 验证日志文件
-ls -lh /home/ai/zhineng-knowledge-system/logs/
+ls -lh /home/ai/lingzhi/logs/
 # 预期: 有监控日志文件
 ```
 

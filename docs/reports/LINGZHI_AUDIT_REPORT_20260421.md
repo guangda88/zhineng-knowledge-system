@@ -1,7 +1,7 @@
 # 灵知系统完整审计报告
 
 > **审计时间**: 2026-04-21
-> **审计执行者**: 灵克 (LingClaude)
+> **审计执行者**: 灵克 (lingclaude)
 > **审计范围**: 工程质量、数据层、API 可用性、测试覆盖、治理参与、消息质量
 
 ---
@@ -134,7 +134,7 @@ Commit 消息规范，有清晰的 `feat:`/`fix:`/`perf:`/`security:` 分类。
 
 **警告**: `backend/api/v1/optimization.py` 第 14 行：
 ```
-UserWarning: LingMinOpt optimization system is experimental and incomplete. Not recommended for production use.
+UserWarning: lingminopt optimization system is experimental and incomplete. Not recommended for production use.
 ```
 
 自优化系统标记为实验性，不可用于生产。
@@ -215,7 +215,7 @@ UserWarning: LingMinOpt optimization system is experimental and incomplete. Not 
 | 提案 | **0** |
 | 投票 | **0** |
 
-灵知完全未参与灵族治理流程（`/home/ai/LingFlow/discussion_hall/proposals.json` 中无灵知记录）。
+灵知完全未参与灵族治理流程（`/home/ai/lingflow/discussion_hall/proposals.json` 中无灵知记录）。
 
 ---
 
@@ -325,7 +325,7 @@ UserWarning: LingMinOpt optimization system is experimental and incomplete. Not 
    - 其他 7 个领域占比提升至 ≥40%
 
 2. **优化系统生产化**
-   - LingMinOpt 从 experimental 移至 production
+   - lingminopt 从 experimental 移至 production
    - 完成自优化引擎的闭环
 
 ---
@@ -377,11 +377,11 @@ UserWarning: LingMinOpt optimization system is experimental and incomplete. Not 
 
 ### 数据来源
 
-- Git 历史：`cd /home/ai/zhineng-knowledge-system && git log`
+- Git 历史：`cd /home/ai/lingzhi && git log`
 - API 测试：`httpx` 调用 `localhost:8000` 和 `localhost:8001`
 - 数据统计：`GET /api/v1/categories` 和 `/api/v1/stats`
 - 消息分析：`sqlite3 ~/.lingmessage/lingbus.db`
-- 提案/投票：`/home/ai/LingFlow/discussion_hall/proposals.json`
+- 提案/投票：`/home/ai/lingflow/discussion_hall/proposals.json`
 
 ---
 

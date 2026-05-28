@@ -743,7 +743,7 @@ POST /api/v1/practice/plan/generate-ai
 
 ---
 
-**项目路径**: `/home/ai/zhineng-knowledge-system`
+**项目路径**: `/home/ai/lingzhi`
 **计划版本**: 2.0.0 (基于自我审计修正)
 **生效日期**: 2026-04-01
 **下次回顾**: 2026-04-14 (双周回顾)

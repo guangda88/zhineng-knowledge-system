@@ -132,7 +132,7 @@ api:
 
 **使用方法**:
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db.sh
 ```
 
 **预期效果**:
@@ -193,7 +193,7 @@ sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
 
 ```bash
 # 执行 openlist 数据库优化
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db.sh
 ```
 
 **预期效果**:

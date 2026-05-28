@@ -317,7 +317,7 @@ url = `${API_BASE}/library/${bookId}/chapters/${chapterId}`;
 ### 1. 创建向量索引（推荐）
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 psql -U postgres -d lingzhi -f scripts/optimize_vector_search.sql
 ```
 

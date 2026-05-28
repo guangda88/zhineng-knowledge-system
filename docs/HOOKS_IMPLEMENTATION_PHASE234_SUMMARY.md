@@ -29,15 +29,15 @@
   "hooks": {
     "pre-command": {
       "Bash(sqlite3 *data.db* *DROP*|*DELETE*|*TRUNCATE*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/db_write_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/db_write_check.py",
         "description": "检查SQLite数据库破坏性操作是否已获批准"
       },
       "Bash(rm -rf data/*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/file_delete_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/file_delete_check.py",
         "description": "检查批量文件删除操作是否安全"
       },
       "Bash(docker-compose down *-v*)": {
-        "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/volume_delete_check.py",
+        "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/volume_delete_check.py",
         "description": "检查Docker Volume删除操作"
       },
       "Bash(Edit(*DEVELOPMENT_RULES.md*))": {
@@ -54,7 +54,7 @@
       }
     },
     "session-start": {
-      "command": "python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/session_start.py",
+      "command": "python3 /home/ai/lingzhi/scripts/hooks/claude_code/session_start.py",
       "description": "会话开始时提醒阅读规则"
     }
   }

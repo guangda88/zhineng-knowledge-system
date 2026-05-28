@@ -254,10 +254,10 @@ fi
 **3. 添加到 crontab**
 ```bash
 # 每日健康检查（每天早上9点）
-0 9 * * * /home/ai/zhineng-knowledge-system/scripts/daily_health_check.sh >> /home/ai/zhineng-knowledge-system/logs/daily_health.log 2>&1
+0 9 * * * /home/ai/lingzhi/scripts/daily_health_check.sh >> /home/ai/lingzhi/logs/daily_health.log 2>&1
 
 # 每周容量评估（每周日下午5点）
-0 17 * * 0 /home/ai/zhineng-knowledge-system/scripts/weekly_capacity_review.sh >> /home/ai/zhineng-knowledge-system/logs/weekly_capacity.log 2>&1
+0 17 * * 0 /home/ai/lingzhi/scripts/weekly_capacity_review.sh >> /home/ai/lingzhi/logs/weekly_capacity.log 2>&1
 ```
 
 ---
@@ -373,7 +373,7 @@ fi
 配置 logrotate：
 ```bash
 # /etc/logrotate.d/zhineng-app
-/home/ai/zhineng-knowledge-system/logs/*.log {
+/home/ai/lingzhi/logs/*.log {
     daily
     rotate 7
     compress

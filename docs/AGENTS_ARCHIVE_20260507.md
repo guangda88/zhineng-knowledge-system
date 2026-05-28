@@ -376,8 +376,8 @@ Key variables (see `.env.example` for full list):
 | `ENVIRONMENT` | No | `development` | `development`, `testing`, `production` |
 | `DATABASE_URL` | Prod | — | PostgreSQL connection string |
 | `REDIS_URL` | No | — | Redis connection string |
-| `POSTGRES_PASSWORD` | No | `zhineng123` | PostgreSQL password |
-| `REDIS_PASSWORD` | No | `redis123` | Redis password |
+| `POSTGRES_PASSWORD` | Yes | — | PostgreSQL password |
+| `REDIS_PASSWORD` | Yes | — | Redis password |
 | `DEEPSEEK_API_KEY` | No | — | DeepSeek AI API key |
 | `ALLOWED_ORIGINS` | Prod | — | CORS origins (JSON array or comma-separated) |
 | `JWT_PRIVATE_KEY` | Prod | — | RSA private key PEM |

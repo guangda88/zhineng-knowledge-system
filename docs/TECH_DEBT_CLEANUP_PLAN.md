@@ -1,6 +1,6 @@
 # 技术债务清理计划
 
-> 创建日期: 2026-03-31 | 基于: docs/TECHNICAL_DEBT.md | 执行方式: LingFlow Agent Workflow
+> 创建日期: 2026-03-31 | 基于: docs/TECHNICAL_DEBT.md | 执行方式: lingflow Agent Workflow
 > 工作流文件: `.lingflow/workflows/tech_debt_cleanup.yaml`
 
 ---
@@ -88,7 +88,7 @@ else:
 **方案**:
 ```python
 # Before:
-db_url = "postgresql://zhineng:zhineng123@localhost:5436/zhineng_kb"
+db_url = "postgresql://zhineng:${POSTGRES_PASSWORD}@localhost:5436/zhineng_kb"  # 示例，实际用 os.getenv
 
 # After:
 db_url = os.getenv("DATABASE_URL")

@@ -14,7 +14,7 @@
 
 **审查日期**: 2026-03-25
 **审查版本**: 开发规则 v1.0.0
-**审查范围**: `/home/ai/zhineng-knowledge-system`
+**审查范围**: `/home/ai/lingzhi`
 **审查工具**: Claude Code Opus 4.6
 
 ---

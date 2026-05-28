@@ -1150,7 +1150,7 @@ registry.register_agent(
     metadata={
         "description": "探索改进机会",
         "version": "1.0.0",
-        "author": "LingZhi Team"
+        "author": "lingzhi Team"
     }
 )
 

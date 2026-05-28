@@ -35,7 +35,7 @@ GLM_API_MAX_CALLS_PER_MINUTE=50
 
 ```python
 # 测试速率限制器是否工作
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 
 # 启动Python
 python3 - <<'EOF'

@@ -4,7 +4,7 @@
 `backend/main.py` uses `create_app()` returning a configured `FastAPI` instance. Lifespan events (startup/shutdown) are handled via `core/lifespan.py` using `@asynccontextmanager`.
 
 ## Configuration
-- **Pydantic Settings** (`pydantic-settings`): `backend/config/` uses multiple inheritance (`Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, LingZhiConfig)`).
+- **Pydantic Settings** (`pydantic-settings`): `backend/config/` uses multiple inheritance (`Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, lingzhiConfig)`).
 - Singleton via `get_config()`.
 - Environment variable driven; `.env` file supported.
 - Production mode enforces stricter validation (DATABASE_URL required, RSA keys required for JWT).

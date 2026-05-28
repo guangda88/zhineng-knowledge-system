@@ -22,7 +22,7 @@ instructkr通过分析Claude Code的Source Map，提取了完整的代码架构�
 ### 1. 查看项目状态
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 
 # 查看状态摘要
 PYTHONPATH=. python3 -m backend.metadata.cli status

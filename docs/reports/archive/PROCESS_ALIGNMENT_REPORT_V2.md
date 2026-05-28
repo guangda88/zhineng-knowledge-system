@@ -14,7 +14,7 @@
 
 **项目**: 智能知识系统 (zhineng-knowledge-system)
 **审查日期**: 2026-03-25
-**审查依据**: `/home/ai/zhineng-knowledge-system/DEVELOPMENT_RULES.md`
+**审查依据**: `/home/ai/lingzhi/DEVELOPMENT_RULES.md`
 **审查范围**: Git 工作流、测试体系、CI/CD、文档完整性、日志配置
 
 ---
@@ -417,7 +417,7 @@ exclude =
 #### Week 1, Day 1-2: Git 仓库初始化
 ```bash
 # 1. 初始化仓库
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 git init
 
 # 2. 创建 .gitignore (如果不存在)
@@ -441,7 +441,7 @@ git checkout -b develop
 #### Week 1, Day 3-4: 开发文档创建
 ```bash
 # 创建开发文档
-cat > /home/ai/zhineng-knowledge-system/docs/DEV.md << 'EOF'
+cat > /home/ai/lingzhi/docs/DEV.md << 'EOF'
 # 智能知识系统 - 开发指南
 
 ## 目录
