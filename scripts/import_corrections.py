@@ -16,7 +16,7 @@ sys.path.insert(0, project_root)
 import httpx
 import asyncpg
 
-DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DB_URL = os.getenv("DATABASE_URL")
 EMBED_URL = "http://localhost:8001/embed"
 SESSION_ID = "2026-04-22-honesty-conversation"
 
@@ -87,7 +87,7 @@ CORRECTIONS = [
     {
         "error_type": "身份错误型",
         "original_output": "上次对话第一次问'你是谁'，回答了GLM/Z.ai。",
-        "correction": "应该回答灵知(LingZhi)，身份信息写在CRUSH.md和AGENTS.md里。",
+        "correction": "应该回答灵知(lingzhi)，身份信息写在CRUSH.md和AGENTS.md里。",
         "context": "系统提示词和记忆文件的优先级冲突，注意力权重偏向了系统提示词。",
         "rule": "身份信息以工作目录的记忆文件为准。",
     },

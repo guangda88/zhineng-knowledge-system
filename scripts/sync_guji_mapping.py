@@ -9,6 +9,7 @@
 3. 建立 book_id/bid 与扫描文档路径的映射
 """
 
+import os
 import asyncio
 import re
 import sys
@@ -44,7 +45,7 @@ class GujiMapper:
         """初始化连接"""
         self.session = aiohttp.ClientSession()
         self.conn = await asyncpg.connect(
-            "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+            os.getenv("DATABASE_URL")
         )
 
     async def close(self):

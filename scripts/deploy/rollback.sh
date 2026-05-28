@@ -415,7 +415,7 @@ health_check() {
     fi
 
     # 检查Redis连接
-    if docker-compose exec -T redis redis-cli -a redis123 ping > /dev/null 2>&1; then
+    if docker-compose exec -T redis redis-cli -a "${REDIS_PASSWORD:?REDIS_PASSWORD not set}" ping > /dev/null 2>&1; then
         log_info "✓ Redis连接正常"
     else
         log_warn "✗ Redis连接失败"

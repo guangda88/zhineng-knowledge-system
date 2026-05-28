@@ -31,7 +31,7 @@ ALIST_URL = "http://localhost:4255/api/fs/list"
 ALIST_DL_URL = "http://localhost:4255/api/fs/get"
 CLOUD_BASE = "/百度云9080/ZNQG/注意保管的资料/苏颂研究/参考文档/论文"
 LOCAL_BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "susong_import")
-DB_DSN = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DB_DSN = os.getenv("DATABASE_URL")
 
 DOWNLOAD_DELAY = 1.5  # seconds between downloads to avoid throttling
 

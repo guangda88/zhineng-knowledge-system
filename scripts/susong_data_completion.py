@@ -22,7 +22,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DB_DSN = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DB_DSN = os.getenv("DATABASE_URL")
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "susong_import")
 
 CHUNK_SIZE = 2000

@@ -9,6 +9,7 @@
 4. 建立索引
 """
 
+import os
 import asyncio
 import sqlite3
 from pathlib import Path
@@ -17,9 +18,9 @@ from typing import Dict, List, Tuple
 import asyncpg
 
 # 配置
-SQLITE_DB = Path("/home/ai/zhineng-knowledge-system/lingzhi_ubuntu/database/guoxue.db")
+SQLITE_DB = Path("/home/ai/lingzhi/lingzhi_ubuntu/database/guoxue.db")
 POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
-BID_BOOK_MAPPING = Path("/home/ai/zhineng-knowledge-system/data/bid_book_mapping.json")
+BID_BOOK_MAPPING = Path("/home/ai/lingzhi/data/bid_book_mapping.json")
 
 
 def load_bid_mapping() -> Dict[str, str]:
@@ -77,7 +78,7 @@ def get_wx201_books(limit: int = 500) -> List[Tuple]:
 
 async def update_guji_documents():
     """更新guji_documents表"""
-    db_url = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    db_url = os.getenv("DATABASE_URL")
 
     conn = await asyncpg.connect(db_url)
 

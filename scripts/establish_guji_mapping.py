@@ -8,6 +8,7 @@
     python scripts/establish_guji_mapping.py --sync
 """
 
+import os
 import asyncio
 import sys
 
@@ -171,7 +172,7 @@ async def establish_mapping():
     # 4. 连接数据库并写入映射
     print("\n💾 第4步: 写入映射表...")
 
-    conn = await asyncpg.connect("postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+    conn = await asyncpg.connect(os.getenv("DATABASE_URL"))
 
     # 清空旧数据
     await conn.execute("TRUNCATE TABLE guji_scan_mapping")
@@ -204,7 +205,7 @@ async def establish_mapping():
 
 async def show_current_status():
     """显示当前映射状态"""
-    conn = await asyncpg.connect("postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+    conn = await asyncpg.connect(os.getenv("DATABASE_URL"))
 
     total = await conn.fetchval("SELECT COUNT(*) FROM guji_scan_mapping")
 

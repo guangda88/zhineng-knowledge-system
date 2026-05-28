@@ -31,7 +31,7 @@ async def ingest_wuzang_xiangyin():
     ingestion = DocumentIngestionService(db_pool, parser)
 
     # 文档路径
-    file_path = "/home/ai/zhineng-knowledge-system/data/documents/五脏相音-五脏相音六腑应律.pdf"
+    file_path = "/home/ai/lingzhi/data/documents/五脏相音-五脏相音六腑应律.pdf"
 
     # 摄取文档（中医分类）
     print(f"正在摄取文档: {file_path}")

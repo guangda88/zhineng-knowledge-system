@@ -18,6 +18,7 @@ import asyncio
 import logging
 import re
 import sys
+import os
 import time
 
 import httpx
@@ -25,7 +26,7 @@ import httpx
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
-DEFAULT_DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DEFAULT_DB_URL = os.getenv("DATABASE_URL", os.getenv("DATABASE_URL"))
 CATEGORY = "道家"
 
 # Core Daoist texts available on CText

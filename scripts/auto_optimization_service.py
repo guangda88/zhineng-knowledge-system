@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LingMinOpt自动优化 - 非交互式持续运行版本"""
+"""lingminopt自动优化 - 非交互式持续运行版本"""
 import asyncio
 import logging
 import signal
@@ -36,7 +36,7 @@ class AutoOptimizationService:
 
         logger = logging.getLogger(__name__)
         logger.info("=" * 70)
-        logger.info("🚀 LingMinOpt自动优化服务启动")
+        logger.info("🚀 lingminopt自动优化服务启动")
         logger.info("=" * 70)
         logger.info(f"⏱️  检查间隔: {self.check_interval}秒 ({self.check_interval/60:.1f}分钟)")
         logger.info("🔄 模式: 持续自动优化")
@@ -146,7 +146,7 @@ async def main():
     """主函数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="LingMinOpt自动优化服务")
+    parser = argparse.ArgumentParser(description="lingminopt自动优化服务")
     parser.add_argument(
         "--interval", type=int, default=300, help="检查间隔（秒），默认300秒（5分钟）"
     )
@@ -156,7 +156,7 @@ async def main():
     service = AutoOptimizationService(check_interval=args.interval)
 
     print()
-    print("🚀 LingMinOpt自动优化服务")
+    print("🚀 lingminopt自动优化服务")
     print()
     print(f"⏱️  检查间隔: {args.interval}秒 ({args.interval/60:.1f}分钟)")
     print("📝 日志文件: /tmp/lingminopt_auto.log")

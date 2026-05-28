@@ -80,7 +80,7 @@ def print_status():
         import asyncpg
 
         database_url = os.getenv(
-            "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+            "DATABASE_URL", os.getenv("DATABASE_URL")
         )
         try:
             conn = await asyncpg.connect(database_url)
@@ -132,7 +132,7 @@ def force_unlock(task_name: str):
         import asyncpg
 
         database_url = os.getenv(
-            "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+            "DATABASE_URL", os.getenv("DATABASE_URL")
         )
         conn = await asyncpg.connect(database_url)
         try:

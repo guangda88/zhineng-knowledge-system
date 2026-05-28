@@ -398,7 +398,7 @@ async def main():
     # 获取数据库URL
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
-        database_url = "postgresql://postgres:postgres@localhost:5432/zhineng"
+        raise RuntimeError("DATABASE_URL environment variable is required")
 
     logger.info("开始导入中医数据...")
     logger.info(f"知识字典: {KXZD_DB}")

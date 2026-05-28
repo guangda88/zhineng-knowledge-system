@@ -102,7 +102,7 @@ echo "【7. 清理旧备份文件】" | tee -a "$LOG_FILE"
 echo "─────────────────────────────────────" | tee -a "$LOG_FILE"
 # 清理超过30天的备份
 find /backup -type f -mtime +30 -delete 2>/dev/null
-find /home/ai/zhineng-knowledge-system/backups -type f -mtime +30 -delete 2>/dev/null
+find /home/ai/lingzhi/backups -type f -mtime +30 -delete 2>/dev/null
 echo "✅ 已清理超过30天的备份文件" | tee -a "$LOG_FILE"
 echo "" | tee -a "$LOG_FILE"
 

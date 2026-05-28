@@ -64,8 +64,8 @@ CATEGORY_CONFIG = {
         "concept_name": None,
         "extra_concepts": [],
         "extra_names": [],
-        "max_docs": 500,
-        "search_terms": ["武术", "功夫", "太极", "拳法", "格斗", "武术训练", "传统武术"],
+        "max_docs": 2000,
+        "search_terms": ["武术", "功夫", "太极", "拳法", "格斗", "武术训练", "传统武术", "太极拳", "少林", "剑法", "气功武术", "散打", "武术教育", "武术文化"],
     },
     "道家": {
         "concept_id": "C2781334924",
@@ -74,6 +74,22 @@ CATEGORY_CONFIG = {
         "extra_names": ["Chinese philosophy"],
         "max_docs": 1000,
         "search_terms": ["道教", "道家", "老子", "庄子", "内丹", "养生", "修炼", "道", "气功"],
+    },
+    "中医": {
+        "concept_id": "C71924",
+        "concept_name": "Medicine",
+        "extra_concepts": ["C126922612"],
+        "extra_names": ["Traditional Chinese medicine"],
+        "max_docs": 500,
+        "search_terms": ["中医", "中药", "针灸", "经络", "方剂", "辨证", "脉诊", "中医学", "中医药", "养生"],
+    },
+    "儒家": {
+        "concept_id": "C169760540",
+        "concept_name": "Philosophy",
+        "extra_concepts": ["C95330714", "C523546415"],
+        "extra_names": ["Ethics", "Confucianism"],
+        "max_docs": 1000,
+        "search_terms": ["儒家", "儒学", "孔子", "孟子", "礼制", "仁", "义", "中庸", "大学", "论语"],
     },
 }
 
@@ -255,6 +271,7 @@ async def main():
     parser.add_argument("--db-url", default=DEFAULT_DB_URL)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--category", choices=list(CATEGORY_CONFIG.keys()), help="Import only this category")
+    # Note: 中医 and 儒家 now available
     parser.add_argument("--max-docs", type=int, help="Override max docs per category")
     args = parser.parse_args()
 

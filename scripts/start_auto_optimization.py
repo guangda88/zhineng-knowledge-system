@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LingMinOpt自动优化循环启动器"""
+"""lingminopt自动优化循环启动器"""
 import asyncio
 import signal
 import sys
@@ -35,7 +35,7 @@ class AutoOptimizationController:
             loop.add_signal_handler(sig, lambda: asyncio.create_task(self._shutdown()))
 
         print("=" * 70)
-        print("🚀 LingMinOpt自动优化模式启动")
+        print("🚀 lingminopt自动优化模式启动")
         print("=" * 70)
         print()
         print(f"📊 优化间隔: {check_interval}秒 ({check_interval/60:.1f}分钟)")
@@ -109,7 +109,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="LingMinOpt自动优化系统",
+        description="lingminopt自动优化系统",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def main():
     """主函数"""
     # 数据库连接配置
-    db_url = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+    db_url = os.getenv("DATABASE_URL", os.getenv("DATABASE_URL"))
     embedding_service_url = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
 
     logger.info("=== 文档向量重建脚本 ===")

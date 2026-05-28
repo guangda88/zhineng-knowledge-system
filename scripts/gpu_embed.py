@@ -22,7 +22,7 @@ from sentence_transformers import SentenceTransformer
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+DB_URL = os.getenv("DATABASE_URL", os.getenv("DATABASE_URL"))
 MODEL_NAME = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
 MAX_TEXT_LENGTH = 512
 STAGING_TABLE = "doc_embeddings_staging"

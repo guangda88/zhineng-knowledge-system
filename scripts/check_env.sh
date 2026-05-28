@@ -67,7 +67,7 @@ echo ""
 
 # 5. 检查项目目录结构
 echo "5. 检查项目目录结构..."
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 for dir in backend frontend tests scripts data docs; do
     if [ -d "$dir" ]; then
         check_pass "目录 $dir/ 存在"

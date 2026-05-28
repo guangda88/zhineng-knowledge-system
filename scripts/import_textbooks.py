@@ -1,7 +1,7 @@
 """
 智能气功教材数据导入脚本
 
-从 /home/ai/zhineng-knowledge-system/data/textbooks/txt格式/
+从 /home/ai/lingzhi/data/textbooks/txt格式/
 导入智能气功相关教材到灵知系统
 """
 

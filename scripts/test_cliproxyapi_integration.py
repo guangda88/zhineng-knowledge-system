@@ -18,7 +18,9 @@ from backend.services.ai_service_adapter import AIServiceAdapter, TaskType, Unif
 
 # Test configuration
 CLIPROXYAPI_BASE_URL = os.getenv("CLIPROXYAPI_BASE_URL", "http://localhost:8317/v1")
-CLIPROXYAPI_API_KEY = os.getenv("CLIPROXYAPI_API_KEY", "lingzhi-api-key-001")
+CLIPROXYAPI_API_KEY = os.getenv("CLIPROXYAPI_API_KEY")
+if not CLIPROXYAPI_API_KEY:
+    raise RuntimeError("CLIPROXYAPI_API_KEY not set")
 
 
 async def test_health_check():

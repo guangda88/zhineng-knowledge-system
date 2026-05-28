@@ -31,7 +31,7 @@ logging.basicConfig(
 )
 log = logging.getLogger("importer")
 
-DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DB_URL = os.getenv("DATABASE_URL")
 EMBEDDING_URL = "http://localhost:8001"
 
 BATCH_SIZE = 500

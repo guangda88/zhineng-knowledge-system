@@ -211,10 +211,10 @@ class DataImporter:
 async def main():
     """主函数"""
     # 数据库配置
-    db_url = os.getenv("DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+    db_url = os.getenv("DATABASE_URL", os.getenv("DATABASE_URL"))
 
     # 数据目录
-    data_dir = os.getenv("DATA_DIR", "/home/ai/zhineng-knowledge-system/data")
+    data_dir = os.getenv("DATA_DIR", "/home/ai/lingzhi/data")
 
     logger.info(f"数据库URL: {db_url}")
     logger.info(f"数据目录: {data_dir}")

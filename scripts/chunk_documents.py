@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 DB_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb",
+    os.getenv("DATABASE_URL"),
 )
 EMBEDDING_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
 
@@ -28,6 +28,8 @@ OVERLAP = 50
 MIN_DOC_CHARS = 400
 DOC_BATCH = 32
 EMBED_BATCH = 16
+CATEGORIES = os.getenv("CHUNK_CATEGORIES", "")  # comma-separated, e.g. "佛家,道家,中医"
+SKIP_EMBED = os.getenv("SKIP_EMBED", "").strip().lower() in ("1", "true", "yes")
 
 _SENTENCE_ENDS = re.compile(r"[。！？；\n]")
 
@@ -76,7 +78,20 @@ async def main():
     conn = await asyncpg.connect(DB_URL)
     logger.info("DB connected")
 
-    need = await conn.fetchval("SELECT count(*) FROM documents WHERE length(content) > $1", MIN_DOC_CHARS)
+    cats = [c.strip() for c in CATEGORIES.split(",") if c.strip()] if CATEGORIES else []
+    cat_clause = ""
+    cat_params = []
+    if cats:
+        cat_clause = "AND d.category = ANY($3)"
+        cat_params = [cats]
+        logger.info(f"Filtering categories: {cats}")
+
+    need_q = "SELECT count(*) FROM documents d WHERE length(d.content) > $1 "
+    if cats:
+        need_q += "AND d.category = ANY($2)"
+        need = await conn.fetchval(need_q, MIN_DOC_CHARS, cats)
+    else:
+        need = await conn.fetchval(need_q, MIN_DOC_CHARS)
     done = await conn.fetchval("SELECT count(DISTINCT doc_id) FROM doc_chunks") or 0
     logger.info(f"Documents to chunk: {need}, already done: {done}")
 
@@ -84,17 +99,32 @@ async def main():
         total_chunks = 0
         total_docs = 0
 
+        offset = 0
         while True:
-            docs = await conn.fetch(
-                """
-                SELECT id, content FROM documents
-                WHERE length(content) > $1
-                  AND id NOT IN (SELECT DISTINCT doc_id FROM doc_chunks)
-                ORDER BY id LIMIT $2
-                """,
-                MIN_DOC_CHARS,
-                DOC_BATCH,
-            )
+            if cats:
+                docs = await conn.fetch(
+                    """
+                    SELECT id, content FROM documents d
+                    WHERE length(d.content) > $1
+                      AND NOT EXISTS (SELECT 1 FROM doc_chunks dc WHERE dc.doc_id = d.id)
+                      AND d.category = ANY($2)
+                    ORDER BY id LIMIT $3
+                    """,
+                    MIN_DOC_CHARS,
+                    cats,
+                    DOC_BATCH,
+                )
+            else:
+                docs = await conn.fetch(
+                    """
+                    SELECT id, content FROM documents d
+                    WHERE length(d.content) > $1
+                      AND NOT EXISTS (SELECT 1 FROM doc_chunks dc WHERE dc.doc_id = d.id)
+                    ORDER BY id LIMIT $2
+                    """,
+                    MIN_DOC_CHARS,
+                    DOC_BATCH,
+                )
             if not docs:
                 break
 
@@ -109,37 +139,50 @@ async def main():
 
             texts = [p[2] for p in all_parts]
 
-            for i in range(0, len(texts), EMBED_BATCH):
-                batch_texts = texts[i:i + EMBED_BATCH]
-                batch_parts = all_parts[i:i + EMBED_BATCH]
-                try:
-                    embeddings = await embed(client, batch_texts)
-                except Exception as e:
-                    logger.error(f"Embed failed: {e}, inserting without embedding")
-                    embeddings = None
-
-                for j, (doc_id, chunk_idx, content) in enumerate(batch_parts):
+            if SKIP_EMBED:
+                for j, (doc_id, chunk_idx, content) in enumerate(all_parts):
                     seg = segment(content)
-                    if embeddings:
-                        emb_str = "[" + ",".join(map(str, embeddings[j])) + "]"
-                        await conn.execute(
-                            """INSERT INTO doc_chunks (doc_id, chunk_index, content, embedding, search_vector)
-                            VALUES ($1, $2, $3, $4::vector, to_tsvector('simple', $5))
-                            ON CONFLICT (doc_id, chunk_index) DO UPDATE SET
-                                content = EXCLUDED.content, embedding = EXCLUDED.embedding,
-                                search_vector = EXCLUDED.search_vector, updated_at = now()""",
-                            doc_id, chunk_idx, content, emb_str, seg,
-                        )
-                    else:
-                        await conn.execute(
-                            """INSERT INTO doc_chunks (doc_id, chunk_index, content, search_vector)
-                            VALUES ($1, $2, $3, to_tsvector('simple', $4))
-                            ON CONFLICT (doc_id, chunk_index) DO UPDATE SET
-                                content = EXCLUDED.content, search_vector = EXCLUDED.search_vector,
-                                updated_at = now()""",
-                            doc_id, chunk_idx, content, seg,
-                        )
+                    await conn.execute(
+                        """INSERT INTO doc_chunks (doc_id, chunk_index, content, search_vector)
+                        VALUES ($1, $2, $3, to_tsvector('simple', $4))
+                        ON CONFLICT (doc_id, chunk_index) DO UPDATE SET
+                            content = EXCLUDED.content, search_vector = EXCLUDED.search_vector,
+                            updated_at = now()""",
+                        doc_id, chunk_idx, content, seg,
+                    )
                     total_chunks += 1
+            else:
+                for i in range(0, len(texts), EMBED_BATCH):
+                    batch_texts = texts[i:i + EMBED_BATCH]
+                    batch_parts = all_parts[i:i + EMBED_BATCH]
+                    try:
+                        embeddings = await embed(client, batch_texts)
+                    except Exception as e:
+                        logger.error(f"Embed failed: {e}, inserting without embedding")
+                        embeddings = None
+
+                    for j, (doc_id, chunk_idx, content) in enumerate(batch_parts):
+                        seg = segment(content)
+                        if embeddings:
+                            emb_str = "[" + ",".join(map(str, embeddings[j])) + "]"
+                            await conn.execute(
+                                """INSERT INTO doc_chunks (doc_id, chunk_index, content, embedding, search_vector)
+                                VALUES ($1, $2, $3, $4::vector, to_tsvector('simple', $5))
+                                ON CONFLICT (doc_id, chunk_index) DO UPDATE SET
+                                    content = EXCLUDED.content, embedding = EXCLUDED.embedding,
+                                    search_vector = EXCLUDED.search_vector, updated_at = now()""",
+                                doc_id, chunk_idx, content, emb_str, seg,
+                            )
+                        else:
+                            await conn.execute(
+                                """INSERT INTO doc_chunks (doc_id, chunk_index, content, search_vector)
+                                VALUES ($1, $2, $3, to_tsvector('simple', $4))
+                                ON CONFLICT (doc_id, chunk_index) DO UPDATE SET
+                                    content = EXCLUDED.content, search_vector = EXCLUDED.search_vector,
+                                    updated_at = now()""",
+                                doc_id, chunk_idx, content, seg,
+                            )
+                        total_chunks += 1
 
             total_docs += len(docs)
             logger.info(f"Progress: {total_docs} docs, {total_chunks} chunks")

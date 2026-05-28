@@ -9,6 +9,7 @@
 4. 通过文件名匹配建立映射
 """
 
+import os
 import asyncio
 import re
 import sqlite3
@@ -191,7 +192,7 @@ async def main():
     # 连接 PostgreSQL
     import asyncpg
 
-    pg_conn = await asyncpg.connect("postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb")
+    pg_conn = await asyncpg.connect(os.getenv("DATABASE_URL"))
 
     # 清空旧映射
     await pg_conn.execute("TRUNCATE TABLE guji_scan_mapping")

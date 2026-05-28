@@ -146,7 +146,7 @@ async def main():
     import os
 
     database_url = os.getenv(
-        "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+        "DATABASE_URL", os.getenv("DATABASE_URL")
     )
 
     if not SOURCE_DB.exists():

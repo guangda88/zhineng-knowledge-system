@@ -4,12 +4,13 @@ These indexes are slow to build on 3M+ rows and need a longer timeout
 than the default asyncpg command_timeout.
 """
 
+import os
 import asyncio
 import time
 
 import asyncpg
 
-DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DB_URL = os.getenv("DATABASE_URL")
 
 INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_sys_books_filename_trgm ON sys_books USING gin (filename gin_trgm_ops)",

@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgresql://zhineng:{os.getenv('POSTGRES_PASSWORD', 'zhineng_secure_2024')}@localhost:5436/zhineng_kb",
+    os.getenv("DATABASE_URL"),
 )
 EMBEDDING_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
 

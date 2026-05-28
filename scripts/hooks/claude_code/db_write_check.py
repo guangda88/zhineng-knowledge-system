@@ -57,7 +57,7 @@ def print_help():
     print("1. 使用 AskUserQuestion 向用户说明操作方案和风险")
     print("2. 获得用户批准后，运行以下命令创建批准令牌:")
     print(
-        "   python3 /home/ai/zhineng-knowledge-system/scripts/hooks/claude_code/approval_token.py create --operation db_write"
+        "   python3 /home/ai/lingzhi/scripts/hooks/claude_code/approval_token.py create --operation db_write"
     )
     print("")
     print("   或使用 Python 代码:")

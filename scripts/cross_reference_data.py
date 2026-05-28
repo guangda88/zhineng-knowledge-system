@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 DATA_DB_PATH = "data/data.db"
 DB_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb",
+    os.getenv("DATABASE_URL"),
 )
 BATCH_SIZE = 5000
 

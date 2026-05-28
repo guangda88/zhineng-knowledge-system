@@ -265,10 +265,10 @@ async def test_books(client: httpx.AsyncClient, report: TestReport):
         )
     )
 
-    # LingFlow 统一搜索
+    # lingflow 统一搜索
     report.add(
         await req(
-            client, "GET", "/library/lingflow/unified", "LingFlow统一搜索", g,
+            client, "GET", "/library/lingflow/unified", "lingflow统一搜索", g,
             params={"q": "道德经", "size": 5},
         )
     )

@@ -16,21 +16,23 @@
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
 import random
 import re
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import asyncpg
 
 logger = logging.getLogger(__name__)
 
 DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", os.getenv("DATABASE_URL")
 )
 
 TRAINING_DIR = Path(os.getenv("TRAINING_DATA_DIR", "data/training"))
@@ -45,6 +47,12 @@ INTENT_TEMPLATES = {
             "{title}的练习步骤",
             "{title}练法",
             "请讲解{title}的方法",
+            "{title}应该怎么练",
+            "我想学{title}，该怎么开始",
+            "{title}有什么练习技巧",
+            "练习{title}需要注意什么",
+            "{title}的标准动作是什么",
+            "怎样正确练习{title}",
         ],
     },
     "scientific_basis": {
@@ -55,6 +63,12 @@ INTENT_TEMPLATES = {
             "{title}的现代科学研究",
             "有没有实验证明{title}的效果",
             "{title}的科学原理是什么",
+            "{title}有论文支持吗",
+            "学术界怎么看{title}",
+            "{title}有什么数据支撑",
+            "能否从科学角度解释{title}",
+            "{title}有没有做过临床试验",
+            "现代医学如何看{title}",
         ],
     },
     "theory_explanation": {
@@ -66,6 +80,12 @@ INTENT_TEMPLATES = {
             "请解释{title}的含义",
             "{title}是什么概念",
             "介绍一下{title}的理论",
+            "{title}是什么意思",
+            "能否通俗地解释{title}",
+            "{title}的定义是什么",
+            "{title}包含哪些内容",
+            "为什么{title}很重要",
+            "请详细说明{title}",
         ],
     },
     "book_search": {
@@ -76,6 +96,12 @@ INTENT_TEMPLATES = {
             "哪本书提到过{title}",
             "{title}的参考文献",
             "关于{title}的典籍有哪些",
+            "{title}最早记载在哪里",
+            "有没有古籍提到{title}",
+            "{title}的原始文献是什么",
+            "在哪里可以找到{title}的资料",
+            "{title}出自哪个朝代的文献",
+            "查阅{title}应该看什么书",
         ],
     },
     "comparison": {
@@ -86,6 +112,11 @@ INTENT_TEMPLATES = {
             "{title}与{other}的差异",
             "{title}和{other}的关系",
             "比较{title}和{other}的不同",
+            "{title}和{other}哪个更好",
+            "{title}跟{other}有什么联系",
+            "{title}和{other}各自的优缺点",
+            "{title}能不能代替{other}",
+            "{title}与{other}有什么相同点",
         ],
     },
 }
@@ -145,6 +176,71 @@ def _is_quality_content(content: str, min_len: int = 100, chinese_ratio: float =
     if noise >= 3:
         return False
     return True
+
+
+def _smart_truncate(content: str, max_len: int = 400) -> str:
+    if len(content) <= max_len:
+        return content
+    paragraphs = re.split(r"\n\s*\n", content[:int(max_len * 1.5)])
+    result = ""
+    for p in paragraphs:
+        candidate = (result + "\n\n" + p.strip()).strip() if result else p.strip()
+        if len(candidate) > max_len:
+            break
+        result = candidate
+    if not result:
+        sentences = re.split(r"[。！？；]", content[:max_len + 50])
+        result = ""
+        for s in sentences:
+            candidate = result + s + "。"
+            if len(candidate) > max_len:
+                break
+            result = candidate
+    if not result:
+        result = content[:max_len]
+    if len(result) > max_len:
+        result = result[:max_len]
+    return result
+
+
+def _content_hash(text: str) -> str:
+    normalized = re.sub(r"\s+", "", text.strip())
+    return hashlib.md5(normalized.encode("utf-8")).hexdigest()
+
+
+def _deduplicate_samples(samples: List[Dict], text_key: str = "query") -> List[Dict]:
+    seen: Set[str] = set()
+    result = []
+    for s in samples:
+        h = _content_hash(s.get(text_key, ""))
+        if h not in seen:
+            seen.add(h)
+            result.append(s)
+    return result
+
+
+def _split_by_doc_id(samples: List[Dict], train_ratio: float = 0.8) -> Tuple[List[Dict], List[Dict]]:
+    doc_buckets: Dict[Any, List[Dict]] = defaultdict(list)
+    no_doc_id = []
+    for s in samples:
+        doc_id = s.get("doc_id")
+        if doc_id is not None:
+            doc_buckets[doc_id].append(s)
+        else:
+            no_doc_id.append(s)
+    doc_ids = list(doc_buckets.keys())
+    random.shuffle(doc_ids)
+    split_idx = int(len(doc_ids) * train_ratio)
+    train_ids = set(doc_ids[:split_idx])
+    train = []
+    test = []
+    for did in doc_ids:
+        target = train if did in train_ids else test
+        target.extend(doc_buckets[did])
+    split_no = int(len(no_doc_id) * train_ratio)
+    train.extend(no_doc_id[:split_no])
+    test.extend(no_doc_id[split_no:])
+    return train, test
 
 
 def _extract_first_sentence(content: str, max_len: int = 200) -> Optional[str]:
@@ -350,10 +446,11 @@ class TrainingDataPipeline:
                         query = template.format(title=title)
                         samples.append({"query": query, "intent": intent})
 
+        samples = _deduplicate_samples(samples, text_key="query")
+        logger.info(f"  去重后: {len(samples)} 条")
+
         random.shuffle(samples)
-        split_idx = int(len(samples) * 0.8)
-        train = samples[:split_idx]
-        test = samples[split_idx:]
+        train, test = _split_by_doc_id(samples, train_ratio=0.8)
 
         self._write_jsonl(output_dir / "train.jsonl", train)
         self._write_jsonl(output_dir / "test.jsonl", test)
@@ -392,7 +489,7 @@ class TrainingDataPipeline:
                     continue
 
                 anchor = title if _is_clean_title(title) else content[:80]
-                positive = content[:400]
+                positive = _smart_truncate(content, 400)
                 pairs.append(
                     {
                         "anchor": anchor,
@@ -410,8 +507,8 @@ class TrainingDataPipeline:
                     if _is_quality_content(prev_content, 50):
                         pairs.append(
                             {
-                                "anchor": content[:400],
-                                "positive": prev_content[:400],
+                                "anchor": _smart_truncate(content, 400),
+                                "positive": _smart_truncate(prev_content, 400),
                                 "category": cat,
                                 "doc_id": doc["id"],
                                 "source": "documents",
@@ -431,7 +528,7 @@ class TrainingDataPipeline:
                     author_info += f"，{doc['dynasty']}"
                 author_info += "）"
             anchor = title
-            positive = content[:400]
+            positive = _smart_truncate(content, 400)
             pairs.append(
                 {
                     "anchor": anchor,
@@ -451,7 +548,7 @@ class TrainingDataPipeline:
             pairs.append(
                 {
                     "anchor": title[:80],
-                    "positive": content[:400],
+                    "positive": _smart_truncate(content, 400),
                     "category": "教材",
                     "doc_id": doc["id"],
                     "source": "textbook_knowledge",
@@ -459,14 +556,15 @@ class TrainingDataPipeline:
                 }
             )
 
-        neg_pairs = await self._generate_hard_negatives()
+        neg_pairs = await self._generate_hard_negatives(target=2500)
+
+        pairs = _deduplicate_samples(pairs, text_key="positive")
+        logger.info(f"  正例去重后: {len(pairs)} 条")
 
         random.shuffle(pairs)
         random.shuffle(neg_pairs)
 
-        split_idx = int(len(pairs) * 0.9)
-        train_pairs = pairs[:split_idx]
-        val_pairs = pairs[split_idx:]
+        train_pairs, val_pairs = _split_by_doc_id(pairs, train_ratio=0.9)
 
         self._write_jsonl(output_dir / "train_pairs.jsonl", train_pairs)
         self._write_jsonl(output_dir / "val_pairs.jsonl", val_pairs)
@@ -490,8 +588,8 @@ class TrainingDataPipeline:
         )
         return stats
 
-    async def _generate_hard_negatives(self, target: int = 1000) -> List[Dict]:
-        logger.info("  生成跨领域硬负例...")
+    async def _generate_hard_negatives(self, target: int = 2500) -> List[Dict]:
+        logger.info(f"  生成跨领域硬负例 (目标={target})...")
         neg_pairs = []
 
         domain_pairs = [
@@ -504,51 +602,56 @@ class TrainingDataPipeline:
             ("儒家", "教材"),
             ("气功", "中医"),
             ("中医", "儒家"),
+            ("儒家", "气功"),
+            ("古籍", "教材"),
+            ("教材", "中医"),
         ]
 
+        fetch_limit = max(200, target // len(domain_pairs) // 5)
+
         for cat_a, cat_b in domain_pairs:
-            docs_a = (
-                await self._fetch_from_documents(category=cat_a, limit=100)
-                if cat_a in ("气功", "中医", "儒家")
-                else []
-            )
-            if cat_a == "古籍":
-                docs_a = await self._fetch_from_guji(limit=100)
-            elif cat_a == "教材":
-                docs_a = await self._fetch_from_textbook(limit=100)
+            if cat_a in ("气功", "中医", "儒家"):
+                docs_a = await self._fetch_from_documents(category=cat_a, limit=fetch_limit)
+            elif cat_a == "古籍":
+                docs_a = await self._fetch_from_guji(limit=fetch_limit)
+            else:
+                docs_a = await self._fetch_from_textbook(limit=fetch_limit)
 
             if cat_b in ("气功", "中医", "儒家"):
-                docs_b = await self._fetch_from_documents(category=cat_b, limit=100)
+                docs_b = await self._fetch_from_documents(category=cat_b, limit=fetch_limit)
             elif cat_b == "古籍":
-                docs_b = await self._fetch_from_guji(limit=100)
+                docs_b = await self._fetch_from_guji(limit=fetch_limit)
             else:
-                docs_b = await self._fetch_from_textbook(limit=100)
+                docs_b = await self._fetch_from_textbook(limit=fetch_limit)
 
             quality_a = [
                 d
                 for d in docs_a
                 if _is_quality_content(d.get("content", ""), 50)
                 and _is_clean_title(d.get("title", ""))
-            ][:20]
+            ][:60]
             candidates_b = [d for d in docs_b if len(d.get("content", "")) > 50]
 
+            per_anchor = min(8, max(3, len(candidates_b)))
             for da in quality_a:
                 anchor = da["title"]
-                sample_size = min(3, len(candidates_b))
+                sample_size = min(per_anchor, len(candidates_b))
                 if sample_size == 0:
                     continue
                 for db in random.sample(candidates_b, sample_size):
                     neg_pairs.append(
                         {
                             "anchor": anchor,
-                            "negative": db["content"][:300],
+                            "negative": _smart_truncate(db["content"], 300),
                             "category_anchor": cat_a,
                             "category_negative": cat_b,
                             "pair_type": "cross_domain_hard_negative",
                         }
                     )
 
+        neg_pairs = _deduplicate_samples(neg_pairs, text_key="negative")
         random.shuffle(neg_pairs)
+        logger.info(f"  硬负例生成: {len(neg_pairs)} 条 (目标 {target})")
         return neg_pairs[:target]
 
     async def generate_qa_benchmark(self) -> Dict[str, Any]:
@@ -557,6 +660,18 @@ class TrainingDataPipeline:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         qa_pairs = []
+        qa_query_templates = [
+            "什么是{title}",
+            "{title}是什么",
+            "请介绍一下{title}",
+            "能否讲讲{title}",
+            "{title}的相关知识",
+            "我想了解{title}",
+            "关于{title}你知道什么",
+            "{title}的具体内容是什么",
+            "请详细说明{title}",
+            "帮我解释一下{title}",
+        ]
 
         for cat in ["气功", "中医", "儒家"]:
             docs = await self._fetch_from_documents(category=cat, limit=500)
@@ -571,19 +686,10 @@ class TrainingDataPipeline:
                 if not answer:
                     continue
 
+                template = random.choice(qa_query_templates)
                 qa_pairs.append(
                     {
-                        "query": f"什么是{title}",
-                        "answer": answer,
-                        "doc_id": doc["id"],
-                        "category": cat,
-                        "source": "documents",
-                        "source_title": title,
-                    }
-                )
-                qa_pairs.append(
-                    {
-                        "query": f"{title}是什么",
+                        "query": template.format(title=title),
                         "answer": answer,
                         "doc_id": doc["id"],
                         "category": cat,
@@ -595,9 +701,10 @@ class TrainingDataPipeline:
                 if len(content) > 500:
                     mid_answer = _extract_meaningful_sentence(content[len(content) // 3 :])
                     if mid_answer:
+                        template2 = random.choice(qa_query_templates[6:])
                         qa_pairs.append(
                             {
-                                "query": f"请详细介绍{title}",
+                                "query": template2.format(title=title),
                                 "answer": mid_answer,
                                 "doc_id": doc["id"],
                                 "category": cat,
@@ -618,9 +725,10 @@ class TrainingDataPipeline:
             if doc.get("author"):
                 author_tag = f"（{doc['author']}）"
 
+            template = random.choice(qa_query_templates[:6])
             qa_pairs.append(
                 {
-                    "query": f"什么是{title}",
+                    "query": template.format(title=title),
                     "answer": answer,
                     "doc_id": doc["id"],
                     "category": "古籍",
@@ -628,11 +736,12 @@ class TrainingDataPipeline:
                     "source_title": title,
                 }
             )
+            template2 = (
+                f"{title}{author_tag}的内容是什么" if author_tag else f"{title}讲了什么"
+            )
             qa_pairs.append(
                 {
-                    "query": (
-                        f"{title}{author_tag}的内容是什么" if author_tag else f"{title}讲了什么"
-                    ),
+                    "query": template2,
                     "answer": answer,
                     "doc_id": doc["id"],
                     "category": "古籍",
@@ -647,10 +756,11 @@ class TrainingDataPipeline:
             content = doc["content"]
             if len(content) < 50:
                 continue
+            template = random.choice(qa_query_templates)
             qa_pairs.append(
                 {
-                    "query": f"什么是{title}",
-                    "answer": content[:200],
+                    "query": template.format(title=title),
+                    "answer": _smart_truncate(content, 200),
                     "doc_id": doc["id"],
                     "category": "教材",
                     "source": "textbook_knowledge",
@@ -658,10 +768,11 @@ class TrainingDataPipeline:
                 }
             )
 
+        qa_pairs = _deduplicate_samples(qa_pairs, text_key="query")
+        logger.info(f"  问答去重后: {len(qa_pairs)} 条")
+
         random.shuffle(qa_pairs)
-        split_idx = int(len(qa_pairs) * 0.8)
-        train_qa = qa_pairs[:split_idx]
-        test_qa = qa_pairs[split_idx:]
+        train_qa, test_qa = _split_by_doc_id(qa_pairs, train_ratio=0.8)
 
         self._write_jsonl(output_dir / "train_qa.jsonl", train_qa)
         self._write_jsonl(output_dir / "test_qa.jsonl", test_qa)

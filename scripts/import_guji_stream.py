@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Optimized guji import using rowid pagination instead of OFFSET."""
 
+import os
 import asyncio
 import logging
 import sqlite3
@@ -16,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 SOURCE_DB = Path(__file__).parent.parent / "lingzhi_ubuntu" / "database" / "guoxue.db"
-DATABASE_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DATABASE_URL = os.getenv("DATABASE_URL")
 BATCH_SIZE = 5000
 
 

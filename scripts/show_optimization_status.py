@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LingMinOpt自动优化状态监控"""
+"""lingminopt自动优化状态监控"""
 import json
 import subprocess
 from datetime import datetime
@@ -10,7 +10,7 @@ def show_optimization_status():
     """显示优化状态"""
 
     print("\n" + "=" * 70)
-    print("📊 LingMinOpt自动优化状态监控")
+    print("📊 lingminopt自动优化状态监控")
     print("=" * 70)
     print()
 
@@ -135,7 +135,7 @@ def show_realtime_dashboard():
 
             # 显示标题
             print("\n" + "=" * 70)
-            print(f"📊 LingMinOpt实时仪表板 - {datetime.now().strftime('%H:%M:%S')}")
+            print(f"📊 lingminopt实时仪表板 - {datetime.now().strftime('%H:%M:%S')}")
             print("=" * 70)
             print()
 
@@ -176,7 +176,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="LingMinOpt状态监控",
+        description="lingminopt状态监控",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:

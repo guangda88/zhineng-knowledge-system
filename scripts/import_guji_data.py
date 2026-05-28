@@ -327,7 +327,7 @@ async def main():
     # 获取数据库URL
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
-        database_url = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+        database_url = os.getenv("DATABASE_URL")
 
     logger.info("开始导入古籍数据...")
     logger.info(f"源数据库: {SOURCE_DB}")

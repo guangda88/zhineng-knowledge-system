@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", os.getenv("DATABASE_URL")
 )
 
 CONTENT_COL = {

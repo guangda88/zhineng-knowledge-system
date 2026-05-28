@@ -13,7 +13,7 @@ import subprocess
 from pathlib import Path
 
 # 配置
-GUJI_MAPPING_FILE = Path("/home/ai/zhineng-knowledge-system/data/guji_mapping.json")
+GUJI_MAPPING_FILE = Path("/home/ai/lingzhi/data/guji_mapping.json")
 POSTGRES_CONTAINER = "dfdd3b278296_zhineng-postgres"
 
 

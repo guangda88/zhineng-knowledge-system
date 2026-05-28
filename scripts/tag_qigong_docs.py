@@ -44,7 +44,7 @@ async def main():
 
     # 数据库连接
     parser.add_argument(
-        "--db-url", default="postgresql://user:password@localhost/dbname", help="PostgreSQL连接URL"
+        "--db-url", default=os.getenv("DATABASE_URL", ""), help="PostgreSQL连接URL (required if DATABASE_URL not set)"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="可用命令")

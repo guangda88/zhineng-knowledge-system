@@ -22,7 +22,7 @@ from dataclasses import dataclass
 import sys
 
 # Add backend to path
-sys.path.insert(0, "/home/ai/zhineng-knowledge-system")
+sys.path.insert(0, "/home/ai/lingzhi")
 
 from backend.core.database import init_db_pool
 from backend.services.retrieval.vector import VectorRetriever

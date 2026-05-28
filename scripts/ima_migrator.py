@@ -8,8 +8,8 @@ import sqlite3
 from pathlib import Path
 from typing import Dict, List
 
-DB_PATH = "/home/ai/zhineng-knowledge-system/data/data.db"
-OUTPUT_DIR = Path("/home/ai/zhineng-knowledge-system/data/ima_export")
+DB_PATH = "/home/ai/lingzhi/data/data.db"
+OUTPUT_DIR = Path("/home/ai/lingzhi/data/ima_export")
 
 
 def extract_knowledge(db_path: str, patterns: Dict[str, List[str]]) -> Dict[str, List[Dict]]:

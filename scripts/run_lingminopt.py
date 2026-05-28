@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""运行LingMinOpt自优化框架"""
+"""运行lingminopt自优化框架"""
 import asyncio
 import sys
 from pathlib import Path
@@ -17,7 +17,7 @@ from backend.services.evolution.lingminopt import (
 async def run_analysis():
     """运行系统分析和优化建议"""
     print("=" * 70)
-    print("🚀 LingMinOpt灵极优自优化框架")
+    print("🚀 lingminopt灵极优自优化框架")
     print("=" * 70)
     print()
 

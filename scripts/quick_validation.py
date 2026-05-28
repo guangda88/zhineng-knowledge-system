@@ -7,7 +7,7 @@ import asyncio
 import time
 import sys
 
-sys.path.insert(0, "/home/ai/zhineng-knowledge-system")
+sys.path.insert(0, "/home/ai/lingzhi")
 
 from backend.core.database import init_db_pool
 from backend.services.retrieval.bm25 import BM25Retriever

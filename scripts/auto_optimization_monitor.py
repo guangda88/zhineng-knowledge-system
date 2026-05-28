@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LingMinOpt自动优化监控面板"""
+"""lingminopt自动优化监控面板"""
 import asyncio
 import sys
 from datetime import datetime, timedelta
@@ -22,7 +22,7 @@ class OptimizationMonitor:
         """启动监控"""
 
         print("=" * 70)
-        print("📊 LingMinOpt自动优化监控面板")
+        print("📊 lingminopt自动优化监控面板")
         print("=" * 70)
         print()
         print(f"⏱️  检查间隔: {self.check_interval}秒")
@@ -103,7 +103,7 @@ class OptimizationMonitor:
                 # print("\033[2J\033[H", end="")
 
                 print("\n" + "=" * 70)
-                print("📊 LingMinOpt实时监控仪表板")
+                print("📊 lingminopt实时监控仪表板")
                 print("=" * 70)
                 print()
 
@@ -253,7 +253,7 @@ def main():
     """主函数"""
 
     # 直接启动监控仪表板（更直观）
-    print("🚀 启动LingMinOpt自动优化监控")
+    print("🚀 启动lingminopt自动优化监控")
     print()
     print("模式: 实时仪表板")
     print("更新频率: 每10秒")

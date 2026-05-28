@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # 配置
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", os.getenv("DATABASE_URL")
 )
 LOCK_DIR = Path("/tmp/zhineng_imports")
 LOCK_TIMEOUT_MINUTES = 60  # 1小时后认为锁过期

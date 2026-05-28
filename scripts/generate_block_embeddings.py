@@ -12,7 +12,7 @@ import httpx
 
 DB_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb",
+    os.getenv("DATABASE_URL"),
 )
 EMBED_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8001")
 BATCH_SIZE = 20

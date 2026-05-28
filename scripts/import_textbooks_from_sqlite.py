@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", os.getenv("DATABASE_URL")
 )
 SQLITE_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),

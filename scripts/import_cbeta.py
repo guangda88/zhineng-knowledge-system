@@ -16,7 +16,7 @@ CBETA XML-P5 导入管线 — 将 CBETA 佛典 TEI XML 导入 documents 表
     python scripts/import_cbeta.py --source /data/cbeta/xml-p5 --canon T --dry-run
 
     # 指定数据库
-    python scripts/import_cbeta.py --source /data/cbeta/xml-p5 --canon T --db-url postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb
+    python scripts/import_cbeta.py --source /data/cbeta/xml-p5 --canon T --db-url os.getenv("DATABASE_URL")
 
 数据结构:
     - 每个 XML 文件 = 一部经
@@ -67,7 +67,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-DEFAULT_DB_URL = "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+DEFAULT_DB_URL = os.getenv("DATABASE_URL")
 CATEGORY = "佛家"
 
 TEI_NS = "http://www.tei-c.org/ns/1.0"

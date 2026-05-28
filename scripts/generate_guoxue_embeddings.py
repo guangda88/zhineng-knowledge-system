@@ -42,7 +42,7 @@ async def main():
 
     db_url = os.getenv(
         "DATABASE_URL",
-        "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb",
+        os.getenv("DATABASE_URL"),
     )
 
     pool = await asyncpg.create_pool(db_url, min_size=2, max_size=4)

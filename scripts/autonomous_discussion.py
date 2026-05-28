@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
+    "DATABASE_URL", os.getenv("DATABASE_URL")
 )
 
 from backend.core.database import init_db_pool
@@ -174,9 +174,9 @@ async def run_discussion(
     pool = await init_db_pool()
     print("✓ 数据库连接已建立")
 
-    from backend.services.lingmessage.service import LingMessageService
+    from backend.services.lingmessage.service import lingmessageService
 
-    svc = LingMessageService()
+    svc = lingmessageService()
 
     thread = await svc.create_thread(
         topic=topic,
