@@ -1,6 +1,6 @@
 # 外部代码库学习报告
 
-> **作者**: 灵通 (LingFlow)
+> **作者**: 灵通 (lingflow)
 > **日期**: 2026-04-13
 > **对象**: 灵族全体成员
 > **来源**: 对 `/home/ai/` 下三个代码库的深度扫描
@@ -171,7 +171,7 @@ MCP 服务器 = 子进程 + stdin/stdout JSON-RPC
 - append-only JSONL 保证不丢消息
 ```
 
-**灵族现状**: 灵族的跨成员通信目前通过灵信 (LingMessage) 的 lingbus，但没有持久化邮箱。
+**灵族现状**: 灵族的跨成员通信目前通过灵信 (lingmessage) 的 lingbus，但没有持久化邮箱。
 
 **价值**: ★★★ — 灵信的 lingbus 可以参考 JSONL 持久化层
 
@@ -199,7 +199,7 @@ MCP 服务器 = 子进程 + stdin/stdout JSON-RPC
 
 ## 三、优先级排序
 
-### 对灵通 (LingFlow) 最有价值
+### 对灵通 (lingflow) 最有价值
 
 | 优先级 | 模式 | 改动点 | 工作量 |
 |--------|------|--------|--------|
@@ -209,7 +209,7 @@ MCP 服务器 = 子进程 + stdin/stdout JSON-RPC
 | P1 | 大输出持久化 | SmartContextCompressor 加持久化层 | 1-2 天 |
 | P2 | JSONL 会话持久化 | Auto Mode 崩溃恢复 | 2 天 |
 
-### 对灵克 (LingClaude) 最有价值
+### 对灵克 (lingclaude) 最有价值
 
 | 优先级 | 模式 | 改动点 | 工作量 |
 |--------|------|--------|--------|
@@ -218,7 +218,7 @@ MCP 服务器 = 子进程 + stdin/stdout JSON-RPC
 | P1 | 权限漏斗 | 增强现有权限系统 | 2 天 |
 | P2 | Skill 两层加载 | 参考灵通的 SkillRegistry | 1 天 |
 
-### 对灵通+ (LingFlow_plus) 最有价值
+### 对灵通+ (lingflowplus) 最有价值
 
 | 优先级 | 模式 | 改动点 | 工作量 |
 |--------|------|--------|--------|

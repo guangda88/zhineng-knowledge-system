@@ -2,7 +2,7 @@
 
 **学习日期**: 2026-04-14
 **来源**: Kode-Agent/src/app/query.ts (~1269行)
-**对比来源**: LingClaude/lingclaude/core/query_engine.py (~1150行)
+**对比来源**: lingclaude/lingclaude/core/query_engine.py (~1150行)
 **任务**: 理解递归代理循环的核心机制，对比两种实现模式
 
 ---
@@ -289,9 +289,9 @@ Kode-Agent 有多种终止条件：
 | **Stop Hook Block** | Stop Hooks | 最多重试 5 次，否则 block |
 | **Max Iterations** | 外部限制 | (未在 queryCore 中，可能在调用方） |
 
-### LingClaude 循环迭代代理
+### lingclaude 循环迭代代理
 
-LingClaude 实现了一个**基于迭代的代理循环**，使用 `for round_idx in range(AGENT_MAX_TOOL_ROUNDS)`。
+lingclaude 实现了一个**基于迭代的代理循环**，使用 `for round_idx in range(AGENT_MAX_TOOL_ROUNDS)`。
 
 ```python
 def _call_model(self, prompt: str) -> str:
@@ -353,7 +353,7 @@ def _call_model(self, prompt: str) -> str:
 
 ### 1. 递归 vs 迭代的权衡
 
-| 维度 | 递归（Kode-Agent） | 迭代（LingClaude） |
+| 维度 | 递归（Kode-Agent） | 迭代（lingclaude） |
 |-----|------------------|------------------|
 | **自然性** | ⭐⭐⭐⭐⭐ 递归结构符合 ReAct 思维 | ⭐⭐⭐ 显式轮次，更易理解 |
 | **并发支持** | ⭐⭐⭐⭐⭐ ToolUseQueue 原生支持 | ⭐⭐ 需要手动实现 |
@@ -435,7 +435,7 @@ async function queryWithBinaryFeedback(...): Promise<BinaryFeedbackResult> {
 
 ---
 
-## How - 如何应用到 LingClaude
+## How - 如何应用到 lingclaude
 
 ### 改进方案：引入递归代理循环
 
@@ -760,7 +760,7 @@ write_tool = ToolDefinition(
 
 ## Summary - 总结
 
-| 对比维度 | Kode-Agent (递归) | LingClaude (迭代) | 改进建议 |
+| 对比维度 | Kode-Agent (递归) | lingclaude (迭代) | 改进建议 |
 |---------|-------------------|------------------|----------|
 | **循环类型** | 递归（AsyncGenerator） | 迭代（for range） | 引入递归模式 |
 | **并发支持** | ToolUseQueue（并发读+串行写） | 串行执行 | 实现 ToolQueue |
@@ -780,9 +780,9 @@ write_tool = ToolDefinition(
 
 ## Next Steps - 下一步
 
-- [ ] Task 4: 渐进式 Agent Loop (LingFlow_plus)
+- [ ] Task 4: 渐进式 Agent Loop (lingflowplus)
 
 ---
 
 **学习笔记完成日期**: 2026-04-14
-**作者**: 灵通 (LingFlow)
+**作者**: 灵通 (lingflow)

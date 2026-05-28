@@ -503,7 +503,7 @@ def agent_loop(messages: list) -> None:
 
 ---
 
-## How - 如何应用到 LingFlow_plus
+## How - 如何应用到 lingflowplus
 
 ### 改进方案：实现渐进式教学框架
 
@@ -775,14 +775,14 @@ if __name__ == "__main__":
 
 | 模块 | 核心概念 | 灵族对应 |
 |-------|----------|----------|
-| **s01** | 最简循环（LoopState, run_one_turn） | LingFlow 的基础架构 |
-| **s02** | 工具分发（TOOL_HANDLERS, normalize_messages） | LingFlow 的 ToolRouter |
-| **s03** | 会话规划（TodoManager, PLAN_REMINDER_INTERVAL） | LingFlow 的任务系统 |
+| **s01** | 最简循环（LoopState, run_one_turn） | lingflow 的基础架构 |
+| **s02** | 工具分发（TOOL_HANDLERS, normalize_messages） | lingflow 的 ToolRouter |
+| **s03** | 会话规划（TodoManager, PLAN_REMINDER_INTERVAL） | lingflow 的任务系统 |
 | **s04** | 子代理隔离（run_subagent, messages=[]） | 无（灵族没有子代理） |
-| **s05** | 技能按需加载（SkillRegistry, load_full_text） | LingFlow 的技能系统 |
-| **s06** | 上下文压缩（persist_large_output, summarize） | LingFlow 的压缩系统 |
-| **s07** | 权限系统（Permission Funnel） | LingFlow 的权限系统（待增强） |
-| **s08** | Hook 协议（pre/post/stop hooks） | LingFlow 无（灵族有 Daemon） |
+| **s05** | 技能按需加载（SkillRegistry, load_full_text） | lingflow 的技能系统 |
+| **s06** | 上下文压缩（persist_large_output, summarize） | lingflow 的压缩系统 |
+| **s07** | 权限系统（Permission Funnel） | lingflow 的权限系统（待增强） |
+| **s08** | Hook 协议（pre/post/stop hooks） | lingflow 无（灵族有 Daemon） |
 
 **关键洞察**：
 1. **循环不变原则**：所有模块的核心循环结构完全不变
@@ -799,4 +799,4 @@ if __name__ == "__main__":
 ---
 
 **学习笔记完成日期**: 2026-04-14
-**作者**: 灵通 (LingFlow)
+**作者**: 灵通 (lingflow)

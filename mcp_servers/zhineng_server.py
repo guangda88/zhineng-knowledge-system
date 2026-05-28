@@ -1,35 +1,11 @@
-"""智能知识系统 MCP Server — 47个工具封装
+"""智能知识系统 MCP Server — 精简版 15个工具
 
-封装智能知识系统的核心 API 为 MCP 工具，供灵族成员通过 MCP 协议调用。
-使用 FastMCP 框架，代理至 FastAPI 后端。
+从47个工具精简为15个高频工具。被禁用的32个工具保留代码但注释掉 @mcp.tool() 装饰器。
+需要时取消注释即可恢复。
 
-P0 工具(11):
-  1. knowledge_search  — 知识检索（混合 BM25+向量）
-  2. ask_question      — 智能问答
-  3. domain_query      — 领域路由查询
-  4. optimization_status — 自优化状态
-  4b. analyze_optimization — 分析优化机会
-  4c. execute_optimization — 触发优化执行
-  4d. optimization_dashboard — 优化仪表盘
-  4e. trigger_audit / audit_history — 系统审计
-  4f. error_analysis / log_error — 错误分析与记录
-  5. submit_feedback   — 反馈提交
-  6. generate_training_data — 训练数据生成
-  7. safe_db_query     — 安全数据库查询
+保留的工具(15): ask_question, book_fulltext, book_search, domain_query, graph_query, guoxue_search, kg_entities, kg_subgraph, knowledge_gaps, knowledge_search, list_categories, optimization_status, reason, safe_db_query, system_stats
 
-P1 扩展(19 + 10 新增):
-  藏书检索: book_search, book_fulltext, book_detail, book_related
-  国学经典: guoxue_search, guoxue_cross_book, guoxue_classics
-  书目系统: sysbook_search, sysbook_domains
-  推理图谱: reason, graph_query, kg_entities, kg_subgraph
-  知识缺口: knowledge_gaps, gap_stats
-  灵信线程: thread_list, thread_summary
-  管道情报: pipeline_stats, intelligence_dashboard
-  文档管理: document_create, document_get, document_list, embedding_update
-  多模型对比: evolution_compare, evolution_dashboard
-  音频转录: audio_transcribe
-  标注系统: annotation_stats, ocr_pending_tasks
-  内容提取: content_extract
+禁用的工具(32): analyze_optimization, annotation_stats, audio_transcribe, audit_history, book_detail, book_related, content_extract, document_create, document_get, document_list, embedding_update, error_analysis, evolution_compare, evolution_dashboard, execute_optimization, gap_stats, generate_training_data, get_search_feedback, guoxue_classics, guoxue_cross_book, intelligence_dashboard, log_error, ocr_pending_tasks, optimization_dashboard, pipeline_stats, submit_feedback, submit_search_feedback, sysbook_domains, sysbook_search, thread_list, thread_summary, trigger_audit
 """
 
 import asyncio
@@ -47,9 +23,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("zhineng-mcp")
 
 BASE_URL = os.getenv("ZHINENG_API_URL", "http://localhost:8000")
-DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
-)
+DB_URL = os.getenv("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required")
 TRAINING_SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "prepare_training_data.py"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ALLOWED_OUTPUT_BASES = {PROJECT_ROOT / "data", PROJECT_ROOT / "output", PROJECT_ROOT / "tmp"}
@@ -212,7 +188,7 @@ async def optimization_status() -> dict:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — analyze_optimization (low usage)
 async def analyze_optimization(opportunity_id: str) -> dict:
     """深入分析优化机会，制定详细执行计划。
 
@@ -233,7 +209,7 @@ async def analyze_optimization(opportunity_id: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — execute_optimization (low usage)
 async def execute_optimization(
     opportunity_id: str,
     auto_approve: bool = False,
@@ -261,7 +237,7 @@ async def execute_optimization(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — optimization_dashboard (low usage)
 async def optimization_dashboard() -> dict:
     """获取自优化仪表盘：机会分布、活跃优化、近期完成。
 
@@ -279,7 +255,7 @@ async def optimization_dashboard() -> dict:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — trigger_audit (low usage)
 async def trigger_audit(
     audit_type: str = "comprehensive",
 ) -> dict:
@@ -301,7 +277,7 @@ async def trigger_audit(
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — audit_history (low usage)
 async def audit_history(limit: int = 10) -> dict:
     """查询审计历史记录。
 
@@ -322,7 +298,7 @@ async def audit_history(limit: int = 10) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — error_analysis (low usage)
 async def error_analysis() -> dict:
     """获取系统错误分析：错误频率、模式、趋势。
 
@@ -335,7 +311,7 @@ async def error_analysis() -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — log_error (low usage)
 async def log_error(
     error_type: str,
     error_message: str,
@@ -378,7 +354,7 @@ async def log_error(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — submit_feedback (low usage)
 async def submit_feedback(
     user_id: str,
     feedback_type: str,
@@ -424,7 +400,7 @@ async def submit_feedback(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — generate_training_data (low usage)
 async def generate_training_data(
     data_type: str = "all",
     output_dir: str = "data/training",
@@ -566,7 +542,7 @@ async def safe_db_query(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — submit_search_feedback (low usage)
 async def submit_search_feedback(
     query: str,
     feedback_type: str,
@@ -611,7 +587,7 @@ async def submit_search_feedback(
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — get_search_feedback (low usage)
 async def get_search_feedback(
     feedback_type: Optional[str] = None,
     doc_id: Optional[int] = None,
@@ -701,7 +677,7 @@ async def book_fulltext(q: str, book_id: str = "", page: int = 1, size: int = 10
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — book_detail (low usage)
 async def book_detail(book_id: str) -> dict:
     """书籍详情+章节目录（灵典详情）。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -710,7 +686,7 @@ async def book_detail(book_id: str) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — book_related (low usage)
 async def book_related(book_id: str, top_k: int = 5) -> dict:
     """向量相似书籍推荐（灵典荐）。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -730,7 +706,7 @@ async def guoxue_search(q: str, mode: str = "fulltext", page: int = 1, size: int
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — guoxue_cross_book (low usage)
 async def guoxue_cross_book(q: str, top_k: int = 10, per_book: int = 3) -> dict:
     """跨典籍搜索（灵经跨）— 概念在不同经典中的论述。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=15.0) as client:
@@ -742,7 +718,7 @@ async def guoxue_cross_book(q: str, top_k: int = 10, per_book: int = 3) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — guoxue_classics (low usage)
 async def guoxue_classics(page: int = 1, size: int = 50) -> dict:
     """国学典籍列表（灵经目）— 109部。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -751,7 +727,7 @@ async def guoxue_classics(page: int = 1, size: int = 50) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — sysbook_search (low usage)
 async def sysbook_search(q: str = "", domain: str = "", page: int = 1, size: int = 20) -> dict:
     """系统书目检索（灵目）— 302万条。"""
     params = {"page": page, "size": size}
@@ -765,7 +741,7 @@ async def sysbook_search(q: str = "", domain: str = "", page: int = 1, size: int
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — sysbook_domains (low usage)
 async def sysbook_domains() -> dict:
     """书目领域分类树（灵目域）。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -839,7 +815,7 @@ async def knowledge_gaps(status: str = "", category: str = "", limit: int = 20) 
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — gap_stats (low usage)
 async def gap_stats() -> dict:
     """知识缺口统计（灵缺统）。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -848,7 +824,7 @@ async def gap_stats() -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — thread_list (low usage)
 async def thread_list(status: str = "", limit: int = 20) -> dict:
     """灵信线程列表（灵信列）。"""
     params = {"limit": limit}
@@ -860,7 +836,7 @@ async def thread_list(status: str = "", limit: int = 20) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — thread_summary (low usage)
 async def thread_summary(thread_id: str) -> dict:
     """灵信线程摘要（灵信摘）— 消息+共识。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -869,7 +845,7 @@ async def thread_summary(thread_id: str) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — pipeline_stats (low usage)
 async def pipeline_stats() -> dict:
     """管道总览（灵报）— 提取/标注/图谱/对账进度。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -878,7 +854,7 @@ async def pipeline_stats() -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — intelligence_dashboard (low usage)
 async def intelligence_dashboard() -> dict:
     """情报仪表盘摘要（灵智）。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -890,7 +866,7 @@ async def intelligence_dashboard() -> dict:
 # ── P1 扩展工具（10个） ──
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — document_create (low usage)
 async def document_create(
     title: str,
     content: str,
@@ -916,7 +892,7 @@ async def document_create(
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — document_get (low usage)
 async def document_get(doc_id: int) -> dict:
     """获取文档详情（灵文阅）。
 
@@ -929,7 +905,7 @@ async def document_get(doc_id: int) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — document_list (low usage)
 async def document_list(category: str = "", page: int = 1, size: int = 20) -> dict:
     """列出知识库文档（灵文列）。
 
@@ -947,7 +923,7 @@ async def document_list(category: str = "", page: int = 1, size: int = 20) -> di
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — embedding_update (low usage)
 async def embedding_update(doc_ids: Optional[List[int]] = None) -> dict:
     """更新文档嵌入向量（灵嵌）。不传doc_ids则更新全部。
 
@@ -963,7 +939,7 @@ async def embedding_update(doc_ids: Optional[List[int]] = None) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — evolution_compare (low usage)
 async def evolution_compare(
     question: str,
     models: Optional[List[str]] = None,
@@ -983,7 +959,7 @@ async def evolution_compare(
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — evolution_dashboard (low usage)
 async def evolution_dashboard(period: str = "7d") -> dict:
     """进化仪表盘（灵进仪）— 用户行为、对比统计。
 
@@ -996,7 +972,7 @@ async def evolution_dashboard(period: str = "7d") -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — audio_transcribe (low usage)
 async def audio_transcribe(
     file_path: str,
     method: str = "local",
@@ -1044,7 +1020,7 @@ async def audio_transcribe(
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — annotation_stats (low usage)
 async def annotation_stats() -> dict:
     """标注统计（灵注统）— OCR + 转录标注进度。"""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
@@ -1053,7 +1029,7 @@ async def annotation_stats() -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — ocr_pending_tasks (low usage)
 async def ocr_pending_tasks(limit: int = 10) -> dict:
     """待处理OCR任务（灵OCR待）。
 
@@ -1066,7 +1042,7 @@ async def ocr_pending_tasks(limit: int = 10) -> dict:
         return resp.json()
 
 
-@mcp.tool()
+# @mcp.tool() DISABLED — content_extract (low usage)
 async def content_extract(
     source_type: str = "document",
     source_id: Optional[int] = None,

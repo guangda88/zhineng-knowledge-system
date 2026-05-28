@@ -29,7 +29,7 @@ services:
       # Qwen API
     - QWEN_API_KEY=${QWEN_API_KEY:-}
       # JWT Secret (if using JWT auth)
-    - JWT_SECRET=${JWT_SECRET:-lingzhi-default-secret-change-in-production}
+    - JWT_SECRET=${JWT_SECRET:?JWT_SECRET not set}
       # OAuth Credentials (optional)
     - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
     - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
@@ -59,7 +59,7 @@ services:
     environment:
       # CLIProxyAPI endpoint
     - CLIPROXYAPI_BASE_URL=http://cliproxyapi:8317/v1
-    - CLIPROXYAPI_API_KEY=lingzhi-api-key-001
+    - CLIPROXYAPI_API_KEY=${CLIPROXYAPI_API_KEY:?CLIPROXYAPI_API_KEY not set}
       # Enable unified AI service
     - ENABLE_UNIFIED_AI_SERVICE=true
       # Default AI model

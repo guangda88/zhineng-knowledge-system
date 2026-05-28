@@ -123,7 +123,7 @@ function getBunShellSandboxPlan({
 - 限制网络访问
 - 限制系统调用
 
-### LingClaude 当前的权限系统
+### lingclaude 当前的权限系统
 
 ```python
 @dataclass(frozen=True)
@@ -154,9 +154,9 @@ class PermissionContext:
 - 用户可控的权限分级（safe/needs-confirmation/blocked）
 - 默认安全的策略（未授权操作默认拒绝）
 
-### 2. LingClaude 的改进空间
+### 2. lingclaude 的改进空间
 
-当前 LingClaude 仅支持：
+当前 lingclaude 仅支持：
 - **工具级拒绝**：完全禁止某些工具
 - **前缀拒绝**：禁止某类工具（如 `bash:*`）
 
@@ -168,7 +168,7 @@ class PermissionContext:
 
 ---
 
-## How - 如何应用到 LingClaude
+## How - 如何应用到 lingclaude
 
 ### 改进方案：三层权限系统
 
@@ -403,7 +403,7 @@ def is_in_working_dirs(path: str, working_dirs: tuple[str, ...]) -> bool:
 
 ## Summary - 总结
 
-| 对比维度 | Kode-Agent | LingClaude (当前) | LingClaude (改进后) |
+| 对比维度 | Kode-Agent | lingclaude (当前) | lingclaude (改进后) |
 |---------|-----------|------------------|-------------------|
 | **权限模式** | 4种 (bypass, acceptEdits, ask, dontAsk) | 无 | 4种 |
 | **路径规则** | 支持 (glob模式, 3种操作类型) | 不支持 | 支持 |
@@ -429,4 +429,4 @@ def is_in_working_dirs(path: str, working_dirs: tuple[str, ...]) -> bool:
 ---
 
 **学习笔记完成日期**: 2026-04-14
-**作者**: 灵通 (LingFlow)
+**作者**: 灵通 (lingflow)

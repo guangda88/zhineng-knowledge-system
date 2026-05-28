@@ -19,7 +19,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
             "services/web_app/backend/requirements.txt"
         ],
         "scanned_full_path": [
-            "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+            "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
         ],
         "target_languages": [
             "python"
@@ -78,7 +78,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "fastapi",
                     "specifier": "==0.128.8",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -95,7 +95,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "uvicorn",
                     "specifier": "==0.40.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -110,7 +110,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "python-multipart",
                     "specifier": "==0.0.20",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -125,7 +125,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "sqlalchemy",
                     "specifier": "==2.0.46",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -140,7 +140,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "asyncpg",
                     "specifier": "==0.31.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -155,7 +155,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "psycopg2-binary",
                     "specifier": "==2.9.11",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -170,7 +170,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pgvector",
                     "specifier": "==0.4.2",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -185,7 +185,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "alembic",
                     "specifier": "==1.18.4",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -200,7 +200,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pymilvus",
                     "specifier": "==2.6.9",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -215,7 +215,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "elasticsearch",
                     "specifier": "==9.3.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -230,7 +230,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "httpx",
                     "specifier": "==0.28.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -245,7 +245,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pydantic",
                     "specifier": "==2.12.5",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -260,7 +260,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pydantic-settings",
                     "specifier": "==2.12.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -275,7 +275,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pyyaml",
                     "specifier": "==6.0.3",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -292,7 +292,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "python-jose",
                     "specifier": "==3.5.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -309,7 +309,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "passlib",
                     "specifier": "==1.7.4",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -324,7 +324,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "bcrypt",
                     "specifier": "==4.0.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -339,7 +339,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "itsdangerous",
                     "specifier": "==2.2.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -356,7 +356,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "redis",
                     "specifier": "==7.1.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -371,7 +371,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "python-dotenv",
                     "specifier": "==1.2.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -386,7 +386,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "aiofiles",
                     "specifier": "==25.1.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -401,7 +401,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "structlog",
                     "specifier": "==25.2.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -416,7 +416,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "prometheus-client",
                     "specifier": "==0.21.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -431,7 +431,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "openpyxl",
                     "specifier": "==3.1.5",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -446,7 +446,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "xlrd",
                     "specifier": "==2.0.2",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -461,7 +461,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "PyPDF2",
                     "specifier": "==3.0.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -476,7 +476,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pdfplumber",
                     "specifier": "==0.11.9",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -491,7 +491,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pytest",
                     "specifier": "==8.3.4",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -506,7 +506,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pytest-asyncio",
                     "specifier": "==0.24.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -521,7 +521,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pytest-cov",
                     "specifier": "==6.0.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -536,7 +536,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "pytest-mock",
                     "specifier": "==3.14.0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         },
@@ -551,7 +551,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "aiosqlite",
                     "specifier": ">=0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 },
                 {
                     "raw": "aiosqlite",
@@ -560,7 +560,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "aiosqlite",
                     "specifier": ">=0",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ]
         }
@@ -577,7 +577,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "PyPDF2",
                     "specifier": "==3.0.1",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ],
             "found": null,
@@ -665,7 +665,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                     "name": "python-multipart",
                     "specifier": "==0.0.20",
                     "url": null,
-                    "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                    "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                 }
             ],
             "found": null,
@@ -727,7 +727,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                 "name": "PyPDF2",
                 "specifier": "==3.0.1",
                 "url": null,
-                "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
             },
             "advisory": "Pypdf2 is vulnerable to CVE-2023-36464: An attacker may craft a PDF which leads to an infinite loop if '__parse_content_stream' is executed. That is, for example, the case if the user extracted text from such a PDF. Users may modify the line 'while peek not in (b\"\\r\", b\"\\n\")' in 'pypdf/generic/_data_structures.py' to 'while peek not in (b\"\\r\", b\"\\n\", b\"\")' as a workaround.\r\nhttps://github.com/py-pdf/pypdf/pull/1828\r\nhttps://github.com/py-pdf/pypdf/security/advisories/GHSA-4vvm-4w3v-6mr8",
             "is_transitive": false,
@@ -760,7 +760,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                 "name": "python-multipart",
                 "specifier": "==0.0.20",
                 "url": null,
-                "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
             },
             "advisory": "Affected versions of the python-multipart package are vulnerable to Path Traversal due to unsafe filesystem path construction when preserving user-supplied upload filenames. When UPLOAD_DIR is configured and UPLOAD_KEEP_FILENAME=True, the upload-to-disk code builds the destination path with os.path.join(file_dir, fname) after the upload exceeds MAX_MEMORY_FILE_SIZE, allowing absolute-path filenames (for example, those starting with /) to override the intended base directory.",
             "is_transitive": false,
@@ -788,7 +788,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                         "name": "PyPDF2",
                         "specifier": "==3.0.1",
                         "url": null,
-                        "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                        "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                     },
                     "more_info_url": "https://data.safetycli.com/p/pypi/pypdf2/97c/"
                 }
@@ -811,7 +811,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
                         "name": "python-multipart",
                         "specifier": "==0.0.20",
                         "url": null,
-                        "found": "/home/ai/zhineng-knowledge-system/services/web_app/backend/requirements.txt"
+                        "found": "/home/ai/lingzhi/services/web_app/backend/requirements.txt"
                     },
                     "more_info_url": "https://data.safetycli.com/p/pypi/python-multipart/97c/"
                 }

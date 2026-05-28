@@ -2,7 +2,7 @@
 
 **学习日期**: 2026-04-14
 **来源**: learn-claude-code/agents/s09_memory_system.py (~534行)
-**对比来源**: LingClaude/lingclaude/core/layered_memory.py (~501行)
+**对比来源**: lingclaude/lingclaude/core/layered_memory.py (~501行)
 **任务**: 理解跨会话记忆存储和自动合并机制
 
 ---
@@ -230,9 +230,9 @@ def _acquire_lock(self) -> bool:
     return True
 ```
 
-### LingClaude 当前的分层记忆系统
+### lingclaude 当前的分层记忆系统
 
-LingClaude 实现了一个**五层架构 + 艾宾浩斯遗忘曲线**的记忆系统：
+lingclaude 实现了一个**五层架构 + 艾宾浩斯遗忘曲线**的记忆系统：
 
 #### 五层架构
 
@@ -360,7 +360,7 @@ class ExperienceStore:
 - **灵活扩展**：无需数据库迁移，直接创建新记忆文件
 - **简单易懂**：新手可以直接读取 `.memory/` 目录查看记忆内容
 
-### 2. LingClaude 艾宾浩斯遗忘曲线的优势
+### 2. lingclaude 艾宾浩斯遗忘曲线的优势
 
 - **动态权重**：经验随着时间、重复、情感、关联自动调整权重
 - **自动清理**：低权重经验自动删除，避免记忆膨胀
@@ -368,18 +368,18 @@ class ExperienceStore:
 
 ### 3. 两者的互补性
 
-| 维度 | Kode-Agent | LingClaude | 改进方向 |
+| 维度 | Kode-Agent | lingclaude | 改进方向 |
 |-----|-----------|------------|---------|
 | **存储格式** | Markdown 文件 | SQLite DB | 文件式更易读，DB 更易查询 |
 | **记忆类型** | 4种（user, feedback, project, reference） | 无类型区分 | 应当有类型区分 |
 | **自动清理** | Dream Consolidation（7层门控） | 艾宾浩斯衰减 | 两者结合更强大 |
 | **跨会话** | 支持（文件持久化） | 支持（SQLite） | 都支持 |
-| **并发控制** | PID 锁机制 | 无 | LingClaude 需要 |
-| **人类可读** | 高（Markdown） | 低（SQLite） | LingClaude 应当导出 |
+| **并发控制** | PID 锁机制 | 无 | lingclaude 需要 |
+| **人类可读** | 高（Markdown） | 低（SQLite） | lingclaude 应当导出 |
 
 ---
 
-## How - 如何应用到 LingClaude
+## How - 如何应用到 lingclaude
 
 ### 改进方案：混合式记忆系统
 
@@ -398,11 +398,11 @@ class Experience:
     mem_type: MemoryType = MemoryType.PROJECT  # 新增：记忆类型
 ```
 
-#### 阶段 2：添加 Dream Consolidation 到 LingClaude
+#### 阶段 2：添加 Dream Consolidation 到 lingclaude
 
 ```python
 class DreamConsolidator:
-    """LingClaude 版本的记忆巩固（基于 Experience Store）"""
+    """lingclaude 版本的记忆巩固（基于 Experience Store）"""
 
     COOLDOWN_SECONDS = 86400       # 24 小时冷却
     SCAN_THROTTLE_SECONDS = 600    # 10 分钟扫描节流
@@ -441,7 +441,7 @@ class DreamConsolidator:
             return False, f"Gate 2: only {stats['total_experiences']} experiences, need {self.MIN_SESSION_COUNT}"
 
         # Gate 3: not in read-only mode
-        # LingClaude 可以根据模式检查
+        # lingclaude 可以根据模式检查
 
         # Gate 4: 24-hour cooldown
         time_since_last = now - self.last_consolidation_time
@@ -800,7 +800,7 @@ class Experience:
 
 ## Summary - 总结
 
-| 对比维度 | Kode-Agent | LingClaude (当前) | LingClaude (改进后) |
+| 对比维度 | Kode-Agent | lingclaude (当前) | lingclaude (改进后) |
 |---------|-----------|------------------|-------------------|
 | **存储格式** | Markdown 文件 | SQLite DB | SQLite DB + JSONL 摘要 |
 | **记忆类型** | 4种（user, feedback, project, reference） | 无 | 4种 |
@@ -826,4 +826,4 @@ class Experience:
 ---
 
 **学习笔记完成日期**: 2026-04-14
-**作者**: 灵通 (LingFlow)
+**作者**: 灵通 (lingflow)

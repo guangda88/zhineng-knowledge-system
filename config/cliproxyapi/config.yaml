@@ -117,12 +117,12 @@ AuthenticationSettings:
   EnableApiKeyAuth: true
   # 灵知系统的API key
   ApiKeys:
-    - "lingzhi-api-key-001"
-    - "lingzhi-api-key-dev"
+    - "${CLIPROXYAPI_API_KEY}"
+    - "${CLIPROXYAPI_API_KEY_DEV}"
   # 是否启用JWT认证（可选）
   EnableJwtAuth: false
   # JWT密钥（如果启用JWT）
-  JwtSecret: "${JWT_SECRET:lingzhi-default-secret-change-in-production}"
+  JwtSecret: "${JWT_SECRET}"
 
 # OAuth配置（用于Claude Code, OpenAI Codex等）
 OAuthSettings:
