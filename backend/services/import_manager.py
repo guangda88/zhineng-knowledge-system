@@ -43,9 +43,9 @@ class ImportManager:
             timeout: 锁超时时间(秒)
         """
         self.task_name = task_name
-        self.database_url = database_url or os.getenv(
-            "DATABASE_URL", "postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb"
-        )
+        self.database_url = database_url or os.getenv("DATABASE_URL")
+        if not self.database_url:
+            raise RuntimeError("DATABASE_URL environment variable is required")
         self.timeout = timeout
 
         self.lock_file = None

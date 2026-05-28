@@ -41,7 +41,7 @@ def _load_env_keys() -> dict[str, str]:
 
     # 1) Read from .env files (both host and container paths)
     for f in [
-        "/home/ai/zhineng-knowledge-system/.env",
+        "/home/ai/lingzhi/.env",
         "/app/.env",
         "/app/backend/.env",
     ]:
@@ -251,7 +251,7 @@ async def lingmessage_notify(req: NotifyRequest):
     )
 
     if event_type == "family_chat" and req.thread_id:
-        sys.path.insert(0, "/home/ai/LingMessage")
+        sys.path.insert(0, "/home/ai/lingmessage")
         from lingmessage.auto_reply import auto_reply
 
         threading.Thread(
@@ -272,7 +272,7 @@ async def lingmessage_notify(req: NotifyRequest):
             import os
 
             lingyi_src = os.environ.get(
-                "LINGYI_SRC_PATH", os.path.join(os.path.expanduser("~"), "LingYi", "src")
+                "LINGYI_SRC_PATH", os.path.join(os.path.expanduser("~"), "lingyi", "src")
             )
             if lingyi_src not in sys.path:
                 sys.path.insert(0, lingyi_src)

@@ -1,4 +1,4 @@
-"""LingMinOpt灵极优自优化框架
+"""lingminopt灵极优自优化框架
 
 核心原则：
 1. 渐进式优化 - 不破坏现有功能
@@ -650,7 +650,7 @@ class OptimizationOrchestrator:
         # 这里简化实现，实际应该有版本控制
 
 
-class LingMinOptFramework:
+class lingminoptFramework:
     """灵极优自优化框架主类"""
 
     def __init__(self, config_path: str = "config/lingminopt.json"):
@@ -666,7 +666,7 @@ class LingMinOptFramework:
         """启动自动优化循环"""
         self.is_running = True
 
-        logger.info("🚀 启动LingMinOpt自动优化循环")
+        logger.info("🚀 启动lingminopt自动优化循环")
         logger.info(f"优化间隔: {self.optimization_interval}秒")
 
         while self.is_running:
@@ -768,14 +768,14 @@ class LingMinOptFramework:
 
 
 # 全局单例
-_lingminopt_framework: Optional[LingMinOptFramework] = None
+_lingminopt_framework: Optional[lingminoptFramework] = None
 
 
-def get_lingminopt_framework() -> LingMinOptFramework:
-    """获取LingMinOpt框架单例"""
+def get_lingminopt_framework() -> lingminoptFramework:
+    """获取lingminopt框架单例"""
     global _lingminopt_framework
     if _lingminopt_framework is None:
-        _lingminopt_framework = LingMinOptFramework()
+        _lingminopt_framework = lingminoptFramework()
     return _lingminopt_framework
 
 
@@ -784,7 +784,7 @@ async def main():
     """主函数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="LingMinOpt灵极优自优化框架")
+    parser = argparse.ArgumentParser(description="lingminopt灵极优自优化框架")
     parser.add_argument(
         "action",
         choices=["start", "stop", "once", "analyze"],

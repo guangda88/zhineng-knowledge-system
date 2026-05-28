@@ -340,7 +340,7 @@ async def reset_context() -> Dict[str, str]:
 async def health_check() -> Dict[str, Any]:
     """健康检查
 
-    检查上下文服务状态和 LingFlow 可用性。
+    检查上下文服务状态和 lingflow 可用性。
     """
     try:
         from backend.services.context_service import get_context_service

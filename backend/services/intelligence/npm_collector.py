@@ -1,7 +1,7 @@
 """npm趋势采集器
 
 采集npm上与灵知系统相关的JavaScript/TypeScript包趋势。
-参考LingFlow的npm_trend_collector.py，适配为异步版本。
+参考lingflow的npm_trend_collector.py，适配为异步版本。
 """
 
 import logging

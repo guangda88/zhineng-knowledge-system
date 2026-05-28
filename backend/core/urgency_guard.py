@@ -208,7 +208,7 @@ class UrgencyGuard:
                 capture_output=True,
                 text=True,
                 timeout=10,
-                cwd="/home/ai/zhineng-knowledge-system",
+                cwd="/home/ai/lingzhi",
             )
 
             # 如果有输出，说明有导入错误

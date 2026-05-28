@@ -65,6 +65,10 @@ class AuthConfig:
             "/auth/refresh",
             "/api/v1/discuss",
             "/api/v1/lingmessage/notify",
+            "/metrics",
+            "/metrics/prometheus",
+            "/api/v1/metrics",
+            "/api/v1/metrics/prometheus",
         }
     )
     public_path_prefixes: Set[str] = frozenset(

@@ -31,6 +31,13 @@ ENTITY_TYPE_SCHOOL = "流派"
 ENTITY_TYPE_ORGAN = "脏腑"
 ENTITY_TYPE_POINT = "穴位"
 ENTITY_TYPE_DOMAIN = "领域"
+ENTITY_TYPE_MERIDIAN = "经络"
+ENTITY_TYPE_ACTION = "动作"
+ENTITY_TYPE_SYMPTOM = "病症"
+ENTITY_TYPE_HERB = "药材"
+ENTITY_TYPE_FORMULA = "方剂"
+ENTITY_TYPE_THEORY = "理论"
+ENTITY_TYPE_ORG = "组织"
 
 
 # ============================================================
@@ -74,15 +81,28 @@ ENTITY_PATTERNS = {
         "阴阳",
         "五行",
         "气血",
-        "经络",
         "丹田",
         "调身",
         "调息",
         "调心",
         "运用意识",
         "内求法",
-        "组场",
         "三传并用",
+        "仁",
+        "义",
+        "礼",
+        "智",
+        "信",
+        "孝",
+        "道",
+        "无为",
+        "禅",
+        "定",
+        "慧",
+        "觉悟",
+        "中庸",
+        "天人合一",
+        "精气神",
     ],
     ENTITY_TYPE_ORGAN: [
         "心",
@@ -94,6 +114,9 @@ ENTITY_PATTERNS = {
         "胆",
         "三焦",
         "膀胱",
+        "心包",
+        "小肠",
+        "大肠",
     ],
     ENTITY_TYPE_CLASSIC: [
         "黄帝内经",
@@ -101,6 +124,9 @@ ENTITY_PATTERNS = {
         "金匮要略",
         "本草纲目",
         "难经",
+        "温病条辨",
+        "神农本草经",
+        "千金方",
         "论语",
         "孟子",
         "大学",
@@ -112,6 +138,11 @@ ENTITY_PATTERNS = {
         "尚书",
         "礼记",
         "春秋",
+        "心经",
+        "金刚经",
+        "坛经",
+        "楞严经",
+        "法华经",
         "智能气功科学概论",
         "智能气功科学精义",
         "智能气功科学混元整体理论",
@@ -127,6 +158,164 @@ ENTITY_PATTERNS = {
         "道家",
         "佛家",
         "中医",
+        "禅宗",
+        "净土宗",
+        "天台宗",
+        "华严宗",
+    ],
+    ENTITY_TYPE_PERSON: [
+        "庞明",
+        "庞鹤鸣",
+        "冯广德",
+        "樊志诚",
+        "黄帝",
+        "岐伯",
+        "张仲景",
+        "华佗",
+        "孙思邈",
+        "李时珍",
+        "孔子",
+        "孟子",
+        "荀子",
+        "朱熹",
+        "王阳明",
+        "老子",
+        "庄子",
+        "列子",
+        "释迦牟尼",
+        "达摩",
+        "慧能",
+        "玄奘",
+        "张三丰",
+    ],
+    ENTITY_TYPE_POINT: [
+        "百会",
+        "膻中",
+        "气海",
+        "关元",
+        "命门",
+        "涌泉",
+        "足三里",
+        "合谷",
+        "太冲",
+        "内关",
+        "神阙",
+        "中脘",
+        "天枢",
+        "大椎",
+        "风池",
+        "太溪",
+        "三阴交",
+        "血海",
+        "曲池",
+        "肩井",
+        "肾俞",
+        "肝俞",
+        "脾俞",
+        "肺俞",
+        "心俞",
+        "印堂",
+        "太阳",
+        "劳宫",
+    ],
+    ENTITY_TYPE_MERIDIAN: [
+        "手太阴肺经",
+        "手阳明大肠经",
+        "足阳明胃经",
+        "足太阴脾经",
+        "手少阴心经",
+        "手太阳小肠经",
+        "足太阳膀胱经",
+        "足少阴肾经",
+        "手厥阴心包经",
+        "手少阳三焦经",
+        "足少阳胆经",
+        "足厥阴肝经",
+        "任脉",
+        "督脉",
+        "冲脉",
+        "带脉",
+    ],
+    ENTITY_TYPE_ACTION: [
+        "站桩",
+        "打坐",
+        "吐纳",
+        "导引",
+        "行气",
+        "采气",
+        "发气",
+        "拉气",
+        "组场",
+        "收功",
+        "调身",
+        "调息",
+        "调心",
+    ],
+    ENTITY_TYPE_SYMPTOM: [
+        "头痛",
+        "眩晕",
+        "失眠",
+        "心悸",
+        "咳嗽",
+        "哮喘",
+        "胃痛",
+        "腹痛",
+        "便秘",
+        "腹泻",
+        "水肿",
+        "痹症",
+        "中风",
+        "消渴",
+    ],
+    ENTITY_TYPE_HERB: [
+        "人参",
+        "黄芪",
+        "当归",
+        "白术",
+        "茯苓",
+        "甘草",
+        "川芎",
+        "白芍",
+        "熟地黄",
+        "桂枝",
+        "麻黄",
+        "柴胡",
+        "黄芩",
+        "半夏",
+        "陈皮",
+        "丹参",
+    ],
+    ENTITY_TYPE_FORMULA: [
+        "四君子汤",
+        "四物汤",
+        "八珍汤",
+        "六味地黄丸",
+        "逍遥散",
+        "桂枝汤",
+        "麻黄汤",
+        "小柴胡汤",
+        "大柴胡汤",
+        "补中益气汤",
+        "归脾汤",
+    ],
+    ENTITY_TYPE_THEORY: [
+        "混元整体理论",
+        "阴阳五行学说",
+        "藏象学说",
+        "经络学说",
+        "气血津液学说",
+        "病因学说",
+        "辨证论治",
+        "天人相应",
+        "形神合一",
+        "理法方药",
+    ],
+    ENTITY_TYPE_ORG: [
+        "石家庄智能气功进修学院",
+        "华夏智能气功培训中心",
+        "智能气功研究会",
+        "中国中医药研究院",
+        "北京中医药大学",
     ],
 }
 
@@ -137,6 +326,12 @@ RELATION_BELONGS_TO = "属于"
 RELATION_REFERENCES = "引用"
 RELATION_EVOLVED_FROM = "演变自"
 RELATION_CORRESPONDS = "对应"
+RELATION_FOUNDED = "创立"
+RELATION_AUTHORED = "著述"
+RELATION_TEACHES = "师承"
+RELATION_TREATS = "治疗"
+RELATION_ENTERS = "归经"
+RELATION_LOCATED_ON = "位于"
 
 
 # ============================================================
@@ -419,8 +614,36 @@ class KnowledgeGraphBuilder:
 
     def _infer_relation_type(self, type_a: str, type_b: str, name_a: str, name_b: str) -> str:
         """推断两个实体间的关系类型"""
+        types = {type_a, type_b}
+
+        # --- 人物关系 ---
+        # 人物 ↔ 人物: 师承
+        if type_a == ENTITY_TYPE_PERSON and type_b == ENTITY_TYPE_PERSON:
+            return RELATION_TEACHES
+
+        # 人物 ↔ 功法: 创立
+        if types == {ENTITY_TYPE_PERSON, ENTITY_TYPE_GONGFA}:
+            return RELATION_FOUNDED
+
+        # 人物 ↔ 典籍: 著述
+        if types == {ENTITY_TYPE_PERSON, ENTITY_TYPE_CLASSIC}:
+            return RELATION_AUTHORED
+
+        # 人物 ↔ 流派: 属于/创立
+        if types == {ENTITY_TYPE_PERSON, ENTITY_TYPE_SCHOOL}:
+            return RELATION_FOUNDED
+
+        # 人物 ↔ 理论: 创立
+        if types == {ENTITY_TYPE_PERSON, ENTITY_TYPE_THEORY}:
+            return RELATION_FOUNDED
+
+        # 人物 ↔ 组织: 属于
+        if types == {ENTITY_TYPE_PERSON, ENTITY_TYPE_ORG}:
+            return RELATION_BELONGS_TO
+
+        # --- 功法关系 ---
         # 功法 ↔ 概念
-        if {type_a, type_b} == {ENTITY_TYPE_GONGFA, ENTITY_TYPE_CONCEPT}:
+        if types == {ENTITY_TYPE_GONGFA, ENTITY_TYPE_CONCEPT}:
             return RELATION_RELATED
 
         # 功法 ↔ 功法
@@ -428,20 +651,84 @@ class KnowledgeGraphBuilder:
             return RELATION_RELATED
 
         # 功法 ↔ 流派
-        if {type_a, type_b} == {ENTITY_TYPE_GONGFA, ENTITY_TYPE_SCHOOL}:
+        if types == {ENTITY_TYPE_GONGFA, ENTITY_TYPE_SCHOOL}:
             return RELATION_BELONGS_TO
 
+        # 功法 ↔ 动作: 包含
+        if types == {ENTITY_TYPE_GONGFA, ENTITY_TYPE_ACTION}:
+            return RELATION_CONTAINS
+
+        # --- 概念关系 ---
         # 概念 ↔ 概念
         if type_a == ENTITY_TYPE_CONCEPT and type_b == ENTITY_TYPE_CONCEPT:
             return RELATION_RELATED
 
+        # --- 典籍关系 ---
         # 典籍 ↔ 流派
-        if {type_a, type_b} == {ENTITY_TYPE_CLASSIC, ENTITY_TYPE_SCHOOL}:
+        if types == {ENTITY_TYPE_CLASSIC, ENTITY_TYPE_SCHOOL}:
             return RELATION_BELONGS_TO
 
+        # 典籍 ↔ 理论: 引用
+        if types == {ENTITY_TYPE_CLASSIC, ENTITY_TYPE_THEORY}:
+            return RELATION_REFERENCES
+
+        # --- 脏腑关系 ---
         # 脏腑 ↔ 概念
-        if {type_a, type_b} == {ENTITY_TYPE_ORGAN, ENTITY_TYPE_CONCEPT}:
+        if types == {ENTITY_TYPE_ORGAN, ENTITY_TYPE_CONCEPT}:
             return RELATION_CORRESPONDS
+
+        # 脏腑 ↔ 经络: 对应
+        if types == {ENTITY_TYPE_ORGAN, ENTITY_TYPE_MERIDIAN}:
+            return RELATION_CORRESPONDS
+
+        # 脏腑 ↔ 病症: 对应
+        if types == {ENTITY_TYPE_ORGAN, ENTITY_TYPE_SYMPTOM}:
+            return RELATION_CORRESPONDS
+
+        # --- 经络关系 ---
+        # 经络 ↔ 穴位: 包含
+        if types == {ENTITY_TYPE_MERIDIAN, ENTITY_TYPE_POINT}:
+            return RELATION_CONTAINS
+
+        # --- 穴位关系 ---
+        # 穴位 ↔ 病症: 治疗
+        if types == {ENTITY_TYPE_POINT, ENTITY_TYPE_SYMPTOM}:
+            return RELATION_TREATS
+
+        # --- 药材关系 ---
+        # 药材 ↔ 经络: 归经
+        if types == {ENTITY_TYPE_HERB, ENTITY_TYPE_MERIDIAN}:
+            return RELATION_ENTERS
+
+        # 药材 ↔ 脏腑: 归经
+        if types == {ENTITY_TYPE_HERB, ENTITY_TYPE_ORGAN}:
+            return RELATION_ENTERS
+
+        # 药材 ↔ 病症: 治疗
+        if types == {ENTITY_TYPE_HERB, ENTITY_TYPE_SYMPTOM}:
+            return RELATION_TREATS
+
+        # --- 方剂关系 ---
+        # 方剂 ↔ 药材: 包含
+        if types == {ENTITY_TYPE_FORMULA, ENTITY_TYPE_HERB}:
+            return RELATION_CONTAINS
+
+        # 方剂 ↔ 病症: 治疗
+        if types == {ENTITY_TYPE_FORMULA, ENTITY_TYPE_SYMPTOM}:
+            return RELATION_TREATS
+
+        # 方剂 ↔ 经络: 归经
+        if types == {ENTITY_TYPE_FORMULA, ENTITY_TYPE_MERIDIAN}:
+            return RELATION_ENTERS
+
+        # --- 理论关系 ---
+        # 理论 ↔ 概念: 包含
+        if types == {ENTITY_TYPE_THEORY, ENTITY_TYPE_CONCEPT}:
+            return RELATION_CONTAINS
+
+        # 理论 ↔ 流派: 属于
+        if types == {ENTITY_TYPE_THEORY, ENTITY_TYPE_SCHOOL}:
+            return RELATION_BELONGS_TO
 
         # 默认
         return RELATION_RELATED
@@ -461,6 +748,17 @@ class KnowledgeGraphBuilder:
             ("中医", "古籍", "经典传承", ["黄帝内经", "伤寒论", "本草"]),
             ("儒家", "古籍", "经典传承", ["论语", "孟子", "大学", "中庸"]),
             ("道家", "古籍", "经典传承", ["道德经", "庄子"]),
+            ("武术", "智能气功", "功法体系", ["站桩", "吐纳", "太极拳"]),
+            ("武术", "中医", "经络/穴位", ["经络", "穴位", "气血", "脏腑"]),
+            ("哲学", "儒家", "思想渊源", ["仁", "义", "礼", "中庸", "天人合一"]),
+            ("哲学", "道家", "思想渊源", ["道", "无为", "阴阳"]),
+            ("哲学", "佛家", "思想渊源", ["禅", "定", "慧", "觉悟"]),
+            ("心理学", "智能气功", "意识/调心", ["调心", "运用意识", "意元体"]),
+            ("心理学", "哲学", "意识研究", ["意识", "认知", "心理"]),
+            ("科学", "智能气功", "现代研究", ["混元气", "意元体", "气场"]),
+            ("佛家", "古籍", "经典传承", ["心经", "金刚经", "坛经"]),
+            ("中医", "哲学", "身体哲学", ["阴阳", "五行", "天人合一"]),
+            ("智能气功", "道家", "修炼体系", ["丹田", "精气神", "混元气"]),
         ]
 
         stats = {"associations_created": 0}

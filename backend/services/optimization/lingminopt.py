@@ -1,4 +1,4 @@
-"""LingMinOpt自优化框架
+"""lingminopt自优化框架
 
 Ling（灵知） + Min（敏捷/智能） + Opt（优化）
 
@@ -70,8 +70,8 @@ class OptimizationOpportunity:
     metrics_after: Dict[str, float] = field(default_factory=dict)
 
 
-class LingMinOptOptimizer:
-    """LingMinOpt自优化器"""
+class lingminoptOptimizer:
+    """lingminopt自优化器"""
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)

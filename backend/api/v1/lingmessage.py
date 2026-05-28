@@ -9,15 +9,15 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from backend.services.lingmessage.service import LingMessageService
+from backend.services.lingmessage.service import lingmessageService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/lingmessage", tags=["lingmessage"])
 
 
-def _svc() -> LingMessageService:
-    return LingMessageService()
+def _svc() -> lingmessageService:
+    return lingmessageService()
 
 
 class CreateThreadRequest(BaseModel):

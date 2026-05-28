@@ -1,5 +1,5 @@
 """
-LingFlow Agents Flow Service
+lingflow Agents Flow Service
 
 提供自主教材处理的AI agents工作流服务，包括：
 - 自主TOC提取和扩展
@@ -27,7 +27,7 @@ try:
 
     LINGFLOW_AGENTS_AVAILABLE = True
 except ImportError as e:
-    logger.warning(f"LingFlow agents module not available: {e}")
+    logger.warning(f"lingflow agents module not available: {e}")
     LINGFLOW_AGENTS_AVAILABLE = False
     AutonomousTextbookProcessor = None
     ProcessingResult = None
@@ -92,8 +92,8 @@ class AgentTaskResult:
         }
 
 
-class LingFlowAgentsService:
-    """LingFlow Agents 工作流服务"""
+class lingflowAgentsService:
+    """lingflow Agents 工作流服务"""
 
     def __init__(self, api_key: Optional[str] = None):
         """初始化服务
@@ -127,7 +127,7 @@ class LingFlowAgentsService:
             任务结果
         """
         if not self.is_available():
-            raise RuntimeError("LingFlow agents service is not available")
+            raise RuntimeError("lingflow agents service is not available")
 
         if config is None:
             config = AgentTaskConfig()
@@ -209,7 +209,7 @@ class LingFlowAgentsService:
             任务结果列表
         """
         if not self.is_available():
-            raise RuntimeError("LingFlow agents service is not available")
+            raise RuntimeError("lingflow agents service is not available")
 
         results = []
         for textbook in textbooks:
@@ -281,16 +281,16 @@ class LingFlowAgentsService:
 
 
 # 全局服务实例
-_service_instance: Optional[LingFlowAgentsService] = None
+_service_instance: Optional[lingflowAgentsService] = None
 
 
-def get_agents_service() -> LingFlowAgentsService:
-    """获取LingFlow agents服务实例"""
+def get_agents_service() -> lingflowAgentsService:
+    """获取lingflow agents服务实例"""
     global _service_instance
     if _service_instance is None:
         from config import config
 
-        _service_instance = LingFlowAgentsService(api_key=config.DEEPSEEK_API_KEY)
+        _service_instance = lingflowAgentsService(api_key=config.DEEPSEEK_API_KEY)
     return _service_instance
 
 
@@ -304,7 +304,7 @@ __all__ = [
     "LINGFLOW_AGENTS_AVAILABLE",
     "AgentTaskConfig",
     "AgentTaskResult",
-    "LingFlowAgentsService",
+    "lingflowAgentsService",
     "get_agents_service",
     "reset_agents_service",
 ]

@@ -24,7 +24,7 @@ class ImaKnowledgeImporter:
             db_pool: 数据库连接池
         """
         self.db_pool = db_pool
-        self.export_dir = Path("/home/ai/zhineng-knowledge-system/data/ima_export")
+        self.export_dir = Path("/home/ai/lingzhi/data/ima_export")
 
         # 分类映射
         self.category_mapping = {

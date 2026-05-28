@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LingFlow - 教材处理工作流系统
+lingflow - 教材处理工作流系统
 
 实现大专教材的完整处理流程：
 1. 定位教材实体文件路径
@@ -121,8 +121,8 @@ TEXTBOOKS = [
 ]
 
 
-class LingFlowWorkflow:
-    """LingFlow 工作流引擎"""
+class lingflowWorkflow:
+    """lingflow 工作流引擎"""
 
     def __init__(
         self,
@@ -671,7 +671,7 @@ class LingFlowWorkflow:
         if steps is None:
             steps = [1, 2, 3, 4, 5]
 
-        logger.info(f"LingFlow 工作流开始 - 步骤: {steps}")
+        logger.info(f"lingflow 工作流开始 - 步骤: {steps}")
 
         step_methods = {
             1: self.step1_locate_files,
@@ -696,7 +696,7 @@ class LingFlowWorkflow:
         failed = sum(1 for r in self.steps_results if r.status == StepStatus.FAILED)
 
         report = {
-            "workflow": "LingFlow 教材处理工作流",
+            "workflow": "lingflow 教材处理工作流",
             "generated_at": datetime.now().isoformat(),
             "summary": {
                 "total_steps": len(self.steps_results),
@@ -731,7 +731,7 @@ def run_workflow(
     steps: Optional[List[int]] = None,
     force_extract: bool = False,
 ) -> Dict:
-    """运行LingFlow工作流
+    """运行lingflow工作流
 
     Args:
         project_root: 项目根目录
@@ -760,7 +760,7 @@ def run_workflow(
             # 如果找不到，使用当前目录的父目录
             project_root = Path.cwd().parent if (Path.cwd() / "backend").exists() else Path.cwd()
 
-    workflow = LingFlowWorkflow(project_root=project_root)
+    workflow = lingflowWorkflow(project_root=project_root)
     return workflow.run(steps=steps, force_extract=force_extract)
 
 
@@ -784,7 +784,7 @@ if __name__ == "__main__":
 
     # 打印摘要
     print("\n" + "=" * 60)
-    print("LingFlow 工作流执行完成")
+    print("lingflow 工作流执行完成")
     print("=" * 60)
     print(f"完成步骤: {result['summary']['completed']}/{result['summary']['total_steps']}")
     print(f"成功率: {result['summary']['success_rate']}")

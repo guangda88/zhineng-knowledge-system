@@ -248,9 +248,9 @@ async def get_gaps_stats(pool: asyncpg.Pool) -> Dict[str, Any]:
 async def _alert_gap_threshold(query: str, hit_count: int, category: Optional[str]) -> None:
     """当知识缺口命中次数超过阈值时，通过灵信服务发送告警。"""
     try:
-        from backend.services.lingmessage.service import LingMessageService
+        from backend.services.lingmessage.service import lingmessageService
 
-        svc = LingMessageService()
+        svc = lingmessageService()
         cat_info = f" (分类: {category})" if category else ""
         topic = f"知识缺口告警: {query}{cat_info}"
 

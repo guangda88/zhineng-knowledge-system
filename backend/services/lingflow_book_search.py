@@ -1,4 +1,4 @@
-"""LingFlow 书目统一搜索服务
+"""lingflow 书目统一搜索服务
 
 提供跨 books / sys_books / guoxue_books 的统一搜索能力：
 - 多源联合搜索
@@ -15,8 +15,8 @@ import asyncpg
 logger = logging.getLogger(__name__)
 
 
-class LingFlowBookSearchService:
-    """LingFlow 书目统一搜索服务"""
+class lingflowBookSearchService:
+    """lingflow 书目统一搜索服务"""
 
     def __init__(self, db_pool: asyncpg.Pool):
         self.pool = db_pool

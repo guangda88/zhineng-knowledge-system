@@ -51,7 +51,7 @@ class InnovationProposal:
 class InnovationManager:
     """创新管理器"""
 
-    def __init__(self, project_root: str = "/home/ai/zhineng-knowledge-system"):
+    def __init__(self, project_root: str = "/home/ai/lingzhi"):
         self.project_root = project_root
         self.proposals: List[InnovationProposal] = []
         self.experiment_branch_prefix = "exp/"

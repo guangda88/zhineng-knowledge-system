@@ -27,10 +27,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/pipeline", tags=["Phase 2/3 管道"])
 
-DB_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://localhost:5432/zhineng_kb",
-)
+DB_URL = os.getenv("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required")
 
 
 def _pool():

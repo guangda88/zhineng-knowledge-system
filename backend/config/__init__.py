@@ -16,14 +16,14 @@ from typing import Optional
 
 from .base import BaseConfig
 from .database import DatabaseConfig
-from .lingzhi import LingZhiConfig
+from .lingzhi import lingzhiConfig
 from .redis import RedisConfig
 from .security import SecurityConfig
 
 logger = logging.getLogger(__name__)
 
 
-class Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, LingZhiConfig):
+class Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, lingzhiConfig):
     """统一配置类
 
     整合所有配置模块，提供统一的配置访问接口。
@@ -156,5 +156,5 @@ __all__ = [
     "DatabaseConfig",
     "RedisConfig",
     "SecurityConfig",
-    "LingZhiConfig",
+    "lingzhiConfig",
 ]

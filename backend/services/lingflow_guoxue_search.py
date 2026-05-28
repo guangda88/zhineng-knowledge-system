@@ -1,4 +1,4 @@
-"""LingFlow 国学古籍搜索服务
+"""lingflow 国学古籍搜索服务
 
 提供国学古籍（guoxue_content / guoxue_books）的高级搜索功能：
 - jieba 预分词全文搜索（search_vector + GIN 索引）
@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 _EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://embedding:8001")
 
 
-class LingFlowGuoxueSearchService:
-    """LingFlow 国学古籍搜索服务"""
+class lingflowGuoxueSearchService:
+    """lingflow 国学古籍搜索服务"""
 
     def __init__(self, db_pool: asyncpg.Pool):
         self.pool = db_pool

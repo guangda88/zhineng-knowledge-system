@@ -1,4 +1,4 @@
-"""LingMinOpt自优化系统
+"""lingminopt自优化系统
 
 ⚠️ 实验性功能 - 未完成，不建议生产使用
 
@@ -11,11 +11,11 @@ import warnings
 from .auditor import SystemAuditor
 from .error_analyzer import ErrorAnalyzer
 from .feedback_collector import FeedbackCollector
-from .lingminopt import LingMinOptOptimizer
+from .lingminopt import lingminoptOptimizer
 
 # 发出实验性功能警告
 warnings.warn(
-    "LingMinOpt optimization system is experimental and incomplete. "
+    "lingminopt optimization system is experimental and incomplete. "
     "Not recommended for production use. "
     "See: backend/services/optimization/README.md",
     UserWarning,
@@ -23,7 +23,7 @@ warnings.warn(
 )
 
 __all__ = [
-    "LingMinOptOptimizer",
+    "lingminoptOptimizer",
     "FeedbackCollector",
     "ErrorAnalyzer",
     "SystemAuditor",

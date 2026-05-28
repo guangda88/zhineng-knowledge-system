@@ -1,6 +1,6 @@
 """自优化API路由
 
-LingMinOpt自优化框架的API接口
+lingminopt自优化框架的API接口
 
 ⚠️ 实验性功能 - 未完成，不建议生产使用
 """
@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from backend.services.optimization import (
     ErrorAnalyzer,
     FeedbackCollector,
-    LingMinOptOptimizer,
+    lingminoptOptimizer,
     SystemAuditor,
 )
 from backend.services.optimization.lingminopt import OptimizationPriority
@@ -72,7 +72,7 @@ async def list_optimization_opportunities(
     返回：优化机会列表
     """
     try:
-        optimizer = LingMinOptOptimizer()
+        optimizer = lingminoptOptimizer()
 
         # 识别新的机会
         opportunities = await optimizer.identify_opportunities()
@@ -115,7 +115,7 @@ async def analyze_opportunity(opportunity_id: str) -> dict:
     深入分析优化机会，制定详细计划
     """
     try:
-        optimizer = LingMinOptOptimizer()
+        optimizer = lingminoptOptimizer()
 
         # 查找机会
         opportunity = None
@@ -166,7 +166,7 @@ async def execute_optimization(
     - **auto_approve**: 是否自动批准（跳过人工确认）
     """
     try:
-        optimizer = LingMinOptOptimizer()
+        optimizer = lingminoptOptimizer()
 
         # 查找机会
         opportunity = None
@@ -356,7 +356,7 @@ async def get_optimization_stats() -> dict:
     返回整体统计信息
     """
     try:
-        optimizer = LingMinOptOptimizer()
+        optimizer = lingminoptOptimizer()
         collector = FeedbackCollector()
         analyzer = ErrorAnalyzer()
         auditor = SystemAuditor()
@@ -391,7 +391,7 @@ async def get_optimization_dashboard() -> dict:
     返回可视化的优化状态和趋势
     """
     try:
-        optimizer = LingMinOptOptimizer()
+        optimizer = lingminoptOptimizer()
 
         # 获取优化机会分布
         all_opportunities = await optimizer.identify_opportunities()

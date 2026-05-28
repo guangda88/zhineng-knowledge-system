@@ -20,11 +20,14 @@ class CoTReasoner(BaseReasoner):
 
     def __init__(self, api_key: str = "", api_url: str = ""):
         super().__init__(api_key, api_url)
+        self._http_client = None
         self.model_name = "deepseek-chat"
 
     async def close(self) -> None:
         """关闭资源"""
-        pass
+        if self._http_client is not None:
+            await self._http_client.aclose()
+            self._http_client = None
 
     async def __aenter__(self):
         return self

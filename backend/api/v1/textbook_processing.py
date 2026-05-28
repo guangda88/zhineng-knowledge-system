@@ -1,5 +1,5 @@
 """
-LingFlow Agents API - AI agents 工作流接口
+lingflow Agents API - AI agents 工作流接口
 
 提供自主教材处理的RESTful API接口：
 - 处理单个教材
@@ -87,19 +87,19 @@ class HealthResponse(BaseModel):
 
 @router.get("/health", response_model=HealthResponse)
 async def check_health():
-    """检查LingFlow agents服务健康状态"""
+    """检查lingflow agents服务健康状态"""
     from config import config
 
     if not LINGFLOW_AGENTS_AVAILABLE:
         return HealthResponse(
             available=False,
-            message="LingFlow agents module not available",
+            message="lingflow agents module not available",
             api_key_configured=config.DEEPSEEK_API_KEY is not None,
         )
 
     return HealthResponse(
         available=True,
-        message="LingFlow agents service is ready",
+        message="lingflow agents service is ready",
         api_key_configured=config.DEEPSEEK_API_KEY is not None,
     )
 
@@ -112,7 +112,7 @@ async def process_textbook(
 ):
     """处理单个教材"""
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
+        raise HTTPException(status_code=503, detail="lingflow agents service is not available")
 
     try:
         safe_path, _ = validate_file_path(request.path)
@@ -164,7 +164,7 @@ async def batch_process_textbooks(
 ):
     """批量处理教材"""
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
+        raise HTTPException(status_code=503, detail="lingflow agents service is not available")
 
     safe_paths = []
     for textbook in request.textbooks:
@@ -213,7 +213,7 @@ async def batch_process_textbooks(
 async def get_task_status(task_id: str):
     """查询任务状态"""
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
+        raise HTTPException(status_code=503, detail="lingflow agents service is not available")
 
     try:
         service = get_agents_service()
@@ -248,7 +248,7 @@ async def get_task_status(task_id: str):
 async def list_all_tasks():
     """列出所有任务"""
     if not LINGFLOW_AGENTS_AVAILABLE:
-        raise HTTPException(status_code=503, detail="LingFlow agents service is not available")
+        raise HTTPException(status_code=503, detail="lingflow agents service is not available")
 
     try:
         service = get_agents_service()

@@ -69,6 +69,10 @@ def create_app(lifespan_ctx=None) -> FastAPI:
             "/docs",
             "/redoc",
             "/openapi.json",
+            "/metrics",
+            "/metrics/prometheus",
+            "/api/v1/metrics",
+            "/api/v1/metrics/prometheus",
         },
         public_path_prefixes={
             "/static",
@@ -108,6 +112,16 @@ def create_app(lifespan_ctx=None) -> FastAPI:
     # 注册API路由
     app.include_router(api_router)
     app.include_router(api_router_v2)  # 添加v2路由（书籍搜索）
+
+    @app.get("/metrics")
+    async def root_metrics():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/api/v1/metrics")
+
+    @app.get("/metrics/prometheus")
+    async def root_metrics_prometheus():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/api/v1/metrics/prometheus")
 
     logger.info("FastAPI application initialized with security enhancements")
     logger.info(f"CORS allowed origins: {allowed_origins}")

@@ -1,7 +1,7 @@
-"""国学经典检索API — LingFlow 增强版
+"""国学经典检索API — lingflow 增强版
 
 提供对 guoxue_content（26.3万条）和 guoxue_books（109部典籍）的搜索、浏览功能。
-LingFlow 增强功能：
+lingflow 增强功能：
 - 多模式全文搜索（精确/模糊/宽泛/语义）
 - 跨典籍联合搜索
 - 上下文片段高亮
@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from backend.common.db_helpers import row_to_dict
 from backend.core.dependency_injection import get_db_pool as _get_di_db_pool
-from backend.services.lingflow_guoxue_search import LingFlowGuoxueSearchService
+from backend.services.lingflow_guoxue_search import lingflowGuoxueSearchService
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ def _pool():
     return pool
 
 
-def _guoxue_service() -> LingFlowGuoxueSearchService:
-    return LingFlowGuoxueSearchService(_pool())
+def _guoxue_service() -> lingflowGuoxueSearchService:
+    return lingflowGuoxueSearchService(_pool())
 
 
 @router.get("/books")
@@ -194,7 +194,7 @@ async def search_content(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
 ):
-    """LingFlow 增强全文搜索
+    """lingflow 增强全文搜索
 
     支持四种搜索模式：
     - fulltext: 三元组全文搜索（默认，精确匹配优先）
@@ -227,7 +227,7 @@ async def cross_book_search(
     top_k: int = Query(5, ge=1, le=20, description="返回典籍数量"),
     per_book: int = Query(3, ge=1, le=10, description="每部典籍返回条数"),
 ):
-    """LingFlow 跨典籍搜索
+    """lingflow 跨典籍搜索
 
     在所有典籍中搜索关键词，返回每部典籍最相关的条目。
     适合发现某个概念在不同经典中的论述。

@@ -1,14 +1,14 @@
 """灵知系统配置模块
 
 提供灵知古籍知识系统的特定配置。
-包含 LingFlow 搜索引擎的配置参数。
+包含 lingflow 搜索引擎的配置参数。
 """
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
-class LingZhiConfig(BaseSettings):
+class lingzhiConfig(BaseSettings):
     """灵知系统配置类
 
     管理灵知古籍知识系统的特定配置。
@@ -25,13 +25,13 @@ class LingZhiConfig(BaseSettings):
     MAX_CONNECTIONS: int = Field(default=10, ge=1, le=50, description="最大连接数")
     CONNECTION_TIMEOUT: int = Field(default=10, ge=1, le=60, description="连接超时时间（秒）")
 
-    # LingFlow 搜索引擎配置
-    LINGFLOW_ENABLED: bool = Field(default=True, description="是否启用 LingFlow 搜索引擎")
+    # lingflow 搜索引擎配置
+    LINGFLOW_ENABLED: bool = Field(default=True, description="是否启用 lingflow 搜索引擎")
     LINGFLOW_DEFAULT_MODE: str = Field(
-        default="fulltext", description="LingFlow 默认搜索模式（fulltext/fuzzy/broad）"
+        default="fulltext", description="lingflow 默认搜索模式（fulltext/fuzzy/broad）"
     )
     LINGFLOW_SEARCH_TIMEOUT: float = Field(
-        default=60.0, ge=5.0, description="LingFlow 搜索超时时间（秒）"
+        default=60.0, ge=5.0, description="lingflow 搜索超时时间（秒）"
     )
     LINGFLOW_SNIPPET_LENGTH: int = Field(
         default=300, ge=50, le=1000, description="搜索结果上下文片段长度（字符数）"

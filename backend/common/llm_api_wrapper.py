@@ -260,36 +260,49 @@ def get_llm_client(
     if _global_client is None:
         import os
 
-        glm_key = os.getenv("GLM_CODING_PLAN_KEY") or os.getenv("GLM_API_KEY")
-        if api_key is None:
-            if glm_key:
-                api_key = glm_key
-            else:
-                api_key = os.getenv("DEEPSEEK_API_KEY")
-
-        if api_key is None:
-            raise ValueError(
-                "No LLM API key found (GLM_CODING_PLAN_KEY, GLM_API_KEY, or DEEPSEEK_API_KEY)"
-            )
-
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
-        if glm_key and api_key == glm_key:
-            default_url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-            default_model = "glm-4.7"
-        else:
-            default_url = os.getenv(
-                "DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"
+        # Priority: LLM_PROXY_URL > GLM > DeepSeek
+        proxy_url = os.getenv("LLM_PROXY_URL")
+        if proxy_url:
+            proxy_key = os.getenv("LLM_PROXY_KEY", os.getenv("DEEPSEEK_API_KEY", ""))
+            proxy_model = os.getenv("LLM_PROXY_MODEL", "glm-5.1")
+            _global_client = LLMAPIClient(
+                api_key=proxy_key,
+                api_url=api_url or proxy_url,
+                model=model or proxy_model,
+                max_calls_per_minute=max_calls_per_minute,
+                redis_url=redis_url,
             )
-            default_model = "deepseek-chat"
+        else:
+            glm_key = os.getenv("GLM_CODING_PLAN_KEY") or os.getenv("GLM_API_KEY")
+            if api_key is None:
+                if glm_key:
+                    api_key = glm_key
+                else:
+                    api_key = os.getenv("DEEPSEEK_API_KEY")
 
-        _global_client = LLMAPIClient(
-            api_key=api_key,
-            api_url=api_url or default_url,
-            model=model or default_model,
-            max_calls_per_minute=max_calls_per_minute,
-            redis_url=redis_url,
-        )
+            if api_key is None:
+                raise ValueError(
+                    "No LLM API key found (LLM_PROXY_URL, GLM_CODING_PLAN_KEY, GLM_API_KEY, or DEEPSEEK_API_KEY)"
+                )
+
+            if glm_key and api_key == glm_key:
+                default_url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+                default_model = "glm-4.7"
+            else:
+                default_url = os.getenv(
+                    "DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions"
+                )
+                default_model = "deepseek-chat"
+
+            _global_client = LLMAPIClient(
+                api_key=api_key,
+                api_url=api_url or default_url,
+                model=model or default_model,
+                max_calls_per_minute=max_calls_per_minute,
+                redis_url=redis_url,
+            )
 
     return _global_client
 

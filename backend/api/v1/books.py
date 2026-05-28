@@ -1,7 +1,7 @@
-"""书籍搜索API路由 — LingFlow 增强版
+"""书籍搜索API路由 — lingflow 增强版
 
 提供书籍搜索、详情、章节内容等API端点。
-LingFlow 增强功能：
+lingflow 增强功能：
 - 统一跨源搜索（books + sys_books + guoxue_books）
 - book_chapters 全文搜索
 - 智能结果合并排序
@@ -28,7 +28,7 @@ from backend.schemas.book import (
     SimilarBookResponse,
 )
 from backend.services.book_search import BookSearchService
-from backend.services.lingflow_book_search import LingFlowBookSearchService
+from backend.services.lingflow_book_search import lingflowBookSearchService
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +183,7 @@ async def get_filters(db: AsyncSession = Depends(get_async_session)):
         raise HTTPException(status_code=500, detail=f"获取筛选选项失败: {str(e)}")
 
 
-# ========== LingFlow 统一搜索端点 ==========
+# ========== lingflow 统一搜索端点 ==========
 
 
 @router.get("/lingflow/unified")
@@ -196,13 +196,13 @@ async def lingflow_unified_search(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
 ):
-    """LingFlow 统一搜索"""
+    """lingflow 统一搜索"""
     try:
         pool = _get_di_db_pool()
         if pool is None:
             raise HTTPException(status_code=503, detail="数据库连接池未初始化")
 
-        service = LingFlowBookSearchService(pool)
+        service = lingflowBookSearchService(pool)
         result = await service.unified_search(
             query=q,
             category=category,
@@ -227,13 +227,13 @@ async def lingflow_fulltext_search(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
 ):
-    """LingFlow 书籍全文搜索"""
+    """lingflow 书籍全文搜索"""
     try:
         pool = _get_di_db_pool()
         if pool is None:
             raise HTTPException(status_code=503, detail="数据库连接池未初始化")
 
-        service = LingFlowBookSearchService(pool)
+        service = lingflowBookSearchService(pool)
         result = await service.search_books_fulltext(
             query=q,
             book_id=book_id,

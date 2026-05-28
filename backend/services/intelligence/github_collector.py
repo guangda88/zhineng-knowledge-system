@@ -1,7 +1,7 @@
 """GitHub趋势采集器
 
 采集GitHub上与灵知系统相关的开源项目趋势。
-参考LingFlow的github_trend_collector.py，适配为异步版本。
+参考lingflow的github_trend_collector.py，适配为异步版本。
 """
 
 import logging

@@ -17,7 +17,7 @@ from backend.core.database import get_db_pool
 logger = logging.getLogger(__name__)
 
 
-class LingMessageService:
+class lingmessageService:
     """灵信通信服务"""
 
     async def _pool(self):

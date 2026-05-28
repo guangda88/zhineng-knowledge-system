@@ -69,8 +69,8 @@ def _validate_model_path(model_path: str) -> str:
     total_size = sum(f.stat().st_size for f in model_dir.rglob("*") if f.is_file())
     total_mb = total_size / (1024 * 1024)
     logger.info(f"模型目录: {model_path}, 总大小: {total_mb:.1f}MB")
-    if total_mb < 100:
-        raise ValueError(f"模型文件过小 ({total_mb:.1f}MB), 可能不完整 (BGE-M3 应约 2200MB)")
+    if total_mb < 50:
+        raise ValueError(f"模型文件过小 ({total_mb:.1f}MB), 可能不完整")
 
     return str(model_dir.resolve())
 

@@ -137,11 +137,13 @@ class AIServiceAdapter:
 
         Args:
             base_url: CLIProxyAPI base URL (default: http://localhost:8317/v1)
-            api_key: API key for CLIProxyAPI (default: lingzhi-api-key-001)
+            api_key: API key for CLIProxyAPI (from CLIPROXYAPI_API_KEY env var)
             default_model: Default model to use (default: deepseek-chat)
         """
         self.base_url = base_url or os.getenv("CLIPROXYAPI_BASE_URL", "http://localhost:8317/v1")
-        self.api_key = api_key or os.getenv("CLIPROXYAPI_API_KEY", "lingzhi-api-key-001")
+        self.api_key = api_key or os.getenv("CLIPROXYAPI_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("CLIPROXYAPI_API_KEY not set")
         self.default_model = default_model or os.getenv("DEFAULT_AI_MODEL", "deepseek-chat")
 
         # Initialize OpenAI client (compatible with CLIProxyAPI)

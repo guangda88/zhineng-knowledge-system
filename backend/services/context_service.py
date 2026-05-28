@@ -1,6 +1,6 @@
-"""上下文管理服务 - 基于 LingFlow 的上下文管理 API 封装
+"""上下文管理服务 - 基于 lingflow 的上下文管理 API 封装
 
-此服务封装了 LingFlow 的上下文管理功能，提供:
+此服务封装了 lingflow 的上下文管理功能，提供:
 1. Token 估算
 2. 消息评分
 3. 上下文压缩
@@ -104,7 +104,7 @@ class ContextSnapshot(BaseModel):
 class ContextService:
     """上下文管理服务
 
-    封装 LingFlow 的上下文管理功能，提供统一的 API 接口。
+    封装 lingflow 的上下文管理功能，提供统一的 API 接口。
     """
 
     # 默认配置
@@ -146,7 +146,7 @@ class ContextService:
             session_id=self.session_id,
         )
 
-        # 尝试加载 LingFlow 组件
+        # 尝试加载 lingflow 组件
         self._load_lingflow_components()
 
         # 从 PostgreSQL 加载（如果 pool 可用），否则从本地 JSON
@@ -166,13 +166,13 @@ class ContextService:
         return secrets.token_urlsafe(12)
 
     def _load_lingflow_components(self):
-        """加载 LingFlow 组件（可选）"""
+        """加载 lingflow 组件（可选）"""
         self.lingflow_available = False
         self.token_estimator = None
         self.message_scorer = None
 
         try:
-            # 尝试导入 LingFlow 的核心组件
+            # 尝试导入 lingflow 的核心组件
             from lingflow_core.core.message_scorer import get_message_scorer
             from lingflow_core.core.token_estimator import get_token_estimator
 
@@ -180,9 +180,9 @@ class ContextService:
             self.message_scorer = get_message_scorer()
             self.lingflow_available = True
 
-            logger.info("LingFlow components loaded successfully")
+            logger.info("lingflow components loaded successfully")
         except ImportError as e:
-            logger.warning(f"LingFlow components not available: {e}")
+            logger.warning(f"lingflow components not available: {e}")
             logger.info("Using fallback token estimation")
 
     def _load_last_context(self):
@@ -271,7 +271,7 @@ class ContextService:
                     estimated=estimate.estimated,
                 )
             except Exception as e:
-                logger.warning(f"LingFlow token estimation failed: {e}")
+                logger.warning(f"lingflow token estimation failed: {e}")
 
         # 回退到简单估算 (约 4 字符 = 1 token)
         token_count = len(text) // 4
@@ -304,7 +304,7 @@ class ContextService:
                     for msg, score in zip(messages, scores)
                 ]
             except Exception as e:
-                logger.warning(f"LingFlow message scoring failed: {e}")
+                logger.warning(f"lingflow message scoring failed: {e}")
 
         # 回退到简单评分
         results = []

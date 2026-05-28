@@ -1,4 +1,4 @@
-"""LingFlow - Textbook Processing Module
+"""lingflow - Textbook Processing Module
 
 提供自主教材处理功能，包括TOC提取、文本分割和质量评估。
 """
