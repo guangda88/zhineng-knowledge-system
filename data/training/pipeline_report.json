@@ -1,14 +1,20 @@
 {
   "pipeline": "training_data_preparation",
   "version": "2.0.0",
-  "generated_at": "2026-04-08T00:09:36.086513",
+  "generated_at": "2026-05-07T21:32:04.687596",
   "stats": {
-    "started_at": "2026-04-08T00:09:13.091614",
+    "started_at": "2026-05-07T21:30:56.757496",
     "data_sources": {
       "documents": {
-        "气功": 15432,
-        "儒家": 20610,
-        "中医": 68749
+        "中医": 80,
+        "佛家": 6971,
+        "儒家": 201,
+        "哲学": 1378,
+        "心理学": 1551,
+        "武术": 541,
+        "气功": 61337,
+        "科学": 2961,
+        "道家": 1931
       },
       "guji_documents": {
         "古籍": 263512
@@ -18,43 +24,45 @@
       }
     },
     "intent": {
-      "total": 9364,
-      "train": 7491,
-      "test": 1873,
+      "total": 19441,
+      "train": 15552,
+      "test": 3889,
       "intent_distribution": {
-        "practice_method": 2400,
-        "scientific_basis": 2000,
-        "theory_explanation": 2400,
-        "book_search": 2000,
-        "comparison": 564
+        "comparison": 1267,
+        "scientific_basis": 4352,
+        "book_search": 4330,
+        "practice_method": 4745,
+        "theory_explanation": 4747
       }
     },
     "embedding": {
-      "positive_pairs": 2433,
-      "train_pairs": 2189,
-      "val_pairs": 244,
-      "hard_negatives": 100,
+      "positive_pairs": 2540,
+      "train_pairs": 2286,
+      "val_pairs": 254,
+      "hard_negatives": 971,
       "sources": {
-        "documents": 371,
-        "guji_documents": 2000,
+        "documents": 489,
+        "guji_documents": 1989,
         "textbook_knowledge": 62
       }
     },
     "qa_benchmark": {
-      "total": 4314,
-      "train": 3451,
-      "test": 863,
+      "total": 4320,
+      "train": 3468,
+      "test": 852,
       "category_distribution": {
-        "古籍": 3560,
-        "气功": 692,
+        "古籍": 3431,
+        "儒家": 285,
+        "中医": 141,
+        "气功": 401,
         "教材": 62
       },
       "source_distribution": {
-        "guji_documents": 3560,
-        "documents": 692,
+        "guji_documents": 3431,
+        "documents": 827,
         "textbook_knowledge": 62
       }
     },
-    "completed_at": "2026-04-08T00:09:36.086499"
+    "completed_at": "2026-05-07T21:32:04.687580"
   }
 }

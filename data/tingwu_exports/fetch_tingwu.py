@@ -32,7 +32,7 @@ HEADERS = {
 }
 
 FOLDER_ID = "265086"
-OUTPUT_DIR = "/home/ai/zhineng-knowledge-system/data/tingwu_exports"
+OUTPUT_DIR = "/home/ai/lingzhi/data/tingwu_exports"
 
 
 def try_api_endpoints(session):

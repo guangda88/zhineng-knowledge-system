@@ -5,7 +5,7 @@ import json
 import os
 import re
 
-OUTPUT_DIR = "/home/ai/zhineng-knowledge-system/data/tingwu_exports"
+OUTPUT_DIR = "/home/ai/lingzhi/data/tingwu_exports"
 
 RAW_COOKIES = """account_info_switch=close; login_current_pk=1936339930532323; yunpk=1936339930532323; cnaui=1936339930532323; aui=1936339930532323; t=9526c411797878f69f4b234494a868ab; currentRegionId=cn-hangzhou; cna=707AIewNgkwCAXe3pvNuqNSD; sca=72043460; aliyun_enable_passkey=1; login_aliyunid_pk=1936339930532323; aliyun_country=CN; partitioned_cookie_flag=doubleRemove; aliyun_site=CN; aliyun_lang=zh; login_aliyunid=6bsh%E5%88%98%E5%8D%9A%E5%A3%AB; hsite=6"""
 
