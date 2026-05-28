@@ -3,8 +3,11 @@ const SearchModule = {
     currentQuery: '',
     currentCategory: '',
     currentMode: 'semantic',
+    initialized: false,
 
     init() {
+        if (this.initialized) return;
+        this.initialized = true;
         this.bindEvents();
         this.loadRecentSearches();
     },
@@ -88,7 +91,7 @@ const SearchModule = {
             resultsDiv.innerHTML = `
                 <div class="error-state">
                     <div class="error-icon">⚠️</div>
-                    <p>搜索失败：${error.message}</p>
+                    <p>搜索失败：${Utils.escapeHtml(error.message)}</p>
                     <button class="btn btn-secondary" onclick="SearchModule.retry()">重试</button>
                 </div>
             `;
@@ -112,7 +115,7 @@ const SearchModule = {
         const metaHtml = `
             <div class="results-meta">
                 <span>找到 ${Utils.formatNumber(data.total || data.results.length)} 条结果</span>
-                <span class="meta-time">耗时 ${data.time || 0.1}秒</span>
+                <span class="meta-time">耗时 ${Utils.escapeHtml(String(data.time || 0.1))}秒</span>
             </div>
         `;
 
@@ -127,7 +130,7 @@ const SearchModule = {
 
     createResultCard(item) {
         const categoryTag = item.category ?
-            `<span class="tag tag-${item.category}">${item.category}</span>` : '';
+            `<span class="tag tag-${Utils.escapeHtml(item.category)}">${Utils.escapeHtml(item.category)}</span>` : '';
 
         const preview = Utils.escapeHtml(
             Utils.truncate(item.content || item.body || '', 150)
@@ -137,13 +140,13 @@ const SearchModule = {
             `<span class="relevance-score">相似度: ${Math.round((item.similarity || item.score) * 100)}%</span>` : '';
 
         return `
-            <div class="result-card" data-id="${item.id}">
+            <div class="result-card" data-id="${Utils.escapeHtml(String(item.id))}">
                 <h3 class="result-title">${Utils.escapeHtml(item.title || '无标题')}</h3>
                 <p class="result-preview">${preview}</p>
                 <div class="result-footer">
                     ${categoryTag}
                     ${relevance}
-                    <span class="result-id">ID: ${item.id}</span>
+                    <span class="result-id">ID: ${Utils.escapeHtml(String(item.id))}</span>
                 </div>
             </div>
         `;

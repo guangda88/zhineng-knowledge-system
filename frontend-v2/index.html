@@ -399,6 +399,11 @@
                     </div>
 
                     <div class="annotation-container">
+                        <div class="annotation-tabs" style="display:flex;gap:4px;margin-bottom:12px;padding:4px;background:var(--bg-tertiary);border-radius:8px;">
+                            <button class="tab-btn active" data-tab="ocr" style="flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-size:14px;background:var(--bg-primary);">OCR标注</button>
+                            <button class="tab-btn" data-tab="transcription" style="flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-size:14px;background:transparent;">转写标注</button>
+                            <button class="tab-btn" data-tab="general" style="flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-size:14px;background:transparent;">通用标注</button>
+                        </div>
                         <div class="annotation-workspace">
                             <div class="annotation-sidebar">
                                 <h3>待标注内容</h3>
@@ -536,22 +541,22 @@
         <div class="modal-content" id="modalContent"></div>
     </div>
 
-    <!-- 加载脚本 -->
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/router.js"></script>
-    <script src="js/modules/search.js"></script>
-    <script src="js/modules/library.js"></script>
-    <script src="js/modules/ai-assistant.js"></script>
-    <script src="js/modules/reasoning.js"></script>
-    <script src="js/modules/guoxue.js"></script>
-    <script src="js/modules/guji.js"></script>
-    <script src="js/modules/sysbooks.js"></script>
-    <script src="js/modules/annotation.js"></script>
-    <script src="js/modules/audio.js"></script>
-    <script src="js/modules/import.js"></script>
-    <script src="js/modules/analytics.js"></script>
-    <script src="js/modules/settings.js"></script>
-    <script src="js/app.js"></script>
+    <!-- 加载脚本（defer: 不阻塞DOM解析，按顺序执行） -->
+    <script defer src="js/config.js"></script>
+    <script defer src="js/api.js"></script>
+    <script defer src="js/router.js"></script>
+    <script defer src="js/modules/search.js"></script>
+    <script defer src="js/modules/library.js"></script>
+    <script defer src="js/modules/ai-assistant.js"></script>
+    <script defer src="js/modules/reasoning.js"></script>
+    <script defer src="js/modules/guoxue.js"></script>
+    <script defer src="js/modules/guji.js"></script>
+    <script defer src="js/modules/sysbooks.js"></script>
+    <script defer src="js/modules/annotation.js"></script>
+    <script defer src="js/modules/audio.js"></script>
+    <script defer src="js/modules/import.js"></script>
+    <script defer src="js/modules/analytics.js"></script>
+    <script defer src="js/modules/settings.js"></script>
+    <script defer src="js/app.js"></script>
 </body>
 </html>

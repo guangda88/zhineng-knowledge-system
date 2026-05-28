@@ -10,6 +10,8 @@ const API = {
             retries = Config.api.retryAttempts
         } = options;
 
+        const isFormData = (typeof FormData !== 'undefined' && body instanceof FormData);
+
         let lastError;
         for (let i = 0; i < retries; i++) {
             try {
@@ -18,14 +20,13 @@ const API = {
 
                 const config = {
                     method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...headers
-                    }
+                    headers: isFormData
+                        ? { ...headers }
+                        : { 'Content-Type': 'application/json', ...headers }
                 };
 
                 if (body) {
-                    config.body = JSON.stringify(body);
+                    config.body = isFormData ? body : JSON.stringify(body);
                 }
 
                 const response = await fetch(url, {
@@ -265,29 +266,42 @@ const API = {
 
     // 标注 API
     annotation: {
-        async list(options = {}) {
-            const params = new URLSearchParams(options);
-            return API.request(`${Config.api.baseURL}/annotations?${params}`);
+        async ocrStats() {
+            return API.request(`/annotation/ocr/stats`);
         },
 
-        async create(data) {
-            return API.request(`${Config.api.baseURL}/annotations`, {
+        async ocrPending() {
+            return API.request(`/annotation/ocr/tasks/pending`);
+        },
+
+        async ocrTask(taskId) {
+            return API.request(`/annotation/ocr/task/${taskId}`);
+        },
+
+        async ocrCorrect(data) {
+            return API.request(`/annotation/ocr/correct`, {
                 method: 'POST',
                 body: data
             });
         },
 
-        async update(id, data) {
-            return API.request(`${Config.api.baseURL}/annotations/${id}`, {
-                method: 'PUT',
+        async transcriptionStats() {
+            return API.request(`/annotation/transcription/stats`);
+        },
+
+        async transcriptionPending() {
+            return API.request(`/annotation/transcription/tasks/pending`);
+        },
+
+        async transcriptionCorrect(data) {
+            return API.request(`/annotation/transcription/correct`, {
+                method: 'POST',
                 body: data
             });
         },
 
-        async delete(id) {
-            return API.request(`${Config.api.baseURL}/annotations/${id}`, {
-                method: 'DELETE'
-            });
+        async annotationStats() {
+            return API.request(`/annotation/stats`);
         }
     },
 
@@ -295,38 +309,141 @@ const API = {
     audio: {
         async list(options = {}) {
             const params = new URLSearchParams(options);
-            return API.request(`${Config.api.baseURL}/audio?${params}`);
+            return API.request(`/audio/files?${params}`);
+        },
+
+        async get(fileId) {
+            return API.request(`/audio/files/${fileId}`);
+        },
+
+        async delete(fileId) {
+            return API.request(`/audio/files/${fileId}`, { method: 'DELETE' });
         },
 
         async upload(file) {
             const formData = new FormData();
             formData.append('file', file);
-            return API.request(`${Config.api.baseURL}/audio/upload`, {
+            return API.request(`/audio/upload`, {
                 method: 'POST',
-                headers: {}, // 让浏览器自动设置 Content-Type
+                headers: {},
                 body: formData
             });
         },
 
-        async transcribe(id) {
-            return API.request(`${Config.api.baseURL}/audio/${id}/transcribe`, {
+        async importData(data) {
+            return API.request(`/audio/import`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        async transcribe(fileId) {
+            return API.request(`/audio/transcribe/${fileId}`, {
                 method: 'POST'
             });
         },
 
-        async getSegments(id) {
-            return API.request(`${Config.api.baseURL}/audio/${id}/segments`);
+        async transcribeLocal(fileId) {
+            return API.request(`/audio/transcribe-local/${fileId}`, {
+                method: 'POST'
+            });
+        },
+
+        async transcribeStatus(fileId) {
+            return API.request(`/audio/transcribe/${fileId}/status`);
+        },
+
+        async getSegments(fileId) {
+            return API.request(`/audio/files/${fileId}/segments`);
+        },
+
+        async search(query, options = {}) {
+            const params = new URLSearchParams({ q: query, ...options });
+            return API.request(`/audio/search?${params}`);
+        },
+
+        async vectorize(fileId) {
+            return API.request(`/audio/vectorize/${fileId}`, { method: 'POST' });
+        },
+
+        async getAnnotations(fileId) {
+            return API.request(`/audio/annotations/audio/${fileId}`);
+        },
+
+        async addAnnotation(data) {
+            return API.request(`/audio/annotations`, {
+                method: 'POST',
+                body: data
+            });
+        }
+    },
+
+    // 导入 API
+    importData: {
+        async audioImport(data) {
+            return API.request(`/audio/import`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        async processTextbook(data) {
+            return API.request(`/textbook-processing/process`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        async processBatch(data) {
+            return API.request(`/textbook-processing/process/batch`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        async getTasks(options = {}) {
+            const params = new URLSearchParams(options);
+            return API.request(`/textbook-processing/tasks?${params}`);
+        }
+    },
+
+    // 数据分析 API
+    analytics: {
+        async dashboard() {
+            return API.request(`${Config.api.baseURL}/analytics/dashboard`);
+        },
+
+        async track(data) {
+            return API.request(`${Config.api.baseURL}/analytics/track`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        async feedbackInstant(data) {
+            return API.request(`${Config.api.baseURL}/analytics/feedback/instant`, {
+                method: 'POST',
+                body: data
+            });
         }
     },
 
     // 系统状态 API
     system: {
         async getHealth() {
-            return API.request(`${Config.api.baseURL}/health`);
+            return API.request(`/health`);
         },
 
         async getStats() {
             return API.request(`${Config.api.baseURL}/stats`);
+        },
+
+        async getDomains() {
+            return API.request(`${Config.api.baseURL}/domains`);
+        },
+
+        async getCategories() {
+            return API.request(`${Config.api.baseURL}/categories`);
         }
     }
 };

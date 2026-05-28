@@ -93,8 +93,9 @@ const Router = {
     },
 
     initModule(module, params) {
-        // 调用模块初始化函数
-        const moduleInit = window[`init${module.charAt(0).toUpperCase() + module.slice(1)}`];
+        const camelName = module.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        const funcName = 'init' + camelName.charAt(0).toUpperCase() + camelName.slice(1);
+        const moduleInit = window[funcName];
         if (typeof moduleInit === 'function') {
             moduleInit(params);
         }

@@ -55,6 +55,9 @@ header h1 {
     gap: 10px;
     margin-bottom: 20px;
     border-bottom: 2px solid var(--border-color);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 
 .tab {

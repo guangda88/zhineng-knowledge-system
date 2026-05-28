@@ -1,6 +1,10 @@
 // 灵知系统 - 推理模块
 const ReasoningModule = {
+    initialized: false,
+
     init() {
+        if (this.initialized) return;
+        this.initialized = true;
         this.bindEvents();
         this.loadGraphStatus();
     },
@@ -44,7 +48,7 @@ const ReasoningModule = {
         } catch (error) {
             outputDiv.innerHTML = `
                 <div class="error-state">
-                    <p>推理失败：${error.message}</p>
+                    <p>推理失败：${Utils.escapeHtml(error.message)}</p>
                 </div>
             `;
         }
@@ -97,8 +101,8 @@ const ReasoningModule = {
 
         const metaHtml = `
             <div class="reasoning-meta">
-                <span>模式: ${this.getModeName(data.mode)}</span>
-                <span>类型: ${this.getTypeName(data.query_type)}</span>
+                <span>模式: ${Utils.escapeHtml(this.getModeName(data.mode))}</span>
+                <span>类型: ${Utils.escapeHtml(this.getTypeName(data.query_type))}</span>
                 <span>耗时: ${data.reasoning_time?.toFixed(2)}s</span>
                 <span>置信度: ${Math.round((data.confidence || 0) * 100)}%</span>
             </div>
@@ -113,7 +117,8 @@ const ReasoningModule = {
     },
 
     formatAnswer(text) {
-        return text
+        const escaped = Utils.escapeHtml(text);
+        return escaped
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
     },
@@ -133,8 +138,8 @@ const ReasoningModule = {
             const data = await API.reasoning.getStatus();
             const statsDiv = document.getElementById('graphStats');
             statsDiv.innerHTML = `
-                <span class="graph-stat">📊 实体: ${data.graph_entity_count || 0}</span>
-                <span class="graph-stat">🔗 关系: ${data.graph_relation_count || 0}</span>
+                <span class="graph-stat">📊 实体: ${Utils.escapeHtml(String(data.graph_entity_count || 0))}</span>
+                <span class="graph-stat">🔗 关系: ${Utils.escapeHtml(String(data.graph_relation_count || 0))}</span>
             `;
         } catch (error) {
             console.error('加载图谱状态失败:', error);
@@ -150,14 +155,14 @@ const ReasoningModule = {
             const data = await API.graph.build();
 
             document.getElementById('graphStats').innerHTML = `
-                <span class="graph-stat">📊 实体: ${data.entity_count}</span>
-                <span class="graph-stat">🔗 关系: ${data.relation_count}</span>
-                <span class="graph-stat">📄 文档: ${data.document_count}</span>
+                <span class="graph-stat">📊 实体: ${Utils.escapeHtml(String(data.entity_count || 0))}</span>
+                <span class="graph-stat">🔗 关系: ${Utils.escapeHtml(String(data.relation_count || 0))}</span>
+                <span class="graph-stat">📄 文档: ${Utils.escapeHtml(String(data.document_count || 0))}</span>
             `;
 
             this.drawGraph(data);
         } catch (error) {
-            alert('构建图谱失败：' + error.message);
+            alert('构建图谱失败：' + (error.message || '未知错误'));
         } finally {
             btn.disabled = false;
             btn.textContent = '构建图谱';

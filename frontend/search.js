@@ -1,6 +1,11 @@
 import { API_BASE, state, escapeHtml } from './core.js';
 import { submitFeedback } from './feedback.js';
 
+let searchPage = 1;
+let searchQuery = '';
+let searchCategory = '';
+let searchHasMore = false;
+
 function initSearch() {
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
@@ -10,8 +15,10 @@ function initSearch() {
         const query = searchInput.value.trim();
         if (!query) return;
 
-        const category = categoryFilter.value;
-        performSearch(query, category);
+        searchQuery = query;
+        searchCategory = categoryFilter.value;
+        searchPage = 1;
+        performSearch(searchQuery, searchCategory, searchPage, true);
     };
 
     searchBtn.addEventListener('click', doSearch);
@@ -23,18 +30,20 @@ function initSearch() {
     });
 }
 
-async function performSearch(query, category = '') {
+async function performSearch(query, category = '', page = 1, replace = true) {
     const resultsDiv = document.getElementById('search-results');
-    resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>搜索中...</p></div>';
+    if (replace) {
+        resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>搜索中...</p></div>';
+    }
 
     try {
-        const params = new URLSearchParams({ q: query });
+        const params = new URLSearchParams({ q: query, limit: 20, offset: (page - 1) * 20 });
         if (category) params.append('category', category);
 
         const response = await fetch(`${API_BASE}/search?${params}`);
         const data = await response.json();
 
-        if (data.results.length === 0) {
+        if (data.results.length === 0 && page === 1) {
             resultsDiv.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">🔍</div>
@@ -45,10 +54,31 @@ async function performSearch(query, category = '') {
             return;
         }
 
-        resultsDiv.innerHTML = `
-            <p class="result-meta">找到 ${data.total} 条结果</p>
+        searchHasMore = data.results.length >= 20;
+
+        const newHtml = `
+            ${page === 1 ? `<p class="result-meta">找到 ${data.total} 条结果</p>` : ''}
             ${data.results.map(item => createResultItem(item, query)).join('')}
+            ${searchHasMore ? '<button id="load-more-search" class="btn btn-secondary" style="display:block;margin:16px auto;padding:10px 24px;">加载更多</button>' : ''}
         `;
+
+        if (replace) {
+            resultsDiv.innerHTML = newHtml;
+        } else {
+            const loadMoreBtn = resultsDiv.querySelector('#load-more-search');
+            if (loadMoreBtn) loadMoreBtn.remove();
+            resultsDiv.insertAdjacentHTML('beforeend', newHtml);
+        }
+
+        const loadMore = resultsDiv.querySelector('#load-more-search');
+        if (loadMore) {
+            loadMore.addEventListener('click', () => {
+                searchPage++;
+                loadMore.textContent = '加载中...';
+                loadMore.disabled = true;
+                performSearch(searchQuery, searchCategory, searchPage, false);
+            });
+        }
     } catch (error) {
         resultsDiv.innerHTML = `
             <div class="empty-state">

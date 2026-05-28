@@ -3,7 +3,11 @@ const ChatModule = {
     currentSessionId: null,
     isStreaming: false,
 
+    initialized: false,
+
     init() {
+        if (this.initialized) return;
+        this.initialized = true;
         this.bindEvents();
         this.loadSession();
     },
@@ -13,10 +17,8 @@ const ChatModule = {
         const chatInput = document.getElementById('chatInput');
         const charCount = document.querySelector('.char-count');
 
-        // 发送消息
         sendBtn.addEventListener('click', () => this.sendMessage());
 
-        // 回车发送（Shift+Enter换行）
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -24,7 +26,6 @@ const ChatModule = {
             }
         });
 
-        // 字符计数
         chatInput.addEventListener('input', () => {
             const len = chatInput.value.length;
             charCount.textContent = `${len} / 2000`;
@@ -79,7 +80,7 @@ const ChatModule = {
             this.addMessage('assistant', response.answer, response.sources);
         } catch (error) {
             this.removeLoading(loadingId);
-            this.addMessage('assistant', `抱歉，出错了：${error.message}`);
+            this.addMessage('assistant', `抱歉，出错了：${Utils.escapeHtml(error.message)}`);
         }
     },
 
@@ -148,7 +149,8 @@ const ChatModule = {
 
     formatContent(text) {
         if (!text) return '';
-        return text
+        const escaped = Utils.escapeHtml(text);
+        return escaped
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*([^*]+)\*/g, '<em>$1</em>')
             .replace(/`([^`]+)`/g, '<code>$1</code>')
