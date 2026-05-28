@@ -154,7 +154,7 @@ zhineng-knowledge-system/
 │   │   ├── database.py        # DatabaseConfig
 │   │   ├── redis.py           # RedisConfig
 │   │   ├── security.py        # SecurityConfig（JWT、CORS、API Key）
-│   │   └── lingzhi.py         # LingZhiConfig（遗留 DB 路径）
+│   │   └── lingzhi.py         # lingzhiConfig（遗留 DB 路径）
 │   ├── api/                   # API 路由
 │   │   ├── v1/                # v1 端点（documents, search, reasoning, books...）
 │   │   └── v2/                # v2 端点（复用 v1 router，authenticated）
@@ -1249,7 +1249,7 @@ OPENLIST_MIN_DELAY=1          # 最小延迟(秒)
 
 | 版本 | 日期 | 变更内容 | 作者 |
 |------|------|----------|------|
-| 1.0.0 | 2026-03-25 | 初始版本 | LingFlow |
+| 1.0.0 | 2026-03-25 | 初始版本 | lingflow |
 | 1.1.0 | 2026-03-30 | 新增第14章：系统资源管理规范 | Claude Code |
 | 2.0.0 | 2026-03-31 | 更新项目结构至当前架构；补充 SQL 命名规范 | Claude Code |
 | 2.0.0 | 2026-03-31 | 更新项目结构至当前架构；补充 SQL 命名规范；对齐 ENGINEERING_ALIGNMENT.md | Claude Code |

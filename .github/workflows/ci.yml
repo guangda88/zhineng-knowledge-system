@@ -96,7 +96,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: zhineng
-          POSTGRES_PASSWORD: zhineng123
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           POSTGRES_DB: zhineng_kb_test
         options: >-
           --health-cmd pg_isready
@@ -133,7 +133,7 @@ jobs:
 
     - name: 运行 pytest 测试
       env:
-        DATABASE_URL: postgresql://zhineng:zhineng123@localhost:5432/zhineng_kb_test
+        DATABASE_URL: postgresql://zhineng:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/zhineng_kb_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         pytest tests/ \

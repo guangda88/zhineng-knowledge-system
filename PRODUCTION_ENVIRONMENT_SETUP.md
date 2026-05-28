@@ -49,7 +49,7 @@ api:
 
 **手动执行脚本**（需要 root 权限）:
 ```bash
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db.sh
 ```
 
 **效果**:
@@ -124,8 +124,8 @@ services:
     container_name: zhineng-api-prod
     environment:
       PYTHONPATH: /app
-      DATABASE_URL: postgresql://zhineng:${POSTGRES_PASSWORD:-zhineng123}@postgres:5432/zhineng_kb
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+      DATABASE_URL: postgresql://zhineng:${POSTGRES_PASSWORD}@postgres:5432/zhineng_kb
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
       API_HOST: 0.0.0.0
       API_PORT: 8000
       LOG_LEVEL: INFO
@@ -198,13 +198,13 @@ After=network.target postgresql.service redis.service
 Type=notify
 User=zhineng
 Group=zhineng
-WorkingDirectory=/home/ai/zhineng-knowledge-system
-Environment="PATH=/home/ai/zhineng-knowledge-system/venv/bin"
-Environment="PYTHONPATH=/home/ai/zhineng-knowledge-system/backend"
-EnvironmentFile=/home/ai/zhineng-knowledge-system/.env.prod
+WorkingDirectory=/home/ai/lingzhi
+Environment="PATH=/home/ai/lingzhi/venv/bin"
+Environment="PYTHONPATH=/home/ai/lingzhi/backend"
+EnvironmentFile=/home/ai/lingzhi/.env.prod
 
 # 使用 gunicorn 启动
-ExecStart=/home/ai/zhineng-knowledge-system/venv/bin/gunicorn \
+ExecStart=/home/ai/lingzhi/venv/bin/gunicorn \
     main:app \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
@@ -265,7 +265,7 @@ sudo journalctl -u zhineng-api -f
 
 **目录结构**:
 ```
-/home/ai/zhineng-knowledge-system/
+/home/ai/lingzhi/
 ├── docker-compose.yml                 # 开发环境（默认）
 ├── docker-compose.production.yml      # 生产环境
 ├── docker-compose.staging.yml         # 预发布环境
@@ -668,7 +668,7 @@ jobs:
 **立即执行**（今天）:
 ```bash
 # 执行 openlist 数据库优化
-sudo bash /home/ai/zhineng-knowledge-system/scripts/optimize_openlist_db.sh
+sudo bash /home/ai/lingzhi/scripts/optimize_openlist_db.sh
 ```
 
 **本周执行**:

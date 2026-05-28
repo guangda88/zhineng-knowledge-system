@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"$TOOL_INPUT\" | jq -r '.file_path // .filePath' | xargs -I {} python3 /home/ai/zhineng-knowledge-system/scripts/hooks/check_115_rate_limit.py {} 2>/dev/null || true",
+            "command": "echo \"$TOOL_INPUT\" | jq -r '.file_path // .filePath' | xargs -I {} python3 /home/ai/lingzhi/scripts/hooks/check_115_rate_limit.py {} 2>/dev/null || true",
             "timeout": 30,
             "statusMessage": "检查代码速率限制合规性..."
           }

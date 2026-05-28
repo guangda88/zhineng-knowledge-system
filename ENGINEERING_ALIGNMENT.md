@@ -245,7 +245,7 @@ Scopes: backend, frontend, api, db, auth, docs, ci
 ### ADR-004: Pydantic Settings 多继承配置
 
 - **背景**: 配置分散在多个文件中
-- **决策**: `Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, LingZhiConfig)` 多继承
+- **决策**: `Config(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig, lingzhiConfig)` 多继承
 - **原因**: 配置关注点分离，同时保持单一访问入口 `get_config()`
 - **日期**: 2026-03-25
 

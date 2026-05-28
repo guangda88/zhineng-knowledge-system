@@ -1,30 +1,55 @@
 # 灵知 (LingZhi) Handoff
 
 ## 最后更新
-2026-05-07
+2026-05-27
 
 ## 状态
 active
 
-## 上次完成
-AGENTS.md 瘦身 22KB→5.5KB (-75%)，详细内容提取到 docs/ 目录 (commit 3e382bdc)
+## 当前任务：智能健康与康养·师资培训教材编写
 
-## 当前任务
-无进行中任务
+**来源**：`/home/ai/下载/未来医学相关/智能健康与康养·师资培训教材大纲.docx`
+
+共四册，全部完成：
+
+| 册 | 书名 | docx | 大小 |
+|----|------|------|------|
+| 1 | 智能健康与预防医学 | ✅ 第1册_智能健康与预防医学_师资培训教材.docx | 99KB |
+| 2 | 中医非药物疗法与养生实操 | ✅ 中医非药物疗法与养生实操·师资培训教材.docx | 138KB |
+| 3 | 医学气功与导引功法 | ✅ 第三册_医学气功与导引功法_师资培训教材.docx | 185KB |
+| 4 | 四大场景健康宣教·实战 | ✅ 第四册_四大场景健康宣教_实战师资培训教材.docx | 80KB |
+
+路径：`/home/ai/下载/未来医学相关/师资培训教材/`
+
+## 知识库数据
+
+| 领域 | 文档数 |
+|------|--------|
+| 气功 | 61,323 |
+| 佛家 | 6,971 |
+| 科学 | 2,976 |
+| 武术 | 2,041 |
+| 道家 | 1,933 |
+| 心理学 | 1,564 |
+| 哲学 | 1,379 |
+| 儒家 | 1,196 |
+| 中医 | 565 |
+| **总计** | **79,948** |
+
+doc_chunks: 1,749,547（全有FTS+embedding，NVMe tablespace）
+
+## 索引状态
+
+- `idx_doc_chunks_search_vector_gin` (GIN) ✅ valid
+- `idx_doc_chunks_embedding_hnsw` (HNSW) — 重建中（work_mem=1GB, maintenance_work_mem=2GB, ~5min+）
+- 其他5个HNSW索引（documents/blocks/guoxue等）均 ✅ valid
 
 ## 阻塞项
-无
+
+- 灵通+ proxy Docker网络未通（阻塞LLM查询扩展）
 
 ## 下一步
-1. CRUSH.md (9.1KB) 可能需要单独瘦身
-2. 11 个预存测试失败待排查 (test_watchdog, test_retrieval, test_reasoning)
-3. 数据导入脚本 (import_confucian/tcm/martial/philosophy_wikisource.py) 待整合
 
-## 关键文件
-- AGENTS.md (5.5KB), docs/*.md (6个提取文档)
-- backend/ (FastAPI 应用主体)
-- init.sql (数据库 schema)
-- scripts/import_*.py (数据导入)
-
-## LingBus 线程
-- ec01829a280e4b79bf5581b489dea5f8 (AGENTS.md 瘦身完成通知)
+1. 验证HNSW索引重建完成
+2. 检索质量评估
+3. 灵康v2第一层：263K古籍embedding（等灵通提供数据源）

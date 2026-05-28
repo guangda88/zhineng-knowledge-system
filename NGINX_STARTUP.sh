@@ -7,8 +7,8 @@ docker rm zhineng-nginx 2>/dev/null || true
 docker run -d --name zhineng-nginx \
   --network zhineng-knowledge-system_zhineng-network \
   -p 8008:80 \
-  -v /home/ai/zhineng-knowledge-system/nginx/nginx.conf:/etc/nginx/nginx.conf:ro \
-  -v /home/ai/zhineng-knowledge-system/frontend:/usr/share/nginx/html:ro \
+  -v /home/ai/lingzhi/nginx/nginx.conf:/etc/nginx/nginx.conf:ro \
+  -v /home/ai/lingzhi/frontend:/usr/share/nginx/html:ro \
   --restart unless-stopped \
   nginx:alpine
 

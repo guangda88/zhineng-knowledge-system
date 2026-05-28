@@ -6,7 +6,7 @@ set -e
 echo "=== 测试LLM API包装器集成 ==="
 echo ""
 
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 
 # 1. 检查环境变量
 echo "1. 检查环境配置..."
@@ -41,7 +41,7 @@ echo ""
 echo "3. 测试LLM客户端初始化..."
 python3 - <<EOF
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 try:
     from backend.common.llm_api_wrapper import get_llm_client
@@ -60,7 +60,7 @@ echo "4. 测试推理模块集成..."
 python3 - <<EOF
 import sys
 import asyncio
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 async def test_reasoner():
     try:
@@ -90,7 +90,7 @@ echo ""
 echo "5. 测试所有推理模块导入..."
 python3 - <<EOF
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 try:
     from backend.services.reasoning.cot import CoTReasoner

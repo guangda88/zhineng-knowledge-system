@@ -678,9 +678,9 @@ docker-compose exec postgres pg_dump ...          # 导出数据库
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
 | POSTGRES_USER | zhineng | 数据库用户名 |
-| POSTGRES_PASSWORD | zhineng123 | 数据库密码 |
+| POSTGRES_PASSWORD | — | 数据库密码（必填） |
 | POSTGRES_DB | zhineng_kb | 数据库名 |
-| REDIS_PASSWORD | redis123 | Redis密码 |
+| REDIS_PASSWORD | — | Redis密码（必填） |
 | API_PORT | 8000 | API内部端口 |
 | RETENTION_DAYS | 7 | 备份保留天数 |
 

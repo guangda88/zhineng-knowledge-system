@@ -17,7 +17,7 @@
 运行自动安装脚本：
 
 ```bash
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 bash setup-dev-env.sh
 ```
 

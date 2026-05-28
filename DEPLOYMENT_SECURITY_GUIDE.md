@@ -233,11 +233,11 @@ curl -X OPTIONS http://localhost:8000/health \
 crontab -e
 
 # 添加以下任务：
-*/10 * * * * cd /home/ai/zhineng-knowledge-system && bash scripts/emergency_memory_recovery.sh >> logs/emergency_recovery.log 2>&1
-0 * * * * cd /home/ai/zhineng-knowledge-system && bash scripts/monitor_disk.sh >> logs/monitor_disk.log 2>&1
-*/30 * * * * cd /home/ai/zhineng-knowledge-system && bash scripts/monitor_docker.sh >> logs/monitor_docker.log 2>&1
-0 9 * * * cd /home/ai/zhineng-knowledge-system && bash scripts/daily_health_check.sh >> logs/daily_health.log 2>&1
-0 0 * * 0 cd /home/ai/zhineng-knowledge-system && bash scripts/weekly_capacity_review.sh >> logs/weekly_capacity.log 2>&1
+*/10 * * * * cd /home/ai/lingzhi && bash scripts/emergency_memory_recovery.sh >> logs/emergency_recovery.log 2>&1
+0 * * * * cd /home/ai/lingzhi && bash scripts/monitor_disk.sh >> logs/monitor_disk.log 2>&1
+*/30 * * * * cd /home/ai/lingzhi && bash scripts/monitor_docker.sh >> logs/monitor_docker.log 2>&1
+0 9 * * * cd /home/ai/lingzhi && bash scripts/daily_health_check.sh >> logs/daily_health.log 2>&1
+0 0 * * 0 cd /home/ai/lingzhi && bash scripts/weekly_capacity_review.sh >> logs/weekly_capacity.log 2>&1
 
 # 保存并退出
 ```
@@ -286,7 +286,7 @@ async def get_domain_stats(domain_name: str):
 ```bash
 # 创建日志轮转配置
 cat > /etc/logrotate.d/zhineng-knowledge-system << 'EOF'
-/home/ai/zhineng-knowledge-system/logs/*.log {
+/home/ai/lingzhi/logs/*.log {
     daily
     rotate 14
     compress

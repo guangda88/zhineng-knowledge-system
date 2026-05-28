@@ -23,7 +23,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # 项目根目录
-PROJECT_ROOT="/home/ai/zhineng-knowledge-system"
+PROJECT_ROOT="/home/ai/lingzhi"
 WORKFLOWS_DIR="$PROJECT_ROOT/.lingflow/workflows"
 
 # 日志函数
@@ -43,14 +43,14 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# 检查LingFlow是否安装
+# 检查lingflow是否安装
 check_lingflow() {
     if ! command -v lingflow &> /dev/null; then
-        log_error "LingFlow未安装"
-        echo "请安装LingFlow: pip install lingflow"
+        log_error "lingflow未安装"
+        echo "请安装lingflow: pip install lingflow"
         exit 1
     fi
-    log_success "LingFlow已安装: $(lingflow --version)"
+    log_success "lingflow已安装: $(lingflow --version)"
 }
 
 # 检查项目环境
@@ -91,7 +91,7 @@ show_banner() {
     echo ""
     echo "╔════════════════════════════════════════════════════════╗"
     echo "║    灵知系统 - 双团队并行工作流启动器                 ║"
-    echo "║    LingZhi System - Parallel Teams Launcher          ║"
+    echo "║    lingzhi System - Parallel Teams Launcher          ║"
     echo "╚════════════════════════════════════════════════════════╝"
     echo ""
     echo "版本: 1.0.0"

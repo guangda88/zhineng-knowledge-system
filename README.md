@@ -172,10 +172,10 @@ curl -X POST "http://localhost:8001/api/v1/domains/qigong/query" \
 
 ```bash
 # 数据库连接
-DATABASE_URL=postgresql://zhineng:zhineng123@postgres:5432/zhineng_kb
+DATABASE_URL=postgresql://zhineng:${DB_PASSWORD}@postgres:5432/zhineng_kb
 
 # Redis 连接
-REDIS_URL=redis://:redis123@redis:6379/0
+REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
 
 # AI API (可选)
 DEEPSEEK_API_KEY=your_api_key_here
@@ -224,7 +224,7 @@ zhineng-knowledge-system/
 ├── backend/                    # 后端服务
 │   ├── main.py                # FastAPI 主入口 (App Factory)
 │   ├── config/                # Pydantic Settings 配置包
-│   │   ├── __init__.py        # Config 单例 (BaseConfig+DB+Redis+Security+LingZhi)
+│   │   ├── __init__.py        # Config 单例 (BaseConfig+DB+Redis+Security+lingzhi)
 │   │   ├── base.py            # 基础配置 (环境、API、BGE、DeepSeek)
 │   │   ├── database.py        # 数据库配置
 │   │   ├── redis.py           # Redis 配置

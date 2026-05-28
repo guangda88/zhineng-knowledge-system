@@ -11,7 +11,8 @@ if [ -f .env ]; then
     REDIS_PASSWORD=$(grep "^REDIS_PASSWORD=" .env | cut -d'=' -f2)
     REDIS_PORT=$(docker-compose ps redis | grep -oP '0\.0\.0\.0:\K[0-9]+' || echo "6381")
 else
-    REDIS_PASSWORD="redis123"  # 默认值
+    REDIS_PASSWORD="${REDIS_PASSWORD:-}"
+    if [ -z "$REDIS_PASSWORD" ]; then echo "ERROR: REDIS_PASSWORD not set"; exit 1; fi
     REDIS_PORT="6381"
 fi
 
@@ -23,7 +24,7 @@ echo "配置："
 echo "  Redis URL: redis://:****@localhost:${REDIS_PORT}/0"
 echo ""
 
-cd /home/ai/zhineng-knowledge-system
+cd /home/ai/lingzhi
 
 # 检查Redis连接
 echo "1. 检查Redis连接..."
@@ -41,7 +42,7 @@ echo ""
 echo "2. 测试基本速率限制（5次/分钟）..."
 python3 - <<EOF
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 from backend.common.rate_limiter import DistributedRateLimiter
 
@@ -67,7 +68,7 @@ echo "3. 测试并发速率限制（3个槽位）..."
 python3 - <<EOF
 import sys
 import asyncio
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 from backend.common.rate_limiter import DistributedRateLimiter
 
@@ -109,7 +110,7 @@ echo "4. 测试令牌桶算法（平滑限流）..."
 python3 - <<EOF
 import sys
 import time
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 from backend.common.rate_limiter import TokenBucketRateLimiter
 
@@ -134,7 +135,7 @@ echo ""
 echo "5. 测试API监控功能..."
 python3 - <<EOF
 import sys
-sys.path.insert(0, '/home/ai/zhineng-knowledge-system')
+sys.path.insert(0, '/home/ai/lingzhi')
 
 from backend.common.api_monitor import record_api_call, get_api_stats
 
