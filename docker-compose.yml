@@ -8,9 +8,9 @@ services:
     command:
     - postgres
     - -c
-    - shared_buffers=4GB
+    - shared_buffers=2GB
     - -c
-    - work_mem=64MB
+    - work_mem=16MB
     - -c
     - maintenance_work_mem=512MB
     - -c
@@ -48,7 +48,7 @@ services:
       resources:
         limits:
           cpus: '4.0'
-          memory: 4G
+          memory: 8G
         reservations:
           cpus: '1.0'
           memory: 2G

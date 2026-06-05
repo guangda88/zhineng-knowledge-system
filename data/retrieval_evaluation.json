@@ -1,0 +1,613 @@
+{
+  "timestamp": "2026-06-05T05:52:00",
+  "summary": {
+    "total_queries": 27,
+    "hit_rate": 92.5925925925926,
+    "avg_latency_ms": 4393.991822333731,
+    "avg_top1_sim": 0.7340054684947769,
+    "avg_top3_sim": 0.7001424065659841,
+    "avg_top5_sim": 0.6935418220985734
+  },
+  "results": [
+    {
+      "query": "混元气的本质是什么",
+      "category": "气功",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 216.1663589067757,
+      "top1_sim": 0.8247467979939715,
+      "top3_avg_sim": 0.7639541660796251,
+      "top5_avg_sim": 0.7498665115267423,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "气功",
+        "古籍",
+        "教材"
+      ]
+    },
+    {
+      "query": "练功时杂念很多怎么办",
+      "category": "气功",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 84.82257113792002,
+      "top1_sim": 0.8430819792004876,
+      "top3_avg_sim": 0.7805611056517471,
+      "top5_avg_sim": 0.7656140785143444,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "气功",
+        "古籍",
+        "教材"
+      ]
+    },
+    {
+      "query": "气功与中医经络的关系",
+      "category": "气功",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 17613.20226988755,
+      "top1_sim": 0.8429977642596468,
+      "top3_avg_sim": 0.8059878381389521,
+      "top5_avg_sim": 0.7938225342076016,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "气功",
+        "古籍",
+        "教材"
+      ]
+    },
+    {
+      "query": "五脏六腑的功能",
+      "category": "中医",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 18.18216103129089,
+      "top1_sim": 0.7726115218583206,
+      "top3_avg_sim": 0.7474856397415697,
+      "top5_avg_sim": 0.7456847988424664,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "中医",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "体质虚寒如何调理",
+      "category": "中医",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 13.721415074542165,
+      "top1_sim": 0.7174562980260684,
+      "top3_avg_sim": 0.688102536343625,
+      "top5_avg_sim": 0.6791332439026401,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "中医",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "中医与哲学阴阳五行",
+      "category": "中医",
+      "type": "跨领域",
+      "hit": false,
+      "result_count": 0,
+      "latency_ms": 22164.256803924218,
+      "top1_sim": 0,
+      "top3_avg_sim": 0,
+      "top5_avg_sim": 0,
+      "source_tables": [],
+      "top_categories": []
+    },
+    {
+      "query": "仁义礼智信的含义",
+      "category": "儒家",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 5.3656629752367735,
+      "top1_sim": 0.7382642498735947,
+      "top3_avg_sim": 0.7153380985549543,
+      "top5_avg_sim": 0.7289861705182092,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "儒家",
+        "古籍",
+        "教材",
+        "气功",
+        "佛家"
+      ]
+    },
+    {
+      "query": "如何修身齐家",
+      "category": "儒家",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 4.714056849479675,
+      "top1_sim": 0.6416275501251221,
+      "top3_avg_sim": 0.6354762138247839,
+      "top5_avg_sim": 0.641220737774393,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "儒家",
+        "古籍",
+        "教材",
+        "佛家"
+      ]
+    },
+    {
+      "query": "儒家思想对现代教育的影响",
+      "category": "儒家",
+      "type": "跨领域",
+      "hit": false,
+      "result_count": 0,
+      "latency_ms": 22107.67097887583,
+      "top1_sim": 0,
+      "top3_avg_sim": 0,
+      "top5_avg_sim": 0,
+      "source_tables": [],
+      "top_categories": []
+    },
+    {
+      "query": "四圣谛八正道",
+      "category": "佛家",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 24.15518299676478,
+      "top1_sim": 0.6564068011752651,
+      "top3_avg_sim": 0.6542476560211672,
+      "top5_avg_sim": 0.6405915803173571,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "佛家",
+        "教材"
+      ]
+    },
+    {
+      "query": "禅修入门方法",
+      "category": "佛家",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 19.55053210258484,
+      "top1_sim": 0.6828453540802002,
+      "top3_avg_sim": 0.676459358667009,
+      "top5_avg_sim": 0.6820515313951212,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "佛家",
+        "教材",
+        "气功",
+        "道家"
+      ]
+    },
+    {
+      "query": "佛教与心理学正念",
+      "category": "佛家",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 10.10652189143002,
+      "top1_sim": 0.6802609944032437,
+      "top3_avg_sim": 0.6624080011879127,
+      "top5_avg_sim": 0.6575686618430312,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "心理学",
+        "气功",
+        "古籍",
+        "教材",
+        "佛家"
+      ]
+    },
+    {
+      "query": "道德经第一章解读",
+      "category": "道家",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 19.600844010710716,
+      "top1_sim": 0.7412477731704712,
+      "top3_avg_sim": 0.7198099756200875,
+      "top5_avg_sim": 0.7088779161796148,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "道家",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "无为而治在管理中的应用",
+      "category": "道家",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 10.436570039018989,
+      "top1_sim": 0.7278319597244263,
+      "top3_avg_sim": 0.6965907017389933,
+      "top5_avg_sim": 0.6799962675821313,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "道家",
+        "古籍",
+        "教材",
+        "心理学",
+        "儒家"
+      ]
+    },
+    {
+      "query": "道家养生与气功",
+      "category": "道家",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 13408.991029020399,
+      "top1_sim": 0.7906432276580808,
+      "top3_avg_sim": 0.7577697735251278,
+      "top5_avg_sim": 0.7447684467566782,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "气功",
+        "古籍",
+        "教材"
+      ]
+    },
+    {
+      "query": "太极拳的基本功法",
+      "category": "武术",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 12.5110421795398,
+      "top1_sim": 0.7732719914155025,
+      "top3_avg_sim": 0.7357698889479288,
+      "top5_avg_sim": 0.7285271681341348,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "武术",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "如何提高武术实战能力",
+      "category": "武术",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 9.281447157263756,
+      "top1_sim": 0.709720986502113,
+      "top3_avg_sim": 0.6976883469080732,
+      "top5_avg_sim": 0.6860658514815994,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "武术",
+        "古籍",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "武术与中医筋骨理论",
+      "category": "武术",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 10228.003637865186,
+      "top1_sim": 0.798807036947786,
+      "top3_avg_sim": 0.7046825736239338,
+      "top5_avg_sim": 0.6831419862829173,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "武术",
+        "气功",
+        "古籍",
+        "教材"
+      ]
+    },
+    {
+      "query": "存在主义的核心观点",
+      "category": "哲学",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 8.98368889465928,
+      "top1_sim": 0.7230482316925598,
+      "top3_avg_sim": 0.6948936450182904,
+      "top5_avg_sim": 0.6859850605234559,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "哲学",
+        "古籍",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "意识与物质的关系",
+      "category": "哲学",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 8.191948058083653,
+      "top1_sim": 0.7015686390914155,
+      "top3_avg_sim": 0.6770518673911848,
+      "top5_avg_sim": 0.7038977616195553,
+      "source_tables": [
+        "guoxue_content",
+        "documents",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "古籍",
+        "哲学",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "中西方哲学比较",
+      "category": "哲学",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 9390.025546075776,
+      "top1_sim": 0.7969776629500889,
+      "top3_avg_sim": 0.7626583262721863,
+      "top5_avg_sim": 0.7515424130650235,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "哲学",
+        "古籍",
+        "教材"
+      ]
+    },
+    {
+      "query": "量子力学基本原理",
+      "category": "科学",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 20.125715993344784,
+      "top1_sim": 0.6362263993947075,
+      "top3_avg_sim": 0.6114655556174151,
+      "top5_avg_sim": 0.6263354910547753,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "科学",
+        "古籍",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "人工智能的发展趋势",
+      "category": "科学",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 12.772438814863563,
+      "top1_sim": 0.7288806438446045,
+      "top3_avg_sim": 0.6663675506909689,
+      "top5_avg_sim": 0.6435530953212839,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "科学",
+        "古籍",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "科学与哲学的认识论",
+      "category": "科学",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 11933.425854193047,
+      "top1_sim": 0.7729903594857254,
+      "top3_avg_sim": 0.7322170297970171,
+      "top5_avg_sim": 0.7213764082777818,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "科学",
+        "哲学",
+        "古籍",
+        "气功",
+        "教材"
+      ]
+    },
+    {
+      "query": "认知行为疗法CBT原理",
+      "category": "心理学",
+      "type": "精确",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 13.55836191214621,
+      "top1_sim": 0.6858781763387826,
+      "top3_avg_sim": 0.6224575806193222,
+      "top5_avg_sim": 0.6088277994290691,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "心理学",
+        "古籍",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "如何缓解焦虑情绪",
+      "category": "心理学",
+      "type": "模糊",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 16.01862208917737,
+      "top1_sim": 0.6946105178958498,
+      "top3_avg_sim": 0.6458860490955365,
+      "top5_avg_sim": 0.6425036974142161,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "心理学",
+        "古籍",
+        "教材",
+        "气功"
+      ]
+    },
+    {
+      "query": "心理学与佛学冥想",
+      "category": "心理学",
+      "type": "跨领域",
+      "hit": true,
+      "result_count": 10,
+      "latency_ms": 11263.937941053882,
+      "top1_sim": 0.6681337952613878,
+      "top3_avg_sim": 0.6482306850721943,
+      "top5_avg_sim": 0.638606340500192,
+      "source_tables": [
+        "documents",
+        "guoxue_content",
+        "textbook_blocks_v2",
+        "doc_chunks"
+      ],
+      "top_categories": [
+        "心理学",
+        "气功",
+        "古籍",
+        "教材"
+      ]
+    }
+  ]
+}
