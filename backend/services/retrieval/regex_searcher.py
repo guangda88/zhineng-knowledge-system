@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 class RegexSearcher:
     """正则表达式搜索器"""
 
+    ALLOWED_TABLES = frozenset(["documents", "guoxue_content", "textbook_blocks_v2"])
+    _REGEX_FLAGS = {True: "", False: "i"}
+
     def __init__(self, db_pool: asyncpg.Pool):
         """
         初始化正则搜索器
@@ -26,6 +29,12 @@ class RegexSearcher:
 
         # 默认搜索的表
         self.default_tables = ["documents", "guoxue_content", "textbook_blocks_v2"]
+
+    def _validate_table(self, table: str) -> str:
+        """校验表名是否在白名单中，防止SQL注入"""
+        if table not in self.ALLOWED_TABLES:
+            raise ValueError(f"非法表名: {table}")
+        return table
 
     async def search(
         self,
@@ -53,10 +62,16 @@ class RegexSearcher:
             return []
 
         tables = tables or self.default_tables
+        limit = int(limit)
 
         results = []
 
         for table in tables:
+            try:
+                self._validate_table(table)
+            except ValueError as e:
+                logger.warning(f"表名校验失败: {e}")
+                continue
             try:
                 table_results = await self._search_table(
                     table, pattern, category, limit, case_sensitive
@@ -89,8 +104,7 @@ class RegexSearcher:
         Returns:
             匹配的文档列表
         """
-        # 构建查询
-        regex_flags = "" if case_sensitive else "i"  # 'i' 表示不区分大小写
+        regex_flags = self._REGEX_FLAGS[case_sensitive]
 
         # 基础查询
         base_query = f"""
@@ -99,7 +113,7 @@ class RegexSearcher:
                 title,
                 content,
                 category,
-                {table} as source_table
+                '{table}' as source_table
             FROM {table}
             WHERE content ~ $1
         """
@@ -111,10 +125,12 @@ class RegexSearcher:
             params.append(category)
 
         # 添加排序（按匹配数量）
+        next_param = len(params) + 1
         base_query += f"""
             ORDER BY array_length(regexp_matches(content, $1, '{regex_flags}'), 1) DESC NULLS LAST
-            LIMIT {limit}
+            LIMIT ${next_param}
         """
+        params.append(limit)
 
         # 执行查询
         rows = await self.db_pool.fetch(base_query, *params)
@@ -155,8 +171,8 @@ class RegexSearcher:
             匹配信息字典 {"count": int, "positions": List[Dict]}
         """
         try:
-            # 查询匹配位置
-            regex_flags = "" if case_sensitive else "i"
+            self._validate_table(table)
+            regex_flags = self._REGEX_FLAGS[case_sensitive]
             sql = f"""
                 SELECT
                     regexp_matches(content, $1, '{regex_flags}') as matches,
@@ -207,6 +223,7 @@ class RegexSearcher:
             文档内容
         """
         try:
+            self._validate_table(table)
             sql = f"""
                 SELECT content
                 FROM {table}
@@ -307,7 +324,8 @@ class RegexSearcher:
 
         for table in tables:
             try:
-                regex_flags = "" if case_sensitive else "i"
+                self._validate_table(table)
+                regex_flags = self._REGEX_FLAGS[case_sensitive]
                 sql = f"""
                     SELECT COUNT(*) as count
                     FROM {table}
