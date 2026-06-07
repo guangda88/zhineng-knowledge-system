@@ -24,7 +24,7 @@ class TestUserProfile:
     def test_create_user_profile(self, test_user_id):
         """测试创建用户画像"""
         response = client.post(
-            "/user/profiles",
+            "/api/v1/user/profiles",
             json={
                 "user_id": test_user_id,
                 "current_level": "入门",
@@ -36,13 +36,13 @@ class TestUserProfile:
 
     def test_get_user_profile(self, test_user_id):
         """测试获取用户画像"""
-        response = client.get(f"/user/profiles/{test_user_id}")
+        response = client.get(f"/api/v1/user/profiles/{test_user_id}")
         assert response.status_code in [200, 404, 500, 503, 401]
 
     def test_update_user_profile(self, test_user_id):
         """测试更新用户画像"""
         response = client.put(
-            f"/user/profiles/{test_user_id}",
+            f"/api/v1/user/profiles/{test_user_id}",
             json={"current_level": "初级", "assessment_score": 80.0},
         )
         assert response.status_code in [200, 404, 500, 503, 401]
@@ -59,7 +59,7 @@ class TestLifeStateTracking:
     def test_create_life_state_tracking(self, test_user_id):
         """测试记录生活状态"""
         response = client.post(
-            "/user/life-state",
+            "/api/v1/user/life-state",
             json={
                 "user_id": test_user_id,
                 "physical_health": 7,
@@ -74,12 +74,12 @@ class TestLifeStateTracking:
 
     def test_get_life_state_tracking(self, test_user_id):
         """测试获取生活状态记录"""
-        response = client.get(f"/user/life-state/{test_user_id}")
+        response = client.get(f"/api/v1/user/life-state/{test_user_id}")
         assert response.status_code in [200, 500, 503, 401]
 
     def test_get_life_state_summary(self, test_user_id):
         """测试获取生活状态统计摘要"""
-        response = client.get(f"/user/life-state/{test_user_id}/summary")
+        response = client.get(f"/api/v1/user/life-state/{test_user_id}/summary")
         assert response.status_code in [200, 500, 503, 401]
 
 
@@ -94,7 +94,7 @@ class TestPracticeRecords:
     def test_create_practice_record(self, test_user_id):
         """测试记录练习"""
         response = client.post(
-            "/user/practice",
+            "/api/v1/user/practice",
             json={
                 "user_id": test_user_id,
                 "concept": "站桩",
@@ -109,12 +109,12 @@ class TestPracticeRecords:
 
     def test_get_practice_records(self, test_user_id):
         """测试获取练习记录"""
-        response = client.get(f"/user/practice/{test_user_id}")
+        response = client.get(f"/api/v1/user/practice/{test_user_id}")
         assert response.status_code in [200, 500, 503, 401]
 
     def test_get_practice_summary(self, test_user_id):
         """测试获取练习统计摘要"""
-        response = client.get(f"/user/practice/{test_user_id}/summary")
+        response = client.get(f"/api/v1/user/practice/{test_user_id}/summary")
         assert response.status_code in [200, 500, 503, 401]
 
 
@@ -131,7 +131,7 @@ class TestPracticePlans:
         start_date = date.today()
         end_date = date(start_date.year, start_date.month + 1, start_date.day)
         response = client.post(
-            "/user/plans",
+            "/api/v1/user/plans",
             json={
                 "user_id": test_user_id,
                 "plan_name": "30天站桩计划",
@@ -145,13 +145,13 @@ class TestPracticePlans:
 
     def test_get_practice_plans(self, test_user_id):
         """测试获取练习计划"""
-        response = client.get(f"/user/plans/{test_user_id}")
+        response = client.get(f"/api/v1/user/plans/{test_user_id}")
         assert response.status_code in [200, 500, 503, 401]
 
     def test_update_practice_plan(self, test_user_id):
         """测试更新练习计划"""
         response = client.put(
-            "/user/plans/1",
+            "/api/v1/user/plans/1",
             json={"status": "completed"},
         )
         assert response.status_code in [200, 404, 500, 503, 401]

@@ -4,6 +4,7 @@
 """
 
 import logging
+import shlex
 import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -121,15 +122,52 @@ class InnovationManager:
             logger.error(f"Failed to create branch: {e}")
             return {"status": "error", "error": str(e)}
 
-    def _validate_command(self, command: str) -> None:
-        """验证命令安全性，防止命令注入攻击
+    _ALLOWED_COMMANDS = {
+        "python", "python3", "pytest", "pip", "pip3",
+        "node", "npm", "npx",
+        "git", "echo", "cat", "ls", "grep", "find",
+        "make", "cargo", "go",
+        "curl", "wget",
+    }
 
-        检测危险的 shell 元字符：; | & $ ` ( ) < > 以及换行符
+    _BLOCKED_PATTERNS = {
+        "rm", "rmdir", "mkfs", "dd", "format",
+        "shutdown", "reboot", "poweroff",
+        "passwd", "su", "sudo", "doas",
+        "nc", "ncat", "netcat",
+        "bash", "sh", "zsh", "fish",
+        "chmod", "chown", "chgrp",
+        "mount", "umount",
+        "iptables", "ufw",
+        "crontab", "at",
+        ">",
+    }
+
+    def _validate_command(self, command: str) -> list[str]:
+        """验证命令安全性，解析为参数列表
+
+        使用 shlex.split 替代 blocklist，从根本上杜绝 shell 注入。
+        额外检查命令白名单和危险模式黑名单。
         """
-        dangerous_chars = [";", "|", "&", "$", "`", "(", ")", "<", ">", "\n", "\r"]
-        for char in dangerous_chars:
-            if char in command:
-                raise ValueError(f"命令包含危险字符 '{char}'，可能存在命令注入风险: {command}")
+        try:
+            args = shlex.split(command)
+        except ValueError as e:
+            raise ValueError(f"命令解析失败: {e}") from e
+        if not args:
+            raise ValueError("命令不能为空")
+
+        base_cmd = args[0].rsplit("/", 1)[-1]
+        if base_cmd in self._BLOCKED_PATTERNS:
+            raise ValueError(f"禁止的命令: {base_cmd}")
+        if base_cmd not in self._ALLOWED_COMMANDS:
+            raise ValueError(
+                f"不允许的命令: {base_cmd}。"
+                f"允许的命令: {', '.join(sorted(self._ALLOWED_COMMANDS))}"
+            )
+        for arg in args[1:]:
+            if arg in (";", "&&", "||", "|", "`", "$(", ">", ">>", "<<"):
+                raise ValueError(f"命令包含非法字符: {arg}")
+        return args
 
     async def run_mvp_test(self, proposal_id: str, test_commands: List[str]) -> Dict[str, Any]:
         """运行MVP测试
@@ -145,16 +183,15 @@ class InnovationManager:
 
         for i, command in enumerate(test_commands):
             try:
-                # 安全验证：检查命令是否包含危险的 shell 元字符
-                self._validate_command(command)
+                args = self._validate_command(command)
 
                 result = subprocess.run(
-                    command,
-                    shell=True,
+                    args,
+                    shell=False,
                     cwd=self.project_root,
                     capture_output=True,
                     text=True,
-                    timeout=300,  # 5分钟超时
+                    timeout=300,
                 )
 
                 test_result = {

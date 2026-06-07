@@ -1,76 +1,48 @@
 # -*- coding: utf-8 -*-
-"""
-性能分析工具
-Performance Analyzer
+"""性能分析工具 — asyncpg 版
 
 分析系统性能，包括查询响应时间、吞吐量、并发能力等
 """
 
-import sys
-sys.path.insert(0, '/home/ai/lingzhi/services/web_app/backend')
-
 import asyncio
-import os
-import time
-import logging
-import statistics
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Any, Tuple
 import json
-from concurrent.futures import ThreadPoolExecutor
+import logging
+import os
+import statistics
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Any
+
 import aiohttp
+import asyncpg
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import select, func, text
+from backend.core.dependency_injection import get_db_pool
 
-from database.models import SearchHistory, Document, User
-from common.logging_config import setup_logging
+logger = logging.getLogger(__name__)
 
-logger = setup_logging(__name__)
-
-# =============================================================================
-# 配置
-# =============================================================================
-
-DATABASE_URL = os.environ.get("ANALYTICS_DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("ANALYTICS_DATABASE_URL not set")
 API_BASE_URL = "http://localhost:8000"
 OUTPUT_DIR = Path("/home/ai/lingzhi/analytics/reports")
 
-# =============================================================================
-# 性能测试类
-# =============================================================================
 
 class PerformanceAnalyzer:
-    """性能分析器"""
-
-    def __init__(self, engine, output_dir: Path = OUTPUT_DIR):
-        self.engine = engine
+    def __init__(self, pool: asyncpg.Pool, output_dir: Path = OUTPUT_DIR):
+        self.pool = pool
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.session_factory = sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
 
     async def analyze_query_performance(self) -> Dict[str, Any]:
-        """分析查询性能"""
         logger.info("Analyzing query performance...")
 
-        async with self.session_factory() as session:
-            # 获取搜索历史数据
-            result = await session.execute(
-                select(SearchHistory)
-                .order_by(SearchHistory.created_at.desc())
-                .limit(10000)
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT response_time_ms, search_type FROM search_history ORDER BY created_at DESC LIMIT 10000"
             )
-            histories = result.scalars().all()
 
-            if not histories:
+            if not rows:
                 return {"error": "No search history found"}
 
-            # 计算响应时间统计
-            response_times = [h.response_time_ms for h in histories]
+            response_times = [r["response_time_ms"] for r in rows]
 
             stats = {
                 "count": len(response_times),
@@ -85,63 +57,46 @@ class PerformanceAnalyzer:
                 "p99_ms": self._percentile(response_times, 99),
             }
 
-            # 按搜索类型分组
-            type_stats = {}
-            for hist in histories:
-                search_type = hist.search_type
-                if search_type not in type_stats:
-                    type_stats[search_type] = []
-                type_stats[search_type].append(hist.response_time_ms)
+            type_stats: Dict[str, List[float]] = {}
+            for r in rows:
+                st = r["search_type"]
+                type_stats.setdefault(st, []).append(r["response_time_ms"])
 
-            for search_type, times in type_stats.items():
-                type_stats[search_type] = {
+            stats["by_search_type"] = {
+                st: {
                     "count": len(times),
                     "mean_ms": statistics.mean(times),
                     "median_ms": statistics.median(times),
                     "p95_ms": self._percentile(times, 95),
                 }
+                for st, times in type_stats.items()
+            }
 
-            stats["by_search_type"] = type_stats
-
-        logger.info(f"✅ Query performance analysis complete")
+        logger.info("Done: query performance analysis")
         return stats
 
     async def analyze_throughput(self, duration_seconds: int = 60) -> Dict[str, Any]:
-        """分析吞吐量"""
         logger.info(f"Analyzing throughput for {duration_seconds}s...")
 
-        # 并发执行多个查询
         concurrent_levels = [1, 5, 10, 20, 50]
         results = {}
 
         async with aiohttp.ClientSession() as session:
             for concurrency in concurrent_levels:
                 logger.info(f"Testing concurrency level: {concurrency}")
-
-                tasks = []
+                tasks: List[float] = []
                 start_time = time.time()
                 request_count = 0
 
                 while time.time() - start_time < duration_seconds:
-                    # 创建并发任务
-                    batch_tasks = []
-                    for _ in range(concurrency):
-                        task = self._make_search_request(session)
-                        batch_tasks.append(task)
-                        request_count += 1
-
-                    # 执行并发任务
+                    batch_tasks = [self._make_search_request(session) for _ in range(concurrency)]
+                    request_count += concurrency
                     batch_times = await asyncio.gather(*batch_tasks, return_exceptions=True)
                     successful_times = [t for t in batch_times if isinstance(t, float) and t > 0]
-
-                    if successful_times:
-                        tasks.extend(successful_times)
-
-                    # 控制测试时长
+                    tasks.extend(successful_times)
                     if time.time() - start_time >= duration_seconds:
                         break
 
-                # 计算统计数据
                 if tasks:
                     results[concurrency] = {
                         "requests": request_count,
@@ -159,149 +114,104 @@ class PerformanceAnalyzer:
                         "throughput_rps": 0,
                     }
 
-        logger.info(f"✅ Throughput analysis complete")
+        logger.info("Done: throughput analysis")
         return results
 
     async def _make_search_request(self, session: aiohttp.ClientSession) -> float:
-        """执行搜索请求"""
         start_time = time.time()
         try:
             async with session.get(
                 f"{API_BASE_URL}/api/search",
-                params={
-                    "query": "测试",
-                    "limit": 10,
-                },
-                timeout=aiohttp.ClientTimeout(total=10)
+                params={"query": "测试", "limit": 10},
+                timeout=aiohttp.ClientTimeout(total=10),
             ) as response:
                 if response.status == 200:
-                    end_time = time.time()
-                    return (end_time - start_time) * 1000
-                else:
-                    return 0
-        except Exception as e:
-            logger.warning(f"Search request failed: {e}")
+                    return (time.time() - start_time) * 1000
+                return 0
+        except Exception:
             return 0
 
     async def analyze_database_performance(self) -> Dict[str, Any]:
-        """分析数据库性能"""
         logger.info("Analyzing database performance...")
-
         stats = {}
 
-        async with self.session_factory() as session:
-            # 测试表扫描性能
+        async with self.pool.acquire() as conn:
             for table_name in ["users", "documents", "document_chunks"]:
-                start_time = time.time()
-                result = await session.execute(
-                    text(f"SELECT COUNT(*) FROM {table_name}")
-                )
-                count = result.scalar()
-                end_time = time.time()
+                t0 = time.time()
+                row = await conn.fetchrow(f"SELECT COUNT(*) as cnt FROM {table_name}")
+                elapsed = (time.time() - t0) * 1000
+                stats[f"{table_name}_scan_ms"] = elapsed
+                stats[f"{table_name}_count"] = row["cnt"]
 
-                stats[f"{table_name}_scan_ms"] = (end_time - start_time) * 1000
-                stats[f"{table_name}_count"] = count
-
-            # 测试索引使用
             for table_name in ["users", "documents"]:
-                start_time = time.time()
-                result = await session.execute(
-                    text(f"SELECT COUNT(*) FROM {table_name} ORDER BY id LIMIT 1")
-                )
-                count = result.scalar()
-                end_time = time.time()
+                t0 = time.time()
+                await conn.fetchrow(f"SELECT id FROM {table_name} ORDER BY id LIMIT 1")
+                elapsed = (time.time() - t0) * 1000
+                stats[f"{table_name}_index_scan_ms"] = elapsed
 
-                stats[f"{table_name}_index_scan_ms"] = (end_time - start_time) * 1000
-
-            # 测试连接查询性能
-            start_time = time.time()
-            result = await session.execute(
-                select(User, Document)
-                .join(Document, User.id == Document.uploader_id)
-                .limit(100)
+            t0 = time.time()
+            rows = await conn.fetch(
+                "SELECT u.id as user_id, d.id as doc_id FROM users u JOIN documents d ON u.id = d.uploader_id LIMIT 100"
             )
-            results = result.fetchall()
-            end_time = time.time()
+            elapsed = (time.time() - t0) * 1000
+            stats["join_query_ms"] = elapsed
+            stats["join_query_count"] = len(rows)
 
-            stats["join_query_ms"] = (end_time - start_time) * 1000
-            stats["join_query_count"] = len(results)
-
-        logger.info(f"✅ Database performance analysis complete")
+        logger.info("Done: database performance analysis")
         return stats
 
     async def analyze_system_health(self) -> Dict[str, Any]:
-        """分析系统健康状态"""
         logger.info("Analyzing system health...")
-
         stats = {}
 
-        async with self.session_factory() as session:
-            # 数据统计
-            for model, name in [(User, "users"), (Document, "documents"), (SearchHistory, "searches")]:
-                result = await session.execute(
-                    select(func.count(model.id))
-                )
-                stats[f"{name}_count"] = result.scalar()
+        async with self.pool.acquire() as conn:
+            for table in ["users", "documents", "search_history"]:
+                row = await conn.fetchrow(f"SELECT COUNT(*) as cnt FROM {table}")
+                stats[f"{table}_count"] = row["cnt"]
 
-            # 活跃用户
-            result = await session.execute(
-                select(func.count(User.id)).where(User.is_active == True)
-            )
-            stats["active_users"] = result.scalar()
+            row = await conn.fetchrow("SELECT COUNT(*) as cnt FROM users WHERE is_active")
+            stats["active_users"] = row["cnt"]
 
-            # 最近搜索（24小时内）
-            from datetime import timedelta
             recent = datetime.now() - timedelta(days=1)
-            result = await session.execute(
-                select(func.count(SearchHistory.id)).where(
-                    SearchHistory.created_at >= recent
-                )
+            row = await conn.fetchrow(
+                "SELECT COUNT(*) as cnt FROM search_history WHERE created_at >= $1", recent
             )
-            stats["recent_searches_24h"] = result.scalar()
+            stats["recent_searches_24h"] = row["cnt"]
 
-        logger.info(f"✅ System health analysis complete")
+        logger.info("Done: system health analysis")
         return stats
 
     def _percentile(self, data: List[float], p: int) -> float:
-        """计算百分位数"""
         sorted_data = sorted(data)
         index = (len(data) - 1) * p / 100
         return sorted_data[int(index)]
 
     async def generate_report(self) -> Dict[str, Any]:
-        """生成性能分析报告"""
         logger.info("=" * 50)
-        logger.info("Generating Performance Analysis Report")
+        logger.info("Generating Performance Analysis Report (asyncpg)")
         logger.info("=" * 50)
 
-        report = {
+        report: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "query_performance": await self.analyze_query_performance(),
             "system_health": await self.analyze_system_health(),
         }
 
-        # 数据库性能（可选）
         try:
             report["database_performance"] = await self.analyze_database_performance()
         except Exception as e:
             logger.warning(f"Database performance analysis skipped: {e}")
 
-        # 保存报告
         report_file = self.output_dir / f"performance_report_{datetime.now():%Y%m%d_%H%M%S}.json"
-        with open(report_file, 'w', encoding='utf-8') as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2, default=str)
+        logger.info(f"Performance report saved to {report_file}")
 
-        logger.info(f"✅ Performance report saved to {report_file}")
-
-        # 生成摘要
         summary_file = self.output_dir / "performance_summary.txt"
-        with open(summary_file, 'w', encoding='utf-8') as f:
-            f.write("=" * 50 + "\n")
-            f.write("性能分析摘要\n")
-            f.write("=" * 50 + "\n\n")
+        with open(summary_file, "w", encoding="utf-8") as f:
+            f.write("=" * 50 + "\n性能分析摘要\n" + "=" * 50 + "\n\n")
             f.write(f"报告时间: {report['timestamp']}\n\n")
 
-            # 查询性能摘要
             query_perf = report.get("query_performance", {})
             if "mean_ms" in query_perf:
                 f.write("【查询性能】\n")
@@ -310,54 +220,31 @@ class PerformanceAnalyzer:
                 f.write(f"最大响应时间: {query_perf['max_ms']:.2f}ms\n")
                 f.write(f"最小响应时间: {query_perf['min_ms']:.2f}ms\n\n")
 
-            # 系统健康摘要
             health = report.get("system_health", {})
             f.write("【系统健康】\n")
             f.write(f"用户总数: {health.get('users_count', 0)}\n")
             f.write(f"活跃用户: {health.get('active_users', 0)}\n")
             f.write(f"文档总数: {health.get('documents_count', 0)}\n")
-            f.write(f"搜索总数: {health.get('searches_count', 0)}\n")
+            f.write(f"搜索总数: {health.get('search_history_count', 0)}\n")
             f.write(f"最近24小时搜索: {health.get('recent_searches_24h', 0)}\n\n")
 
-        logger.info(f"✅ Summary saved to {summary_file}")
-
+        logger.info(f"Summary saved to {summary_file}")
         return report
 
 
-# =============================================================================
-# 主函数
-# =============================================================================
-
 async def main():
-    """主函数"""
     logger.info("=" * 50)
-    logger.info("Starting Performance Analysis")
+    logger.info("Starting Performance Analysis (asyncpg)")
     logger.info("=" * 50)
 
+    pool = get_db_pool()
     try:
-        # 创建数据库引擎
-        engine = create_async_engine(
-            DATABASE_URL,
-            echo=False,
-            pool_size=10,
-            max_overflow=20
-        )
-
-        # 创建性能分析器
-        analyzer = PerformanceAnalyzer(engine)
-
-        # 生成报告
-        report = await analyzer.generate_report()
-
-        logger.info("=" * 50)
+        analyzer = PerformanceAnalyzer(pool)
+        await analyzer.generate_report()
         logger.info("Performance Analysis Complete")
-        logger.info("=" * 50)
-
     except Exception as e:
         logger.error(f"Error analyzing performance: {e}", exc_info=True)
         raise
-    finally:
-        await engine.dispose()
 
 
 if __name__ == "__main__":

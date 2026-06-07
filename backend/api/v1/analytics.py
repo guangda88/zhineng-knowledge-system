@@ -4,6 +4,7 @@
 """
 
 import hashlib
+import json
 import logging
 import uuid
 from datetime import date, datetime, timedelta
@@ -11,11 +12,9 @@ from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import JSON, bindparam, text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.common.typing import JSONResponse
-from backend.core.database import get_async_session
+from backend.core.dependency_injection import get_db_pool, require_admin_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -126,49 +125,41 @@ def anonymize_content(content: str) -> str:
 
 
 async def get_or_create_user_profile(
-    db: AsyncSession, user_id: Optional[str], session_id: str
+    conn, user_id: Optional[str], session_id: str
 ) -> Dict[str, Any]:
     """获取或创建用户状态"""
     if user_id:
-        query = text(
+        row = await conn.fetchrow(
             """
             SELECT user_id, session_id, display_name, level, first_seen_at,
                    last_active_at, total_sessions, current_streak,
                    last_feedback_date, preferences
             FROM user_profile
-            WHERE user_id = :user_id
-        """
+            WHERE user_id = $1
+        """,
+            user_id,
         )
-        result = await db.execute(query, {"user_id": user_id})
-        row = result.fetchone()
 
         if row:
-            # 更新最后活跃时间
-            await db.execute(
-                text(
-                    """
-                    UPDATE user_profile
-                    SET last_active_at = NOW()
-                    WHERE user_id = :user_id
+            await conn.execute(
                 """
-                ),
-                {"user_id": user_id},
+                UPDATE user_profile
+                SET last_active_at = NOW()
+                WHERE user_id = $1
+            """,
+                user_id,
             )
-            await db.commit()
-            return dict(row._mapping)
+            return dict(row)
         else:
-            # 创建新用户状态
-            stmt = text(
+            await conn.execute(
                 """
                     INSERT INTO user_profile (user_id, session_id, level, preferences)
-                    VALUES (:user_id, :session_id, 'beginner', :preferences)
-                """
+                    VALUES ($1, $2, 'beginner', $3)
+                """,
+                user_id,
+                session_id,
+                json.dumps({}),
             )
-            stmt = stmt.bindparams(bindparam("preferences", type_=JSON))
-            await db.execute(
-                stmt, {"user_id": user_id, "session_id": session_id, "preferences": {}}
-            )
-            await db.commit()
             return {
                 "user_id": user_id,
                 "session_id": session_id,
@@ -178,43 +169,36 @@ async def get_or_create_user_profile(
                 "preferences": {},
             }
     else:
-        # 匿名用户
-        query = text(
+        row = await conn.fetchrow(
             """
             SELECT user_id, session_id, display_name, level, first_seen_at,
                    last_active_at, total_sessions, current_streak,
                    last_feedback_date, preferences
             FROM user_profile
-            WHERE session_id = :session_id
-        """
+            WHERE session_id = $1
+        """,
+            session_id,
         )
-        result = await db.execute(query, {"session_id": session_id})
-        row = result.fetchone()
 
         if row:
-            await db.execute(
-                text(
-                    """
-                    UPDATE user_profile
-                    SET last_active_at = NOW()
-                    WHERE session_id = :session_id
+            await conn.execute(
                 """
-                ),
-                {"session_id": session_id},
+                UPDATE user_profile
+                SET last_active_at = NOW()
+                WHERE session_id = $1
+            """,
+                session_id,
             )
-            await db.commit()
-            return dict(row._mapping)
+            return dict(row)
         else:
-            # 创建新的匿名用户状态
-            stmt = text(
+            await conn.execute(
                 """
                     INSERT INTO user_profile (session_id, level, preferences)
-                    VALUES (:session_id, 'guest', :preferences)
-                """
+                    VALUES ($1, 'guest', $2)
+                """,
+                session_id,
+                json.dumps({}),
             )
-            stmt = stmt.bindparams(bindparam("preferences", type_=JSON))
-            await db.execute(stmt, {"session_id": session_id, "preferences": {}})
-            await db.commit()
             return {
                 "user_id": None,
                 "session_id": session_id,
@@ -232,61 +216,52 @@ async def get_or_create_user_profile(
 async def track_activity(
     request: TrackActivityRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """记录用户活动
 
     追踪用户的搜索、问答、音频播放、书籍阅读等行为
     """
     try:
+        pool = get_db_pool()
         session_id = get_or_create_session_id(http_request)
         user_id = get_user_id(http_request)
 
-        # 获取用户隐私设置
-        profile = await get_or_create_user_profile(db, user_id, session_id)
-        privacy_mode = profile.get("preferences", {}).get("privacy_mode", "standard")
+        async with pool.acquire() as conn:
+            # 获取用户隐私设置
+            profile = await get_or_create_user_profile(conn, user_id, session_id)
+            privacy_mode = profile.get("preferences", {}).get("privacy_mode", "standard")
 
-        # 根据隐私设置决定是否记录具体内容
-        content_anonymous = None
-        content_to_store = request.content
-
-        if privacy_mode == "anonymous":
-            # 完全匿名模式：只记录hash
-            if request.content:
-                content_anonymous = anonymize_content(request.content)
-            content_to_store = None
-        elif privacy_mode == "standard":
-            # 标准模式：记录内容7天，之后只保留hash
-            content_to_store = request.content
-            if request.content:
-                content_anonymous = anonymize_content(request.content)
-        else:  # full
-            # 完全记录模式
+            # 根据隐私设置决定是否记录具体内容
+            content_anonymous = None
             content_to_store = request.content
 
-        # 记录活动
-        stmt = text(
-            """
+            if privacy_mode == "anonymous":
+                if request.content:
+                    content_anonymous = anonymize_content(request.content)
+                content_to_store = None
+            elif privacy_mode == "standard":
+                content_to_store = request.content
+                if request.content:
+                    content_anonymous = anonymize_content(request.content)
+            else:  # full
+                content_to_store = request.content
+
+            await conn.execute(
+                """
                 INSERT INTO user_activity_log
-                (user_id, session_id, action_type, content, content_anonymous, metadata, ip_address, user_agent)
-                VALUES (:user_id, :session_id, :action_type, :content, :content_anonymous, :metadata, :ip_address, :user_agent)
-            """
-        )
-        stmt = stmt.bindparams(bindparam("metadata", type_=JSON))
-        await db.execute(
-            stmt,
-            {
-                "user_id": user_id,
-                "session_id": session_id,
-                "action_type": request.action_type,
-                "content": content_to_store,
-                "content_anonymous": content_anonymous,
-                "metadata": request.metadata or {},
-                "ip_address": http_request.client.host if http_request.client else None,
-                "user_agent": http_request.headers.get("user-agent"),
-            },
-        )
-        await db.commit()
+                (user_id, session_id, action_type, content, content_anonymous,
+                 metadata, ip_address, user_agent)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                """,
+                user_id,
+                session_id,
+                request.action_type,
+                content_to_store,
+                content_anonymous,
+                json.dumps(request.metadata or {}),
+                http_request.client.host if http_request.client else None,
+                http_request.headers.get("user-agent"),
+            )
 
         logger.info(f"Activity tracked: {request.action_type} for user {user_id or session_id}")
 
@@ -301,54 +276,44 @@ async def track_activity(
 
 @router.post("/feedback/instant", response_model=JSONResponse)
 async def submit_instant_feedback(
-    request: FeedbackRequest, http_request: Request, db: AsyncSession = Depends(get_async_session)
+    request: FeedbackRequest, http_request: Request
 ):
     """提交即时反馈
 
     用户在使用某个功能后立即评价（好/中/差）
     """
     try:
+        pool = get_db_pool()
         session_id = get_or_create_session_id(http_request)
         user_id = get_user_id(http_request)
 
         # 差评时建议填写评论
         if request.rating == "poor" and not request.comment:
             logger.warning(f"Poor feedback without comment from {user_id or session_id}")
-            # 不强制要求，但记录警告
 
-        # 记录反馈
-        stmt = text(
-            """
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
                 INSERT INTO user_feedback
                 (user_id, session_id, feedback_type, rating, comment, context)
-                VALUES (:user_id, :session_id, 'instant', :rating, :comment, :context)
-            """
-        )
-        stmt = stmt.bindparams(bindparam("context", type_=JSON))
-        await db.execute(
-            stmt,
-            {
-                "user_id": user_id,
-                "session_id": session_id,
-                "rating": request.rating,
-                "comment": request.comment,
-                "context": request.context or {},
-            },
-        )
+                VALUES ($1, $2, 'instant', $3, $4, $5)
+                """,
+                user_id,
+                session_id,
+                request.rating,
+                request.comment,
+                json.dumps(request.context or {}),
+            )
 
-        # 更新用户状态
-        await db.execute(
-            text(
+            await conn.execute(
                 """
                 UPDATE user_profile
                 SET last_feedback_date = CURRENT_DATE
-                WHERE user_id = :user_id OR (user_id IS NULL AND session_id = :session_id)
-            """
-            ),
-            {"user_id": user_id, "session_id": session_id},
-        )
-
-        await db.commit()
+                WHERE user_id = $1 OR (user_id IS NULL AND session_id = $2)
+                """,
+                user_id,
+                session_id,
+            )
 
         logger.info(f"Instant feedback submitted: {request.rating} from {user_id or session_id}")
 
@@ -363,50 +328,40 @@ async def submit_instant_feedback(
 async def submit_extended_feedback(
     request: ExtendedFeedbackRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """提交深度反馈
 
     周度或月度满意度调查，要求填写文字意见
     """
     try:
+        pool = get_db_pool()
         session_id = get_or_create_session_id(http_request)
         user_id = get_user_id(http_request)
 
-        # 记录深度反馈
-        stmt = text(
-            """
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
                 INSERT INTO user_feedback
                 (user_id, session_id, feedback_type, rating, comment, context)
-                VALUES (:user_id, :session_id, :feedback_type, :rating, :comment, :context)
-            """
-        )
-        stmt = stmt.bindparams(bindparam("context", type_=JSON))
-        await db.execute(
-            stmt,
-            {
-                "user_id": user_id,
-                "session_id": session_id,
-                "feedback_type": request.feedback_type,
-                "rating": request.rating,
-                "comment": request.comment,
-                "context": request.additional_context or {},
-            },
-        )
+                VALUES ($1, $2, $3, $4, $5, $6)
+                """,
+                user_id,
+                session_id,
+                request.feedback_type,
+                request.rating,
+                request.comment,
+                json.dumps(request.additional_context or {}),
+            )
 
-        # 更新用户状态
-        await db.execute(
-            text(
+            await conn.execute(
                 """
                 UPDATE user_profile
                 SET last_feedback_date = CURRENT_DATE
-                WHERE user_id = :user_id OR (user_id IS NULL AND session_id = :session_id)
-            """
-            ),
-            {"user_id": user_id, "session_id": session_id},
-        )
-
-        await db.commit()
+                WHERE user_id = $1 OR (user_id IS NULL AND session_id = $2)
+                """,
+                user_id,
+                session_id,
+            )
 
         logger.info(
             f"Extended feedback submitted: {request.feedback_type} - {request.rating} from {user_id or session_id}"
@@ -422,13 +377,15 @@ async def submit_extended_feedback(
 
 
 @router.get("/me", response_model=UserProfile)
-async def get_my_profile(http_request: Request, db: AsyncSession = Depends(get_async_session)):
+async def get_my_profile(http_request: Request):
     """获取当前用户状态"""
     try:
+        pool = get_db_pool()
         session_id = get_or_create_session_id(http_request)
         user_id = get_user_id(http_request)
 
-        profile = await get_or_create_user_profile(db, user_id, session_id)
+        async with pool.acquire() as conn:
+            profile = await get_or_create_user_profile(conn, user_id, session_id)
 
         return UserProfile(
             user_id=profile.get("user_id"),
@@ -449,88 +406,68 @@ async def get_my_profile(http_request: Request, db: AsyncSession = Depends(get_a
 @router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard(
     period: Literal["7d", "30d", "90d"] = Query("7d", description="统计周期"),
-    db: AsyncSession = Depends(get_async_session),
+    _admin: bool = Depends(require_admin_api_key),
 ):
     """获取管理员仪表板数据
 
     仅限管理员访问
     """
-    try:
-        from backend.auth import require_permission
-
-        require_permission("system:metrics")
-    except (ImportError, NotImplementedError):
-        raise HTTPException(
-            status_code=503,
-            detail="权限服务不可用，请稍后重试",
-        )
 
     try:
+        pool = get_db_pool()
         # 计算日期范围
         days_map = {"7d": 7, "30d": 30, "90d": 90}
         days = days_map[period]
         start_date = datetime.now() - timedelta(days=days)
 
-        # 总用户数（去重session_id）
-        result = await db.execute(
-            text(
+        async with pool.acquire() as conn:
+            # 总用户数（去重session_id）
+            row = await conn.fetchrow(
                 """
                 SELECT COUNT(DISTINCT session_id) as total_users,
                        COUNT(DISTINCT user_id) as total_logged_in_users
                 FROM user_activity_log
-                WHERE created_at >= :start_date
-            """
-            ),
-            {"start_date": start_date},
-        )
-        row = result.fetchone()
-        total_users = row.total_users if row else 0
+                WHERE created_at >= $1
+                """,
+                start_date,
+            )
+            total_users = row["total_users"] if row else 0
 
-        # 活跃用户数（最近7天有活动）
-        result = await db.execute(
-            text(
+            # 活跃用户数（最近7天有活动）
+            row = await conn.fetchrow(
                 """
                 SELECT COUNT(DISTINCT session_id) as active_users
                 FROM user_activity_log
-                WHERE created_at >= :recent_start
-            """
-            ),
-            {"recent_start": datetime.now() - timedelta(days=7)},
-        )
-        row = result.fetchone()
-        active_users = row.active_users if row else 0
+                WHERE created_at >= $1
+                """,
+                datetime.now() - timedelta(days=7),
+            )
+            active_users = row["active_users"] if row else 0
 
-        # 总活动数
-        result = await db.execute(
-            text(
+            # 总活动数
+            row = await conn.fetchrow(
                 """
                 SELECT COUNT(*) as total_activities
                 FROM user_activity_log
-                WHERE created_at >= :start_date
-            """
-            ),
-            {"start_date": start_date},
-        )
-        row = result.fetchone()
-        total_activities = row.total_activities if row else 0
+                WHERE created_at >= $1
+                """,
+                start_date,
+            )
+            total_activities = row["total_activities"] if row else 0
 
-        # 总反馈数
-        result = await db.execute(
-            text(
+            # 总反馈数
+            row = await conn.fetchrow(
                 """
                 SELECT COUNT(*) as total_feedbacks
                 FROM user_feedback
-                WHERE created_at >= :start_date
-            """
-            ),
-            {"start_date": start_date},
-        )
-        row = result.fetchone()
-        total_feedbacks = row.total_feedbacks if row else 0
+                WHERE created_at >= $1
+                """,
+                start_date,
+            )
+            total_feedbacks = row["total_feedbacks"] if row else 0
 
-        # 平均评分（good=5, neutral=3, poor=1）
-        result = await db.execute(
-            text(
+            # 平均评分（good=5, neutral=3, poor=1）
+            row = await conn.fetchrow(
                 """
                 SELECT
                     AVG(CASE WHEN rating = 'good' THEN 5
@@ -538,75 +475,61 @@ async def get_dashboard(
                              WHEN rating = 'poor' THEN 1
                              END) as avg_rating
                 FROM user_feedback
-                WHERE created_at >= :start_date
-            """
-            ),
-            {"start_date": start_date},
-        )
-        row = result.fetchone()
-        avg_rating = float(row.avg_rating) if row and row.avg_rating else 0.0
+                WHERE created_at >= $1
+                """,
+                start_date,
+            )
+            avg_rating = float(row["avg_rating"]) if row and row["avg_rating"] else 0.0
 
-        # 评分分布
-        result = await db.execute(
-            text(
+            # 评分分布
+            rows = await conn.fetch(
                 """
                 SELECT rating, COUNT(*) as count
                 FROM user_feedback
-                WHERE created_at >= :start_date
+                WHERE created_at >= $1
                 GROUP BY rating
-            """
-            ),
-            {"start_date": start_date},
-        )
-        rows = result.fetchall()
-        rating_distribution = {row.rating: row.count for row in rows}
+                """,
+                start_date,
+            )
+            rating_distribution = {r["rating"]: r["count"] for r in rows}
 
-        # Top功能
-        result = await db.execute(
-            text(
+            # Top功能
+            rows = await conn.fetch(
                 """
                 SELECT action_type, COUNT(*) as count
                 FROM user_activity_log
-                WHERE created_at >= :start_date
+                WHERE created_at >= $1
                 GROUP BY action_type
                 ORDER BY count DESC
                 LIMIT 5
-            """
-            ),
-            {"start_date": start_date},
-        )
-        rows = result.fetchall()
-        top_features = [row.action_type for row in rows]
+                """,
+                start_date,
+            )
+            top_features = [r["action_type"] for r in rows]
 
-        # 留存率（简化计算）
-        # 7日留存：7天前活跃的用户中，今天还活跃的比例
-        result = await db.execute(
-            text(
+            # 留存率（简化计算）
+            row = await conn.fetchrow(
                 """
                 WITH users_7d_ago AS (
                     SELECT DISTINCT session_id
                     FROM user_activity_log
-                    WHERE created_at BETWEEN :start_7d AND :end_7d
+                    WHERE created_at BETWEEN $1 AND $2
                 ),
                 users_today AS (
                     SELECT DISTINCT session_id
                     FROM user_activity_log
-                    WHERE created_at >= :today_start
+                    WHERE created_at >= $3
                 )
                 SELECT
                     COUNT(DISTINCT u.session_id) * 1.0 / NULLIF(COUNT(DISTINCT t.session_id), 0) as retention_rate
                 FROM users_7d_ago t
                 LEFT JOIN users_today u ON t.session_id = u.session_id
-            """
-            ),
-            {
-                "start_7d": datetime.now() - timedelta(days=14),
-                "end_7d": datetime.now() - timedelta(days=7),
-                "today_start": datetime.now() - timedelta(days=1),
-            },
-        )
-        row = result.fetchone()
-        retention_7d = float(row.retention_rate) if row and row.retention_rate else 0.0
+                """,
+                datetime.now() - timedelta(days=14),
+                datetime.now() - timedelta(days=7),
+                datetime.now() - timedelta(days=1),
+            )
+            retention_7d = float(row["retention_rate"]) if row and row["retention_rate"] else 0.0
 
         # 30日留存（简化）
         retention_30d = max(0.0, retention_7d - 0.2)  # 粗略估算
@@ -639,28 +562,28 @@ async def get_dashboard(
 
 @router.post("/request-deletion", response_model=JSONResponse)
 async def request_data_deletion(
-    request: DeletionRequest, http_request: Request, db: AsyncSession = Depends(get_async_session)
+    request: DeletionRequest, http_request: Request
 ):
     """请求数据删除
 
     用户可以请求删除所有追踪数据（GDPR合规）
     """
     try:
+        pool = get_db_pool()
         session_id = get_or_create_session_id(http_request)
         user_id = get_user_id(http_request)
 
-        # 记录删除请求
-        await db.execute(
-            text(
+        async with pool.acquire() as conn:
+            await conn.execute(
                 """
                 INSERT INTO data_deletion_requests
                 (user_id, session_id, contact_email, status)
-                VALUES (:user_id, :session_id, :contact_email, 'pending')
-            """
-            ),
-            {"user_id": user_id, "session_id": session_id, "contact_email": request.contact_email},
-        )
-        await db.commit()
+                VALUES ($1, $2, $3, 'pending')
+                """,
+                user_id,
+                session_id,
+                request.contact_email,
+            )
 
         logger.info(f"Data deletion requested from {user_id or session_id}")
 

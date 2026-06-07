@@ -26,11 +26,10 @@ def _make_app():
 
 
 class TestNoKeysConfigured:
-    """无 ADMIN_API_KEYS 时，应跳过验证"""
+    """无 ADMIN_API_KEYS 时，应拒绝访问"""
 
-    def test_allows_without_key(self):
+    def test_rejects_without_keys(self):
         os.environ.pop("ADMIN_API_KEYS", None)
-        # 需要重新创建 config 单例以反映环境变化
         import backend.config
 
         backend.config._config = None
@@ -38,7 +37,7 @@ class TestNoKeysConfigured:
         app = _make_app()
         client = TestClient(app)
         resp = client.get("/protected")
-        assert resp.status_code == 200
+        assert resp.status_code == 401
 
         backend.config._config = None
 

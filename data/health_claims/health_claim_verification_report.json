@@ -1,0 +1,2250 @@
+{
+  "summary": {
+    "verified_at": "2026-06-05T23:32:10.780246+00:00",
+    "verifier": "lingzhi",
+    "method": "keyword_extraction + rule_based_classification",
+    "classification": {
+      "claim_types": [
+        "factual(事实)",
+        "traditional(传统)",
+        "testimonial(证言)"
+      ],
+      "risk_levels": [
+        "high(高)",
+        "medium(中)",
+        "low(低)"
+      ]
+    },
+    "totals": {
+      "episodes": 20,
+      "total_claims": 97,
+      "high_risk_claims": 3,
+      "medium_risk_claims": 47,
+      "low_risk_claims": 47
+    },
+    "episode_risk_distribution": {
+      "high": [
+        "EP054",
+        "EP055",
+        "EP069"
+      ],
+      "medium": [
+        "EP052",
+        "EP053",
+        "EP056",
+        "EP057",
+        "EP058",
+        "EP059",
+        "EP060",
+        "EP061",
+        "EP062",
+        "EP063",
+        "EP064",
+        "EP065",
+        "EP067",
+        "EP068",
+        "EP070",
+        "EP071"
+      ],
+      "low": [
+        "EP066"
+      ]
+    }
+  },
+  "episodes": {
+    "EP052": {
+      "episode": "EP052",
+      "total_claims": 2,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 0,
+        "traditional": 1,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP052",
+          "line_number": 5,
+          "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP052",
+          "line_number": 7,
+          "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP053": {
+      "episode": "EP053",
+      "total_claims": 7,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 6,
+        "low": 1
+      },
+      "type_distribution": {
+        "factual": 4,
+        "traditional": 0,
+        "testimonial": 3
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP053",
+          "line_number": 3,
+          "text": "广大：你说的不以为然我完全理解。一开始我也觉得，我们做的是生命教育，为什么要从市场讲起？但我后来想明白了一件事。康养产业的规模，反映的不是商业机会，而是人的需求。十万亿背后，是几亿人的健康焦虑、睡眠困扰、精神内耗。这些需求是真实的、迫切的、每天都在发生的。不看市场，我们就不知道有多少人在等一个答案。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP053",
+          "line_number": 7,
+          "text": "广大：这个例子很典型，而且这样的例子不是个例。我在海涵春育做志愿者期间，见过太多类似的情况。二十六岁的程序员连续两年每天只能睡四个小时，头发一把一把地掉。三十五岁的企业主体检报告全正常，但整个人像被掏空了一样，干什么都提不起劲。四十岁的全职妈妈产后三年没睡过一个整觉，焦虑到要靠药物维持。这些人有个共同特点——去医院检查，指标都正常，可就是不对劲。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP053",
+          "line_number": 9,
+          "text": "慧心：所以医学上管这个叫亚健康。但我一直觉得这个说法本身就有问题。什么叫亚健康？比健康差一点，但还没到生病？这就像说一个人亚快乐、亚幸福一样荒谬。你去跟那些长期失眠的人说你是亚健康，他们会觉得你在轻视他们的痛苦。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP053",
+          "line_number": 17,
+          "text": "慧心：说到这里我插一句。我注意到一个很有意思的现象，现在很多年轻人不是不养生，他们其实很早就开始关注健康了。只不过他们不叫养生，叫恢复精力、找回状态、提升生命质量。你去小红书上看看，补剂、代餐、冥想、瑜伽，这些内容的消费者绝大多数都是二三十岁的人。但他们的养生方式有一个很大的问题——碎片化。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP053",
+          "line_number": 31,
+          "text": "广大：不高，但现在能做到的机构真的不多。安全、舒适、自然、有人情味的康养环境，会是越来越硬的刚需。而且我观察到，很多子女最焦虑的不是父母的身体状况，而是父母的孤独感。一个有温度的康养社区，不只是在照顾老人的身体，更是在疗愈整个家庭的关系。我在海涵春育见过七十多岁的阿姨学会了画画和太极，整个人焕发出的光彩比年轻时候还动人。她说她以前在家就是看电视等日子，现在每天早上醒来都有期待。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP053",
+          "line_number": 35,
+          "text": "广大：对。第三个驱动力是健康意识的全民普及。这个变化是底层价值观的转变。十年前你会关注食品配料表吗？十年前你会因为焦虑而主动学冥想吗？",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP053",
+          "line_number": 49,
+          "text": "慧心：说到这里，我忽然有一个感触。今天我们聊了十万亿市场的三个驱动力——低龄化、老龄化、全民普及。但回过头来看，这三个趋势其实指向同一件事。人越来越意识到，健康不是一个局部问题，而是一个整体问题。年轻人不是某个零件坏了，老年人也不是只需要修修补补。全民的健康焦虑背后，是一种对完整生命状态的渴望。十万亿不是冰冷的数字，是无数人在呼唤一种真正有效的、整体的康养方式。这个认知，也许才是今天最值得记住的东西。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP054": {
+      "episode": "EP054",
+      "total_claims": 6,
+      "risk_distribution": {
+        "high": 1,
+        "medium": 3,
+        "low": 2
+      },
+      "type_distribution": {
+        "factual": 4,
+        "traditional": 1,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "high",
+      "claims": [
+        {
+          "episode": "EP054",
+          "line_number": 11,
+          "text": "广大：一切回到原点。该失眠还是失眠，该腰痛还是腰痛，因为在机构里养好的状态，回家之后没有方法去维持。这让我觉得特别无奈，花了那么多钱，效果却留不住。就像花了大价钱装修了一间房子，结果风一吹又回到毛坯。这就引出一个更深的问题——康养如果不能变成生活方式的一部分，那任何短期的改善都是暂时的。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠"
+            ],
+            "health_verbs": [
+              "改善"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP054",
+          "line_number": 25,
+          "text": "慧心：对。人去住了几天，环境不错，服务也不错，感觉像度了个假。但离开之后，身体并没有真正变好。因为它没有形成整体调理，没有改变人的生活方式。就像你去一个漂亮的地方住了几天，回来之后一切照旧。这种体验式的康养，说穿了就是换了地方睡觉，回来该怎样还是怎样。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP054",
+          "line_number": 27,
+          "text": "广大：这个比喻太形象了。我们平时出去旅游不就是这样吗？住五星级酒店的时候觉得身心舒畅，一回到家该累还是累，该焦虑还是焦虑。而且我还发现，有些康养机构的饮食和作息安排甚至是互相矛盾的——白天做理疗放松，晚上却安排了很晚的活动，饮食上也谈不上健康。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP054",
+          "line_number": 29,
+          "text": "慧心：对，这就是典型的碎片化思维。身体的问题从来不是单一的，睡眠不好可能跟饮食有关，情绪低落可能跟运动不足有关，腰酸背痛可能跟呼吸方式有关。如果你把这些问题拆开来一个一个解决，就像头疼医头脚疼医脚，永远治不到根上。更可怕的是，有些方法之间还会互相冲突——比如你吃了安眠药来助眠，结果白天更没精神，运动量更少，身体状况更差，又需要更多的药物。这就陷入了恶性循环。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "助眠"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP054",
+          "line_number": 39,
+          "text": "广大：还有一个让我特别感动的故事。海涵春育有一个著名的\"八仙\"——八位患有癌症、白血病、肿瘤的客人自发组成了互助小组，每天互相鼓励、一起练习，最后八个人全部康复了。当人不再独自面对困境，身心的自愈力就被真正激活了。其中有一位大姐，来的时候已经不抱什么希望了，是其他七个人硬拉着她一起练的。她后来跟我说，她之所以能坚持下来，不是因为功法多神奇，而是因为身边有人在等她，有人在乎她。这种被需要的感觉，比任何药物都管用。",
+          "claim_type": "testimonial",
+          "risk_level": "high",
+          "risk_reason": "个人证言涉及重大疾病（癌症/白血病/肿瘤等）",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [
+              "癌症",
+              "癌",
+              "肿瘤",
+              "白血病"
+            ],
+            "chronic_condition": [],
+            "health_verbs": [
+              "康复",
+              "自愈"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP054",
+          "line_number": 51,
+          "text": "广大：是的。我常常在想，康养的终极目的，到底是让人更舒服，还是让人更焦虑？是让人依赖外力，还是让人拥有自主健康的能力？这三个困境——成本高、服务割裂、人情味淡——恰恰是我们做生命整体观、做海涵春育的出发点。因为我们想要回答的就是：有没有一种康养方式，既低成本又整体，既有科学又有温度？",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP055": {
+      "episode": "EP055",
+      "total_claims": 6,
+      "risk_distribution": {
+        "high": 1,
+        "medium": 3,
+        "low": 2
+      },
+      "type_distribution": {
+        "factual": 0,
+        "traditional": 0,
+        "testimonial": 6
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "high",
+      "claims": [
+        {
+          "episode": "EP055",
+          "line_number": 15,
+          "text": "广大：比如呼吸。每个人都在呼吸，但大部分人呼吸的方式是不对的。浅呼吸、短呼吸、急促呼吸，长期下来身体的供氧就不足，人会容易疲惫、焦虑、注意力不集中。但如果有人教你正确地呼吸，不需要任何设备，不需要花一分钱，你的状态就能明显改善。在海涵春育，呼吸是每天晨练的第一课，很多客人说光是学会了正确呼吸，困扰多年的失眠就有了明显的改善。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [
+              "改善"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP055",
+          "line_number": 19,
+          "text": "广大：没错，而且海涵春育就是一个活生生的例子。那里坐落在沂蒙山区的泉庄镇，森林覆盖率高达73.2%，每立方厘米空气中就含有五千多个负氧离子，还有天然富锶矿泉水——这些全是大自然免费赐予的康养资源。来到这里的人，一到两周内百分之八十五就能感受到身体状态的明显改善。超过百分之四十的用户已经坚持了十年以上，不是因为他们有钱，是因为他们真正体验到了，最好的康养资源原来就在身边。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "改善"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP055",
+          "line_number": 31,
+          "text": "广大：对。康养的目标不是把服务做得多精致，而是把人的自愈力、觉察力、调节力唤醒。人一旦醒过来，健康就会自己发生。我见过很多客人，来的时候带着一身的毛病和满心的焦虑，走的时候不是病全好了，而是他们的状态完全不同了——他们开始相信自己能够好起来，开始知道怎么跟自己的身体对话。这种转变，比任何治疗都更根本。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [
+              "治疗",
+              "自愈",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP055",
+          "line_number": 35,
+          "text": "广大：比免疫力更深层。免疫力只是身体层面的，我说的是整个生命的自调节能力——身体的、心理的、情绪的、精神的，全部协调起来。这是人与生俱来的能力，只是被我们的生活方式压住了。海涵春育的实践证明，当一个人在一个支持性的环境里慢慢找回这种能力，很多所谓的不治之症都会出现转机。我们有八个被称为\"八仙\"的朋友，他们中有癌症、白血病、肿瘤患者，组成了互助小组，靠的就是这种生命自调节的力量，最终全部恢复了健康。",
+          "claim_type": "testimonial",
+          "risk_level": "high",
+          "risk_reason": "个人证言涉及重大疾病（癌症/白血病/肿瘤等）",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [
+              "癌症",
+              "癌",
+              "肿瘤",
+              "白血病"
+            ],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP055",
+          "line_number": 37,
+          "text": "慧心：八位重病患者，靠的不是药物和仪器，而是生命自身的调节力量，最终全部康复。这确实让人重新思考，我们对健康的认知是不是太局限了。那第三个思考呢？",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "康复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP055",
+          "line_number": 43,
+          "text": "广大：我们养生，是为了不生病吗？是为了活得久吗？还是为了活得有质量、有喜悦、有尊严、有意义？大部分人没想过这个问题，他们养生是被恐惧驱动的——怕生病、怕变老、怕死。恐惧驱动下的养生，越养越焦虑。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP056": {
+      "episode": "EP056",
+      "total_claims": 14,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 7,
+        "low": 7
+      },
+      "type_distribution": {
+        "factual": 7,
+        "traditional": 1,
+        "testimonial": 6
+      },
+      "traceable_claims": 1,
+      "traceability_rate": 0.071,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP056",
+          "line_number": 11,
+          "text": "广大：从表面上看是的。我见过一个康养中心，花了大价钱安装了智能床垫、智能手环、AI监控系统，管理者觉得特别先进。但三个月后发现问题了——老人们的焦虑感反而上升了，每天被数据提醒这个偏高那个偏低，搞得人心惶惶。有个大爷甚至说，我原来好好的，住进来反而觉得自己浑身是病。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 13,
+          "text": "慧心：我太理解这个感受了。我有段时间戴了智能手环，每天盯着睡眠分数看。分数一低就焦虑，结果越焦虑越睡不好，分数更低，恶性循环。后来有一个朋友跟我说了一句话，她说你把手环摘了试试，我当时觉得这算什么建议，但真的摘了之后，反而睡得踏实了。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 15,
+          "text": "广大：你就是活生生的例子。很多人跟我讲类似的经历。戴了智能手表之后，每天最紧张的时刻就是看数据的那一刻。步数不够焦虑，心率偏高焦虑，睡眠质量差焦虑。本来是为了健康，结果反而被数据绑架了。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 19,
+          "text": "广大：不是不用，而是要摆正位置。设备是工具，不是裁判。数据是参考，不是判决书。健康不是靠算出来的，是靠活出来的。身体不是靠监测变好的，是靠自我调节、自我修复变好的。就像海涵春育的很多老朋友，他们来的时候什么数据都没带，走的时候却带走了真正的健康——因为他们学会的不是看数据，而是感受自己。有一位阿姨跟我说，她来之前每天量三次血压，来之后一周都没量过，但血压反而比之前稳定了。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": true,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "血压"
+            ],
+            "health_verbs": [
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 21,
+          "text": "慧心：自我调节、自我修复，这个听起来有点抽象。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 25,
+          "text": "慧心：好像确实有过。但这跟自我修复有什么关系？",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "修复"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 27,
+          "text": "广大：关系大了。你的腰酸和头疼，不是因为你没吃药，而是因为你长期处于紧张和压抑的状态。当你的心情放松下来，身体的自我修复机制就被激活了，很多小毛病自然就好了。这就是自我调节和自我修复的力量。它不需要任何外力，只需要你给自己创造合适的条件。而且这种修复不是暂时的缓解，是从根源上的改善，因为你是从生活方式和身心状态上做了调整。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "改善",
+              "缓解",
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 31,
+          "text": "广大：数据再精准，也测不出一个人的孤独感被治愈的那一刻。AI可以告诉你心率变异性改善了百分之多少，但它不知道你今天因为和老朋友聊了两个小时，心里那块石头终于落地了。这种变化，只有人能感知，只有生命整体观的框架才能理解和解释。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "改善",
+              "治愈"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 35,
+          "text": "广大：AI可以作为辅助工具，帮你记录、提醒、分析，这都没问题。但真正决定健康的，不是算法，不是数据，不是机器，而是人自己的自觉、自律、自愈、自在。这四个自是层层递进的关系，自觉是起点，你首先得意识到自己的状态；自律是过程，你愿意为自己做出改变；自愈是结果，身体开始恢复自己的平衡；自在是境界，你不再被外物牵着走。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "自愈",
+              "恢复",
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 37,
+          "text": "慧心：自觉、自律、自愈、自在。这四个自听着简单，但感觉比任何AI都难做到。因为技术可以替你做事，但没有人能替你觉醒。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "自愈"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 39,
+          "text": "广大：因为这四个字不是技术问题，是生命层次的问题。AI可以帮你自律，比如定时提醒你运动，但它没办法让你自觉，没办法帮你自愈，更没办法让你自在。这些只能靠你自己，就像没有人能替你吃饭、替你睡觉一样，生命的觉醒只能自己来完成。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "自愈"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 41,
+          "text": "慧心：这正是生命整体观给我们的启示——人的健康不是一台机器的参数优化，而是身体、心理、情绪、精神全方位的协调统一。同样是血压偏高，数据驱动的方案是加药、换药、反复监测，越治越焦虑；而生命整体观的方案是调整作息、练习放松、融入社群，血压自然就稳了。当一个人从内到外真正和谐了，那种健康是从骨子里透出来的，不是数据表上的一个数字可以衡量的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "general_wellness",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "血压",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 47,
+          "text": "广大：AI是辅助，人是主体。AI帮你省时间和精力，让你有更多空间去关注自己真正需要关注的东西——你的呼吸、你的情绪、你跟身体的关系、你跟自然的关系。在海涵春育，AI帮你省下来的时间，你可以去院子里走走，跟老朋友下盘棋，练练功，甚至就是坐着发发呆——这些看似'没用'的事，恰恰是健康最需要的。而不是让你盯着屏幕上冷冰冰的数字焦虑一整天。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP056",
+          "line_number": 49,
+          "text": "慧心：所以说到底，你对AI的态度很平衡，既不排斥也不迷信，这点很难得。今天聊到最后，我忽然想到一件事——我们花了这么多时间讨论AI能不能帮人健康，但也许核心问题是：人有没有先帮自己健康？当我们把注意力从外部技术收回到自身，从数据焦虑回到呼吸觉察，很多答案其实已经在了。AI是工具，自觉是根本，这个顺序不能反。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP057": {
+      "episode": "EP057",
+      "total_claims": 2,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 0,
+        "traditional": 1,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP057",
+          "line_number": 3,
+          "text": "广大：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP057",
+          "line_number": 5,
+          "text": "慧心：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP058": {
+      "episode": "EP058",
+      "total_claims": 4,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 1,
+        "low": 3
+      },
+      "type_distribution": {
+        "factual": 4,
+        "traditional": 0,
+        "testimonial": 0
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP058",
+          "line_number": 3,
+          "text": "慧心：首先，我们来聊聊什么是自觉。自觉，就是自我觉察、自我感知、自我调节、自我修复。听起来是不是有点像科幻小说里的概念？但这就是我们每个人身上就有的能力。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP058",
+          "line_number": 5,
+          "text": "广大：那么，自觉智能呢？自觉智能不是算计，不是技巧，它是身体本来就有的自愈智慧。想象一下，如果我们的身体能够自动感知到不适，并且能够自我调节和修复，那该有多神奇啊！",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "自愈",
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP058",
+          "line_number": 15,
+          "text": "慧心：确实如此。现代生活太乱、太快、太碎片化，让我们越来越听不到身体的声音。比如，熬夜、压力、焦虑、饮食不规律，这些都是阻碍我们感知身体的因素。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP058",
+          "line_number": 19,
+          "text": "慧心：唤醒你的自觉，唤醒你的智能，唤醒你本来就有的健康能力。康养不是“给你做什么”，而是“帮你唤醒什么”。海涵春育康养民宿就是一个很好的例子，它帮助人们从整体上恢复健康。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP059": {
+      "episode": "EP059",
+      "total_claims": 5,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 3
+      },
+      "type_distribution": {
+        "factual": 2,
+        "traditional": 2,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP059",
+          "line_number": 3,
+          "text": "广大：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP059",
+          "line_number": 5,
+          "text": "慧心：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP059",
+          "line_number": 15,
+          "text": "广大：人一到这种环境里，自然就放松，自然就修复，自然就变好。因为你回到了整体，回到了本质。健康不是修修补补，是回归完整。生命整体观告诉我们，人不是碎片，是整体。身、心、精、气、神是一体；人和自然是一体；人和社群是一体。健康，就是这个整体和谐、通畅、平衡。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "修复",
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP059",
+          "line_number": 17,
+          "text": "慧心：所谓进化，不是变得更忙、更累、更厉害。 而是回到完整、回到自觉、回到生命本来的样子。在海涵春育，你会感受到这种整体。所以，健康不是未来目标，是每一个当下。我们需要从整体的角度去看待自己的健康和生命，找到真正的平衡和和谐。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP059",
+          "line_number": 21,
+          "text": "慧心：所以说到底，健康不是未来目标，是每一个当下。我们需要从整体的角度去看待自己的健康和生命，找到真正的平衡和和谐。感谢收听灵通问道，我们下期再见。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP060": {
+      "episode": "EP060",
+      "total_claims": 3,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 3,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 1,
+        "traditional": 1,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP060",
+          "line_number": 5,
+          "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP060",
+          "line_number": 7,
+          "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP060",
+          "line_number": 27,
+          "text": "广大：我觉得这个观点非常重要。因为很多人都把健康当成一个未来目标，等我退休再养生；等我有空再调理；等我生病了再重视。其实，健康应该是每一个当下的享受，而不是未来的焦虑。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP061": {
+      "episode": "EP061",
+      "total_claims": 3,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 3,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 1,
+        "traditional": 1,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP061",
+          "line_number": 5,
+          "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP061",
+          "line_number": 7,
+          "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP061",
+          "line_number": 21,
+          "text": "慧心：第一，身心整合。身体不舒服，调情绪；情绪乱了，调身体。不头痛医头，不脚痛医脚。第二，生活整合。饮食、作息、运动、情绪、环境，统一协调。不熬夜、不暴饮暴食、不过度劳累、不长期压抑。第三，人与自然整合。多接触自然，多晒太阳，多呼吸新鲜空气。人来自自然，回归自然，才会安定。第四，人与社群整合。和真诚的人相处，互相陪伴、互相鼓励、互相滋养。孤独最伤健康，温暖最养生命。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP062": {
+      "episode": "EP062",
+      "total_claims": 4,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 2
+      },
+      "type_distribution": {
+        "factual": 0,
+        "traditional": 2,
+        "testimonial": 2
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP062",
+          "line_number": 5,
+          "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头痛"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP062",
+          "line_number": 7,
+          "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠",
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP062",
+          "line_number": 19,
+          "text": "广大：对，它不教你一个一个的方法，而是带你回到整体的状态。海涵春育到底不一样在哪里呢？首先，它不是以住宿为目的，是以康养为目的。住宿只是载体，健康才是目标。其次，它不是碎片化服务，是整体调理。从你进门开始，饮食、作息、练功、情绪、环境，全部围绕生命整体观设计。第三，它不是被动服务，是主动唤醒。不只是照顾你，更是教你方法，让你自己会养、会调、会修复。第四，它有得天独厚的环境。位于沂水县泉庄镇，森林覆盖率高，负氧离子充足，山水相依，崮群环绕，是天然的疗愈场。第五，它有人情味、有社群、有温度。大家像家人一样相处，融利己于利他之中，彼此陪伴，共同成长。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理",
+              "修复"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP062",
+          "line_number": 21,
+          "text": "慧心：我作为志愿者，最直观的感受是：人一来到这里，心会静下来，身体会松下来，情绪会软下来。不用刻意做什么，修复就已经开始。海涵春育，是生命整体观落地的地方。下一期，我们讲最核心的内容：生命整体观到底是什么？",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "修复"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP063": {
+      "episode": "EP063",
+      "total_claims": 8,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 1,
+        "low": 7
+      },
+      "type_distribution": {
+        "factual": 2,
+        "traditional": 5,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP063",
+          "line_number": 5,
+          "text": "广大：是啊，我也听说过不少这样的例子。有的人为了调理身体，专门跑到那些所谓的高端康养中心，花了几十万块钱，结果呢？身体还是那个样子，钱倒是没少花。这让我不禁想问，这到底是咋回事儿啊？",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 11,
+          "text": "慧心：我觉得吧，我们应该树立一个全新的健康观念，那就是生命整体观。这个观念强调的是身体的完整性，认为我们的身体是一个有机的整体，各个部分都是相互依存、相互影响的。因此，我们在调理身体时，就不能只关注局部，而要关注整体，要从整体出发，找到问题的根源，然后进行有针对性的调理。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 15,
+          "text": "慧心：简单来说呢，就是要把身体看作是一个完整的系统，各个部分都是这个系统的重要组成部分。我们要关注身体的各个方面，包括饮食、运动、睡眠、情绪等等。同时，我们还要学会与自然和社会环境相适应，保持身心的平衡和和谐。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 19,
+          "text": "慧心：其实并不复杂，关键是要掌握正确的方法和理念。比如说，我们吃饭的时候要注意营养均衡，运动的时候要根据自己的身体状况选择合适的运动方式，保证充足的睡眠时间，避免过度焦虑和压力等等。只有这样，我们才能真正地保持身心的健康和平衡。",
+          "claim_type": "traditional",
+          "risk_level": "medium",
+          "risk_reason": "传统理论涉及疾病，需标注为传统理论",
+          "medium_subcategory": "traditional_disease",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [
+              "平衡"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 23,
+          "text": "慧心：当然可以。比如说，有一个朋友，他一直觉得自己身体不太好，经常感冒、乏力。后来，他接受了生命整体观的指导，开始注重饮食和运动的调整。他减少了高糖、高脂肪的食物摄入，增加了蔬菜、水果和全谷物的比例；同时，他也开始了适度的运动锻炼，如散步、瑜伽等。经过一段时间的坚持，他的身体状况有了明显的改善，感冒、乏力的次数减少了，整个人也变得更加精神和自信。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "改善"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 27,
+          "text": "慧心：是的呢，生命整体观不仅是一种健康观念，更是一种生活态度和实践方法。它告诉我们，健康不是靠偶然的幸运或者短期的努力就能获得的，而是需要我们长期坚持、全面调理的结果。只要我们掌握了正确的方法和理念，就能够让自己的身体更加健康、更加美好。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 31,
+          "text": "慧心：海涵春育康养民宿确实是一个非常棒的地方。它不仅提供了舒适的住宿环境和专业的康养服务，更重要的是它提供了一种全新的生活方式和健康理念。在这里，客人不仅可以享受到高品质的住宿和餐饮服务，还可以接受到专业的康养指导和训练，帮助自己更好地恢复健康、提升生活质量。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP063",
+          "line_number": 35,
+          "text": "慧心：要领悟并实践生命整体观并不难，关键是要有正确的方法和理念。首先，我们要树立正确的健康观念，认识到身体是一个有机的整体，各个部分都是相互依存、相互影响的。其次，我们要学会观察和分析自己的身体状态和生活习惯，找出存在的问题和不足，并制定相应的调理方案。最后，我们要坚持执行调理方案，保持持之以恒的态度和耐心，相信自己的身体会变得越来越好。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP064": {
+      "episode": "EP064",
+      "total_claims": 4,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 1,
+        "low": 3
+      },
+      "type_distribution": {
+        "factual": 1,
+        "traditional": 1,
+        "testimonial": 2
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP064",
+          "line_number": 5,
+          "text": "广大：其实，这并不是一个遥不可及的地方。海涵春育康养民宿的核心理念，就是生命整体观。这个理念强调的是一种全方位、全周期的健康管理方式。它不同于传统的养生方式，后者往往局限于局部的治疗或调理，而生命整体观则是从整体上把握健康。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "治疗",
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP064",
+          "line_number": 13,
+          "text": "广大：听起来很专业啊。那么，接下来呢？他们是如何进行整体调理的呢？",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP064",
+          "line_number": 15,
+          "text": "慧心：整体调理是海涵春育康养民宿的一大特色。他们提供生态饮食、养生功法、自然疗愈等多种方式，帮助客人从多个方面改善体质，提升生活质量。比如，他们会有专门的营养师为客人制定健康的饮食计划，确保他们摄入足够的营养素；同时，他们还会教授客人一些简单的养生功法，如抻气、拉气、站桩等，帮助客人调节身体机能。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "改善",
+              "调理",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP064",
+          "line_number": 27,
+          "text": "慧心：对于现代人来说，海涵春育康养民宿不仅仅是一个提供住宿的地方，更是一个寻找内心平静和身体和谐的港湾。在这个快节奏的社会里，我们很容易迷失自己，陷入各种焦虑和压力之中。而海涵春育康养民宿通过提供全面的健康管理服务和良好的生活环境，帮助我们找回内心的宁静和身体的和谐。在这里，我们可以放下所有的烦恼和负担，尽情地享受生活的美好和宁静。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP065": {
+      "episode": "EP065",
+      "total_claims": 5,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 1,
+        "low": 4
+      },
+      "type_distribution": {
+        "factual": 2,
+        "traditional": 1,
+        "testimonial": 2
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP065",
+          "line_number": 3,
+          "text": "慧心：首先，我要说的是，康养民宿绝不仅仅是一个提供基本服务的场所。它更像是一个帮助人们恢复身心健康、唤醒内在活力的神奇之地。想象一下，当你走进一个康养民宿，不仅仅是享受了舒适的住宿环境，更重要的是，你获得了一种全新的生活方式和健康理念。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP065",
+          "line_number": 11,
+          "text": "慧心：当然有。首先，康养民宿会通过各种专业的康养项目，如中医调理、按摩、瑜伽等，来激活客人的身体机能。同时，它们还会引导客人进行深度放松和冥想，帮助他们减轻压力，提高情绪稳定性。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "减轻",
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP065",
+          "line_number": 17,
+          "text": "慧心：唤醒式康养与其他康养方式最大的不同在于其整体性和主动性。传统的康养方式往往侧重于解决特定的健康问题，如疼痛、失眠等，而唤醒式康养则更注重从整体上提升客人的健康水平。它鼓励客人积极参与自己的健康管理过程，发掘和发挥自己的自愈能力。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠"
+            ],
+            "health_verbs": [
+              "自愈"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP065",
+          "line_number": 23,
+          "text": "慧心：首先，选择一家有良好口碑和专业资质的康养民宿是非常重要的。这样可以确保你能够在舒适和安全的环境中获得高质量的康养服务。其次，在入住期间，要积极配合工作人员的建议和治疗方案，按时完成各项康养项目。同时，也要保持积极的心态和良好的生活习惯，这样才能更好地发挥康养的效果。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "治疗"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP065",
+          "line_number": 25,
+          "text": "另外，我想强调的是，康养民宿不仅仅是一个治疗疾病的场所，更是一个帮助人们恢复身心健康、找回生活乐趣的地方。因此，在体验康养民宿的过程中，要珍惜每一次与工作人员和同伴的交流机会，共同营造一个温馨、和谐的氛围。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "治疗",
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP066": {
+      "episode": "EP066",
+      "total_claims": 0,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 0,
+        "traditional": 0,
+        "testimonial": 0
+      },
+      "traceable_claims": 0,
+      "traceability_rate": null,
+      "episode_risk": "low",
+      "claims": []
+    },
+    "EP067": {
+      "episode": "EP067",
+      "total_claims": 5,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 3
+      },
+      "type_distribution": {
+        "factual": 3,
+        "traditional": 0,
+        "testimonial": 2
+      },
+      "traceable_claims": 1,
+      "traceability_rate": 0.2,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP067",
+          "line_number": 7,
+          "text": "广大：未来康养的正确模式，其实非常清晰。AI做辅助，自觉智能做主修。AI负责数据监测、效率提升、信息整理、标准化提醒这些事，它擅长处理可量化的、标准化的工作。而自觉智能负责身体觉察、情绪调节、自愈修复、生命整体状态，这些是AI做不到的。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "自愈",
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP067",
+          "line_number": 11,
+          "text": "广大：这个例子很好。数据告诉她昨晚睡了六个小时，但自觉告诉她今天的状态其实不错。有时候数据说睡了八个小时，但她反而觉得头昏脑涨。如果只看数据，她可能会焦虑——明明睡了八小时为什么还不舒服？但有了自觉，她知道睡眠质量不是用时长衡量的，而是用醒来后的整体状态来感受的。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP067",
+          "line_number": 17,
+          "text": "慧心：那就很危险了。我见过一些康养机构，完全依赖智能设备来管理客人的健康。手环监测心率，床垫监测睡眠，APP记录饮食，AI给出建议。看起来很先进，但客人变成了被数据管理的对象，而不是自我觉察的主体。有个阿姨跟我说，她每天最紧张的事就是看APP上的评分，评分高了开心，评分低了焦虑。她不是在养生，是在养数据。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP067",
+          "line_number": 29,
+          "text": "慧心：我们用AI做一些基础的事情，比如记录客人的入住信息、整理课程安排、管理食材采购。但在康养的核心环节——练功、调理、情绪疏导、社群交流——这些全部是人与人之间的互动。因为我们相信，真正能唤醒一个人自觉能力的，永远是另一个活生生的人，不是一台机器。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP067",
+          "line_number": 35,
+          "text": "广大：我总结一下今天的内容。AI是辅助工具，帮我们省时间、提效率、做参考；自觉智能是主修功课，让我们真正拥有觉察自己、调节自己、修复自己的能力。两者搭档，AI负责外围，自觉负责核心。但有一条底线不能越过——人永远是主体，技术永远是工具。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "事实声明有来源引用",
+          "medium_subcategory": null,
+          "has_source": true,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "修复",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP068": {
+      "episode": "EP068",
+      "total_claims": 7,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 5
+      },
+      "type_distribution": {
+        "factual": 5,
+        "traditional": 1,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP068",
+          "line_number": 3,
+          "text": "广大：是的。这句话听起来有点绝对，但我觉得必须这么说。医生可以帮你看病，但不能替你生病；家人可以照顾你，但不能替你生活；民宿可以帮你调理，但不能替你觉察。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调理"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP068",
+          "line_number": 5,
+          "text": "慧心：这个我太有感触了。我有个阿姨，高血压十几年了，每次去看医生都是调药、加药，血压确实能控制住，但她整个人越来越没精神。后来她去了海涵春育，练了三个月的功法，血压反而比吃药的时候还稳。她跟我说了一句话，她说我以前觉得血压是医生的事，现在才知道，血压是我自己的事。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "高血压",
+              "血压"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP068",
+          "line_number": 7,
+          "text": "广大：你阿姨的体会非常深刻。生命整体观强调的\"主体性\"，就是——我对我的健康负责，我觉察我的身体，我调节我的情绪，我管理我的生活，我成为我健康的主人。",
+          "claim_type": "traditional",
+          "risk_level": "low",
+          "risk_reason": "传统理论，未涉及具体疾病声明",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP068",
+          "line_number": 31,
+          "text": "广大：首先是觉察力。你能感受到自己今天的状态好不好，哪里紧了，哪里松了，情绪是平稳的还是波动的。然后是调节力。你发现状态不好，知道用什么方法来调整——是去走走，还是练练功，还是找人聊聊，还是早点休息。最后是维持力。你能在日常生活中持续保持好的状态，不需要依赖任何外力。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP068",
+          "line_number": 33,
+          "text": "慧心：觉察力、调节力、维持力。这三样东西，比任何药物和设备都珍贵。因为药物有副作用，设备会坏，但这三种能力一旦建立，就是终身受用的。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP068",
+          "line_number": 35,
+          "text": "广大：对。当你拥有主体性，健康就不再是焦虑，而是能力。不再是负担，而是享受。不再是依赖，而是自由。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP068",
+          "line_number": 41,
+          "text": "慧心：说到这里我有一个感触。今天聊的主体性，觉察力、调节力、维持力，说到底就是一个认知——你的身体是你自己的，不是医生的，不是机构的，不是任何人的。当你把这个认知真正内化了，健康就不再是一份需要完成的任务，而是一种自然而然的生活方式。从被动到主动，从依赖到自由，这一步跨越，比任何功法都重要。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP069": {
+      "episode": "EP069",
+      "total_claims": 2,
+      "risk_distribution": {
+        "high": 1,
+        "medium": 1,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 1,
+        "traditional": 0,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "high",
+      "claims": [
+        {
+          "episode": "EP069",
+          "line_number": 3,
+          "text": "广大：太有体会了。很多人养生坚持不下去，不是方法不对，是太孤独。一个人练，容易懈怠；一个人调，容易放弃；一个人扛，容易焦虑。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP069",
+          "line_number": 27,
+          "text": "广大：还有一个更深层的作用——被需要。海涵春育有一个著名的\"八仙\"，八位患有癌症、白血病、肿瘤的客人自发组成了互助小组。其中有一位大姐，来的时候已经不抱什么希望了，是其他七个人硬拉着她一起练的。",
+          "claim_type": "testimonial",
+          "risk_level": "high",
+          "risk_reason": "个人证言涉及重大疾病（癌症/白血病/肿瘤等）",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [
+              "癌症",
+              "癌",
+              "肿瘤",
+              "白血病"
+            ],
+            "chronic_condition": [],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP070": {
+      "episode": "EP070",
+      "total_claims": 2,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 2,
+        "low": 0
+      },
+      "type_distribution": {
+        "factual": 1,
+        "traditional": 0,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP070",
+          "line_number": 11,
+          "text": "广大：我给你讲一个故事。有一位六十多岁的阿姨，来海涵春育之前，身体各种毛病，失眠、胃痛、关节疼，看了很多医生都说是慢性病只能养着。她来的时候整个人灰扑扑的，说话声音很轻，眼神也很淡。",
+          "claim_type": "testimonial",
+          "risk_level": "medium",
+          "risk_reason": "个人证言涉及慢性病",
+          "medium_subcategory": "testimonial_chronic",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP070",
+          "line_number": 23,
+          "text": "广大：对。失眠好了，胃痛减轻了，关节也灵活了。不是功法多神奇，是她找到了活着的意义。而活着的意义，就是爱——爱别人、被别人爱、发现自己的价值。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "失眠"
+            ],
+            "health_verbs": [
+              "减轻"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    },
+    "EP071": {
+      "episode": "EP071",
+      "total_claims": 8,
+      "risk_distribution": {
+        "high": 0,
+        "medium": 3,
+        "low": 5
+      },
+      "type_distribution": {
+        "factual": 7,
+        "traditional": 0,
+        "testimonial": 1
+      },
+      "traceable_claims": 0,
+      "traceability_rate": 0.0,
+      "episode_risk": "medium",
+      "claims": [
+        {
+          "episode": "EP071",
+          "line_number": 3,
+          "text": "广大：自觉智能，简单说就是人对自己生命状态的觉知和调节能力。它不是知识，不是技术，是每个人天生就有的内在智慧。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 9,
+          "text": "慧心：这个太真实了。我前阵子忙一个项目，连续加班了一周，直到有一天突然头晕站不稳，才意识到自己已经严重透支了。但回想起来，身体其实一直在给我发信号，肩膀酸、眼睛干、脾气急，这些都是警告，但我完全忽略了。你说的\"被遮住\"，是不是就是这个意思？",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "头晕"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 11,
+          "text": "广大：完全正确。你的身体一直在说话，但你听不见了。而恢复自觉智能，首先要做的就是重新学会听。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 19,
+          "text": "广大：这个体验非常重要。呼吸是自觉智能的入口。当你的呼吸变深变慢，你的副交感神经就被激活了，身体的自我修复机制就开始运转。不需要任何药物和仪器，就是呼吸。气功的核心原理就是这个——通过调息来调动身体内在的自愈力。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "暗示可替代药物治疗",
+          "medium_subcategory": "alternative_medication",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "自愈",
+              "修复"
+            ],
+            "alternative_treatment": true
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 23,
+          "text": "广大：而且自觉智能不只是身体的觉知，还包括情绪的觉知。很多人不知道自己为什么焦虑，为什么易怒，为什么低落。其实情绪也是有信号的，它会在身体上先表现出来——胸闷、胃紧、肩膀僵硬。如果你能在身体信号出现的时候就觉察到，情绪就不会积累到爆发的程度。",
+          "claim_type": "factual",
+          "risk_level": "medium",
+          "risk_reason": "事实声明涉及慢性病，无来源引用",
+          "medium_subcategory": "chronic_factual",
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [
+              "焦虑",
+              "胸闷"
+            ],
+            "health_verbs": [],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 25,
+          "text": "慧心：这个我发现是真的。我有一次开会的时候特别烦躁，后来注意到自己一直在握拳，指关节都发白了。当我意识到这一点，把手松开深呼吸了几次，烦躁感就减轻了很多。觉察本身就是调节，这个原理挺奇妙的。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "减轻",
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 27,
+          "text": "广大：这就是自觉智能在起作用。你觉察到了，调节就自然发生了。不需要刻意控制，觉察本身就是调节。这就是为什么我们说自觉比自律更根本——自律是逼自己做什么，自觉是自然而然地做什么。",
+          "claim_type": "factual",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "调节"
+            ],
+            "alternative_treatment": false
+          }
+        },
+        {
+          "episode": "EP071",
+          "line_number": 31,
+          "text": "广大：对。在海涵春育，我们做的就是帮人恢复这种自觉智能。不是教你怎么做，而是帮你重新听到自己身体和内心的声音。当你能听到了，你就知道该怎么做了。有一位客人跟我说了一句话，她说来了海涵春育之后最大的收获不是学会了什么功法，而是重新认识了自己的身体。她说原来我的身体一直在照顾我，是我不曾好好照顾它。",
+          "claim_type": "testimonial",
+          "risk_level": "low",
+          "risk_reason": "一般健康描述",
+          "medium_subcategory": null,
+          "has_source": false,
+          "keywords_found": {
+            "critical_disease": [],
+            "chronic_condition": [],
+            "health_verbs": [
+              "恢复"
+            ],
+            "alternative_treatment": false
+          }
+        }
+      ]
+    }
+  }
+}

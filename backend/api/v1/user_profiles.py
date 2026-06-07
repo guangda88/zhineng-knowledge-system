@@ -14,7 +14,7 @@ from backend.common.db_helpers import require_pool
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/user", tags=["用户画像与评估"])
+router = APIRouter(prefix="/api/v1/user", tags=["用户画像与评估"])
 
 
 # ==================== 请求/响应模型 ====================

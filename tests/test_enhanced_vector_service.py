@@ -5,6 +5,7 @@
 """
 
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,6 +17,37 @@ from backend.services.enhanced_vector_service import (
     TextVectorizer,
     VectorQualityAssessor,
 )
+
+
+def _make_fake_embedding_result(text, provider=EmbeddingProvider.LOCAL):
+    fake_vector = [0.1] * 512
+    return EmbeddingResult(
+        vector=fake_vector,
+        provider=provider,
+        dimension=512,
+        quality_score=VectorQualityAssessor.assess(fake_vector),
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_embed_local():
+    async def _fake_embed_local(self, text):
+        return _make_fake_embedding_result(text)
+
+    async def _fake_embed_batch_local(self, texts, batch_size):
+        embeddings = [[0.1] * 512 for _ in texts]
+        scores = [VectorQualityAssessor.assess(e) for e in embeddings]
+        return BatchEmbeddingResult(
+            embeddings=embeddings,
+            provider=EmbeddingProvider.LOCAL,
+            total_time=0.0,
+            avg_time_per_item=0.0,
+            quality_scores=scores,
+        )
+
+    with patch.object(EnhancedEmbeddingService, "_embed_local", _fake_embed_local), \
+         patch.object(EnhancedEmbeddingService, "_embed_batch_local", _fake_embed_batch_local):
+        yield
 
 
 class TestVectorQualityAssessor:

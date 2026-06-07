@@ -25,7 +25,7 @@ class DatabaseConfig(BaseSettings):
     DB_POOL_SIZE: int = Field(default=10, ge=1, le=50, description="数据库连接池大小")
     DB_MAX_OVERFLOW: int = Field(default=20, ge=0, le=50, description="连接池最大溢出数")
     DB_POOL_TIMEOUT: int = Field(default=30, ge=1, le=120, description="连接池获取超时时间（秒）")
-    DB_POOL_RECYCLE: int = Field(default=3600, ge=60, description="连接池回收时间（秒）")
+    DB_POOL_RECYCLE: int = Field(default=300, ge=60, description="连接池回收时间（秒）")
     DB_MAX_CONNECTIONS: int = Field(default=10, ge=1, le=50, description="最大连接数")
 
     # 查询配置

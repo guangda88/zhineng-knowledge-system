@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/audio", tags=["音频处理"])
+router = APIRouter(prefix="/api/v1/audio", tags=["音频处理"])
 
 
 # ==================== 请求/响应模型 ====================

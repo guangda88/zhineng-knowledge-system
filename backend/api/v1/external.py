@@ -20,7 +20,7 @@ from backend.core.database import init_db_pool
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/external/v1", tags=["外部API"])
+router = APIRouter(prefix="/api/v1/external", tags=["外部API"])
 
 
 # ==================== 认证系统 ====================

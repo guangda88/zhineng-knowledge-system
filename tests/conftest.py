@@ -44,12 +44,17 @@ async def test_db() -> AsyncGenerator:
 
 @pytest.fixture
 def test_client():
-    """测试客户端 — 测试环境跳过认证和lifespan"""
+    """测试客户端 — 通过 _pytest_skip_auth flag 跳过认证"""
     from fastapi.testclient import TestClient
 
+    from backend.auth.middleware import AuthConfig, AuthMiddleware
     from backend.main import create_app
 
     app = create_app(lifespan_ctx=_noop_lifespan)
+    for mw in app.user_middleware:
+        if mw.cls is AuthMiddleware:
+            mw.kwargs["config"]._pytest_skip_auth = True
+            break
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client
 

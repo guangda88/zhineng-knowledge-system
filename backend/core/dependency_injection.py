@@ -149,13 +149,10 @@ async def require_admin_api_key(request: Request) -> bool:
     valid_keys = [k.strip() for k in raw_keys.split(",") if k.strip()] if raw_keys else []
 
     if not valid_keys:
-        if config.is_production():
-            raise HTTPException(
-                status_code=401,
-                detail="Admin API not configured. Set ADMIN_API_KEYS environment variable.",
-            )
-        logger.warning("ADMIN_API_KEYS not configured - admin endpoints are unprotected")
-        return True
+        raise HTTPException(
+            status_code=401,
+            detail="Admin API not configured. Set ADMIN_API_KEYS environment variable.",
+        )
 
     provided = request.headers.get("X-Admin-API-Key") or request.query_params.get("admin_api_key")
 

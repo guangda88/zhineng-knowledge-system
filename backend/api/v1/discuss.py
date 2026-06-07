@@ -9,10 +9,9 @@
 """
 
 import logging
-from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -34,30 +33,13 @@ ZHI_IDENTITY = (
 
 
 def _load_env_keys() -> dict[str, str]:
-    """Load API keys from env vars first, then .env files (host + container paths)."""
+    """Load API keys from environment variables only (no .env file reading)."""
     import os
 
     keys: dict[str, str] = {}
-
-    # 1) Read from .env files (both host and container paths)
-    for f in [
-        "/home/ai/lingzhi/.env",
-        "/app/.env",
-        "/app/backend/.env",
-    ]:
-        p = Path(f)
-        if p.exists():
-            for line in p.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if "=" in line and not line.startswith("#"):
-                    k, v = line.split("=", 1)
-                    keys[k.strip()] = v.strip()
-
-    # 2) Env vars override file values (docker-compose passes these)
     for k, v in os.environ.items():
         if "_API_KEY" in k or "_KEY" in k:
             keys[k] = v
-
     return keys
 
 
@@ -240,10 +222,9 @@ class NotifyRequest(BaseModel):
 
 
 @router.post("/lingmessage/notify")
-async def lingmessage_notify(req: NotifyRequest):
+async def lingmessage_notify(req: NotifyRequest, background_tasks: BackgroundTasks):
     """灵信通知端点 — 收到通知后独立生成回复并写入灵信"""
-    import sys
-    import threading
+    import importlib
 
     event_type = req.event or req.type
     logger.info(
@@ -251,14 +232,11 @@ async def lingmessage_notify(req: NotifyRequest):
     )
 
     if event_type == "family_chat" and req.thread_id:
-        sys.path.insert(0, "/home/ai/lingmessage")
-        from lingmessage.auto_reply import auto_reply
-
-        threading.Thread(
-            target=auto_reply,
-            args=("lingzhi", req.thread_id),
-            daemon=True,
-        ).start()
+        try:
+            auto_reply_mod = importlib.import_module("lingmessage.auto_reply")
+            background_tasks.add_task(auto_reply_mod.auto_reply, "lingzhi", req.thread_id)
+        except ImportError:
+            logger.warning("lingmessage.auto_reply not available, skipping auto_reply")
         return {"received": True, "service": "灵知", "action": "auto_replying"}
 
     if event_type != "new_message" or req.from_id == "lingzhi":
@@ -267,16 +245,15 @@ async def lingmessage_notify(req: NotifyRequest):
     if not req.topic:
         return {"received": True, "service": "灵知", "action": "no_topic"}
 
-    def _respond():
+    async def _respond():
         try:
-            import os
-
-            lingyi_src = os.environ.get(
-                "LINGYI_SRC_PATH", os.path.join(os.path.expanduser("~"), "lingyi", "src")
-            )
-            if lingyi_src not in sys.path:
-                sys.path.insert(0, lingyi_src)
-            from lingyi.lingmessage import read_discussion, send_message
+            try:
+                lingyi_lingmessage = importlib.import_module("lingyi.lingmessage")
+                read_discussion = lingyi_lingmessage.read_discussion
+                send_message = lingyi_lingmessage.send_message
+            except ImportError:
+                logger.warning("lingyi.lingmessage not available, skipping discuss reply")
+                return
 
             context = ""
             if req.discussion_id:
@@ -309,7 +286,6 @@ async def lingmessage_notify(req: NotifyRequest):
         except Exception as e:
             logger.error(f"灵知自动回复失败: {e}")
 
-    thread = threading.Thread(target=_respond, daemon=True)
-    thread.start()
+    background_tasks.add_task(_respond)
 
     return {"received": True, "service": "灵知", "action": "replying"}

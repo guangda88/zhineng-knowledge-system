@@ -23,9 +23,9 @@ class ProductionConfig(BaseConfig, DatabaseConfig, RedisConfig, SecurityConfig):
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_PER_HOUR: int = 1000
 
-    # 生产环境使用较大的连接池
-    DB_POOL_SIZE: int = 20
-    DB_MAX_OVERFLOW: int = 30
+    # 生产环境适中的连接池（DB_MAX_CONNECTIONS=10）
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 5
     REDIS_POOL_SIZE: int = 20
 
     # 生产环境必须配置密钥

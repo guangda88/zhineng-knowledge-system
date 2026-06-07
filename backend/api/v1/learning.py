@@ -15,7 +15,7 @@ from backend.services.learning.innovation_manager import InnovationManager
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/learning", tags=["学习与进化"])
+router = APIRouter(prefix="/api/v1/learning", tags=["学习与进化"])
 
 
 # ==================== 请求/响应模型 ====================

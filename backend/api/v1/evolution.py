@@ -3,17 +3,16 @@
 提供多AI对比、用户行为追踪、进化方向识别等功能
 """
 
+import json
 import logging
 import uuid
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.common.typing import JSONResponse
-from backend.core.database import get_async_session
+from backend.core.dependency_injection import get_db_pool
 from backend.services.evolution.comparison_engine import get_comparison_engine
 from backend.services.evolution.multi_ai_adapter import get_multi_ai_adapter
 
@@ -77,7 +76,6 @@ class EvolutionOpportunity(BaseModel):
 async def trigger_comparison(
     request: QAComparisonRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """
     触发多AI对比
@@ -118,36 +116,28 @@ async def trigger_comparison(
         # 3. 记录对比结果
         comparison_id = str(uuid.uuid4())
 
-        # 注意：这里假设ai_comparison_log表已创建
-        # 如果表不存在，只返回结果，不记录到数据库
         try:
-            await db.execute(
-                text(
+            pool = get_db_pool()
+            async with pool.acquire() as conn:
+                await conn.execute(
                     """
                     INSERT INTO ai_comparison_log
                     (user_id, session_id, request_type, user_query,
                      lingzhi_response, competitor_responses, comparison_metrics,
                      winner, created_at)
-                    VALUES (:user_id, :session_id, :request_type, :user_query,
-                            :lingzhi_response, :competitor_responses, :comparison_metrics,
-                            :winner, NOW())
-                """
-                ),
-                {
-                    "user_id": None,  # 从JWT获取
-                    "session_id": comparison_id,
-                    "request_type": request.request_type,
-                    "user_query": request.query,
-                    "lingzhi_response": request.lingzhi_response,
-                    "competitor_responses": comparison_result["responses"],
-                    "comparison_metrics": evaluation,
-                    "winner": evaluation["winner"],
-                },
-            )
-            await db.commit()
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+                    """,
+                    None,
+                    comparison_id,
+                    request.request_type,
+                    request.query,
+                    request.lingzhi_response,
+                    json.dumps(comparison_result["responses"]),
+                    json.dumps(evaluation),
+                    evaluation["winner"],
+                )
         except Exception as e:
             logger.warning(f"Failed to log comparison (table may not exist yet): {e}")
-            # 不影响主流程，继续返回结果
 
         return JSONResponse(
             {
@@ -169,7 +159,6 @@ async def trigger_comparison(
 async def track_user_behavior(
     request: BehaviorTrackingRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """
     追踪用户行为（焦点、停留、滚动）
@@ -194,27 +183,23 @@ async def track_user_behavior(
         # 持久化行为记录到 user_focus_log
         session_id = request.session_id or str(uuid.uuid4())
         try:
-            for behavior in request.behaviors:
-                await db.execute(
-                    text(
+            pool = get_db_pool()
+            async with pool.acquire() as conn:
+                for behavior in request.behaviors:
+                    await conn.execute(
                         """
                         INSERT INTO user_focus_log
                         (session_id, request_id, element_id, element_type,
                          dwell_time_ms, viewport_position, timestamp)
-                        VALUES (:session_id, :request_id, :element_id, :element_type,
-                                :dwell_time_ms, :viewport_position, NOW())
-                    """
-                    ),
-                    {
-                        "session_id": session_id,
-                        "request_id": request.request_id,
-                        "element_id": behavior.get("element_id"),
-                        "element_type": behavior.get("element_type", "other"),
-                        "dwell_time_ms": behavior.get("dwell_time_ms", 0),
-                        "viewport_position": behavior.get("viewport_position"),
-                    },
-                )
-            await db.commit()
+                        VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                        """,
+                        session_id,
+                        request.request_id,
+                        behavior.get("element_id"),
+                        behavior.get("element_type", "other"),
+                        behavior.get("dwell_time_ms", 0),
+                        json.dumps(behavior.get("viewport_position")),
+                    )
         except Exception as e:
             logger.warning(f"Failed to persist behavior (table may not exist): {e}")
 
@@ -237,7 +222,6 @@ async def track_user_behavior(
 async def submit_evolution_feedback(
     request: EvolutionFeedbackRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """
     提交对比反馈
@@ -253,26 +237,23 @@ async def submit_evolution_feedback(
     try:
         # 回写用户反馈到 ai_comparison_log
         try:
-            result = await db.execute(
-                text(
+            pool = get_db_pool()
+            async with pool.acquire() as conn:
+                result = await conn.execute(
                     """
                     UPDATE ai_comparison_log
-                    SET user_feedback = :feedback,
-                        user_comment = :comment,
-                        user_preference = :preference
-                    WHERE id = :comparison_id
-                """
-                ),
-                {
-                    "feedback": request.rating,
-                    "comment": request.comment,
-                    "preference": request.preferred_ai,
-                    "comparison_id": request.comparison_id,
-                },
-            )
-            await db.commit()
-            if result.rowcount == 0:
-                logger.warning(f"Comparison {request.comparison_id} not found for feedback")
+                    SET user_feedback = $1,
+                        user_comment = $2,
+                        user_preference = $3
+                    WHERE id = $4
+                    """,
+                    request.rating,
+                    request.comment,
+                    request.preferred_ai,
+                    request.comparison_id,
+                )
+                if result == "UPDATE 0":
+                    logger.warning(f"Comparison {request.comparison_id} not found for feedback")
         except Exception as e:
             logger.warning(f"Failed to write feedback (table may not exist): {e}")
 
@@ -297,11 +278,12 @@ async def submit_evolution_feedback(
 
 
 @router.get("/comparison/{comparison_id}", response_model=JSONResponse)
-async def get_comparison_result(comparison_id: str, db: AsyncSession = Depends(get_async_session)):
+async def get_comparison_result(comparison_id: str):
     """获取对比结果详情"""
     try:
-        result = await db.execute(
-            text(
+        pool = get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
                 """
                 SELECT id, session_id, request_type, user_query,
                        lingzhi_response, competitor_responses,
@@ -310,14 +292,12 @@ async def get_comparison_result(comparison_id: str, db: AsyncSession = Depends(g
                        improvement_suggestions, improvement_status,
                        created_at
                 FROM ai_comparison_log
-                WHERE session_id = :comparison_id
+                WHERE session_id = $1
                 ORDER BY created_at DESC
                 LIMIT 1
-            """
-            ),
-            {"comparison_id": comparison_id},
-        )
-        row = result.mappings().first()
+                """,
+                comparison_id,
+            )
 
         if not row:
             raise HTTPException(status_code=404, detail=f"Comparison {comparison_id} not found")
@@ -335,7 +315,7 @@ async def get_comparison_result(comparison_id: str, db: AsyncSession = Depends(g
 
 @router.get("/dashboard", response_model=JSONResponse)
 async def get_evolution_dashboard(
-    period: Literal["7d", "30d", "90d"] = "30d", db: AsyncSession = Depends(get_async_session)
+    period: Literal["7d", "30d", "90d"] = "30d",
 ):
     """
     获取进化仪表板
@@ -349,77 +329,73 @@ async def get_evolution_dashboard(
     - 已实施的进化
     """
     try:
-        interval_map = {"7d": "7 days", "30d": "30 days", "90d": "90 days"}
-        interval = interval_map.get(period, "30 days")
+        pool = get_db_pool()
+        days_map = {"7d": 7, "30d": 30, "90d": 90}
+        days = days_map.get(period, 30)
 
-        # 1. 对比统计摘要
-        summary_row = await db.execute(
-            text(
-                f"""
+        async with pool.acquire() as conn:
+            # 1. 对比统计摘要
+            summary = await conn.fetchrow(
+                """
                 SELECT
                     COUNT(*) AS total_comparisons,
                     COALESCE(SUM(CASE WHEN winner = 'lingzhi' THEN 1 ELSE 0 END)::float
                         / NULLIF(COUNT(*), 0) * 100, 0) AS lingzhi_win_rate
                 FROM ai_comparison_log
-                WHERE created_at >= NOW() - INTERVAL '{interval}'
-            """
+                WHERE created_at >= NOW() - $1 * INTERVAL '1 day'
+                """,
+                days,
             )
-        )
-        summary = summary_row.mappings().first()
 
-        # 2. 各AI胜率
-        perf_rows = await db.execute(
-            text(
-                f"""
+            # 2. 各AI胜率
+            perf_rows = await conn.fetch(
+                """
                 SELECT
                     winner AS provider,
                     COUNT(*) AS wins,
                     COUNT(*) * 100.0 / NULLIF(SUM(COUNT(*)) OVER (), 0) AS win_rate
                 FROM ai_comparison_log
-                WHERE created_at >= NOW() - INTERVAL '{interval}'
+                WHERE created_at >= NOW() - $1 * INTERVAL '1 day'
                   AND winner IS NOT NULL
                 GROUP BY winner
-            """
+                """,
+                days,
             )
-        )
-        ai_performance = {}
-        for row in perf_rows.mappings().all():
-            ai_performance[row["provider"]] = {
-                "wins": row["wins"],
-                "win_rate": float(row["win_rate"] or 0),
-            }
-        for provider in ["lingzhi", "hunyuan", "doubao", "deepseek", "glm"]:
-            ai_performance.setdefault(provider, {"wins": 0, "win_rate": 0.0})
+            ai_performance = {}
+            for row in perf_rows:
+                ai_performance[row["provider"]] = {
+                    "wins": row["wins"],
+                    "win_rate": float(row["win_rate"] or 0),
+                }
+            for provider in ["lingzhi", "hunyuan", "doubao", "deepseek", "glm"]:
+                ai_performance.setdefault(provider, {"wins": 0, "win_rate": 0.0})
 
-        # 3. 进化趋势
-        evo_rows = await db.execute(
-            text(
-                f"""
+            # 3. 进化趋势
+            evo = await conn.fetchrow(
+                """
                 SELECT
                     COUNT(*) AS total_issues,
                     SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS resolved_issues
                 FROM evolution_log
-                WHERE created_at >= NOW() - INTERVAL '{interval}'
-            """
+                WHERE created_at >= NOW() - $1 * INTERVAL '1 day'
+                """,
+                days,
             )
-        )
-        evo = evo_rows.mappings().first()
-        total_issues = evo["total_issues"] if evo else 0
-        resolved = evo["resolved_issues"] if evo else 0
+            total_issues = evo["total_issues"] if evo else 0
+            resolved = evo["resolved_issues"] if evo else 0
 
-        # 4. 最近对比
-        recent_rows = await db.execute(
-            text(
-                f"""
+            # 4. 最近对比
+            recent_rows = await conn.fetch(
+                """
                 SELECT id, session_id, request_type, winner, created_at
                 FROM ai_comparison_log
-                WHERE created_at >= NOW() - INTERVAL '{interval}'
+                WHERE created_at >= NOW() - $1 * INTERVAL '1 day'
                 ORDER BY created_at DESC
                 LIMIT 10
-            """
+                """,
+                days,
             )
-        )
-        recent_comparisons = [dict(r) for r in recent_rows.mappings().all()]
+            recent_comparisons = [dict(r) for r in recent_rows]
 
         return JSONResponse(
             {

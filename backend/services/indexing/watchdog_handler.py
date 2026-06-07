@@ -68,7 +68,6 @@ class IndexingEventHandler(FileSystemEventHandler):
 
         # 防抖缓存
         self._debounce_cache: dict[str, float] = {}
-        self._loop = asyncio.get_event_loop()
 
     def _should_ignore(self, path: str) -> bool:
         """检查是否应该忽略该文件"""

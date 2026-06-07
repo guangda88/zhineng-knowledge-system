@@ -1,23 +1,34 @@
 """
 Reranker 模块测试
 """
-import pytest
+import sys
 from unittest.mock import MagicMock, patch
 
-from backend.services.retrieval.reranker import Reranker, create_reranker
+import pytest
 
 
 class TestCreateReranker:
+    @pytest.fixture(autouse=True)
+    def _mock_cross_encoder(self):
+        with patch.dict(sys.modules, {"sentence_transformers": MagicMock()}):
+            yield
+
     def test_create_reranker_default(self):
+        from backend.services.retrieval.reranker import Reranker, create_reranker
+
         reranker = create_reranker()
         assert isinstance(reranker, Reranker)
 
     def test_create_reranker_custom_top_n(self):
+        from backend.services.retrieval.reranker import create_reranker
+
         reranker = create_reranker(top_n=5)
         assert reranker.top_n == 5
 
     @patch("backend.services.retrieval.reranker.asyncio.Lock")
     def test_cpu_fallback_top_n(self, mock_lock):
+        from backend.services.retrieval.reranker import create_reranker
+
         with patch("backend.services.retrieval.reranker._DEFAULT_TOP_N", 20), \
              patch("backend.services.retrieval.reranker._FALLBACK_TOP_N", 10):
             reranker = create_reranker(top_n=None)
@@ -25,24 +36,37 @@ class TestCreateReranker:
 
 
 class TestReranker:
+    @pytest.fixture(autouse=True)
+    def _mock_cross_encoder(self):
+        with patch.dict(sys.modules, {"sentence_transformers": MagicMock()}):
+            yield
+
     def test_init_defaults(self):
+        from backend.services.retrieval.reranker import Reranker
+
         r = Reranker()
         assert r.top_n == 20
         assert r.max_length == 512
 
     def test_init_custom(self):
+        from backend.services.retrieval.reranker import Reranker
+
         r = Reranker(top_n=5, max_length=256)
         assert r.top_n == 5
         assert r.max_length == 256
 
     @pytest.mark.asyncio
     async def test_rerank_empty_results(self):
+        from backend.services.retrieval.reranker import Reranker
+
         r = Reranker()
         result = await r.rerank("test query", [])
         assert result == []
 
     @pytest.mark.asyncio
     async def test_rerank_single_result(self):
+        from backend.services.retrieval.reranker import Reranker
+
         r = Reranker()
         results = [{"id": 1, "title": "test", "content": "content", "score": 0.9}]
         result = await r.rerank("test query", results)
@@ -51,6 +75,8 @@ class TestReranker:
 
     @pytest.mark.asyncio
     async def test_rerank_with_model(self):
+        from backend.services.retrieval.reranker import Reranker
+
         mock_model = MagicMock()
         mock_model.predict.return_value = [0.8, 0.3, 0.95]
 
@@ -78,6 +104,8 @@ class TestReranker:
 
     @pytest.mark.asyncio
     async def test_rerank_truncates_long_content(self):
+        from backend.services.retrieval.reranker import Reranker
+
         mock_model = MagicMock()
         mock_model.predict.return_value = [0.5, 0.4]
 
@@ -98,6 +126,8 @@ class TestReranker:
 
     @pytest.mark.asyncio
     async def test_rerank_top_n_limit(self):
+        from backend.services.retrieval.reranker import Reranker
+
         mock_model = MagicMock()
         mock_model.predict.return_value = [0.1 * i for i in range(5)]
 
@@ -113,6 +143,8 @@ class TestReranker:
 
     @pytest.mark.asyncio
     async def test_rerank_model_failure_returns_original(self):
+        from backend.services.retrieval.reranker import Reranker
+
         mock_model = MagicMock()
         mock_model.predict.side_effect = RuntimeError("model error")
 

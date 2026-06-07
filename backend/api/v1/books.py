@@ -10,14 +10,9 @@ lingflow 增强功能：
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import distinct, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Query
 
-from backend.core.database import get_async_session
 from backend.core.dependency_injection import get_db_pool as _get_di_db_pool
-from backend.models.book import Book
-from backend.models.source import DataSource
 from backend.schemas.book import (
     BookDetailResponse,
     BookSearchResult,
@@ -32,7 +27,12 @@ from backend.services.lingflow_book_search import lingflowBookSearchService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/library", tags=["书籍搜索"])
+router = APIRouter(prefix="/api/v1/library", tags=["书籍搜索"])
+
+
+def _get_service() -> BookSearchService:
+    pool = _get_di_db_pool()
+    return BookSearchService(pool)
 
 
 @router.get("/search", response_model=BookSearchResult)
@@ -45,12 +45,10 @@ async def search_books(
     author: Optional[str] = Query(None, description="作者筛选"),
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
-    db: AsyncSession = Depends(get_async_session),
 ):
     """搜索书籍（元数据搜索）"""
     try:
-        pool = _get_di_db_pool()
-        service = BookSearchService(db, pool)
+        service = _get_service()
         result = await service.search_metadata(q, category, dynasty, author, page, size)
         return result
     except Exception as e:
@@ -63,12 +61,10 @@ async def search_book_content(
     category: Optional[str] = Query(None, description="分类筛选"),
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
-    db: AsyncSession = Depends(get_async_session),
 ):
     """全文内容搜索"""
     try:
-        pool = _get_di_db_pool()
-        service = BookSearchService(db, pool)
+        service = _get_service()
         result = await service.search_content(q, category, page, size)
         return result
     except Exception as e:
@@ -78,12 +74,10 @@ async def search_book_content(
 @router.get("/{book_id}", response_model=BookDetailResponse)
 async def get_book(
     book_id: int,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """获取书籍详情"""
     try:
-        pool = _get_di_db_pool()
-        service = BookSearchService(db, pool)
+        service = _get_service()
         result = await service.get_book_detail(book_id)
         if not result:
             raise HTTPException(status_code=404, detail=f"书籍 {book_id} 不存在")
@@ -99,12 +93,14 @@ async def get_related_books(
     book_id: int,
     top_k: int = Query(10, ge=1, le=50, description="返回数量"),
     threshold: float = Query(0.6, ge=0.0, le=1.0, description="相似度阈值"),
-    db: AsyncSession = Depends(get_async_session),
 ):
     """获取相关书籍（基于向量相似度）"""
     try:
         pool = _get_di_db_pool()
-        service = BookSearchService(db, pool)
+        if pool is None:
+            logger.warning("DB pool not initialized, returning empty related books")
+            return []
+        service = BookSearchService(pool)
         results = await service.search_similar(book_id, top_k, threshold)
         return results
     except Exception as e:
@@ -115,12 +111,10 @@ async def get_related_books(
 async def get_chapter(
     book_id: int,
     chapter_id: int,
-    db: AsyncSession = Depends(get_async_session),
 ):
     """获取章节内容"""
     try:
-        pool = _get_di_db_pool()
-        service = BookSearchService(db, pool)
+        service = _get_service()
         result = await service.get_chapter_content(book_id, chapter_id)
         if not result:
             raise HTTPException(status_code=404, detail="章节不存在")
@@ -132,52 +126,16 @@ async def get_chapter(
 
 
 @router.get("/filters/list", response_model=FiltersResponse)
-async def get_filters(db: AsyncSession = Depends(get_async_session)):
+async def get_filters():
     """获取筛选选项"""
     try:
-        categories_stmt = (
-            select(distinct(Book.category)).where(Book.category.isnot(None)).order_by(Book.category)
-        )
-        categories_result = await db.execute(categories_stmt)
-        categories = [row[0] for row in categories_result.scalars().all()]
-
-        dynasties_stmt = (
-            select(distinct(Book.dynasty)).where(Book.dynasty.isnot(None)).order_by(Book.dynasty)
-        )
-        dynasties_result = await db.execute(dynasties_stmt)
-        dynasties = [row[0] for row in dynasties_result.scalars().all()]
-
-        languages_stmt = (
-            select(distinct(Book.language)).where(Book.language.isnot(None)).order_by(Book.language)
-        )
-        languages_result = await db.execute(languages_stmt)
-        languages = [row[0] for row in languages_result.scalars().all()]
-
-        sources_result = await db.execute(
-            select(DataSource)
-            .where(DataSource.is_active == True)  # noqa: E712
-            .order_by(DataSource.sort_order)  # noqa: E712
-        )
-        sources = [
-            DataSourceResponse(
-                id=s.id,
-                code=s.code,
-                name_zh=s.name_zh,
-                name_en=s.name_en,
-                description=s.description,
-                category=s.category,
-                supports_search=s.supports_search,
-                supports_fulltext=s.supports_fulltext,
-                is_active=s.is_active,
-            )
-            for s in sources_result.scalars().all()
-        ]
-
+        service = _get_service()
+        result = await service.get_filters()
         return FiltersResponse(
-            categories=categories,
-            dynasties=dynasties,
-            languages=languages,
-            sources=sources,
+            categories=result["categories"],
+            dynasties=result["dynasties"],
+            languages=result["languages"],
+            sources=[DataSourceResponse(**s) for s in result["sources"]],
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取筛选选项失败: {str(e)}")

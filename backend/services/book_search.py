@@ -9,12 +9,6 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import text
-
-from backend.models.book import Book, BookChapter
 from backend.services.retrieval.vector import VectorRetriever
 
 logger = logging.getLogger(__name__)
@@ -23,8 +17,7 @@ logger = logging.getLogger(__name__)
 class BookSearchService:
     """书籍搜索服务"""
 
-    def __init__(self, db_session: AsyncSession, db_pool):
-        self.db = db_session
+    def __init__(self, db_pool):
         self.pool = db_pool
 
     async def search_metadata(
@@ -36,144 +29,119 @@ class BookSearchService:
         page: int = 1,
         size: int = 20,
     ) -> Dict[str, Any]:
-        """元数据搜索（标题、作者、描述）
-
-        Args:
-            query: 搜索关键词
-            category: 分类筛选
-            dynasty: 朝代筛选
-            author: 作者筛选
-            page: 页码
-            size: 每页数量
-
-        Returns:
-            搜索结果字典
-        """
-        # 构建基础查询
-        stmt = select(Book)
-
-        # 构建搜索条件
+        """元数据搜索（标题、作者、描述）"""
         conditions = []
+        params = []
+        param_idx = 1
 
         if query and query.strip():
             query_str = query.strip()
-            # 使用ILIKE进行模糊匹配（利用pg_trgm索引）
             conditions.append(
-                or_(
-                    Book.title.ilike(f"%{query_str}%"),
-                    Book.author.ilike(f"%{query_str}%"),
-                    Book.description.ilike(f"%{query_str}%"),
-                )
+                f"(title ILIKE ${param_idx} OR author ILIKE ${param_idx} OR description ILIKE ${param_idx})"
             )
+            params.append(f"%{query_str}%")
+            param_idx += 1
 
         if category:
-            conditions.append(Book.category == category)
+            conditions.append(f"category = ${param_idx}")
+            params.append(category)
+            param_idx += 1
 
         if dynasty:
-            conditions.append(Book.dynasty == dynasty)
+            conditions.append(f"dynasty = ${param_idx}")
+            params.append(dynasty)
+            param_idx += 1
 
         if author:
-            conditions.append(Book.author.ilike(f"%{author}%"))
+            conditions.append(f"author ILIKE ${param_idx}")
+            params.append(f"%{author}%")
+            param_idx += 1
 
-        # 应用所有条件
-        if conditions:
-            stmt = stmt.where(and_(*conditions))
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-        # 排序：有标题匹配的优先
+        order_clause = "ORDER BY view_count DESC, created_at DESC"
         if query and query.strip():
-            stmt = stmt.order_by(
-                text("CASE WHEN title ILIKE :query_start THEN 1 ELSE 2 END"),
-                Book.view_count.desc(),
-                Book.created_at.desc(),
-            ).params(query_start=f"{query.strip()}%")
-        else:
-            stmt = stmt.order_by(Book.view_count.desc(), Book.created_at.desc())
+            order_clause = f"ORDER BY CASE WHEN title ILIKE ${param_idx} THEN 1 ELSE 2 END, view_count DESC, created_at DESC"
+            params.append(f"{query.strip()}%")
+            param_idx += 1
 
-        # 获取总数
-        count_stmt = select(func.count(Book.id))
-        if conditions:
-            count_stmt = count_stmt.where(and_(*conditions))
-        total_result = await self.db.execute(count_stmt)
-        total = total_result.scalar()
+        async with self.pool.acquire() as conn:
+            count_sql = f"SELECT count(*) as total FROM books {where_clause}"
+            row = await conn.fetchrow(count_sql, *params[:param_idx - 1])
+            total = row["total"] if row else 0
 
-        # 分页
-        stmt = stmt.limit(size).offset((page - 1) * size)
-        result = await self.db.execute(stmt)
-        books = result.scalars().all()
+            offset = (page - 1) * size
+            data_sql = (
+                f"SELECT id, title, author, category, dynasty, year, language, "
+                f"description, has_content, total_pages, total_chars, "
+                f"view_count, source_id, created_at "
+                f"FROM books {where_clause} {order_clause} "
+                f"LIMIT ${param_idx} OFFSET ${param_idx + 1}"
+            )
+            params.extend([size, offset])
+            rows = await conn.fetch(data_sql, *params)
 
         return {
             "total": total or 0,
             "page": page,
             "size": size,
-            "results": [self._book_to_dict(book) for book in books],
+            "results": [self._book_row_to_dict(r) for r in rows],
         }
 
     async def search_content(
         self, query: str, category: Optional[str] = None, page: int = 1, size: int = 20
     ) -> Dict[str, Any]:
-        """全文内容搜索
-
-        Args:
-            query: 搜索关键词
-            category: 分类筛选
-            page: 页码
-            size: 每页数量
-
-        Returns:
-            搜索结果字典
-        """
+        """全文内容搜索"""
         if not query or not query.strip():
             return {"total": 0, "page": page, "size": size, "results": []}
 
-        # 构建查询
-        stmt = select(BookChapter).join(Book)
-
-        conditions = [BookChapter.content.ilike(f"%{query.strip()}%")]
+        conditions = ["bc.content ILIKE $1"]
+        params: list = [f"%{query.strip()}%"]
+        param_idx = 2
 
         if category:
-            conditions.append(Book.category == category)
+            conditions.append(f"b.category = ${param_idx}")
+            params.append(category)
+            param_idx += 1
 
-        stmt = stmt.where(and_(*conditions))
-        stmt = stmt.order_by(BookChapter.char_count.desc())
+        where_clause = f"WHERE {' AND '.join(conditions)}"
 
-        # 分页
-        stmt = stmt.limit(size).offset((page - 1) * size)
-        result = await self.db.execute(stmt)
-        chapters = result.scalars().all()
+        async with self.pool.acquire() as conn:
+            offset = (page - 1) * size
+            sql = (
+                f"SELECT bc.id, bc.book_id, bc.chapter_num, bc.title, "
+                f"bc.content, bc.char_count, b.title as book_title "
+                f"FROM book_chapters bc JOIN books b ON bc.book_id = b.id "
+                f"{where_clause} "
+                f"ORDER BY bc.char_count DESC "
+                f"LIMIT ${param_idx} OFFSET ${param_idx + 1}"
+            )
+            params.extend([size, offset])
+            rows = await conn.fetch(sql, *params)
 
         return {
-            "total": len(chapters),  # 简化：不计算总数
+            "total": len(rows),
             "page": page,
             "size": size,
-            "results": [self._chapter_to_dict(ch, query) for ch in chapters],
+            "results": [self._chapter_row_to_dict(r, query) for r in rows],
         }
 
     async def search_similar(
         self, book_id: int, top_k: int = 10, threshold: float = 0.6
     ) -> List[Dict[str, Any]]:
-        """基于向量的相似书籍推荐
+        """基于向量的相似书籍推荐"""
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT embedding FROM books WHERE id = $1", book_id
+            )
+            if not row or not row["embedding"]:
+                logger.warning(f"Book {book_id} not found or has no embedding")
+                return []
 
-        Args:
-            book_id: 目标书籍ID
-            top_k: 返回数量
-            threshold: 相似度阈值
+            query_vector = row["embedding"]
 
-        Returns:
-            相似书籍列表
-        """
-        # 获取目标书籍
-        book = await self.db.get(Book, book_id)
-        if not book or not book.embedding:
-            logger.warning(f"Book {book_id} not found or has no embedding")
-            return []
-
-        # 使用VectorRetriever进行向量搜索
         try:
-            async with VectorRetriever(self.pool) as _retriever:  # noqa: F841
-                # 获取书籍的嵌入向量
-                query_vector = book.embedding
-
-                # 构建向量搜索SQL
+            async with VectorRetriever(self.pool) as _retriever:
                 vector_str = "[" + ",".join(map(str, query_vector)) + "]"
 
                 sql = """
@@ -187,18 +155,17 @@ class BookSearchService:
 
                 rows = await self.pool.fetch(sql, vector_str, book_id, top_k)
 
-                # 过滤低于阈值的结果
                 results = []
-                for row in rows:
-                    if row["similarity"] >= threshold:
+                for r in rows:
+                    if r["similarity"] >= threshold:
                         results.append(
                             {
-                                "id": row["id"],
-                                "title": row["title"],
-                                "author": row["author"],
-                                "category": row["category"],
-                                "dynasty": row["dynasty"],
-                                "similarity": float(row["similarity"]),
+                                "id": r["id"],
+                                "title": r["title"],
+                                "author": r["author"],
+                                "category": r["category"],
+                                "dynasty": r["dynasty"],
+                                "similarity": float(r["similarity"]),
                             }
                         )
 
@@ -210,118 +177,160 @@ class BookSearchService:
             return []
 
     async def get_book_detail(self, book_id: int) -> Optional[Dict[str, Any]]:
-        """获取书籍详情
+        """获取书籍详情"""
+        async with self.pool.acquire() as conn:
+            book = await conn.fetchrow(
+                "SELECT id, title, author, category, dynasty, year, language, "
+                "description, has_content, total_pages, total_chars, "
+                "view_count, source_id, created_at "
+                "FROM books WHERE id = $1",
+                book_id,
+            )
+            if not book:
+                return None
 
-        Args:
-            book_id: 书籍ID
+            chapters = await conn.fetch(
+                "SELECT id, chapter_num, title, level, char_count, order_position "
+                "FROM book_chapters WHERE book_id = $1 "
+                "ORDER BY order_position, chapter_num",
+                book_id,
+            )
 
-        Returns:
-            书籍详情字典，如果不存在返回None
-        """
-        stmt = select(Book).options(selectinload(Book.chapters)).where(Book.id == book_id)
-        result_q = await self.db.execute(stmt)
-        book = result_q.scalar_one_or_none()
-        if not book:
-            return None
+            await conn.execute(
+                "UPDATE books SET view_count = view_count + 1 WHERE id = $1",
+                book_id,
+            )
 
-        # 增加浏览计数 - 使用UPDATE语句避免async错误
-        await self.db.execute(
-            update(Book).where(Book.id == book_id).values(view_count=Book.view_count + 1)
-        )
-        await self.db.commit()
-
-        # 刷新以获取更新后的值
-        await self.db.refresh(book)
-
-        return self._book_to_dict(book, include_chapters=True)
+        result = self._book_row_to_dict(book)
+        result["chapters"] = [
+            {
+                "id": ch["id"],
+                "chapter_num": ch["chapter_num"],
+                "title": ch["title"],
+                "level": ch["level"],
+                "char_count": ch["char_count"],
+            }
+            for ch in chapters
+        ]
+        result["view_count"] = book["view_count"] + 1
+        return result
 
     async def get_chapter_content(self, book_id: int, chapter_id: int) -> Optional[Dict[str, Any]]:
-        """获取章节内容
+        """获取章节内容"""
+        async with self.pool.acquire() as conn:
+            chapter = await conn.fetchrow(
+                "SELECT id, book_id, chapter_num, title, content, char_count "
+                "FROM book_chapters WHERE id = $1 AND book_id = $2",
+                chapter_id,
+                book_id,
+            )
 
-        Args:
-            book_id: 书籍ID
-            chapter_id: 章节ID
-
-        Returns:
-            章节内容字典
-        """
-        chapter = await self.db.get(BookChapter, chapter_id)
-        if not chapter or chapter.book_id != book_id:
+        if not chapter:
             return None
 
         return {
-            "id": chapter.id,
-            "book_id": chapter.book_id,
-            "chapter_num": chapter.chapter_num,
-            "title": chapter.title,
-            "content": chapter.content,
-            "char_count": chapter.char_count,
+            "id": chapter["id"],
+            "book_id": chapter["book_id"],
+            "chapter_num": chapter["chapter_num"],
+            "title": chapter["title"],
+            "content": chapter["content"],
+            "char_count": chapter["char_count"],
         }
 
-    def _book_to_dict(self, book: Book, include_chapters: bool = False) -> Dict[str, Any]:
-        """转换为字典"""
-        result = {
-            "id": book.id,
-            "title": book.title,
-            "author": book.author,
-            "category": book.category,
-            "dynasty": book.dynasty,
-            "year": book.year,
-            "language": book.language,
-            "description": book.description,
-            "has_content": book.has_content,
-            "total_pages": book.total_pages,
-            "total_chars": book.total_chars,
-            "view_count": book.view_count,
-            "source_id": book.source_id,
-            "created_at": book.created_at.isoformat() if book.created_at else None,
-        }
-
-        if include_chapters:
-            result["chapters"] = [
-                {
-                    "id": ch.id,
-                    "chapter_num": ch.chapter_num,
-                    "title": ch.title,
-                    "level": ch.level,
-                    "char_count": ch.char_count,
-                }
-                for ch in sorted(book.chapters, key=lambda x: x.order_position or 0)
+    async def get_filters(self) -> Dict[str, Any]:
+        """获取筛选选项"""
+        async with self.pool.acquire() as conn:
+            categories = [
+                r["category"]
+                for r in await conn.fetch(
+                    "SELECT DISTINCT category FROM books "
+                    "WHERE category IS NOT NULL ORDER BY category"
+                )
             ]
+            dynasties = [
+                r["dynasty"]
+                for r in await conn.fetch(
+                    "SELECT DISTINCT dynasty FROM books "
+                    "WHERE dynasty IS NOT NULL ORDER BY dynasty"
+                )
+            ]
+            languages = [
+                r["language"]
+                for r in await conn.fetch(
+                    "SELECT DISTINCT language FROM books "
+                    "WHERE language IS NOT NULL ORDER BY language"
+                )
+            ]
+            sources = await conn.fetch(
+                "SELECT id, code, name_zh, name_en, description, category, "
+                "supports_search, supports_fulltext, is_active "
+                "FROM data_sources WHERE is_active = true ORDER BY sort_order"
+            )
 
-        return result
+        return {
+            "categories": categories,
+            "dynasties": dynasties,
+            "languages": languages,
+            "sources": [
+                {
+                    "id": s["id"],
+                    "code": s["code"],
+                    "name_zh": s["name_zh"],
+                    "name_en": s["name_en"],
+                    "description": s["description"],
+                    "category": s["category"],
+                    "supports_search": s["supports_search"],
+                    "supports_fulltext": s["supports_fulltext"],
+                    "is_active": s["is_active"],
+                }
+                for s in sources
+            ],
+        }
 
-    def _chapter_to_dict(self, chapter: BookChapter, query: str = None) -> Dict[str, Any]:
-        """转换为字典（带高亮）"""
-        # 生成高亮预览
-        preview = chapter.content or ""
+    def _book_row_to_dict(self, row) -> Dict[str, Any]:
+        """转换行为字典"""
+        return {
+            "id": row["id"],
+            "title": row["title"],
+            "author": row["author"],
+            "category": row["category"],
+            "dynasty": row["dynasty"],
+            "year": row["year"],
+            "language": row["language"],
+            "description": row["description"],
+            "has_content": row["has_content"],
+            "total_pages": row["total_pages"],
+            "total_chars": row["total_chars"],
+            "view_count": row["view_count"],
+            "source_id": row["source_id"],
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        }
+
+    def _chapter_row_to_dict(self, row, query: str = None) -> Dict[str, Any]:
+        """转换章节行为字典（带高亮）"""
+        preview = row["content"] or ""
         if query and query.strip():
-            # 简单高亮：截取包含关键词的部分
             query_lower = query.strip().lower()
             content_lower = preview.lower()
             pos = content_lower.find(query_lower)
 
             if pos != -1:
-                # 截取关键词前后200字符
                 start = max(0, pos - 200)
                 end = min(len(preview), pos + 200)
                 preview = preview[start:end]
-
-                # 添加高亮标记
                 if len(preview) > 0:
                     preview = preview.replace(
-                        query.strip(), f"**{query.strip()}**", 1  # 只替换第一个
+                        query.strip(), f"**{query.strip()}**", 1
                     )
             else:
-                # 如果没找到，取前400字符
                 preview = preview[:400] + "..."
 
         return {
-            "id": chapter.id,
-            "book_id": chapter.book_id,
-            "book_title": chapter.book.title if chapter.book else "",
-            "chapter_num": chapter.chapter_num,
-            "title": chapter.title,
+            "id": row["id"],
+            "book_id": row["book_id"],
+            "book_title": row["book_title"] if "book_title" in row.keys() else "",
+            "chapter_num": row["chapter_num"],
+            "title": row["title"],
             "preview": preview,
-            "char_count": chapter.char_count,
+            "char_count": row["char_count"],
         }

@@ -193,13 +193,69 @@
                 <section class="module" id="module-library">
                     <div class="module-header">
                         <h2>知识库</h2>
+                        <div class="module-stats" id="libraryStats"></div>
                         <div class="module-actions">
                             <button class="btn btn-primary" id="addDocumentBtn">+ 添加文档</button>
                             <button class="btn btn-secondary" id="refreshLibraryBtn">刷新</button>
                         </div>
                     </div>
 
-                    <div class="library-content">
+                    <div class="search-container">
+                        <div class="search-box-large">
+                            <input type="text" id="librarySearchInput" placeholder="搜索书名、作者...">
+                            <button class="btn btn-primary search-main-btn" id="librarySearchBtn">搜索</button>
+                        </div>
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label>搜索类型：</label>
+                                <div class="filter-toggle" id="librarySearchTypeToggle">
+                                    <button class="toggle-btn active" data-type="metadata">元数据</button>
+                                    <button class="toggle-btn" data-type="content">全文</button>
+                                </div>
+                            </div>
+                            <div class="filter-group">
+                                <label>分类：</label>
+                                <select class="filter-select" id="libraryCategoryFilter">
+                                    <option value="">全部分类</option>
+                                    <option value="国学">国学</option>
+                                    <option value="中医">中医</option>
+                                    <option value="气功">气功</option>
+                                    <option value="儒家">儒家</option>
+                                    <option value="道家">道家</option>
+                                    <option value="佛学">佛学</option>
+                                    <option value="哲学">哲学</option>
+                                    <option value="武术">武术</option>
+                                    <option value="古籍">古籍</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>朝代：</label>
+                                <select class="filter-select" id="libraryDynastyFilter">
+                                    <option value="">全部朝代</option>
+                                    <option value="先秦">先秦</option>
+                                    <option value="秦汉">秦汉</option>
+                                    <option value="魏晋">魏晋</option>
+                                    <option value="南北朝">南北朝</option>
+                                    <option value="隋唐">隋唐</option>
+                                    <option value="宋代">宋代</option>
+                                    <option value="元代">元代</option>
+                                    <option value="明代">明代</option>
+                                    <option value="清代">清代</option>
+                                    <option value="近代">近代</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="libraryResults">
+                        <div class="results-placeholder">
+                            <div class="placeholder-icon">📚</div>
+                            <h3>知识库搜索</h3>
+                            <p>输入书名、作者或关键词搜索，或浏览分类</p>
+                        </div>
+                    </div>
+
+                    <div class="library-content" style="display:none">
                         <div class="library-sidebar">
                             <div class="library-tree" id="libraryTree">
                                 <div class="tree-item expanded" data-category="all">

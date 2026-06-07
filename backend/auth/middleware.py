@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Optional, Set
 
@@ -63,8 +64,6 @@ class AuthConfig:
             "/auth/login",
             "/auth/register",
             "/auth/refresh",
-            "/api/v1/discuss",
-            "/api/v1/lingmessage/notify",
             "/metrics",
             "/metrics/prometheus",
             "/api/v1/metrics",
@@ -84,6 +83,7 @@ class AuthConfig:
     )
     log_denied: bool = True
     require_auth_for_api: bool = True
+    _pytest_skip_auth: bool = False
 
 
 def is_public_path(path: str, config: AuthConfig) -> bool:
@@ -233,9 +233,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         """
         path = request.url.path
 
-        # 测试/开发环境跳过认证
-        environment = os.getenv("ENVIRONMENT", "development")
-        if environment in ("test", "testing"):
+        # 仅在 pytest 进程中跳过认证（检查 sys.modules，不可通过环境变量伪造）
+        if self.config._pytest_skip_auth or "pytest" in sys.modules:
             return await call_next(request)
 
         # 公开路径直接放行

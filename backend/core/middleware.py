@@ -38,6 +38,24 @@ def get_allowed_origins() -> list[str]:
 
     origins_str = os.getenv("ALLOWED_ORIGINS", "").strip()
 
+    # 安全检查：生产环境禁止通配符
+    if origins_str == "*":
+        environment = config.ENVIRONMENT.lower()
+        if environment in ("production", "prod"):
+            logger.error("ALLOWED_ORIGINS='*' 在生产环境不允许（与 allow_credentials=True 冲突）")
+            raise ConfigError(
+                "安全错误: ALLOWED_ORIGINS 不允许为 '*'（allow_credentials=True 时浏览器拒绝）"
+            )
+        logger.warning("ALLOWED_ORIGINS='*' 仅限开发环境，建议使用具体域名")
+        return [
+            "http://localhost:3000",
+            "http://localhost:8000",
+            "http://localhost:8001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:8000",
+            "http://127.0.0.1:8001",
+        ]
+
     if not origins_str:
         environment = config.ENVIRONMENT.lower()
 
@@ -65,7 +83,7 @@ def get_allowed_origins() -> list[str]:
         origin = origin.strip()
         if origin:
             # 基本验证
-            if not (origin.startswith("http://") or origin.startswith("https://")):
+            if not origin.startswith(("http://", "https://")):
                 logger.warning(f"无效的来源格式: {origin}，将被忽略")
                 continue
             origins.append(origin)
@@ -120,7 +138,8 @@ async def log_requests(request: Request, call_next):
         response = await call_next(request)
         process_time = time.time() - start_time
 
-        if request.url.path.startswith("/api/"):
+        _api_prefix = "/api/"
+        if request.url.path[: len(_api_prefix)] == _api_prefix:
             logger.info(
                 f"{request.method} {request.url.path} - "
                 f"{response.status_code} - {process_time:.3f}s"

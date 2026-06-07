@@ -10,7 +10,13 @@ from tests.conftest import _noop_lifespan
 @pytest.fixture
 def client():
     """测试客户端"""
+    from backend.auth.middleware import AuthMiddleware
+
     app = create_app(lifespan_ctx=_noop_lifespan)
+    for mw in app.user_middleware:
+        if mw.cls is AuthMiddleware:
+            mw.kwargs["config"]._pytest_skip_auth = True
+            break
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
 

@@ -191,6 +191,7 @@ class TestFeedbackAPI:
 
         from fastapi import FastAPI
 
+        from backend.auth.middleware import AuthMiddleware
         from backend.main import create_app
 
         @asynccontextmanager
@@ -198,6 +199,10 @@ class TestFeedbackAPI:
             yield
 
         app = create_app(lifespan_ctx=_noop)
+        for mw in app.user_middleware:
+            if mw.cls is AuthMiddleware:
+                mw.kwargs["config"]._pytest_skip_auth = True
+                break
         from fastapi.testclient import TestClient
 
         with TestClient(app, raise_server_exceptions=False) as c:

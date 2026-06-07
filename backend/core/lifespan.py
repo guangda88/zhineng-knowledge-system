@@ -118,14 +118,6 @@ async def _warm_up_cache(config, db_service):
         logger.warning(f"Cache warm-up skipped: {e}")
 
 
-async def _init_sqlalchemy():
-    """初始化 SQLAlchemy ORM"""
-    from backend.core.database import init_async_engine
-
-    await init_async_engine()
-    logger.info("SQLAlchemy ORM initialized")
-
-
 async def _init_domains(db_service):
     """初始化领域系统"""
     from domains import setup_domains
@@ -246,6 +238,18 @@ async def _init_health_checks(db_service):
         logger.info("Health checks started")
 
 
+async def _warmup_bm25(db_service):
+    """预热 BM25 索引，消除首次查询冷启动延迟"""
+    try:
+        from backend.services.retrieval.bm25 import BM25Retriever
+
+        retriever = BM25Retriever(db_service.pool)
+        await retriever.initialize()
+        logger.info("BM25 index pre-warmed")
+    except Exception as e:
+        logger.warning(f"BM25 warm-up skipped: {e}")
+
+
 async def _init_metrics():
     """初始化指标收集"""
     from monitoring import get_metrics_collector
@@ -301,14 +305,6 @@ async def _shutdown_learning_scheduler(app):
         logger.info("Learning scheduler stopped")
 
 
-async def _shutdown_sqlalchemy():
-    """关闭 SQLAlchemy ORM"""
-    from backend.core.database import close_async_engine
-
-    await close_async_engine()
-    logger.info("SQLAlchemy ORM closed")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理
@@ -359,7 +355,7 @@ async def lifespan(app: FastAPI):
 
     await _safe_init("Cache system")(_init_cache_system)(config, cache_service)
     await _safe_init("Cache warm-up")(_warm_up_cache)(config, db_service)
-    await _safe_init("SQLAlchemy")(_init_sqlalchemy)()
+    await _safe_init("BM25 index warm-up")(_warmup_bm25)(db_service)
     await _safe_init("Domains")(_init_domains)(db_service)
     await _safe_init("Health checks")(_init_health_checks)(db_service)
     await _safe_init("Embedding service check")(_init_embedding_service_check)()
@@ -384,7 +380,5 @@ async def lifespan(app: FastAPI):
         logger.info("All services stopped successfully")
     except Exception as e:
         logger.error(f"Error stopping services: {e}")
-
-    await _safe_init("SQLAlchemy shutdown")(_shutdown_sqlalchemy)()
 
     logger.info("Application shutdown complete")

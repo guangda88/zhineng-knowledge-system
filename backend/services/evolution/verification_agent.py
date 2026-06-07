@@ -4,12 +4,10 @@
 """
 
 import asyncio
+import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.models.evolution import EvolutionLog
 from backend.services.evolution.comparison_engine import get_comparison_engine
 from backend.services.evolution.multi_ai_adapter import get_multi_ai_adapter
 
@@ -69,7 +67,6 @@ class EvolutionVerificationAgent:
 
     async def verify_evolution(
         self,
-        db: AsyncSession,
         query: str,
         old_response: str,
         new_response: str,
@@ -78,7 +75,6 @@ class EvolutionVerificationAgent:
         """验证进化是否有效
 
         Args:
-            db: 数据库会话
             query: 用户问题
             old_response: 旧版本回答
             new_response: 新版本回答
@@ -125,7 +121,7 @@ class EvolutionVerificationAgent:
         )
 
         # 7. 记录验证结果
-        await self._log_verification(db, query, old_response, new_response, result)
+        await self._log_verification(query, old_response, new_response, result)
 
         logger.info(
             f"验证完成: valid={is_valid}, confidence={confidence:.2f}, "
@@ -399,7 +395,6 @@ class EvolutionVerificationAgent:
 
     async def _log_verification(
         self,
-        db: AsyncSession,
         query: str,
         old_response: str,
         new_response: str,
@@ -408,40 +403,51 @@ class EvolutionVerificationAgent:
         """记录验证结果到数据库"""
 
         try:
-            # 使用 EvolutionLog 的正确字段
-            log = EvolutionLog(
-                issue_type="verification",
-                issue_category="quality",
-                issue_description=f"Query: {query[:200]}",
-                improvement_type="response_verification",
-                improvement_action=f"Validated evolution with confidence {result.confidence:.2f}",
-                improvement_details={
-                    "query": query[:500],
-                    "old_response": old_response[:1000],
-                    "new_response": new_response[:1000],
-                    "is_valid": result.is_valid,
-                    "confidence": result.confidence,
-                    "reasons": result.reasons[:5],
-                    "suggestions": result.suggestions[:5],
-                    "metrics": result.metrics,
-                },
-                before_metrics={"old_length": len(old_response)},
-                after_metrics={
-                    "new_length": len(new_response),
-                    "confidence": result.confidence,
-                    "is_valid": result.is_valid,
-                },
-                effectiveness_score=int(result.confidence * 5) if result.is_valid else None,
-                status="completed" if result.is_valid else "pending",
-                implemented_by="verification_agent",
-            )
+            from backend.core.dependency_injection import get_db_pool
 
-            db.add(log)
-            await db.commit()
+            pool = get_db_pool()
+            if pool is None:
+                logger.warning("DB pool not available, skipping verification log")
+                return
+
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO evolution_log
+                    (issue_type, issue_category, issue_description,
+                     improvement_type, improvement_action, improvement_details,
+                     before_metrics, after_metrics, effectiveness_score,
+                     status, implemented_by, created_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+                    """,
+                    "verification",
+                    "quality",
+                    f"Query: {query[:200]}",
+                    "response_verification",
+                    f"Validated evolution with confidence {result.confidence:.2f}",
+                    json.dumps({
+                        "query": query[:500],
+                        "old_response": old_response[:1000],
+                        "new_response": new_response[:1000],
+                        "is_valid": result.is_valid,
+                        "confidence": result.confidence,
+                        "reasons": result.reasons[:5],
+                        "suggestions": result.suggestions[:5],
+                        "metrics": result.metrics,
+                    }),
+                    json.dumps({"old_length": len(old_response)}),
+                    json.dumps({
+                        "new_length": len(new_response),
+                        "confidence": result.confidence,
+                        "is_valid": result.is_valid,
+                    }),
+                    int(result.confidence * 5) if result.is_valid else None,
+                    "completed" if result.is_valid else "pending",
+                    "verification_agent",
+                )
 
         except Exception as e:
             logger.error(f"记录验证结果失败: {e}")
-            await db.rollback()
 
     async def update_thresholds(self, new_thresholds: Dict[str, Any]):
         """动态更新验证阈值

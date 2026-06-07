@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from backend.services.annotation import OCRAnnotator, TranscriptionAnnotator
 from backend.services.annotation.base import Correction
 
-router = APIRouter(prefix="/annotation", tags=["标注系统"])
+router = APIRouter(prefix="/api/v1/annotation", tags=["标注系统"])
 
 
 # ==================== 请求/响应模型 ====================

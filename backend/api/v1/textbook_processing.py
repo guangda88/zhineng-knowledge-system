@@ -25,7 +25,7 @@ from backend.utils.path_validation import validate_file_path
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/textbook-processing", tags=["Textbook Processing"])
+router = APIRouter(prefix="/api/v1/textbook-processing", tags=["Textbook Processing"])
 
 
 class TextbookProcessRequest(BaseModel):

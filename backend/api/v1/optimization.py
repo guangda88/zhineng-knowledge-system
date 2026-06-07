@@ -8,7 +8,7 @@ lingminopt自优化框架的API接口
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel
 
 from backend.services.optimization import (
@@ -21,7 +21,7 @@ from backend.services.optimization.lingminopt import OptimizationPriority
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/optimization", tags=["自优化系统"])
+router = APIRouter(prefix="/api/v1/optimization", tags=["自优化系统"])
 
 
 # ==================== 请求/响应模型 ====================
@@ -154,7 +154,10 @@ async def analyze_opportunity(opportunity_id: str) -> dict:
 
 @router.post("/opportunities/{opportunity_id}/execute")
 async def execute_optimization(
-    opportunity_id: str, request: OptimizationExecuteRequest, background_tasks: BackgroundTasks
+    opportunity_id: str,
+    request: OptimizationExecuteRequest,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
 ) -> dict:
     """
     执行优化
@@ -163,9 +166,18 @@ async def execute_optimization(
 
     参数：
     - **opportunity_id**: 优化机会ID
-    - **auto_approve**: 是否自动批准（跳过人工确认）
+    - **auto_approve**: 是否自动批准（跳过人工确认，仅 admin 角色可用）
     """
     try:
+        # auto_approve 仅限 admin 角色
+        if request.auto_approve:
+            user = getattr(http_request.state, "user", None)
+            if not user or getattr(user, "role", "") != "admin":
+                raise HTTPException(
+                    status_code=403,
+                    detail="auto_approve 仅限管理员角色使用",
+                )
+
         optimizer = lingminoptOptimizer()
 
         # 查找机会

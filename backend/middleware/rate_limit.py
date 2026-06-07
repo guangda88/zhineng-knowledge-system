@@ -17,13 +17,23 @@ logger = logging.getLogger(__name__)
 
 # 全局限流器实例
 rate_limiter: Optional[InMemoryRateLimiter] = None
+llm_rate_limiter: Optional[InMemoryRateLimiter] = None
+
+# LLM-consuming 端点前缀（更严格的限流）
+_LLM_PATH_PREFIXES = (
+    "/api/v1/ask",
+    "/api/v1/discuss",
+    "/api/v1/generation/",
+    "/api/v1/evolution/",
+    "/api/v1/learning/search/autonomous",
+    "/api/v1/lingmessage/notify",
+)
 
 
 def get_rate_limiter() -> InMemoryRateLimiter:
     """获取限流器实例（单例模式）"""
     global rate_limiter
     if rate_limiter is None:
-        # 从环境变量读取配置
         requests_per_minute = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
         whitelist_ips = (
             os.getenv("RATE_LIMIT_WHITELIST", "").split(",")
@@ -37,6 +47,33 @@ def get_rate_limiter() -> InMemoryRateLimiter:
         )
         logger.info(f"初始化限流器: {requests_per_minute} 请求/分钟, 白名单: {whitelist_ips}")
     return rate_limiter
+
+
+def get_llm_rate_limiter() -> InMemoryRateLimiter:
+    """获取 LLM 端点专用限流器（更严格）"""
+    global llm_rate_limiter
+    if llm_rate_limiter is None:
+        llm_requests_per_minute = int(os.getenv("RATE_LIMIT_LLM_REQUESTS", "10"))
+        whitelist_ips = (
+            os.getenv("RATE_LIMIT_WHITELIST", "").split(",")
+            if os.getenv("RATE_LIMIT_WHITELIST")
+            else []
+        )
+
+        llm_rate_limiter = InMemoryRateLimiter(
+            default_limit=RateLimit(requests=llm_requests_per_minute, window=60),
+            whitelist=[ip.strip() for ip in whitelist_ips if ip.strip()],
+        )
+        logger.info(f"初始化 LLM 限流器: {llm_requests_per_minute} 请求/分钟")
+    return llm_rate_limiter
+
+
+def _is_llm_path(path: str) -> bool:
+    """判断路径是否为 LLM-consuming 端点"""
+    for prefix in _LLM_PATH_PREFIXES:
+        if path.startswith(prefix) or path == prefix.rstrip("/"):
+            return True
+    return False
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -58,11 +95,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         """处理请求并应用限流"""
         client_ip = self._get_client_ip(request)
+        path = request.url.path
 
-        if request.url.path in ["/health", "/health/", "/metrics"]:
+        if path in ["/health", "/health/", "/metrics"]:
             return await call_next(request)
 
-        limiter = get_rate_limiter()
+        # LLM-consuming 端点使用更严格的限流
+        if _is_llm_path(path):
+            limiter = get_llm_rate_limiter()
+        else:
+            limiter = get_rate_limiter()
+
         allowed, info = await limiter.check(client_ip) if limiter else (True, {})
 
         if not allowed:

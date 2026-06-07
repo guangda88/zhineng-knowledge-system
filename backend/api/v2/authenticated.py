@@ -1,68 +1,29 @@
-"""JWT 认证示例 - 如何在 API 端点中使用认证
+"""JWT 认证端点 — 使用统一的 auth 模块
 
-这个文件展示了如何在 API 端点中添加 JWT 认证。
+登录/刷新/受保护端点，统一走 backend.auth 体系。
 """
 
-import hmac
 import logging
 import os
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from backend.core.database import get_db_pool
+from backend.auth.middleware import get_authenticated_user, get_current_user
+from backend.auth.rbac import User
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["authenticated"])
 
 
-def _lazy_import(module_path: str, name: str):
-    try:
-        mod = __import__(module_path, fromlist=[name])
-        return getattr(mod, name)
-    except (ImportError, ModuleNotFoundError):
-        return None
-
-
-def _get_current_user_dep():
-    func = _lazy_import("backend.middleware.jwt_auth", "get_current_user")
-    if func is None:
-        raise HTTPException(status_code=503, detail="Authentication module not available")
-    return func
-
-
-class _PermissionDependency:
-    def __init__(self, permission: str):
-        self.permission = permission
-
-    def __call__(self, func):
-        import functools
-
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            require_fn = _lazy_import("backend.middleware.jwt_auth", "require_permission")
-            if require_fn is None:
-                raise HTTPException(status_code=503, detail="Authentication module not available")
-            return await require_fn(self.permission)(func)(*args, **kwargs)
-
-        return wrapper
-
-
-# Pre-resolved dependencies for route decorators
-try:
-    from backend.middleware.jwt_auth import get_current_user, require_permission
-except (ImportError, ModuleNotFoundError):
-    get_current_user = _get_current_user_dep
-    require_permission = _PermissionDependency
-
-
-# ========== 数据模型 ==========
-
-
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class RefreshRequest(BaseModel):
+    token: str
 
 
 class DocumentCreate(BaseModel):
@@ -71,40 +32,40 @@ class DocumentCreate(BaseModel):
     category: str = "通用"
 
 
-class RefreshRequest(BaseModel):
-    token: str
-
-
-# ========== 认证端点 ==========
-
-
 @router.post("/auth/login")
 async def login(request: LoginRequest):
     """用户登录 - 返回 JWT 令牌"""
-    try:
-        from backend.middleware.jwt_auth import jwt_manager
-    except (ImportError, ModuleNotFoundError):
-        raise HTTPException(
-            status_code=503, detail="Authentication module not available. Install PyJWT package."
-        )
+    from backend.auth.jwt import get_auth
+
+    auth = get_auth()
 
     admin_username = os.getenv("ADMIN_USERNAME")
     admin_password = os.getenv("ADMIN_PASSWORD")
 
+    import hmac
+
     if not admin_username or not admin_password:
         raise HTTPException(
             status_code=503,
-            detail="Authentication not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables.",
+            detail="Authentication not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD.",
         )
 
     if hmac.compare_digest(
         request.username.encode(), admin_username.encode()
     ) and hmac.compare_digest(request.password.encode(), admin_password.encode()):
-        token = jwt_manager.create_token(
-            user_id="1", username=request.username, permissions=["document:read", "document:write"]
+        token_pair = await auth.create_token_pair(
+            user_id="1",
+            username=request.username,
+            role="admin",
+            permissions=["document:read", "document:write"],
         )
 
-        return {"access_token": token, "token_type": "bearer", "expires_in": 3600}
+        return {
+            "access_token": token_pair.access_token,
+            "refresh_token": token_pair.refresh_token,
+            "token_type": "bearer",
+            "expires_in": token_pair.expires_in,
+        }
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -112,35 +73,35 @@ async def login(request: LoginRequest):
 @router.post("/auth/refresh")
 async def refresh_token(request: RefreshRequest):
     """刷新 JWT 令牌"""
-    try:
-        from backend.middleware.jwt_auth import jwt_manager
-    except (ImportError, ModuleNotFoundError):
-        raise HTTPException(
-            status_code=503, detail="Authentication module not available. Install PyJWT package."
-        )
+    from backend.auth.jwt import get_auth
 
-    new_token = jwt_manager.refresh_token(request.token)
+    auth = get_auth()
+    token_pair = await auth.refresh_access_token(request.token)
 
-    return {"access_token": new_token, "token_type": "bearer"}
+    if not token_pair:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-
-# ========== 需要认证的端点 ==========
+    return {"access_token": token_pair.access_token, "token_type": "bearer"}
 
 
 @router.get("/user/profile")
-async def get_profile(current_user: dict = Depends(get_current_user)):
+async def get_profile(user: User = Depends(get_authenticated_user)):
     """获取用户资料 - 需要认证"""
     return {
-        "user_id": current_user["user_id"],
-        "username": current_user["username"],
-        "permissions": current_user["permissions"],
+        "user_id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "permissions": user.permissions,
     }
 
 
 @router.post("/documents")
-@require_permission("document:write")
-async def create_document(document: DocumentCreate, current_user: dict = Depends(get_current_user)):
-    """创建文档 - 需要认证和特定权限"""
+async def create_document(
+    document: DocumentCreate, user: User = Depends(get_authenticated_user)
+):
+    """创建文档 - 需要认证"""
+    from backend.core.database import get_db_pool
+
     pool = await get_db_pool()
     row = await pool.fetchrow(
         """INSERT INTO documents (title, content, category, created_at)
@@ -154,14 +115,18 @@ async def create_document(document: DocumentCreate, current_user: dict = Depends
         "id": row["id"],
         "title": row["title"],
         "category": row["category"],
-        "created_by": current_user["username"],
+        "created_by": user.username,
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
     }
 
 
 @router.get("/documents/{document_id}")
-async def get_document(document_id: int, current_user: dict = Depends(get_current_user)):
+async def get_document(
+    document_id: int, user: User = Depends(get_authenticated_user)
+):
     """获取文档 - 需要认证"""
+    from backend.core.database import get_db_pool
+
     pool = await get_db_pool()
     row = await pool.fetchrow(
         "SELECT id, title, content, category, tags, created_at " "FROM documents WHERE id = $1",
@@ -175,32 +140,12 @@ async def get_document(document_id: int, current_user: dict = Depends(get_curren
         "content": row["content"],
         "category": row["category"],
         "tags": row["tags"],
-        "accessed_by": current_user["username"],
+        "accessed_by": user.username,
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
     }
-
-
-# ========== 可选认证端点 ==========
 
 
 @router.get("/public/info")
 async def public_info():
     """公开端点 - 不需要认证"""
     return {"message": "This is a public endpoint", "version": "1.0.0"}
-
-
-# 使用示例：
-#
-# 1. 登录获取令牌（需先设置 ADMIN_USERNAME / ADMIN_PASSWORD 环境变量）：
-#    curl -X POST http://localhost:8000/api/v2/auth/login \
-#      -H "Content-Type: application/json" \
-#      -d '{"username":"<admin_user>","password":"<admin_pass>"}'
-#
-# 2. 使用令牌访问受保护的端点：
-#    curl http://localhost:8000/api/v2/user/profile \
-#      -H "Authorization: Bearer <your_token>"
-#
-# 3. 刷新令牌：
-#    curl -X POST http://localhost:8000/api/v2/auth/refresh \
-#      -H "Content-Type: application/json" \
-#      -d '{"token":"<your_expired_token>"}'

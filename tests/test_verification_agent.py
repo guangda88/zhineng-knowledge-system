@@ -200,7 +200,7 @@ def focus():
         assert metrics["winner"] == "lingzhi"
 
     @pytest.mark.asyncio
-    async def test_verify_evolution_full_pipeline(self, agent, mock_db):
+    async def test_verify_evolution_full_pipeline(self, agent):
         """测试完整的验证流程"""
 
         query = "如何提高学习注意力？"
@@ -269,16 +269,13 @@ def focus():
             ]
         )
 
-        # 执行验证
         result = await agent.verify_evolution(
-            db=mock_db,
             query=query,
             old_response=old_response,
             new_response=new_response,
             user_feedback=None,
         )
 
-        # 验证结果
         assert isinstance(result, VerificationResult)
         assert result.is_valid  # 应该通过验证
         assert result.confidence > 0.7
@@ -286,10 +283,6 @@ def focus():
         assert result.metrics["length_improved"]
         assert result.metrics["meets_min_length"]
         assert result.metrics["structure_score"] > 0.5
-
-        # 验证数据库记录被调用
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
 
     def test_verification_result_to_dict(self):
         """测试VerificationResult的to_dict方法"""

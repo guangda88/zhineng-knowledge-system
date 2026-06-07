@@ -22,7 +22,7 @@ from backend.services.generation.base import GenerationRequest, OutputFormat
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/generation", tags=["内容生成"])
+router = APIRouter(prefix="/api/v1/generation", tags=["内容生成"])
 
 
 # ==================== 请求/响应模型 ====================
