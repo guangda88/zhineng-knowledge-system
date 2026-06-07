@@ -1,10 +1,35 @@
 # 灵知 (LingZhi) Handoff
 
 ## 最后更新
-2026-06-06 01:20 UTC+8（会话参与3方向讨论+健康声明验证脚本+双governance投票）
+2026-06-07 23:45 UTC+8（会话：62+3文件提交推送+何氏虛勞心傳全文导入+OCR方案验证）
 
 ## 状态
 active
+
+## 本次会话产出（2026-06-07）
+
+### 1. 62+3文件提交推送 ✅
+
+**提交**：`d25c72ac` + `2eb2fa56`，已推送 gitea/develop
+- 安全：auth/middleware public_path_prefixes缩减至2个(P0)，JWT认证逻辑重写，middleware PATH_TRAVERSE修复
+- 重构：16个v1路由统一依赖注入，analytics 4脚本共享连接池
+- 审计配置：.gitignore补全.venv-ocr，SECRET误报排除，SQL_INJECT标识符拼接排除，test_retrieval环境依赖排除
+- 测试：1000 passed, 2 skipped
+
+### 2. 何氏虛勞心傳全文导入 ✅
+
+- 来源：Wikisource（23240字），11个PDF确认为纯扫描图无文本层
+- 导入：doc_id=399826，97 chunks，向量(512维)+FTS双索引
+- 检索验证：向量检索top-1距离0.40，内容高度相关
+- 脚本：`scripts/import_heshi_xulao.py`（asyncpg，密码改环境变量）
+
+### 3. OCR方案验证 ✅
+
+- 环境：`.venv-ocr`（PaddleOCR + PyMuPDF + OpenCV）
+- 测试：DPI=300繁体竖排识别，conf 0.86-0.90，质量中等
+- 结论：PaddleOCR对繁体竖排古医书可用但需大量校对，可作批量提取候选
+
+---
 
 ## 本次会话产出（2026-06-05）
 
