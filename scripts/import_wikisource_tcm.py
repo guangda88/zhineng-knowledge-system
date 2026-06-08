@@ -21,33 +21,44 @@ CHUNK_SIZE = 400
 
 # Wikisource 中医核心经典 (按优先级, 已验证页面有效)
 TCM_CLASSICS = [
-    # 伤寒金匮
-    ("傷寒論", "https://zh.wikisource.org/wiki/%E5%82%B7%E5%AF%92%E8%AB%96"),
-    ("金匱要略", "https://zh.wikisource.org/wiki/%E9%87%91%E5%8C%B1%E8%A6%81%E7%95%A5"),
-    # 本草
-    ("神農本草經", "https://zh.wikisource.org/wiki/%E7%A5%9E%E8%BE%B2%E6%9C%AC%E8%8D%89%E7%B6%93"),
-    ("本草綱目", "https://zh.wikisource.org/wiki/%E6%9C%AC%E8%8D%89%E7%B6%B1%E7%9B%AE"),
-    # 医经
-    ("難經", "https://zh.wikisource.org/wiki/%E9%9B%A3%E7%B6%93"),
-    # 温病
-    ("溫熱論", "https://zh.wikisource.org/wiki/%E6%BA%AB%E7%86%B1%E8%AB%96"),
-    # 医案医话
-    ("古今醫案按", "https://zh.wikisource.org/wiki/%E5%8F%A4%E4%BB%8A%E9%86%AB%E6%A1%88%E6%8C%89"),
-    ("冷廬醫話", "https://zh.wikisource.org/wiki/%E5%86%B7%E5%BB%AC%E9%86%AB%E8%A9%B1"),
+    # 第一批: 已导入的经典(去重跳过)
+    ("傷寒論", "傷寒論"),
+    ("金匱要略", "金匱要略"),
+    ("神農本草經", "神農本草經"),
+    ("本草綱目", "本草綱目"),
+    ("難經", "難經"),
+    ("溫熱論", "溫熱論"),
+    ("古今醫案按", "古今醫案按"),
+    ("冷廬醫話", "冷廬醫話"),
+    # 第二批: 新增经典
+    ("脾胃論", "脾胃論"),
+    ("血證論", "血證論"),
+    ("醫學心悟", "醫學心悟"),
+    ("醫方集解", "醫方集解"),
+    ("中藏經", "中藏經"),
+    ("丹溪心法", "丹溪心法"),
+    ("內外傷辨惑論", "內外傷辨惑論"),
+    ("溫疫論", "溫疫論"),
+    ("針灸甲乙經", "針灸甲乙經"),
+    ("濕熱條辨", "濕熱條辨"),
+    ("千金寶要", "千金寶要"),
+    ("醫學三字經", "醫學三字經"),
+    ("脈症治方", "脈症治方"),
+    ("名醫別錄", "名醫別錄"),
 ]
 
 
-def fetch_wikisource(url):
+def fetch_wikisource(page_title):
     """从Wikisource获取全文，使用API避免HTML解析"""
-    title = url.split("/wiki/")[-1]
+    encoded_title = requests.utils.quote(page_title)
     api_url = (
         f"https://zh.wikisource.org/w/api.php?"
-        f"action=parse&page={title}&prop=wikitext&format=json&utf8=1"
+        f"action=parse&page={encoded_title}&prop=wikitext&format=json&utf8=1"
     )
-    time.sleep(1)
+    time.sleep(1.5)
     r = requests.get(api_url, timeout=30, headers={"User-Agent": "LingZhiBot/1.0"})
     if r.status_code == 429:
-        time.sleep(5)
+        time.sleep(8)
         r = requests.get(api_url, timeout=30, headers={"User-Agent": "LingZhiBot/1.0"})
     if r.status_code != 200:
         raise RuntimeError(f"API {r.status_code}: {r.text[:100]}")
@@ -106,11 +117,11 @@ def embed_single(text):
     return r.json()["embedding"]
 
 
-async def import_one(conn, title, url, dry_run=False):
+async def import_one(conn, title, page_title, dry_run=False):
     print(f"\n{'='*60}")
     print(f"Fetching: {title}")
     try:
-        text = fetch_wikisource(url)
+        text = fetch_wikisource(page_title)
     except Exception as e:
         print(f"  FAIL fetch: {e}")
         return None
@@ -187,8 +198,8 @@ async def main():
 
     total_chunks = 0
     success = 0
-    for title, url in classics:
-        result = await import_one(conn, title, url, args.dry_run)
+    for title, page in classics:
+        result = await import_one(conn, title, page, args.dry_run)
         if result is not None and result > 0:
             total_chunks += result
             success += 1
