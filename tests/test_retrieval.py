@@ -2,7 +2,7 @@
 遵循开发规则：测试覆盖检索功能
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import asyncpg
 import pytest
@@ -19,22 +19,37 @@ class TestVectorRetriever:
 
     @pytest.mark.asyncio
     async def test_embed_text(self, mock_pool):
-        """测试文本嵌入"""
-        from backend.services.retrieval.vector import VectorRetriever
+        """测试文本嵌入（mock模型）"""
+        import backend.services.retrieval.vector as vec_mod
 
-        retriever = VectorRetriever(mock_pool)
-        vector = await retriever.embed_text("测试文本")
+        fake_vector = [0.1] * 512
+        mock_model = MagicMock()
+        mock_model.encode.return_value = MagicMock(
+            tolist=lambda: fake_vector
+        )
+
+        with patch.object(vec_mod, "_MODEL_INSTANCE", mock_model), \
+             patch.object(vec_mod, "_USE_REMOTE", False):
+            from backend.services.retrieval.vector import VectorRetriever
+
+            retriever = VectorRetriever(mock_pool)
+            vector = await retriever.embed_text("测试文本")
 
         assert isinstance(vector, list)
-        assert len(vector) == 512  # BGE-small-zh-v1.5 向量维度
+        assert len(vector) == 512
         assert all(isinstance(v, float) for v in vector)
 
     @pytest.mark.asyncio
     async def test_search(self, mock_pool):
-        """测试向量搜索"""
-        from backend.services.retrieval.vector import VectorRetriever
+        """测试向量搜索（mock模型）"""
+        import backend.services.retrieval.vector as vec_mod
 
-        # 模拟查询结果
+        fake_vector = [0.1] * 512
+        mock_model = MagicMock()
+        mock_model.encode.return_value = MagicMock(
+            tolist=lambda: fake_vector
+        )
+
         mock_conn = AsyncMock()
         mock_conn.fetch.side_effect = [
             [
@@ -48,11 +63,19 @@ class TestVectorRetriever:
                 }
             ],
             [],
+            [],
+            [],
         ]
-        mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
+        acquire_context = MagicMock()
+        acquire_context.__aenter__.return_value = mock_conn
+        mock_pool.acquire.return_value = acquire_context
 
-        retriever = VectorRetriever(mock_pool)
-        results = await retriever.search("气功", top_k=5)
+        with patch.object(vec_mod, "_MODEL_INSTANCE", mock_model), \
+             patch.object(vec_mod, "_USE_REMOTE", False):
+            from backend.services.retrieval.vector import VectorRetriever
+
+            retriever = VectorRetriever(mock_pool)
+            results = await retriever.search("气功", top_k=5)
 
         assert len(results) == 1
         assert results[0]["id"] == 1
@@ -97,11 +120,9 @@ class TestHybridRetriever:
     async def mock_pool(self):
         """模拟数据库连接池"""
         pool = AsyncMock(spec=asyncpg.Pool)
-        # 创建正确的上下文管理器mock
         mock_conn = AsyncMock()
-        mock_conn.fetchval.return_value = 0  # 文档数量为0，跳过初始化逻辑
+        mock_conn.fetchval.return_value = 0
         mock_conn.fetch.return_value = []
-        # 使用 MagicMock 作为 acquire 返回的上下文管理器
         acquire_context = MagicMock()
         acquire_context.__aenter__.return_value = mock_conn
         pool.acquire.return_value = acquire_context
@@ -137,7 +158,6 @@ class TestHybridRetriever:
         merged = retriever._rrf_merge(vector_results, bm25_results)
 
         assert len(merged) == 3
-        # ID 2 应该在两者中都出现，得分最高
         assert merged[0]["id"] == 2
 
 
@@ -208,7 +228,7 @@ class TestDomains:
         await domain.initialize()
 
         assert domain.name == "general"
-        assert domain.priority == 0  # 最低优先级
+        assert domain.priority == 0
 
         await domain.shutdown()
 
@@ -243,8 +263,6 @@ class TestDomainRegistry:
 
         enabled = registry.get_enabled()
         assert len(enabled) == 2
-
-        # 应该按优先级排序，气功优先级更高
         assert enabled[0].name == "qigong"
 
     @pytest.mark.asyncio
@@ -313,13 +331,11 @@ class TestRateLimiter:
 
         limiter = InMemoryRateLimiter(default_limit=RateLimit(requests=5, window=60))
 
-        # 前5次请求应该通过
         for i in range(5):
             allowed, info = await limiter.check("test_key")
             assert allowed
             assert info["allowed"]
 
-        # 第6次请求应该被限制
         allowed, info = await limiter.check("test_key")
         assert not allowed
 
@@ -332,7 +348,6 @@ class TestRateLimiter:
             default_limit=RateLimit(requests=1, window=60), whitelist=["trusted_ip"]
         )
 
-        # 白名单IP应该不受限制
         for i in range(10):
             allowed, info = await limiter.check("trusted_ip")
             assert allowed
@@ -347,10 +362,9 @@ class TestRateLimiter:
             default_limit=RateLimit(requests=10, window=60), burst_multiplier=2.0
         )
 
-        # 令牌桶应该支持突发流量
         for i in range(15):
             allowed, info = await limiter.check("test_key")
-            if i < 20:  # 初始令牌数 = 10 * 2 = 20
+            if i < 20:
                 assert allowed
             else:
                 assert not allowed
@@ -370,7 +384,6 @@ class TestCircuitBreaker:
 
         breaker = CircuitBreaker("test", CircuitBreakerConfig(failure_threshold=3, timeout=60))
 
-        # 模拟连续失败
         async def failing_func():
             raise Exception("Service unavailable")
 
@@ -380,10 +393,8 @@ class TestCircuitBreaker:
             except Exception:
                 pass
 
-        # 熔断器应该打开
         assert breaker.state.name == "OPEN"
 
-        # 下次调用应该直接抛出异常
         with pytest.raises(CircuitBreakerOpenError):
             await breaker.call(failing_func)
 
