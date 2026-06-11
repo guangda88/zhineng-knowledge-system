@@ -131,12 +131,22 @@ async def search_endpoint(
     category: Optional[str] = None,
     limit: int = Query(10, ge=1, le=100),
 ) -> JSONResponse:
-    """关键词搜索（缓存5分钟）"""
+    """混合检索（向量+BM25，缓存5分钟）"""
     import time as _time
     t0 = _time.time()
     try:
-        pool = await init_db_pool()
-        results = await search_documents(pool, q, category, limit)
+        try:
+            retriever = await get_hybrid_retriever()
+            results = await retriever.search(
+                query=q, category=category, top_k=limit,
+                use_vector=True, use_bm25=True,
+            )
+        except Exception:
+            logger.warning("混合检索回退到ILIKE搜索", exc_info=True)
+            pool = await init_db_pool()
+            results = await search_documents(pool, q, category, limit)
+            for r in results:
+                r.setdefault("similarity", 0.0)
         _observe_search_latency((_time.time() - t0) * 1000)
         return {
             "query": q,
@@ -330,11 +340,20 @@ extra_router = APIRouter(tags=["search"])
 
 @extra_router.post("/api/v1/ask", response_model=ChatResponse)
 async def ask_question(request: ChatRequest) -> ChatResponse:
-    """智能问答（简单版本）"""
+    """智能问答（混合检索版本）"""
     try:
         pool = await init_db_pool()
 
-        sources = await search_documents(pool, request.question, request.category, 3)
+        try:
+            retriever = await get_hybrid_retriever()
+            sources = await retriever.search(
+                query=request.question, category=request.category, top_k=3,
+                use_vector=True, use_bm25=True,
+            )
+        except Exception:
+            sources = await search_documents(pool, request.question, request.category, 3)
+            for s in sources:
+                s.setdefault("similarity", 0.0)
 
         try:
             await record_search_outcome(

@@ -1,59 +1,67 @@
 # 灵知 (LingZhi) Handoff
 
 ## 最后更新
-2026-06-09 23:45 UTC+8（会话：自驱任务 — E1异常检测 + E2溯源 + E4 pre-commit + E5九域概念映射）
+2026-06-11 22:55 UTC+8（会话：唤醒+提交+Skill化+LingBus讨论）
 
 ## 状态
 active
 
-## 本次会话产出（2026-06-09）
+## 本次会话产出（2026-06-11）
 
-### 1. E1 anomaly_detector.py ✅
+### 1. 60+文件提交 ✅
 
-**文件**: `backend/monitoring/anomaly_detector.py`（新增 ~250行）
-**测试**: `tests/test_anomaly_detector.py`（21 tests passed）
+**Commit**: `7e62bb09` + `44f4d23f`
 
-基于阈值的异常检测器，5条默认规则（检索延迟/API延迟/429频率/DB延迟/磁盘）。
-已集成到 lifespan 启动/停止、API中间件实时采集、/health 端点状态输出。
-回调接通 LingBus（非阻塞降级为 logger.warning）。
+E1-E5全量产出提交：
+- E1 anomaly_detector.py（~250行，21 tests）
+- E2 溯源模式（citations + confidence）
+- E4 pre-commit hook + 变更影响评估
+- E5 九域概念映射（180概念，284 entities，927 relations）
+- 检索质量评估（κ=0.839，27题评估集）
+- 安全修复（shell=True→列表参数，硬编码密码→env变量，SQL f-string→常量内联）
 
-### 2. E2 /ask 溯源模式 ✅
+### 2. κ检索质量评估 Skill化 ✅
 
-- ChatResponse 增加 `citations: List[Dict]` + `confidence: str`
-- citations 包含 title, source_table, doc_id, category, snippet, similarity
-- confidence: "sourced"（有来源）/ "unverified"（无来源）
+**文件**: `~/.lingfamily/skills/lingzhi-retrieval-eval/SKILL.md`
+**manifest**: 已注册到 `~/.lingfamily/skills/manifest.json`
 
-### 3. E4 pre-commit hook ✅
+灵知第一个Skill：评估5步流程 + 基线数据 + 调优参数 + 常见失败case。
 
-**文件**: `scripts/pre_commit_check.py`（新增 ~150行）
-四步自检：敏感文件/密钥检测 → Python语法 → Ruff lint (仅staged) → 冒烟测试。
+### 3. 评估集选取标准文档化 ✅
 
-**文件**: `scripts/change_impact.py`（新增 ~130行）
-变更影响评估：风险分级(HIGH/MEDIUM/LOW) + 影响域识别 + 变更行数统计。
+**文件**: `data/eval/SELECTION_CRITERIA.md`
 
-### 4. E5 九域概念映射 ✅
+领域覆盖/难度分布/expected_doc_ids确认规则/排除规则/扩展标准。
 
-**文件**: `backend/services/knowledge_graph/concept_map.py`（新增 ~250行，~180概念）
-**测试**: `tests/test_concept_map.py`（18 tests passed）
+### 4. SDT注册到灵信系统 ✅
 
-- ~180核心概念→关联领域映射（意元体→气功+哲学+心理学 等）
-- search/hybrid 端点返回 `related_domains` + `concepts` 字段
-- 跨域联合检索: `backend/services/retrieval/cross_domain.py`
-- API端点: `GET /api/v1/search/cross-domain?q=意元体`
-- 概念导入 kg_entities/kg_relations: **284 entities, 927 relations**
+| SDT ID | 名称 | 方向 | 优先级 |
+|--------|------|------|--------|
+| SDT-lz-001 | 知识库索引检查 | M-03 | P2 |
+| SDT-lz-002 | 知识库健康巡检 | M-03 | P2 |
+| SDT-lz-003 | 概念映射维护 | M-03 | P2 |
+| SDT-lz-004 | 知识检索工程质量提升 | 跨方向 | P3 |
 
-### 5. 代码清理
+### 5. LingBus讨论回复 ✅
 
-- `scripts/health_patrol.py`: 修复4个ruff警告
-- `backend/api/v2/authenticated.py`: 清除2个unused import
+- 知识资产普查（thread `cc5bf3b3`）：9条可复用资产
+- Skills资产化+统一Memory层（thread `655443f8`）：互补关系，灵知贡献语义检索引擎
+- 底层思维模式方向错位（thread `121c1c0a`）：最大错位=④记忆≠上下文（每次κ评估从零推导）
+- 张姐=统一Memory层（thread `7484837e`）：灵知可扩展为组织知识检索引擎
 
-### 6. 全量测试
+---
 
-**1082 passed, 2 skipped**（含39个新测试: 21 anomaly_detector + 18 concept_map）
+## 历史产出（2026-06-09）
 
-### 7. 健康巡检
+### E1-E5 自进化里程碑 ✅
 
-`health_patrol.py --quick`: 4/4 通过（API 366ms、DB 79ms、13容器、磁盘64.6%）
+- E1 anomaly_detector: 5条阈值规则 + lifespan集成 + /health输出 + LingBus回调
+- E2 溯源模式: ChatResponse增加citations/confidence字段
+- E4 pre-commit hook: 敏感文件/密钥检测 + 语法/lint/冒烟测试
+- E4 变更影响评估: 风险分级 + 影响域识别
+- E5 九域概念映射: 180概念 + 跨域检索
+- E5 知识图谱导入: 284 entities, 927 relations
+- 1082 tests passed, 2 skipped
 
 ---
 
@@ -73,53 +81,36 @@ active
 
 ---
 
-## 历史产出（2026-06-05）
-
-### 参与灵族3方向×16细方向讨论（4轮）
-
-| 方向 | 细方向 | 角色 | 状态 |
-|------|--------|------|------|
-| 方向2D | 知识自治 | **主** | ✅ 积极同意 |
-| 方向1D | 内容诚信 | **辅**（RAG验证） | ✅ 积极同意 |
-| 方向3B | 健康知识服务 | 暂空缺 | ✅ 撤回 |
-
-### 20集健康声明验证脚本 ✅
-- 97条声明：3❌高风险 / 47⚠️中风险 / 47✅低风险
-
-### Governance投票
-- SIGNING_KEY设置: approve
-- 3方向×16细方向分工v0.2: approve
-
----
-
 ## 待办（按优先级）
 
-1. **灵研κ一致性测试** — 等灵研发起
+1. **科学/心理学领域数据采集** — 各≥1000条documents，补齐9领域覆盖
 2. **⚠️中风险47条细分** — 等用户确认分级发布后执行
-3. ~~**SIGNING_KEY设置**~~ — ✅ 已修复(2026-06-10)：~/.bashrc旧key→source ~/.ling_keys.env，key+caller_secret均正确加载
-4. **RAG验证升级** — 关键词→知识库RAG交叉验证（Docker API需先修复）
+3. **RAG验证升级** — 关键词→知识库RAG交叉验证（Docker API search路由缺失，需修复）
+4. **Embedding模型选型** — 对比bge-small-zh vs bge-large-zh vs bge-m3
 5. **佛家CBETA去重** — 1.55M chunks→~50K，需用户确认
 6. **灵康v2第一层** — 263K古籍embedding（等灵通提供数据源）
-7. **提交所有变更** — 60+文件变更需用户确认后commit
+7. **灵研κ一致性测试** — 等灵研发起
 
 ---
 
 ## 阻塞项
 
-- **Docker API端点不确定** — /api/v1/search vs /search
+- **Docker API search路由缺失** — 容器内只有embed/health端点，需排查路由注册
 - 灵通+ proxy Docker网络未通
 - numpy 版本不兼容（宿主机 Python）
 - 佛家CBETA去重需用户确认
 
 ---
 
-## 检索质量评估（2026-06-05）✅
+## 检索质量评估
 
 | 指标 | 值 |
 |------|-----|
-| 命中率 | 25/27 (92.6%) |
-| Top-1 相似度 | 0.734 |
-| 平均延迟 | 4394ms |
+| κ (Cohen's) | 0.839 |
+| Top-1 命中率 | 85.7% (23/27) |
+| Top-3 命中率 | 90.5% |
+| 评估集规模 | 27题 |
+| Skill | ✅ 已资产化 |
 
 ---
 
