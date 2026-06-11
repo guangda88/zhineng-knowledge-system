@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-06-10T09:30:00",
+  "api_base": "http://localhost:8000",
+  "top_k": 10,
+  "n_queries": 50,
+  "n_valid": 47,
+  "category_accuracy": {
+    "top1": 0.0,
+    "top3": 0.0,
+    "top5": 0.0
+  },
+  "concept_accuracy": 0.043,
+  "kappa_top1": -0.125,
+  "kappa_top3": -0.125,
+  "avg_latency": 3.2,
+  "root_cause": "documents表82%气功(61323/74654)，其他8领域仅13331条(18%)，46/50 query返回0结果",
+  "by_type": {
+    "精确": {"count": 18, "top1_hit_rate": 0.0, "concept_hit_rate": 0.05},
+    "模糊": {"count": 14, "top1_hit_rate": 0.0, "concept_hit_rate": 0.03},
+    "跨领域": {"count": 18, "top1_hit_rate": 0.0, "concept_hit_rate": 0.04}
+  },
+  "improvement_plan": "backfill guoxue_content(263K条有embedding)到documents表，按domain映射平衡分布"
+}

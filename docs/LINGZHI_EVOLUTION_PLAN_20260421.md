@@ -17,8 +17,10 @@
 - [x] 编写 `scripts/health_patrol.py` — 7项自动检测：API健康、DB健康、Docker容器、磁盘空间、搜索性能、路由完整性、Embedding服务
 - [x] 支持 `--quick`/`--watch`/`--json`/`--report` 模式
 - [x] 发现并修正 API_BASE 端口配置错误（8001→8000，8001是Embedding服务）
-- [ ] 在 `backend/monitoring/` 增加 `anomaly_detector.py` — 基于阈值的异常检测（检索>500ms报警，429>3次/分钟报警）
-- [ ] 异常时通过灵信主动通知用户和灵依
+- [x] 在 `backend/monitoring/` 增加 `anomaly_detector.py` — 基于阈值的异常检测（检索>500ms报警，429>3次/分钟报警）
+- [x] 异常检测器回调接通灵信，API启动时自动加载
+- [x] 搜索/API延迟实时采集到anomaly_detector
+- [x] pre-commit hook 四步自检（安全/语法/lint/冒烟测试）
 
 ### E2: 从"知识幻觉"到"溯源核实"
 
@@ -30,8 +32,8 @@
 - [x] 增加 `source_citation` 字段：构建人类可读引用（"史记 - 国学经典"、"气功入门 - [气功]"）
 - [x] RRF合并保留 source_table/similarity/doc_id/node_id 元数据
 - [x] 简单搜索（search_endpoint）也返回 source_table
-- [ ] `/ask` 端点增加溯源模式：回答附带引用的文档ID和原文片段
-- [ ] 建立回答可信度评分：有来源=可信，无来源=标注"未核实"
+- [x] `/ask` 端点增加溯源模式：回答附带引用的文档ID和原文片段 — ChatResponse 增加 citations + confidence 字段
+- [x] 建立回答可信度评分：有来源=可信，无来源=标注"未核实"
 - [ ] 在前端展示引用来源（类似学术引用格式）
 
 ### E3: 从"单兵作战"到"多智能体协作"
@@ -52,9 +54,9 @@
 **目标**: 每次代码变更前自动走合规，不等用户提醒。
 **具体措施**:
 
-- [ ] 建立提交前自检清单（checklist），嵌入 pre-commit hook
+- [x] 建立提交前自检清单（checklist），嵌入 pre-commit hook — `scripts/pre_commit_check.py`
 - [ ] 交叉审计流程化：提交前自动调灵克审查接口
-- [ ] 建立变更影响评估：每次改动标注影响范围和风险等级
+- [x] 建立变更影响评估：每次改动标注影响范围和风险等级 — `scripts/change_impact.py`
 - [ ] 安全事件事后分析制度化：每次事故写 AAR（After Action Report）
 
 ### E5: 从"通用检索"到"领域深度理解"
@@ -63,10 +65,11 @@
 **目标**: 检索时能自动识别跨域关联，提供深层知识网络。
 **具体措施**:
 
-- [ ] 建立九域概念映射表（如：意元体→气功+哲学，自觉智能→气功+哲学+心理学）
-- [ ] 搜索API增加 `related_domains` 字段
-- [ ] 实现跨域联合检索：一次查询返回多域结果
-- [ ] 构建知识图谱：实体-关系-实体的三元组，存储在PostgreSQL
+- [x] 建立九域概念映射表（如：意元体→气功+哲学，自觉智能→气功+哲学+心理学）— `backend/services/knowledge_graph/concept_map.py`，100+概念
+- [x] 搜索API增加 `related_domains` 字段 — search + hybrid 端点已返回 related_domains + concepts
+- [x] 概念映射测试 — `tests/test_concept_map.py`，18 tests passed
+- [x] 实现跨域联合检索：一次查询返回多域结果 — `backend/services/retrieval/cross_domain.py` + `GET /api/v1/search/cross-domain`
+- [ ] 构建知识图谱：实体-关系-实体的三元组，存储在PostgreSQL（已有 kg_entities/kg_relations 表，125+ 概念已导入）
 
 ### E6: 从"本地服务"到"边缘智能+硬件集成"
 

@@ -259,6 +259,43 @@ async def _init_metrics():
     logger.info("Metrics initialized")
 
 
+async def _init_anomaly_detector():
+    """初始化异常检测器"""
+    from backend.monitoring.anomaly_detector import get_anomaly_detector
+
+    detector = get_anomaly_detector()
+
+    async def _alert_to_lingbus(alert):
+        try:
+            from backend.monitoring.anomaly_detector import AlertLevel
+
+            level = "🟡" if alert.level == AlertLevel.WARNING else "🔴"
+            subject = f"{level} 异常检测: {alert.rule_name}"
+            body = f"{alert.message}\nvalue={alert.value:.1f} threshold={alert.threshold:.1f}"
+            logger.warning(f"ANOMALY: {subject} — {body}")
+
+            try:
+                from mcp_lingbus import open_thread
+
+                await open_thread(
+                    topic=subject[:200],
+                    sender="lingzhi",
+                    recipients="all",
+                    body=body,
+                    channel="ecosystem",
+                )
+            except ImportError:
+                pass
+            except Exception as bus_err:
+                logger.debug(f"LingBus通知跳过(非阻塞): {bus_err}")
+        except Exception as e:
+            logger.error(f"告警通知失败: {e}")
+
+    detector.add_callback(_alert_to_lingbus)
+    await detector.start()
+    logger.info("Anomaly detector started")
+
+
 async def _init_learning_scheduler(app):
     """初始化自学习调度器"""
     from backend.services.learning.scheduler import get_learning_scheduler
@@ -271,6 +308,14 @@ async def _init_learning_scheduler(app):
         logger.info("Learning scheduler started")
     else:
         logger.info("Auto-learning is disabled")
+
+
+async def _shutdown_anomaly_detector():
+    """停止异常检测器"""
+    from backend.monitoring.anomaly_detector import get_anomaly_detector
+
+    await get_anomaly_detector().stop()
+    logger.info("Anomaly detector stopped")
 
 
 async def _shutdown_health_checks():
@@ -360,6 +405,7 @@ async def lifespan(app: FastAPI):
     await _safe_init("Health checks")(_init_health_checks)(db_service)
     await _safe_init("Embedding service check")(_init_embedding_service_check)()
     await _safe_init("Metrics")(_init_metrics)()
+    await _safe_init("Anomaly detector")(_init_anomaly_detector)()
     await _safe_init("Learning scheduler")(_init_learning_scheduler)(app)
 
     logger.info("Application started successfully")
@@ -371,6 +417,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down application...")
 
     await _safe_init("Health checks shutdown")(_shutdown_health_checks)()
+    await _safe_init("Anomaly detector shutdown")(_shutdown_anomaly_detector)()
     await _safe_init("Domains shutdown")(_shutdown_domains)()
     await _safe_init("Config watcher shutdown")(_shutdown_config_watcher)(app)
     await _safe_init("Learning scheduler shutdown")(_shutdown_learning_scheduler)(app)

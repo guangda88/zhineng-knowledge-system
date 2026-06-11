@@ -6,10 +6,10 @@
 import logging
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from backend.auth.middleware import get_authenticated_user, get_current_user
+from backend.auth.middleware import get_authenticated_user
 from backend.auth.rbac import User
 
 logger = logging.getLogger(__name__)

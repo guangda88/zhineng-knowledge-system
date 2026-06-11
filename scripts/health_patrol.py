@@ -15,7 +15,7 @@ import asyncio
 import json
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
@@ -172,8 +172,8 @@ async def check_search_performance() -> PatrolResult:
             latencies.append({"query": q, "error": str(e)})
             result.warn(f"搜索'{q}'失败: {e}")
 
-    avg_latency = sum(l.get("latency_ms", 0) for l in latencies) / max(len(latencies), 1)
-    max_latency = max(l.get("latency_ms", 0) for l in latencies)
+    avg_latency = sum(entry.get("latency_ms", 0) for entry in latencies) / max(len(latencies), 1)
+    max_latency = max(entry.get("latency_ms", 0) for entry in latencies)
 
     if max_latency > 5000:
         result.warn(
@@ -373,7 +373,7 @@ def print_report(results: list, verbose: bool = False):
     elif warn_count > 0:
         print(f"  *** 需要关注 {warn_count} 个警告项 ***")
     else:
-        print(f"  所有检查通过")
+        print("  所有检查通过")
 
     print(f"{'='*60}\n")
     return fail_count == 0 and warn_count == 0

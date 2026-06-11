@@ -146,6 +146,16 @@ async def log_requests(request: Request, call_next):
             )
 
         response.headers["X-Process-Time"] = str(process_time)
+
+        try:
+            from backend.monitoring.anomaly_detector import get_anomaly_detector
+            detector = get_anomaly_detector()
+            detector.observe("api_latency_ms", process_time * 1000)
+            if response.status_code == 429:
+                detector.observe("429_count", 1)
+        except Exception:
+            pass
+
         return response
     except Exception as e:
         increment_error_count()

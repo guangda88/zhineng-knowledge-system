@@ -93,6 +93,32 @@ class ChatResponse(BaseModel):
     answer: str
     sources: List[Dict[str, Any]]
     session_id: str
+    citations: List[Dict[str, str]] = []
+    confidence: str = "unverified"
+
+
+def _observe_search_latency(latency_ms: float) -> None:
+    try:
+        from backend.monitoring.anomaly_detector import get_anomaly_detector
+        get_anomaly_detector().observe("search_latency_ms", latency_ms)
+    except Exception:
+        pass
+
+
+def _get_related_domains(query: str) -> list:
+    try:
+        from backend.services.knowledge_graph.concept_map import get_related_domains
+        return get_related_domains(query)
+    except Exception:
+        return []
+
+
+def _get_concept_info(query: str) -> list:
+    try:
+        from backend.services.knowledge_graph.concept_map import get_concept_info
+        return get_concept_info(query)
+    except Exception:
+        return []
 
 
 # ========== 路由 ==========
@@ -106,10 +132,19 @@ async def search_endpoint(
     limit: int = Query(10, ge=1, le=100),
 ) -> JSONResponse:
     """关键词搜索（缓存5分钟）"""
+    import time as _time
+    t0 = _time.time()
     try:
         pool = await init_db_pool()
         results = await search_documents(pool, q, category, limit)
-        return {"query": q, "total": len(results), "results": results}
+        _observe_search_latency((_time.time() - t0) * 1000)
+        return {
+            "query": q,
+            "total": len(results),
+            "results": results,
+            "related_domains": _get_related_domains(q),
+            "concepts": _get_concept_info(q),
+        }
     except Exception as e:
         logger.error(f"搜索失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"搜索失败: {e}")
@@ -123,6 +158,8 @@ async def hybrid_search(request: HybridSearchRequest, skip_cache: bool = False) 
 
     结合向量语义检索和BM25关键词检索
     """
+    import time as _time
+    t0 = _time.time()
     try:
         retriever = await get_hybrid_retriever()
 
@@ -135,7 +172,14 @@ async def hybrid_search(request: HybridSearchRequest, skip_cache: bool = False) 
             use_query_expansion=request.use_query_expansion,
         )
 
-        return {"query": request.query, "total": len(results), "results": results}
+        _observe_search_latency((_time.time() - t0) * 1000)
+        return {
+            "query": request.query,
+            "total": len(results),
+            "results": results,
+            "related_domains": _get_related_domains(request.query),
+            "concepts": _get_concept_info(request.query),
+        }
     except Exception as e:
         logger.error(f"混合检索失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"混合检索失败: {e}")
@@ -264,6 +308,20 @@ async def retrieval_status() -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"获取检索状态失败: {e}")
 
 
+@router.get("/cross-domain")
+async def cross_domain_endpoint(
+    q: str = Query(..., min_length=1, max_length=200),
+    top_k: int = Query(3, ge=1, le=10, description="每个领域最多返回数"),
+    limit: int = Query(20, ge=1, le=50, description="总结果上限"),
+) -> JSONResponse:
+    """跨域联合检索：按领域分组返回搜索结果"""
+    from backend.services.retrieval.cross_domain import cross_domain_search
+
+    pool = await init_db_pool()
+    result = await cross_domain_search(pool, q, top_k_per_domain=top_k, limit=limit)
+    return result
+
+
 # ========== 兼容API路由（添加到主路由器） ==========
 
 # 创建额外路由器用于非search前缀的路由
@@ -285,6 +343,9 @@ async def ask_question(request: ChatRequest) -> ChatResponse:
         except Exception:
             pass
 
+        citations = []
+        confidence = "unverified"
+
         if sources:
             answer = f"根据知识库找到 {len(sources)} 条相关内容：\n\n"
             for i, s in enumerate(sources[:3], 1):
@@ -293,6 +354,15 @@ async def ask_question(request: ChatRequest) -> ChatResponse:
                     "..." if len(s["content"]) > 150 else ""
                 )
                 answer += f"{i}. **{safe_title}**\n{safe_content}\n\n"
+                citations.append({
+                    "title": s.get("title", ""),
+                    "source_table": s.get("source_table", "documents"),
+                    "doc_id": str(s.get("id", "")),
+                    "category": s.get("category", ""),
+                    "snippet": s.get("content", "")[:200],
+                    "similarity": s.get("similarity"),
+                })
+            confidence = "sourced"
         else:
             answer = (
                 "抱歉，知识库中没有找到相关内容。请尝试其他关键词，如：气功、八段锦、中医、论语等。"
@@ -353,7 +423,13 @@ async def ask_question(request: ChatRequest) -> ChatResponse:
         except Exception as save_err:
             logger.warning(f"保存聊天历史失败（不影响回复）: {save_err}")
 
-        return ChatResponse(answer=answer, sources=sources, session_id=session_id)
+        return ChatResponse(
+            answer=answer,
+            sources=sources,
+            session_id=session_id,
+            citations=citations,
+            confidence=confidence,
+        )
     except Exception as e:
         logger.error(f"智能问答失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"智能问答失败: {e}")

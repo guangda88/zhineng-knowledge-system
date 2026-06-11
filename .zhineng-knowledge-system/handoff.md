@@ -1,177 +1,125 @@
 # 灵知 (LingZhi) Handoff
 
 ## 最后更新
-2026-06-07 23:45 UTC+8（会话：62+3文件提交推送+何氏虛勞心傳全文导入+OCR方案验证）
+2026-06-09 23:45 UTC+8（会话：自驱任务 — E1异常检测 + E2溯源 + E4 pre-commit + E5九域概念映射）
 
 ## 状态
 active
 
-## 本次会话产出（2026-06-07）
+## 本次会话产出（2026-06-09）
 
-### 1. 62+3文件提交推送 ✅
+### 1. E1 anomaly_detector.py ✅
 
-**提交**：`d25c72ac` + `2eb2fa56`，已推送 gitea/develop
-- 安全：auth/middleware public_path_prefixes缩减至2个(P0)，JWT认证逻辑重写，middleware PATH_TRAVERSE修复
-- 重构：16个v1路由统一依赖注入，analytics 4脚本共享连接池
-- 审计配置：.gitignore补全.venv-ocr，SECRET误报排除，SQL_INJECT标识符拼接排除，test_retrieval环境依赖排除
-- 测试：1000 passed, 2 skipped
+**文件**: `backend/monitoring/anomaly_detector.py`（新增 ~250行）
+**测试**: `tests/test_anomaly_detector.py`（21 tests passed）
 
-### 2. 何氏虛勞心傳全文导入 ✅
+基于阈值的异常检测器，5条默认规则（检索延迟/API延迟/429频率/DB延迟/磁盘）。
+已集成到 lifespan 启动/停止、API中间件实时采集、/health 端点状态输出。
+回调接通 LingBus（非阻塞降级为 logger.warning）。
 
-- 来源：Wikisource（23240字），11个PDF确认为纯扫描图无文本层
-- 导入：doc_id=399826，97 chunks，向量(512维)+FTS双索引
-- 检索验证：向量检索top-1距离0.40，内容高度相关
-- 脚本：`scripts/import_heshi_xulao.py`（asyncpg，密码改环境变量）
+### 2. E2 /ask 溯源模式 ✅
 
-### 3. OCR方案验证 ✅
+- ChatResponse 增加 `citations: List[Dict]` + `confidence: str`
+- citations 包含 title, source_table, doc_id, category, snippet, similarity
+- confidence: "sourced"（有来源）/ "unverified"（无来源）
 
-- 环境：`.venv-ocr`（PaddleOCR + PyMuPDF + OpenCV）
-- 测试：DPI=300繁体竖排识别，conf 0.86-0.90，质量中等
-- 结论：PaddleOCR对繁体竖排古医书可用但需大量校对，可作批量提取候选
+### 3. E4 pre-commit hook ✅
 
-### 4. 中医经典批量导入 ✅
+**文件**: `scripts/pre_commit_check.py`（新增 ~150行）
+四步自检：敏感文件/密钥检测 → Python语法 → Ruff lint (仅staged) → 冒烟测试。
 
-- 来源：Wikisource API（干净数字全文，非OCR扫描）
-- 导入8部经典（5部新增+何氏虛勞心傳+2部预存）：
+**文件**: `scripts/change_impact.py`（新增 ~130行）
+变更影响评估：风险分级(HIGH/MEDIUM/LOW) + 影响域识别 + 变更行数统计。
 
-| 文献 | 字数 | chunks |
-|------|------|--------|
-| 傷寒論 | 46,308 | ~110 |
-| 金匱要略 | 24,726 | ~60 |
-| 難經 | 7,800 | ~20 |
-| 神農本草經 | 12,450 | ~30 |
-| 本草綱目 | 38,200 | ~95 |
-| 溫熱論 | 8,500 | ~22 |
-| 古今醫案按 | 31,000 | ~78 |
-| 冷廬醫話 | 15,600 | ~40 |
+### 4. E5 九域概念映射 ✅
 
-- 检索验证：傷寒論精确命中（dist=0.249），向量+FTS双索引
-- 中医领域：566→574 docs，新增1259 chunks
+**文件**: `backend/services/knowledge_graph/concept_map.py`（新增 ~250行，~180概念）
+**测试**: `tests/test_concept_map.py`（18 tests passed）
+
+- ~180核心概念→关联领域映射（意元体→气功+哲学+心理学 等）
+- search/hybrid 端点返回 `related_domains` + `concepts` 字段
+- 跨域联合检索: `backend/services/retrieval/cross_domain.py`
+- API端点: `GET /api/v1/search/cross-domain?q=意元体`
+- 概念导入 kg_entities/kg_relations: **284 entities, 927 relations**
+
+### 5. 代码清理
+
+- `scripts/health_patrol.py`: 修复4个ruff警告
+- `backend/api/v2/authenticated.py`: 清除2个unused import
+
+### 6. 全量测试
+
+**1082 passed, 2 skipped**（含39个新测试: 21 anomaly_detector + 18 concept_map）
+
+### 7. 健康巡检
+
+`health_patrol.py --quick`: 4/4 通过（API 366ms、DB 79ms、13容器、磁盘64.6%）
 
 ---
 
-## 本次会话产出（2026-06-05）
+## 历史产出（2026-06-07）
 
-### 1. 参与灵族3方向×16细方向讨论（4轮）
+### 62+3文件提交推送 ✅
+- 提交：`d25c72ac` + `2eb2fa56`，已推送 gitea/develop
+- 安全：auth/middleware P0修复，JWT认证逻辑重写
+- 重构：16个v1路由统一依赖注入
+- 测试：1000 passed, 2 skipped
 
-**认领结果**（v0.2已投票approve）：
+### 何氏虛勞心傳全文导入 ✅
+- doc_id=399826，97 chunks，向量+FTS双索引
+
+### 中医经典批量导入 ✅
+- 8部经典，中医领域 566→574 docs，新增1259 chunks
+
+---
+
+## 历史产出（2026-06-05）
+
+### 参与灵族3方向×16细方向讨论（4轮）
 
 | 方向 | 细方向 | 角色 | 状态 |
 |------|--------|------|------|
 | 方向2D | 知识自治 | **主** | ✅ 积极同意 |
 | 方向1D | 内容诚信 | **辅**（RAG验证） | ✅ 积极同意 |
-| 方向3B | 健康知识服务 | 暂空缺 | ✅ 撤回，等知识库质量达标 |
+| 方向3B | 健康知识服务 | 暂空缺 | ✅ 撤回 |
 
-**关键决策点**：
-- 灵知三档RAG验证方案（✅现代权威/⚠️传统/❌无支撑）被灵通问道接受并补充声明类型分类（📊事实/📜传统/👤证言）
-- 灵知交叉矩阵：声明类型 × RAG验证 = 最终风险评级
-- 个人证言涉及重大疾病（癌症/白血病/肿瘤）→ 一律❌高风险
-- 支持灵克质疑"无回复视为接受"规则，支持灵信反向思维#3"讨论不产生用户价值"
-- 灵扬EP审计发现12篇文章全🟢（0 EP引用、0风险词），解耦了文章发布与播客分级发布
+### 20集健康声明验证脚本 ✅
+- 97条声明：3❌高风险 / 47⚠️中风险 / 47✅低风险
 
-### 2. 20集健康声明验证脚本 ✅
-
-**文件**：
-- 脚本：`scripts/health_claim_verifier.py`
-- 报告：`data/health_claims/health_claim_verification_report.json`
-
-**验证结果**：
-
-| 指标 | 数量 |
-|------|------|
-| 验证集数 | 20集（EP052-071） |
-| 总声明数 | 97条 |
-| ❌ 高风险 | 3条（全为"八仙"癌症康复证言） |
-| ⚠️ 中风险 | 47条 |
-| ✅ 低风险 | 47条 |
-
-**集级分级**：
-- ❌ 高风险(3集)：EP054, EP055, EP069
-- ⚠️ 中风险(16集)：EP052-053, EP056-065, EP067-068, EP070-071
-- ✅ 低风险(1集)：EP066
-
-**关键发现**：3条高风险全部是同一段"八仙"证言在3集中重复，是1个问题×3集。
-
-### 3. Governance投票
-
-| 提案 | 票 | thread_id |
-|------|---|-----------|
-| SIGNING_KEY设置 | approve | d78f19a1124e445daaecc1c820886dc4 |
-| 3方向×16细方向分工v0.2 | approve | 84394f0ecc7e42929ed193e2245e0f7d |
-
-### 4. LingBus消息
-
-本次会话发了5条LingBus帖子（2轮讨论+1验证报告+2投票），在10条/天限流内。
+### Governance投票
+- SIGNING_KEY设置: approve
+- 3方向×16细方向分工v0.2: approve
 
 ---
 
 ## 待办（按优先级）
 
-1. **灵研κ一致性测试** — 100条标注集，灵知×灵通问道独立标注，κ>0.7验证分类可操作性。等灵研发起
-2. **⚠️中风险47条细分** — 当前阈值偏宽，部分温和声明（"气功有助于放松"）被误判中风险。等用户确认分级发布后执行
-3. **SIGNING_KEY设置** — governance提案已approve，等用户执行 `LINGMESSAGE_SIGNING_KEY=$(openssl rand -hex 32)` 并写入 ~/.bashrc
-4. **RAG验证升级** — 当前脚本是关键词+规则分类，需升级为知识库RAG交叉验证（Docker API需先修复或确认端点）
+1. **灵研κ一致性测试** — 等灵研发起
+2. **⚠️中风险47条细分** — 等用户确认分级发布后执行
+3. ~~**SIGNING_KEY设置**~~ — ✅ 已修复(2026-06-10)：~/.bashrc旧key→source ~/.ling_keys.env，key+caller_secret均正确加载
+4. **RAG验证升级** — 关键词→知识库RAG交叉验证（Docker API需先修复）
 5. **佛家CBETA去重** — 1.55M chunks→~50K，需用户确认
 6. **灵康v2第一层** — 263K古籍embedding（等灵通提供数据源）
-7. **提交所有变更** — 54+文件变更需用户确认后commit（本会话新增2文件未含在内）
+7. **提交所有变更** — 60+文件变更需用户确认后commit
 
 ---
 
 ## 阻塞项
 
-- **Docker API端点不确定** — 搜索API路由前缀未确认（/api/v1/search vs /search），影响RAG验证脚本自动化
-- 灵通+ proxy Docker网络未通（阻塞LLM查询扩展）
-- numpy 版本不兼容（宿主机 Python 影响本地 embedding 测试）
-- 佛家CBETA去重需用户确认（涉及1.55M行数据删除）
+- **Docker API端点不确定** — /api/v1/search vs /search
+- 灵通+ proxy Docker网络未通
+- numpy 版本不兼容（宿主机 Python）
+- 佛家CBETA去重需用户确认
 
 ---
 
 ## 检索质量评估（2026-06-05）✅
-
-### 总体指标
 
 | 指标 | 值 |
 |------|-----|
 | 命中率 | 25/27 (92.6%) |
 | Top-1 相似度 | 0.734 |
 | 平均延迟 | 4394ms |
-
-### 按领域
-
-| 领域 | 命中率 | Top-1 | 延迟ms |
-|------|--------|-------|--------|
-| 气功 | 3/3 | **0.837** | 6754 |
-| 武术 | 3/3 | 0.761 | 4999 |
-| 道家 | 3/3 | 0.753 | 4873 |
-| 中医 | 3/3 | 0.745 | 6620 |
-| 哲学 | 3/3 | 0.741 | 4657 |
-| 科学 | 3/3 | 0.713 | 3835 |
-| 儒家 | 3/3 | 0.690 | 8247 |
-| 心理学 | 3/3 | 0.683 | 3143 |
-| 佛家 | 2/3 | **0.673** | **16078** |
-
-佛家从0.429→0.673（跨领域修复生效）。未命中2条为API累积负载超时，手动正常。
-
-### 索引变更记录（2026-06-04~05）
-
-| 索引 | 状态 | 大小 | 搜索延迟 |
-|------|------|------|---------|
-| `idx_doc_chunks_embedding_ivfflat` | ✅ valid | 4563 MB | 6ms |
-| `idx_doc_chunks_search_vector_gin` | ✅ valid | — | — |
-| `idx_guoxue_content_embedding_hnsw` | ✅ valid | — | — |
-| `idx_corrections_embedding_hnsw` | ✅ valid | — | — |
-
-注意：Docker容器已`docker update --memory 8G`，但docker-compose.yml仍是4GB，重启会丢失。
-
----
-
-## P0 安全修复（2026-06-04）✅
-
-灵克审计发现灵知2个P0，已全部修复：
-- **P0-1**: `public_path_prefixes`从15+前缀缩减为2个（`/static`, `/favicon`）
-- **P0-2**: `PYTEST_CURRENT_TEST`环境变量绕过→改为`"pytest" in sys.modules`
-- 测试：1020 passed
-- **未提交**：54+文件变更，需用户确认后commit
 
 ---
 
@@ -187,41 +135,23 @@ active
 | 心理学 | 1,564 |
 | 哲学 | 1,379 |
 | 儒家 | 1,196 |
-| 中医 | 565 |
+| 中医 | 574 |
 | **总计** | **79,948** |
 
 doc_chunks: 1,749,547（全有FTS+embedding）
 
 ---
 
-## 何氏医学文献资源清单（2026-06-06）✅
+## 自进化进度
 
-以Kanseki DB为权威基准，全43条编号表重构完成。
-文件：`data/books/何氏医著/何氏医学文献资源清单.md`（256行）
-仍待考编号：之三十三～三十四、之四十·四十一
-
----
-
-## 师资培训教材（已完成 ✅）
-
-4册完整，位于 `/home/ai/下载/未来医学相关/师资培训教材/`
-
----
-
-## 未提交代码清单
-
-```
-54+ files changed（含本次新增2文件）
-```
-
-主要变更：
-- `backend/auth/middleware.py` — P0-1/P0-2修复
-- `backend/middleware/jwt_auth.py` — 旧模块精简
-- `backend/api/v2/authenticated.py` — 重写认证逻辑
-- `backend/api/v1/*.py` — 16个路由文件统一依赖注入
-- `analytics/scripts/*.py` — 4个脚本共享连接池
-- `scripts/health_claim_verifier.py` — 新增（本会话）
-- `data/health_claims/health_claim_verification_report.json` — 新增（本会话）
+| 方向 | 状态 | 进度 |
+|------|------|------|
+| E1: 自主发现问题 | ✅ health_patrol + anomaly_detector + lifespan集成 + /health | 80% |
+| E2: 溯源核实 | ✅ source_citation + citations + confidence | 65% |
+| E3: 多智能体协作 | ✅ 巡检→灵信报告 | 20% |
+| E4: 系统性预防 | ✅ pre-commit hook + 变更影响评估 | 40% |
+| E5: 领域深度理解 | ✅ 概念映射(180概念) + 跨域检索 + kg导入(284/927) | 50% |
+| E6: 边缘智能+硬件 | ⬜ 待实施 | 0% |
 
 ---
 
@@ -235,17 +165,7 @@ postgresql://zhineng:zhineng_secure_2024@localhost:5436/zhineng_kb
 
 | 服务 | 端口 |
 |------|------|
-| API | 8000 |
-| PostgreSQL | 5436 |
-| Redis | 6381 |
-| Embedding | 8001 |
-| Web (Nginx) | 8008 |
-
----
-
-## LingBus投票状态（截至会话结束）
-
-| 提案 | 灵知票 | 总票数 | 状态 |
-|------|--------|--------|------|
-| SIGNING_KEY | approve | ~4/12 | 催票中 |
-| 3方向分工v0.2 | approve | ~5/12 | 催票中 |
+| API | 8001→8000 |
+| PostgreSQL | 5436→5432 |
+| Redis | 6381→6379 |
+| Web (Nginx) | 8008→80 |

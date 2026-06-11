@@ -166,11 +166,19 @@ class HealthChecker:
         """
         overall = self.get_overall_status()
 
-        return {
+        summary = {
             "status": overall.value,
             "timestamp": time.time(),
             "checks": {name: result.to_dict() for name, result in self._last_results.items()},
         }
+
+        try:
+            from backend.monitoring.anomaly_detector import get_anomaly_detector
+            summary["anomaly_detector"] = get_anomaly_detector().get_status()
+        except Exception:
+            pass
+
+        return summary
 
     async def start_background_checks(self) -> None:
         """启动后台健康检查

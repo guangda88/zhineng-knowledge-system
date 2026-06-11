@@ -17,6 +17,7 @@ from .highlighter import ResultHighlighter
 from .query_expansion import expand_query, expand_query_simple
 from .reranker import create_reranker
 from .vector import VectorRetriever
+from ..knowledge_graph.concept_map import get_related_domains, get_concept_info
 
 if TYPE_CHECKING:
     from .reranker import Reranker
@@ -288,6 +289,12 @@ class HybridRetriever:
         if not self.vector_retriever or not self.bm25_retriever:
             await self.initialize()
 
+        concept_info = get_concept_info(query)
+        related_domains = get_related_domains(query)
+        if category is None and related_domains:
+            category = None
+            logger.info(f"跨域概念检测: concepts={[c['concept'] for c in concept_info]}, domains={related_domains}")
+
         # 查询扩展（限制最多5个词，避免过多并发DB查询）
         expanded_terms = [query]
         if use_query_expansion:
@@ -387,6 +394,24 @@ class HybridRetriever:
             key=lambda x: x.get("rerank_score", x.get("score", x.get("similarity", 0))),
             reverse=True,
         )
+
+        # 跨域概念boost：如果query包含跨域概念，提升匹配领域的文档得分
+        if related_domains:
+            for r in results:
+                r_cat = r.get("category", "")
+                if r_cat in related_domains:
+                    r["score"] = r.get("score", 0) * 1.15
+                    r["cross_domain_boost"] = True
+            results.sort(
+                key=lambda x: x.get("rerank_score", x.get("score", x.get("similarity", 0))),
+                reverse=True,
+            )
+
+        # 为结果附加概念元数据
+        if concept_info:
+            for r in results[:top_k]:
+                r["matched_concepts"] = [c["concept"] for c in concept_info]
+                r["related_domains"] = related_domains
 
         # 表来源多样性保障：确保每个 source_table 在 top_k 中有最低名额
         results = self._ensure_table_diversity(results, top_k)

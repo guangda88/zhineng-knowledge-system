@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-06-11T01:15:00",
+  "api_base": "http://localhost:8000",
+  "endpoint": "/api/v1/search/hybrid",
+  "top_k": 10,
+  "n_queries": 50,
+  "n_valid": 50,
+  "category_accuracy": {
+    "top1": 0.68,
+    "top3": 0.70,
+    "top5": 0.70
+  },
+  "concept_accuracy": 0.713,
+  "kappa_top1": 0.64,
+  "kappa_top3": 0.6625,
+  "avg_latency": 8.2,
+  "by_type": {
+    "精确": {"count": 24, "top1_hit_rate": 0.50, "concept_hit_rate": 0.65},
+    "模糊": {"count": 11, "top1_hit_rate": 0.727, "concept_hit_rate": 0.55},
+    "跨领域": {"count": 15, "top1_hit_rate": 0.933, "concept_hit_rate": 0.93}
+  },
+  "key_findings": {
+    "concept_map_boost_working": "跨领域query top1命中率93.3%，concept_map跨域boost生效",
+    "气功_bias_remains": "气功数据占主导，非气功query仍常返回气功结果(q013/q014/q019/q038)",
+    "古籍_category_gap": "guoxue_content标记为'古籍'而非具体领域(中医/佛家)，导致category miss(q007-q010/q022/q034)",
+    "guoxue_data_accessible": "hybrid search已能检索guoxue_content(263K条)，数据偏斜大幅缓解"
+  },
+  "improvement_from_simple_search": "κ从-0.125提升到0.64(+0.765)，Top1从0%提升到68%",
+  "next_steps": "guoxue_content category映射(古籍→具体领域)可进一步提升κ"
+}

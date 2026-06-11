@@ -3,6 +3,7 @@
 提供系统监控、指标收集和健康检查
 """
 
+from .anomaly_detector import AnomalyDetector, get_anomaly_detector
 from .cache_metrics import (
     CacheLevel,
     CacheMetricsCollector,
@@ -15,6 +16,8 @@ from .metrics import MetricsCollector, MetricType, get_metrics_collector
 from .prometheus import PrometheusExporter
 
 __all__ = [
+    "AnomalyDetector",
+    "get_anomaly_detector",
     "MetricsCollector",
     "MetricType",
     "get_metrics_collector",

@@ -14,6 +14,25 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+DOMAIN_KEYWORDS = {
+    "儒家": ["论语", "孟子", "大学", "中庸", "礼记", "诗经", "尚书", "孝经", "荀子", "朱子", "阳明", "传习录", "儒", "春秋繁露", "商君书", "周礼", "潜夫论", "读通鉴论", "文献通考", "书目答问", "廿二史"],
+    "佛家": ["佛", "法华", "华严", "楞严", "金刚", "般若", "禅", "坛经", "维摩", "净土", "心经", "菩萨", "僧", "弘明集", "佛国记", "续藏经", "陀罗尼", "曼拏罗", "藏经", "高贤传", "大藏经", "嘉兴大藏经", "七千佛", "六甲祈", "神咒经", "六祖", "赞佛"],
+    "道家": ["老子", "庄子", "道德经", "列子", "文子", "抱朴子", "道藏", "黄庭", "悟真", "参同", "内丹", "三十六水法", "一贯天机", "太上老君", "上清", "召魔伏", "奇门", "风水", "青囊", "三极至命"],
+    "中医": ["黄帝内经", "本草", "伤寒", "金匮", "难经", "脉经", "针灸", "千金", "温病", "方剂", "张景岳", "景岳", "丹溪", "颅囟经", "神农本草", "濒湖脉学", "千金翼方"],
+    "气功": ["气功", "混元", "捧气", "形神庄", "五元庄", "站桩", "导引", "吐纳", "丹田", "组场", "经络", "气血"],
+    "武术": ["太极", "八卦", "形意", "少林", "武当", "咏春", "拳", "剑", "刀", "枪", "棍", "三命通会", "七杀星"],
+    "哲学": ["哲学", "逻辑", "存在", "认识论", "伦理", "美学", "辩证", "易", "周易", "易经", "春秋"],
+    "科学": ["科学", "物理", "化学", "数学", "生物", "天文", "地理", "系统论"],
+    "心理学": ["心理", "意识", "认知", "情绪", "人格", "行为", "精神"],
+}
+
+
+def infer_domain(text: str) -> str:
+    for domain, keywords in DOMAIN_KEYWORDS.items():
+        if any(kw in text for kw in keywords):
+            return domain
+    return "古籍"
+
 _MODEL_INSTANCE = None
 _MODEL_DIM = 512
 _MODEL_LOCK = asyncio.Lock()
@@ -207,12 +226,14 @@ class VectorRetriever:
             title = r["node_title"] or "教材"
             if r["node_path"]:
                 title = f"{r['node_path']} → {title}"
+            combined_text = (title + " " + (r["content"] or ""))[:200]
+            cat = infer_domain(combined_text)
             results.append(
                 {
                     "id": f"tbv_{r['id']}",
                     "title": title,
                     "content": r["content"],
-                    "category": "教材",
+                    "category": cat,
                     "similarity": float(r["similarity"]),
                     "method": "vector",
                     "source_table": "textbook_blocks_v2",
@@ -264,39 +285,36 @@ class VectorRetriever:
 
         同时搜索 documents、guoxue_content、textbook_blocks_v2、doc_chunks 四张表，合并结果。
         """
-        doc_filter = (
-            "length(content) > 100"
-            " AND content NOT LIKE '来源: %'"
-            " AND content NOT LIKE '文件名: %'"
-        )
-        gx_filter = "body_length > 100"
-
         if category:
-            doc_sql = f"""
+            doc_sql = """
                 SELECT id, title, content, category,
                        1 - (embedding <=> $1::vector) as similarity,
                        'documents' as source_table
                 FROM documents
                 WHERE category = $2 AND embedding IS NOT NULL
-                      AND {doc_filter}
+                      AND length(content) > 100
+                      AND content NOT LIKE '来源: %'
+                      AND content NOT LIKE '文件名: %'
                 ORDER BY embedding <=> $1::vector
                 LIMIT $3
             """
             doc_params = [vector_str, category, top_k]
         else:
-            doc_sql = f"""
+            doc_sql = """
                 SELECT id, title, content, category,
                        1 - (embedding <=> $1::vector) as similarity,
                        'documents' as source_table
                 FROM documents
                 WHERE embedding IS NOT NULL
-                      AND {doc_filter}
+                      AND length(content) > 100
+                      AND content NOT LIKE '来源: %'
+                      AND content NOT LIKE '文件名: %'
                 ORDER BY embedding <=> $1::vector
                 LIMIT $2
             """
             doc_params = [vector_str, top_k]
 
-        gx_sql = f"""
+        gx_sql = """
             SELECT gc.id, gc.body as content, gc.book_id,
                    1 - (gc.embedding <=> $1::vector) as similarity,
                    'guoxue_content' as source_table,
@@ -304,7 +322,7 @@ class VectorRetriever:
             FROM guoxue_content gc
             LEFT JOIN guoxue_books gb ON gc.book_id = gb.book_id
             WHERE gc.embedding IS NOT NULL
-                  AND {gx_filter}
+                  AND body_length > 100
             ORDER BY gc.embedding <=> $1::vector
             LIMIT $2
         """
@@ -349,12 +367,13 @@ class VectorRetriever:
                 }
             )
         for r in gx_rows:
+            book_title = r.get("book_title") or "古籍"
             normalized.append(
                 {
                     "id": r["id"],
-                    "title": r.get("book_title", "古籍"),
+                    "title": book_title,
                     "content": r["content"],
-                    "category": "古籍",
+                    "category": infer_domain(book_title),
                     "similarity": float(r["similarity"]),
                     "source_table": r["source_table"],
                 }
