@@ -16,9 +16,9 @@ from retrieval_eval_set import EVAL_QUERIES
 
 def search(api_base: str, query: str, top_k: int = 10) -> list:
     import requests as sync_requests
-    r = sync_requests.post(
-        f"{api_base}/api/v1/search/hybrid",
-        json={"query": query, "top_k": top_k, "use_vector": True, "use_bm25": True},
+    r = sync_requests.get(
+        f"{api_base}/api/v1/search",
+        params={"q": query, "limit": top_k},
         timeout=60,
     )
     r.raise_for_status()
