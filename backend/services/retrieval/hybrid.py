@@ -299,9 +299,16 @@ class HybridRetriever:
         expanded_terms = [query]
         if use_query_expansion:
             try:
-                expanded_terms = await expand_query(query)
+                import asyncio
+                expanded_terms = await asyncio.wait_for(expand_query(query), timeout=3.0)
+            except asyncio.TimeoutError:
+                logger.debug("查询扩展超时(3s)，使用本地扩展")
+                try:
+                    expanded_terms = await expand_query_simple(query)
+                except Exception:
+                    expanded_terms = [query]
             except Exception as e:
-                logger.debug(f"查询扩展失败，使用原始查询: {e}")
+                logger.debug(f"查询扩展失败，使用本地扩展: {e}")
                 try:
                     expanded_terms = await expand_query_simple(query)
                 except Exception:
