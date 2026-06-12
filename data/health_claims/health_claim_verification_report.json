@@ -147,7 +147,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.627,
+          "rag_top_source": "气功科学概论辅导材料 - 00891"
         },
         {
           "episode": "EP053",
@@ -165,7 +168,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.629,
+          "rag_top_source": "智能气功-混元整体辅导材料 - 02773"
         },
         {
           "episode": "EP053",
@@ -243,7 +249,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.645,
+          "rag_top_source": "智能气功-精义辅导 - 01612"
         },
         {
           "episode": "EP053",
@@ -261,7 +270,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.611,
+          "rag_top_source": "智能气功-精义辅导 - 01612"
         }
       ]
     },
@@ -339,7 +351,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.631,
+          "rag_top_source": "智能气功科学精义函授辅导材料 - 00642"
         },
         {
           "episode": "EP054",
@@ -631,7 +646,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.687,
+          "rag_top_source": "论智能气功的健康发展（续·存目） - 00640"
         },
         {
           "episode": "EP056",
@@ -827,7 +845,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.639,
+          "rag_top_source": "智能气功科学基础——混元整体理论 - 00845"
         },
         {
           "episode": "EP056",
@@ -847,7 +868,10 @@
               "平衡"
             ],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.631,
+          "rag_top_source": "（原本）智能气功科学概论辅导材料 - 01573"
         }
       ]
     },
@@ -985,7 +1009,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.684,
+          "rag_top_source": "意元体的形成和变化 - 00219"
         },
         {
           "episode": "EP058",
@@ -1202,7 +1229,10 @@
               "调理"
             ],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.711,
+          "rag_top_source": "关于未来文化 - 00065"
         }
       ]
     },
@@ -1282,7 +1312,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.754,
+          "rag_top_source": "气功学总论 - 00052"
         }
       ]
     },
@@ -1643,7 +1676,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.617,
+          "rag_top_source": "打造“心理健康”的港湾"
         }
       ]
     },
@@ -1834,7 +1870,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.662,
+          "rag_top_source": "混元整体理论辅导材料 - 02957"
         },
         {
           "episode": "EP067",
@@ -2023,7 +2062,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.672,
+          "rag_top_source": "相信科学 尊重科学 拥有健康"
         },
         {
           "episode": "EP068",
@@ -2078,7 +2120,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.727,
+          "rag_top_source": "（原本）智能气功科学概论辅导材料 - 01535"
         },
         {
           "episode": "EP069",
@@ -2159,7 +2204,10 @@
               "减轻"
             ],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.651,
+          "rag_top_source": "智能气功科学基础——混元整体理论 - 00835"
         }
       ]
     },
@@ -2214,7 +2262,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.65,
+          "rag_top_source": "庞老师的讲话总集最终修改 - 00698"
         },
         {
           "episode": "EP071",
@@ -2251,7 +2302,10 @@
               "修复"
             ],
             "alternative_treatment": true
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.696,
+          "rag_top_source": "智能气功九大特点 - 00065"
         },
         {
           "episode": "EP071",
@@ -2270,7 +2324,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "rag_verified": true,
+          "rag_top_similarity": 0.724,
+          "rag_top_source": "加强智能气功社团党的建设 - 01035"
         },
         {
           "episode": "EP071",
