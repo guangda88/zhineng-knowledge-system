@@ -74,7 +74,7 @@
           "line_number": 5,
           "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -85,14 +85,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP052",
           "line_number": 7,
           "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -104,7 +107,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         }
       ]
     },
@@ -166,7 +172,7 @@
           "line_number": 9,
           "text": "慧心：所以医学上管这个叫亚健康。但我一直觉得这个说法本身就有问题。什么叫亚健康？比健康差一点，但还没到生病？这就像说一个人亚快乐、亚幸福一样荒谬。你去跟那些长期失眠的人说你是亚健康，他们会觉得你在轻视他们的痛苦。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -177,7 +183,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP053",
@@ -202,7 +211,7 @@
           "line_number": 31,
           "text": "广大：不高，但现在能做到的机构真的不多。安全、舒适、自然、有人情味的康养环境，会是越来越硬的刚需。而且我观察到，很多子女最焦虑的不是父母的身体状况，而是父母的孤独感。一个有温度的康养社区，不只是在照顾老人的身体，更是在疗愈整个家庭的关系。我在海涵春育见过七十多岁的阿姨学会了画画和太极，整个人焕发出的光彩比年轻时候还动人。她说她以前在家就是看电视等日子，现在每天早上醒来都有期待。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -213,7 +222,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP053",
@@ -275,7 +287,7 @@
           "line_number": 11,
           "text": "广大：一切回到原点。该失眠还是失眠，该腰痛还是腰痛，因为在机构里养好的状态，回家之后没有方法去维持。这让我觉得特别无奈，花了那么多钱，效果却留不住。就像花了大价钱装修了一间房子，结果风一吹又回到毛坯。这就引出一个更深的问题——康养如果不能变成生活方式的一部分，那任何短期的改善都是暂时的。",
           "claim_type": "factual",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "事实声明涉及慢性病，无来源引用",
           "medium_subcategory": "chronic_factual",
           "has_source": false,
@@ -288,7 +300,10 @@
               "改善"
             ],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for chronic_factual",
+          "required_disclaimer": "本内容仅代表传统气功理论观点，不构成医疗建议。如有健康问题请咨询专业医生。"
         },
         {
           "episode": "EP054",
@@ -373,7 +388,7 @@
           "line_number": 51,
           "text": "广大：是的。我常常在想，康养的终极目的，到底是让人更舒服，还是让人更焦虑？是让人依赖外力，还是让人拥有自主健康的能力？这三个困境——成本高、服务割裂、人情味淡——恰恰是我们做生命整体观、做海涵春育的出发点。因为我们想要回答的就是：有没有一种康养方式，既低成本又整体，既有科学又有温度？",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -384,7 +399,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         }
       ]
     },
@@ -410,7 +428,7 @@
           "line_number": 15,
           "text": "广大：比如呼吸。每个人都在呼吸，但大部分人呼吸的方式是不对的。浅呼吸、短呼吸、急促呼吸，长期下来身体的供氧就不足，人会容易疲惫、焦虑、注意力不集中。但如果有人教你正确地呼吸，不需要任何设备，不需要花一分钱，你的状态就能明显改善。在海涵春育，呼吸是每天晨练的第一课，很多客人说光是学会了正确呼吸，困扰多年的失眠就有了明显的改善。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -424,7 +442,10 @@
               "改善"
             ],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP055",
@@ -449,7 +470,7 @@
           "line_number": 31,
           "text": "广大：对。康养的目标不是把服务做得多精致，而是把人的自愈力、觉察力、调节力唤醒。人一旦醒过来，健康就会自己发生。我见过很多客人，来的时候带着一身的毛病和满心的焦虑，走的时候不是病全好了，而是他们的状态完全不同了——他们开始相信自己能够好起来，开始知道怎么跟自己的身体对话。这种转变，比任何治疗都更根本。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -464,7 +485,10 @@
               "调节"
             ],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP055",
@@ -514,7 +538,7 @@
           "line_number": 43,
           "text": "广大：我们养生，是为了不生病吗？是为了活得久吗？还是为了活得有质量、有喜悦、有尊严、有意义？大部分人没想过这个问题，他们养生是被恐惧驱动的——怕生病、怕变老、怕死。恐惧驱动下的养生，越养越焦虑。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -525,7 +549,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         }
       ]
     },
@@ -551,7 +578,7 @@
           "line_number": 11,
           "text": "广大：从表面上看是的。我见过一个康养中心，花了大价钱安装了智能床垫、智能手环、AI监控系统，管理者觉得特别先进。但三个月后发现问题了——老人们的焦虑感反而上升了，每天被数据提醒这个偏高那个偏低，搞得人心惶惶。有个大爷甚至说，我原来好好的，住进来反而觉得自己浑身是病。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -562,14 +589,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP056",
           "line_number": 13,
           "text": "慧心：我太理解这个感受了。我有段时间戴了智能手环，每天盯着睡眠分数看。分数一低就焦虑，结果越焦虑越睡不好，分数更低，恶性循环。后来有一个朋友跟我说了一句话，她说你把手环摘了试试，我当时觉得这算什么建议，但真的摘了之后，反而睡得踏实了。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -580,7 +610,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP056",
@@ -605,7 +638,7 @@
           "line_number": 19,
           "text": "广大：不是不用，而是要摆正位置。设备是工具，不是裁判。数据是参考，不是判决书。健康不是靠算出来的，是靠活出来的。身体不是靠监测变好的，是靠自我调节、自我修复变好的。就像海涵春育的很多老朋友，他们来的时候什么数据都没带，走的时候却带走了真正的健康——因为他们学会的不是看数据，而是感受自己。有一位阿姨跟我说，她来之前每天量三次血压，来之后一周都没量过，但血压反而比之前稳定了。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": true,
@@ -619,7 +652,10 @@
               "调节"
             ],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP056",
@@ -759,7 +795,7 @@
           "line_number": 41,
           "text": "慧心：这正是生命整体观给我们的启示——人的健康不是一台机器的参数优化，而是身体、心理、情绪、精神全方位的协调统一。同样是血压偏高，数据驱动的方案是加药、换药、反复监测，越治越焦虑；而生命整体观的方案是调整作息、练习放松、融入社群，血压自然就稳了。当一个人从内到外真正和谐了，那种健康是从骨子里透出来的，不是数据表上的一个数字可以衡量的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "general_wellness",
           "has_source": false,
@@ -771,7 +807,9 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for general_wellness"
         },
         {
           "episode": "EP056",
@@ -835,7 +873,7 @@
           "line_number": 3,
           "text": "广大：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -846,14 +884,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP057",
           "line_number": 5,
           "text": "慧心：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -865,7 +906,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         }
       ]
     },
@@ -985,7 +1029,7 @@
           "line_number": 3,
           "text": "广大：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -996,14 +1040,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP059",
           "line_number": 5,
           "text": "慧心：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1015,7 +1062,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP059",
@@ -1096,7 +1146,7 @@
           "line_number": 5,
           "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -1107,14 +1157,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP060",
           "line_number": 7,
           "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1126,7 +1179,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP060",
@@ -1172,7 +1228,7 @@
           "line_number": 5,
           "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -1183,14 +1239,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP061",
           "line_number": 7,
           "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1202,7 +1261,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP061",
@@ -1246,7 +1308,7 @@
           "line_number": 5,
           "text": "慧心：其实它的核心不是硬件设施，而是一套理念，叫生命整体观。这个理念跟我们平时的养生方式完全不一样，它不是头痛医头脚痛医脚那一套，而是从整体的角度去看待人的健康和生命。这套理念背后有很深的理论支撑，不是我随口说的，它是经过几十年的实践验证的。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -1257,14 +1319,17 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP062",
           "line_number": 7,
           "text": "广大：说到这个我太有感触了。你有没有发现，现在很多人都在拼命养生，吃保健品、做理疗、报课程、买仪器，钱花了不少，可状态并没有真正变好。我身边就有这样的朋友，养生养了三年，该失眠还是失眠，该焦虑还是焦虑。而且有些人越养越焦虑，因为他们每天都在关注自己哪里不舒服，反而把注意力都放在了症状上。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1276,7 +1341,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP062",
@@ -1393,7 +1461,7 @@
           "line_number": 19,
           "text": "慧心：其实并不复杂，关键是要掌握正确的方法和理念。比如说，我们吃饭的时候要注意营养均衡，运动的时候要根据自己的身体状况选择合适的运动方式，保证充足的睡眠时间，避免过度焦虑和压力等等。只有这样，我们才能真正地保持身心的健康和平衡。",
           "claim_type": "traditional",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "传统理论涉及疾病，需标注为传统理论",
           "medium_subcategory": "traditional_disease",
           "has_source": false,
@@ -1406,7 +1474,10 @@
               "平衡"
             ],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for traditional_disease",
+          "required_disclaimer": "以下内容基于中医/气功传统理论，非现代医学结论，仅供参考。"
         },
         {
           "episode": "EP063",
@@ -1635,7 +1706,7 @@
           "line_number": 17,
           "text": "慧心：唤醒式康养与其他康养方式最大的不同在于其整体性和主动性。传统的康养方式往往侧重于解决特定的健康问题，如疼痛、失眠等，而唤醒式康养则更注重从整体上提升客人的健康水平。它鼓励客人积极参与自己的健康管理过程，发掘和发挥自己的自愈能力。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1648,7 +1719,10 @@
               "自愈"
             ],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP065",
@@ -1767,7 +1841,7 @@
           "line_number": 17,
           "text": "慧心：那就很危险了。我见过一些康养机构，完全依赖智能设备来管理客人的健康。手环监测心率，床垫监测睡眠，APP记录饮食，AI给出建议。看起来很先进，但客人变成了被数据管理的对象，而不是自我觉察的主体。有个阿姨跟我说，她每天最紧张的事就是看APP上的评分，评分高了开心，评分低了焦虑。她不是在养生，是在养数据。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1778,7 +1852,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP067",
@@ -1859,7 +1936,7 @@
           "line_number": 5,
           "text": "慧心：这个我太有感触了。我有个阿姨，高血压十几年了，每次去看医生都是调药、加药，血压确实能控制住，但她整个人越来越没精神。后来她去了海涵春育，练了三个月的功法，血压反而比吃药的时候还稳。她跟我说了一句话，她说我以前觉得血压是医生的事，现在才知道，血压是我自己的事。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -1871,7 +1948,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP068",
@@ -2045,7 +2125,7 @@
           "line_number": 11,
           "text": "广大：我给你讲一个故事。有一位六十多岁的阿姨，来海涵春育之前，身体各种毛病，失眠、胃痛、关节疼，看了很多医生都说是慢性病只能养着。她来的时候整个人灰扑扑的，说话声音很轻，眼神也很淡。",
           "claim_type": "testimonial",
-          "risk_level": "medium",
+          "risk_level": "low",
           "risk_reason": "个人证言涉及慢性病",
           "medium_subcategory": "testimonial_chronic",
           "has_source": false,
@@ -2056,7 +2136,10 @@
             ],
             "health_verbs": [],
             "alternative_treatment": false
-          }
+          },
+          "original_risk_level": "medium",
+          "downgrade_reason": "Added disclaimer for testimonial_chronic",
+          "required_disclaimer": "以下为个人练习体验分享，个体效果因人而异，不构成治疗建议。"
         },
         {
           "episode": "EP070",
