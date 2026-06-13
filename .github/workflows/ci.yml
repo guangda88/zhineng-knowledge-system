@@ -187,6 +187,7 @@ jobs:
     - name: 发布测试结果
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
+      continue-on-error: true
       with:
         files: test-results.xml
         check_name: 测试结果
