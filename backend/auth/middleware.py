@@ -15,9 +15,9 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sys
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 from typing import Awaitable, Callable, Optional, Set
 
 from fastapi import HTTPException, Request, Response, status
@@ -77,6 +77,7 @@ class AuthConfig:
         {
             "/static",
             "/favicon",
+            "/api/v1/external",
         }
     )
     protected_path_prefixes: Set[str] = frozenset(
@@ -105,7 +106,7 @@ def is_public_path(path: str, config: AuthConfig) -> bool:
 
     # 前缀匹配
     for prefix in config.public_path_prefixes:
-        if path.startswith(prefix):
+        if PurePosixPath(path).is_relative_to(PurePosixPath(prefix)):
             return True
 
     return False
@@ -240,6 +241,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if self.config._pytest_skip_auth or "pytest" in sys.modules:
             return await call_next(request)
 
+        # 内部服务间API直接放行（external API有自己的X-API-Key认证）
+        if PurePosixPath(path).is_relative_to(PurePosixPath("/api/v1/external")):
+            return await call_next(request)
+
         # 公开路径直接放行
         if is_public_path(path, self.config):
             return await call_next(request)
@@ -336,7 +341,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         """
         # 检查是否在受保护的路径前缀下
         for prefix in self.config.protected_path_prefixes:
-            if path.startswith(prefix):
+            if PurePosixPath(path).is_relative_to(PurePosixPath(prefix)):
                 return True
         return False
 

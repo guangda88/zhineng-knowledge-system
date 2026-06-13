@@ -138,6 +138,9 @@ services:
       LLM_PROXY_URL: http://172.18.0.1:8765/v1/chat/completions
       JWT_PRIVATE_KEY_FILE: /app/jwt_private.pem
       JWT_PUBLIC_KEY_FILE: /app/jwt_public.pem
+      ADMIN_USERNAME: linghealth
+      ADMIN_PASSWORD: linghealth2026
+      SECRET_KEY: lingzhi-secret-key-2026-production
     volumes:
     - ./backend:/app/backend
     - ./jwt_private.pem:/app/jwt_private.pem

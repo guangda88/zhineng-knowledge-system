@@ -11,9 +11,21 @@
 
 import logging
 import os
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+_env_file = Path(__file__).resolve().parent.parent / ".env"
+_FORCE_OVERRIDE = {"ADMIN_USERNAME", "ADMIN_PASSWORD", "ENVIRONMENT", "EXTERNAL_API_KEYS"}
+if _env_file.exists():
+    for line in _env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, _, v = line.partition("=")
+            k, v = k.strip(), v.strip()
+            if k and (k not in os.environ or k in _FORCE_OVERRIDE):
+                os.environ[k] = v
 
 from backend.api.v1 import api_router
 from backend.api.v2 import api_router_v2
@@ -69,6 +81,9 @@ def create_app(lifespan_ctx=None) -> FastAPI:
             "/docs",
             "/redoc",
             "/openapi.json",
+            "/api/v2/auth/login",
+            "/api/v2/auth/register",
+            "/api/v2/auth/refresh",
         },
         public_path_prefixes={
             "/static",

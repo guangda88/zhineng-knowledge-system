@@ -109,6 +109,15 @@ class HybridRetriever:
         await self.bm25_retriever.initialize()
         if self.use_reranker:
             self.reranker = create_reranker()
+            if self.reranker:
+                try:
+                    import torch
+                    if not torch.cuda.is_available():
+                        logger.info("CPU环境检测到，禁用reranker以降低延迟")
+                        self.reranker = None
+                except ImportError:
+                    logger.info("无torch，禁用reranker")
+                    self.reranker = None
 
         if self.use_highlighter:
             self.highlighter = ResultHighlighter(max_length=200, window_size=50)
@@ -261,6 +270,42 @@ class HybridRetriever:
 
         return selected
 
+    def _ensure_category_diversity(
+        self, results: List[Dict[str, Any]], top_k: int
+    ) -> List[Dict[str, Any]]:
+        """确保最终结果中不会由单一 category 垄断。
+
+        策略：每个 category 最多占 top_k 的 60%，为其他域保留名额。
+        按原始排序依次填充，超出配额的放入 remaining 最后补位。
+        """
+        if not results or top_k <= 0:
+            return results
+
+        categories = set(r.get("category", "") for r in results)
+        categories.discard("")
+        n_cats = len(categories)
+        if n_cats <= 1:
+            return results
+
+        max_per_cat = max(top_k * 6 // 10, 2)  # 60% cap per category
+        cat_count: Dict[str, int] = {}
+        selected: List[Dict[str, Any]] = []
+        remaining: List[Dict[str, Any]] = []
+
+        for r in results:
+            cat = r.get("category", "")
+            if cat and cat_count.get(cat, 0) < max_per_cat:
+                selected.append(r)
+                cat_count[cat] = cat_count.get(cat, 0) + 1
+            else:
+                remaining.append(r)
+
+        fill = top_k - len(selected)
+        if fill > 0 and remaining:
+            selected.extend(remaining[:fill])
+
+        return selected
+
     async def search(
         self,
         query: str,
@@ -299,7 +344,6 @@ class HybridRetriever:
         expanded_terms = [query]
         if use_query_expansion:
             try:
-                import asyncio
                 expanded_terms = await asyncio.wait_for(expand_query(query), timeout=3.0)
             except asyncio.TimeoutError:
                 logger.debug("查询扩展超时(3s)，使用本地扩展")
@@ -422,6 +466,9 @@ class HybridRetriever:
 
         # 表来源多样性保障：确保每个 source_table 在 top_k 中有最低名额
         results = self._ensure_table_diversity(results, top_k)
+
+        # 域间多样性保障：防止单一域（如气功83%文档）垄断结果
+        results = self._ensure_category_diversity(results, top_k)
 
         # 为分块结果补充上下文窗口
         results = await self._enrich_chunk_context(results)
