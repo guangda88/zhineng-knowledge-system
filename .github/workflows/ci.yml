@@ -135,7 +135,10 @@ jobs:
       env:
         PGPASSWORD: zhineng_test
       run: |
-        psql -h localhost -U zhineng -d zhineng_kb_test -f init.sql || true
+        psql -h localhost -U zhineng -d zhineng_kb_test -f init.sql
+        for f in scripts/migrations/*.sql; do
+          psql -h localhost -U zhineng -d zhineng_kb_test -f "$f" || true
+        done
 
     - name: 运行 pytest 测试
       env:
