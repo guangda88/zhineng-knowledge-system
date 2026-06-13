@@ -1,67 +1,76 @@
 # 灵知 (LingZhi) Handoff
 
 ## 最后更新
-2026-06-12 10:15 UTC+8（会话：知识库大清理+CBETA去重+道家修复+气功垃圾清理+资产普查）
+2026-06-13 21:40 UTC+8（会话：CI修复 + SDT注册 + RAG交叉验证 + Skills补充 + Embedding选型）
 
 ## 状态
 active
 
-## 本次会话产出（2026-06-12）
+## 本次会话产出（2026-06-13）
 
-### 1. 知识库大清理 ✅
+### 1. GitHub推送欠债清理 ✅
 
-|| 操作 | 删除文档 | 删除chunks |
-||------|---------|-----------|
-|| CBETA异译本去重 | 26 | 4,662 |
-|| 道家历世真仙清理（卷54+均为错误内容） | 803 | 796,839 |
-|| 道家精确去重 | 0 | 109 |
-|| 气功垃圾文档清理（PDF碎片/ctext验证码） | 454 | 0 |
-|| 中医垃圾文档清理 | 7 | 0 |
-|| **合计** | **1,290** | **801,610** |
+| commit | 内容 |
+|--------|------|
+| `34045e46` | 知识库清理全量同步 + auth安全修复(PATH_TRAVERSE) + hybrid检索增强 |
+| `3238ba5a` | CI修复 — flake8 E402豁免 + pytest DB schema初始化 + secret兜底 |
+| `7e03e5bb` | embedding模型选型对比脚本 |
 
-### 2. 中医5文档分块+Embedding ✅
+审计三步全通过，pre-commit/pre-push hook全通过。
 
-5个中医大文档（原缺chunks）已完成分块+FTS+embedding，共2,414 chunks。
+### 2. CI修复 ✅
 
-### 3. 知识库清理后状态 ✅
+| 问题 | 修复 |
+|------|------|
+| flake8 E402 (main.py) | `.flake8` per-file-ignores 添加 `backend/main.py:E402` |
+| pytest DB schema缺失 | CI添加 `psql -f init.sql` 初始化步骤 |
+| TEST_DB_PASSWORD secret | 统一使用固定密码 `zhineng_test`，移除secret依赖 |
+| conftest RuntimeError | DATABASE_URL兜底默认值 |
 
-|| 指标 | 清理前 | 清理后 | 变化 |
-||------|--------|--------|------|
-|| 文档 | 79,948 | 73,366 | -6,582 |
-|| chunks | 1,749,547 | 331,798 | -1,417,749 |
-|| embedding覆盖 | 100% | 100% | — |
-|| FTS覆盖 | 100% | 100% | — |
-|| 缺chunks文档 | 453 | 0 | — |
+### 3. SDT程序化注册 ✅
 
-**清理原因**: 道家"历世真仙体道通鉴"856个文档中803个为错误导入（卷号54+，实际内容为非道家文献），占总chunks 46%。
+4条SDT已注册到LingBus sdt_registry：
 
-### 4. 资产普查 ✅
+| SDT ID | 名称 | 间隔 | 方向 |
+|--------|------|------|------|
+| SDT-lz-001 | 检索质量巡检 | 1440m | D1 |
+| SDT-lz-002 | 数据质量巡检 | 1440m | D1 |
+| SDT-lz-003 | Embedding覆盖率检查 | 10080m | D2 |
+| SDT-lz-004 | 知识库文档增长监控 | 1440m | D1 |
 
-|| 类别 | 规模 |
-||------|------|
-|| Python文件 | ~229 |
-|| API端点 | ~30 |
-|| 数据库表 | 17 |
-|| Docker服务 | 10 |
-|| 测试文件 | ~66 |
-|| 脚本 | ~120 |
-|| 文档 | ~115 .md |
-|| 前端 | 35文件 |
-|| Skill | 1个（lingzhi-retrieval-eval） |
-|| SDT | 4条（声明，待程序化注册） |
+### 4. RAG交叉验证 ✅
 
-### 5. LingBus资产普查回复 ✅
+`scripts/rag_cross_verify.py`：将关键词分类的健康声明用知识库检索交叉验证。
 
-已回复灵克thread `db154c67`，报告Skill/SDT/代码/数据资产。
+| 指标 | 值 |
+|------|-----|
+| 总声明 | 22 |
+| 有知识库支撑 | 20 (90.9%) |
+| 平均相似度 | 0.631 |
+| 中风险有支撑 | 18/19 |
+| 高风险有支撑 | 2/3 |
 
-### 6. κ检索质量评估（上次会话，保持）
+### 5. Skills补充 ✅
 
-|| 指标 | 值 |
-||------|-----|
-|| Top-1命中率 | 84% (42/50) |
-|| Top-3命中率 | 94% (47/50) |
-|| κ (Top-1) | 0.820 |
-|| κ (Top-3) | 0.932 |
+新增3个Skill（灵知总计4个，全族31个）：
+
+| Skill | 覆盖内容 |
+|-------|---------|
+| lingzhi-hybrid-retrieval | 混合检索调优流程（权重+融合+rerank） |
+| lingzhi-concept-map | 跨域概念映射构建（180概念） |
+| lingzhi-data-quality-audit | 知识库数据质量审计（垃圾检测+去重+清理） |
+
+### 6. Embedding模型选型框架 ✅
+
+`scripts/embedding_model_comparison.py`：三模型对比框架就绪。
+
+| 模型 | 维度 | 显存 | 状态 |
+|------|------|------|------|
+| bge-small-zh | 512 | 500MB | ✅ 当前使用 (κ=0.839) |
+| bge-large-zh | 1024 | 1.5GB | ❌ 未下载 |
+| bge-m3 | 1024 | 2.2GB | ❌ 未下载 |
+
+**阻塞项**：numpy 2.2.6不兼容 + CUDA不可用
 
 ---
 
@@ -80,31 +89,29 @@ active
 || 中医 | 487 | 46,356 |
 || **总计** | **73,366** | **331,798** |
 
-doc_chunks: 331,798（全有FTS+embedding，9域100%覆盖，0文档缺chunks）
-
 ## 自进化进度
 
 || 方向 | 状态 | 进度 |
 ||------|------|------|
-|| E1: 自主发现问题 | ✅ health_patrol + anomaly_detector + lifespan集成 + /health | 80% |
-|| E2: 溯源核实 | ✅ source_citation + citations + confidence | 65% |
+|| E1: 自主发现问题 | ✅ health_patrol + anomaly_detector | 80% |
+|| E2: 溯源核实 | ✅ source_citation + RAG交叉验证 | 75% |
 || E3: 多智能体协作 | ✅ 巡检→灵信报告 | 20% |
 || E4: 系统性预防 | ✅ pre-commit hook + 变更影响评估 | 40% |
-|| E5: 领域深度理解 | ✅ 概念映射(180概念) + 跨域检索 + kg导入(284/927) | 50% |
+|| E5: 领域深度理解 | ✅ 概念映射(180概念) + 跨域检索 | 50% |
 || E6: 边缘智能+硬件 | ⬜ 待实施 | 0% |
 
 ## 待办（按优先级）
 
-1. **⚠️中风险47条细分** — 等用户确认分级发布后执行
-2. **RAG验证升级** — 关键词→知识库RAG交叉验证
-3. **Embedding模型选型** — 对比bge-small-zh vs bge-large-zh vs bge-m3
-4. **灵研κ一致性测试** — 等灵研发起
-5. **SDT程序化注册** — 4条SDT待注册到LingBus sdt_registry
-6. **灵康v2第一层** — 263K古籍embedding（等灵通提供数据源）
+1. **⚠️ CI验证** — 确认推送后CI通过（flake8 + pytest）
+2. **numpy降级** — `pip install 'numpy<2'` 解除embedding选型阻塞
+3. **Embedding选型执行** — numpy修复后下载bge-large-zh跑对比
+4. **中风险47条细分** — 等用户确认分级
+5. **灵康v2第一层** — 263K古籍embedding（等灵通提供数据源）
 
 ## 阻塞项
 
-- numpy 版本不兼容（宿主机 Python）
+- numpy 版本不兼容（宿主机 Python）— embedding选型阻塞
+- CI pytest可能因DB schema差异仍失败（需观察下一次CI运行）
 
 ---
 
