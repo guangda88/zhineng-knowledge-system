@@ -150,6 +150,7 @@ jobs:
           --tb=short \
           --strict-markers \
           -ra \
+          --continue-on-collection-errors \
           --cov=backend \
           --cov-report=xml \
           --cov-report=html \
