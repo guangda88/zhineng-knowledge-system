@@ -96,7 +96,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: zhineng
-          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_PASSWORD: zhineng_test
           POSTGRES_DB: zhineng_kb_test
         options: >-
           --health-cmd pg_isready
@@ -131,9 +131,15 @@ jobs:
         pip install -r backend/requirements.txt
         pip install pytest pytest-asyncio pytest-cov pytest-mock
 
+    - name: 初始化数据库 schema
+      env:
+        PGPASSWORD: zhineng_test
+      run: |
+        psql -h localhost -U zhineng -d zhineng_kb_test -f init.sql || true
+
     - name: 运行 pytest 测试
       env:
-        DATABASE_URL: postgresql://zhineng:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/zhineng_kb_test
+        DATABASE_URL: postgresql://zhineng:zhineng_test@localhost:5432/zhineng_kb_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         pytest tests/ \

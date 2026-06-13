@@ -1,0 +1,1094 @@
+{
+  "summary": {
+    "verified_at": "2026-06-13T04:56:28.180766+00:00",
+    "verifier": "lingzhi",
+    "method": "rag_cross_validation",
+    "threshold": 0.6,
+    "totals": {
+      "total_claims": 22,
+      "supported": 20,
+      "unsupported": 2,
+      "support_rate": 0.909,
+      "avg_similarity": 0.6315
+    },
+    "by_risk_level": {
+      "medium": {
+        "total": 19,
+        "supported": 18
+      },
+      "high": {
+        "total": 3,
+        "supported": 2
+      }
+    },
+    "by_category": {
+      "chronic_factual": {
+        "total": 18,
+        "supported": 17
+      },
+      "null": {
+        "total": 3,
+        "supported": 2
+      },
+      "alternative_medication": {
+        "total": 1,
+        "supported": 1
+      }
+    },
+    "elapsed_seconds": 170.0
+  },
+  "claims": [
+    {
+      "episode": "EP053",
+      "line_number": 3,
+      "text": "广大：你说的不以为然我完全理解。一开始我也觉得，我们做的是生命教育，为什么要从市场讲起？但我后来想明白了一件事。康养产业的规模，反映的不是商业机会，而是人的需求。十万亿背后，是几亿人的健康焦虑、睡眠困扰、精神内耗。这些需求是真实的、迫切的、每天都在发生的。不看市场，我们就不知道有多少人在等一个答案。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.627,
+      "rag_top_source": "气功科学概论辅导材料 - 00891",
+      "_episode": "EP053",
+      "_line": 3,
+      "_rag": {
+        "top_similarity": 0.6585,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "论智能气功的健康发展（续·存目） - 00785",
+            "similarity": 0.6585,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "景岳早年推崇丹溪之学。朱丹溪处于《局方",
+            "similarity": 0.6015,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "庞老师的讲话总集最终修改 - 01505",
+            "similarity": 0.6584,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP053",
+      "line_number": 7,
+      "text": "广大：这个例子很典型，而且这样的例子不是个例。我在海涵春育做志愿者期间，见过太多类似的情况。二十六岁的程序员连续两年每天只能睡四个小时，头发一把一把地掉。三十五岁的企业主体检报告全正常，但整个人像被掏空了一样，干什么都提不起劲。四十岁的全职妈妈产后三年没睡过一个整觉，焦虑到要靠药物维持。这些人有个共同特点——去医院检查，指标都正常，可就是不对劲。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.629,
+      "rag_top_source": "智能气功-混元整体辅导材料 - 02773",
+      "_episode": "EP053",
+      "_line": 7,
+      "_rag": {
+        "top_similarity": 0.6783,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "气功科学概论辅导材料 - 01770",
+            "similarity": 0.6783,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "张景岳（1563～1640）",
+            "similarity": 0.6267,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "气功科学概论辅导材料 - 01773",
+            "similarity": 0.6723,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP053",
+      "line_number": 35,
+      "text": "广大：对。第三个驱动力是健康意识的全民普及。这个变化是底层价值观的转变。十年前你会关注食品配料表吗？十年前你会因为焦虑而主动学冥想吗？",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.645,
+      "rag_top_source": "智能气功-精义辅导 - 01612",
+      "_episode": "EP053",
+      "_line": 35,
+      "_rag": {
+        "top_similarity": 0.6536,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "智能气功-精义辅导 - 01612",
+            "similarity": 0.6536,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "一切如来名号陀罗尼经一卷",
+            "similarity": 0.6462,
+            "source_table": "guoxue_content",
+            "category": "佛家"
+          },
+          {
+            "title": "简明智能气功学（大字体） - 00553",
+            "similarity": 0.6508,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP053",
+      "line_number": 49,
+      "text": "慧心：说到这里，我忽然有一个感触。今天我们聊了十万亿市场的三个驱动力——低龄化、老龄化、全民普及。但回过头来看，这三个趋势其实指向同一件事。人越来越意识到，健康不是一个局部问题，而是一个整体问题。年轻人不是某个零件坏了，老年人也不是只需要修修补补。全民的健康焦虑背后，是一种对完整生命状态的渴望。十万亿不是冰冷的数字，是无数人在呼唤一种真正有效的、整体的康养方式。这个认知，也许才是今天最值得记住的东西。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.611,
+      "rag_top_source": "智能气功-精义辅导 - 01612",
+      "_episode": "EP053",
+      "_line": 49,
+      "_rag": {
+        "top_similarity": 0.0,
+        "total_results": 0,
+        "supported": false,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP054",
+      "line_number": 27,
+      "text": "广大：这个比喻太形象了。我们平时出去旅游不就是这样吗？住五星级酒店的时候觉得身心舒畅，一回到家该累还是累，该焦虑还是焦虑。而且我还发现，有些康养机构的饮食和作息安排甚至是互相矛盾的——白天做理疗放松，晚上却安排了很晚的活动，饮食上也谈不上健康。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.631,
+      "rag_top_source": "智能气功科学精义函授辅导材料 - 00642",
+      "_episode": "EP054",
+      "_line": 27,
+      "_rag": {
+        "top_similarity": 0.6837,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "心理（或精神）因素",
+            "similarity": 0.6837,
+            "source_table": "documents",
+            "category": "心理学"
+          },
+          {
+            "title": "景岳早年推崇丹溪之学。朱丹溪处于《局方",
+            "similarity": 0.6189,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "求医不如求己 - 00310",
+            "similarity": 0.664,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP054",
+      "line_number": 39,
+      "text": "广大：还有一个让我特别感动的故事。海涵春育有一个著名的\"八仙\"——八位患有癌症、白血病、肿瘤的客人自发组成了互助小组，每天互相鼓励、一起练习，最后八个人全部康复了。当人不再独自面对困境，身心的自愈力就被真正激活了。其中有一位大姐，来的时候已经不抱什么希望了，是其他七个人硬拉着她一起练的。她后来跟我说，她之所以能坚持下来，不是因为功法多神奇，而是因为身边有人在等她，有人在乎她。这种被需要的感觉，比任何药物都管用。",
+      "claim_type": "testimonial",
+      "risk_level": "high",
+      "risk_reason": "个人证言涉及重大疾病（癌症/白血病/肿瘤等）",
+      "medium_subcategory": null,
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [
+          "癌症",
+          "癌",
+          "肿瘤",
+          "白血病"
+        ],
+        "chronic_condition": [],
+        "health_verbs": [
+          "康复",
+          "自愈"
+        ],
+        "alternative_treatment": false
+      },
+      "_episode": "EP054",
+      "_line": 39,
+      "_rag": {
+        "top_similarity": 0.0,
+        "total_results": 0,
+        "supported": false,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP055",
+      "line_number": 35,
+      "text": "广大：比免疫力更深层。免疫力只是身体层面的，我说的是整个生命的自调节能力——身体的、心理的、情绪的、精神的，全部协调起来。这是人与生俱来的能力，只是被我们的生活方式压住了。海涵春育的实践证明，当一个人在一个支持性的环境里慢慢找回这种能力，很多所谓的不治之症都会出现转机。我们有八个被称为\"八仙\"的朋友，他们中有癌症、白血病、肿瘤患者，组成了互助小组，靠的就是这种生命自调节的力量，最终全部恢复了健康。",
+      "claim_type": "testimonial",
+      "risk_level": "high",
+      "risk_reason": "个人证言涉及重大疾病（癌症/白血病/肿瘤等）",
+      "medium_subcategory": null,
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [
+          "癌症",
+          "癌",
+          "肿瘤",
+          "白血病"
+        ],
+        "chronic_condition": [],
+        "health_verbs": [
+          "恢复",
+          "调节"
+        ],
+        "alternative_treatment": false
+      },
+      "_episode": "EP055",
+      "_line": 35,
+      "_rag": {
+        "top_similarity": 0.7296,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "混元整体理论函授辅导材料 - 02592",
+            "similarity": 0.7296,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "三命通会各卷细目",
+            "similarity": 0.6729,
+            "source_table": "guoxue_content",
+            "category": "武术"
+          },
+          {
+            "title": "意元体的形成和变化 - 00219",
+            "similarity": 0.7196,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP056",
+      "line_number": 15,
+      "text": "广大：你就是活生生的例子。很多人跟我讲类似的经历。戴了智能手表之后，每天最紧张的时刻就是看数据的那一刻。步数不够焦虑，心率偏高焦虑，睡眠质量差焦虑。本来是为了健康，结果反而被数据绑架了。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.687,
+      "rag_top_source": "论智能气功的健康发展（续·存目） - 00640",
+      "_episode": "EP056",
+      "_line": 15,
+      "_rag": {
+        "top_similarity": 0.6658,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "智能气功科学精义函授辅导材料 - 01346",
+            "similarity": 0.6658,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "小引",
+            "similarity": 0.6062,
+            "source_table": "guoxue_content",
+            "category": "古籍"
+          },
+          {
+            "title": "加强智能气功社团党的建设 > 的人想自控，控制不了，就使得自己心理不平衡，出现了各种痛苦。 → 的人想自控，控制不了，就使得自己心理不平衡，出现了各种痛苦。",
+            "similarity": 0.687,
+            "source_table": "textbook_blocks_v2",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP056",
+      "line_number": 47,
+      "text": "广大：AI是辅助，人是主体。AI帮你省时间和精力，让你有更多空间去关注自己真正需要关注的东西——你的呼吸、你的情绪、你跟身体的关系、你跟自然的关系。在海涵春育，AI帮你省下来的时间，你可以去院子里走走，跟老朋友下盘棋，练练功，甚至就是坐着发发呆——这些看似'没用'的事，恰恰是健康最需要的。而不是让你盯着屏幕上冷冰冰的数字焦虑一整天。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.639,
+      "rag_top_source": "智能气功科学基础——混元整体理论 - 00845",
+      "_episode": "EP056",
+      "_line": 47,
+      "_rag": {
+        "top_similarity": 0.6576,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "师资班讲课 - 00086",
+            "similarity": 0.6576,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "千金翼方",
+            "similarity": 0.5579,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "简明智能气功学（大字体） - 00386",
+            "similarity": 0.6558,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP056",
+      "line_number": 49,
+      "text": "慧心：所以说到底，你对AI的态度很平衡，既不排斥也不迷信，这点很难得。今天聊到最后，我忽然想到一件事——我们花了这么多时间讨论AI能不能帮人健康，但也许核心问题是：人有没有先帮自己健康？当我们把注意力从外部技术收回到自身，从数据焦虑回到呼吸觉察，很多答案其实已经在了。AI是工具，自觉是根本，这个顺序不能反。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [
+          "平衡"
+        ],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.631,
+      "rag_top_source": "（原本）智能气功科学概论辅导材料 - 01573",
+      "_episode": "EP056",
+      "_line": 49,
+      "_rag": {
+        "top_similarity": 0.6699,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "庞老师的讲话总集最终修改 - 04929",
+            "similarity": 0.6699,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "（明）華亭陳繼儒著",
+            "similarity": 0.6037,
+            "source_table": "guoxue_content",
+            "category": "儒家"
+          },
+          {
+            "title": "关于未来文化 - 00075",
+            "similarity": 0.6676,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP058",
+      "line_number": 15,
+      "text": "慧心：确实如此。现代生活太乱、太快、太碎片化，让我们越来越听不到身体的声音。比如，熬夜、压力、焦虑、饮食不规律，这些都是阻碍我们感知身体的因素。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.684,
+      "rag_top_source": "意元体的形成和变化 - 00219",
+      "_episode": "EP058",
+      "_line": 15,
+      "_rag": {
+        "top_similarity": 0.6905,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "精义 - 00153",
+            "similarity": 0.6905,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "景岳早年推崇丹溪之学。朱丹溪处于《局方",
+            "similarity": 0.6583,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "《简明智能气功学》辅导材料 - 00688",
+            "similarity": 0.6877,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP060",
+      "line_number": 27,
+      "text": "广大：我觉得这个观点非常重要。因为很多人都把健康当成一个未来目标，等我退休再养生；等我有空再调理；等我生病了再重视。其实，健康应该是每一个当下的享受，而不是未来的焦虑。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [
+          "调理"
+        ],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.711,
+      "rag_top_source": "关于未来文化 - 00065",
+      "_episode": "EP060",
+      "_line": 27,
+      "_rag": {
+        "top_similarity": 0.7276,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "加强智能气功社团党的建设 - 00786",
+            "similarity": 0.7276,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "景岳早年推崇丹溪之学。朱丹溪处于《局方",
+            "similarity": 0.6423,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "加强智能气功社团党的建设 > 健康长寿。我们说的健康，不只是指没有病，还包括不同层次的要求 → 健康长寿。我们说的健康，不只是指没有病，还包括不同层次的要求",
+            "similarity": 0.7276,
+            "source_table": "textbook_blocks_v2",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP061",
+      "line_number": 21,
+      "text": "慧心：第一，身心整合。身体不舒服，调情绪；情绪乱了，调身体。不头痛医头，不脚痛医脚。第二，生活整合。饮食、作息、运动、情绪、环境，统一协调。不熬夜、不暴饮暴食、不过度劳累、不长期压抑。第三，人与自然整合。多接触自然，多晒太阳，多呼吸新鲜空气。人来自自然，回归自然，才会安定。第四，人与社群整合。和真诚的人相处，互相陪伴、互相鼓励、互相滋养。孤独最伤健康，温暖最养生命。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "头痛"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.754,
+      "rag_top_source": "气功学总论 - 00052",
+      "_episode": "EP061",
+      "_line": 21,
+      "_rag": {
+        "top_similarity": 0.7576,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "智能气功-混元整体辅导材料 - 01090",
+            "similarity": 0.7576,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "张景岳（1563～1640）",
+            "similarity": 0.7571,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": " > 就养生、修身方面来说 就养生言，有吹呴呼吸法，吐故纳新法，熊经、鸟申法，服六气法，嗽正阳法， 饮沆靡法，导引、按摩法（如庄子说的“静然可以补病、眢緘可以休老”）等。 就修身言，有闲居静居以思仁之危微法，有恶败出妻的自强法，有完善性格的治 气养心之术，等等。 → 就养生、修身方面来说 就养生言，有吹呴呼吸法，吐故纳新法，熊经、鸟申法，服六气法，嗽正阳法， 饮沆靡法，导引、按摩法（如庄子说的“静然可以补病、眢緘可以休老”）等。 就修身言，有闲居静居以思仁之危微法，有恶败出妻的自强法，有完善性格的治 气养心之术，等等。",
+            "similarity": 0.7989,
+            "source_table": "textbook_blocks_v2",
+            "category": "道家"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP064",
+      "line_number": 27,
+      "text": "慧心：对于现代人来说，海涵春育康养民宿不仅仅是一个提供住宿的地方，更是一个寻找内心平静和身体和谐的港湾。在这个快节奏的社会里，我们很容易迷失自己，陷入各种焦虑和压力之中。而海涵春育康养民宿通过提供全面的健康管理服务和良好的生活环境，帮助我们找回内心的宁静和身体的和谐。在这里，我们可以放下所有的烦恼和负担，尽情地享受生活的美好和宁静。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.617,
+      "rag_top_source": "打造“心理健康”的港湾",
+      "_episode": "EP064",
+      "_line": 27,
+      "_rag": {
+        "top_similarity": 0.6309,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "打造“心理健康”的港湾",
+            "similarity": 0.6309,
+            "source_table": "documents",
+            "category": "心理学"
+          },
+          {
+            "title": "千金翼方",
+            "similarity": 0.5605,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "从庄子“心斋”说心理养生",
+            "similarity": 0.6236,
+            "source_table": "documents",
+            "category": "心理学"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP067",
+      "line_number": 11,
+      "text": "广大：这个例子很好。数据告诉她昨晚睡了六个小时，但自觉告诉她今天的状态其实不错。有时候数据说睡了八个小时，但她反而觉得头昏脑涨。如果只看数据，她可能会焦虑——明明睡了八小时为什么还不舒服？但有了自觉，她知道睡眠质量不是用时长衡量的，而是用醒来后的整体状态来感受的。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.662,
+      "rag_top_source": "混元整体理论辅导材料 - 02957",
+      "_episode": "EP067",
+      "_line": 11,
+      "_rag": {
+        "top_similarity": 0.7409,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "气功科学概论辅导材料 - 01770",
+            "similarity": 0.7409,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "小引",
+            "similarity": 0.7131,
+            "source_table": "guoxue_content",
+            "category": "古籍"
+          },
+          {
+            "title": "气功科学概论辅导材料 > 平的时候，做不到。因为睡觉的时候，脑子里基本处于一个整体性比 → 平的时候，做不到。因为睡觉的时候，脑子里基本处于一个整体性比",
+            "similarity": 0.7409,
+            "source_table": "textbook_blocks_v2",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP068",
+      "line_number": 35,
+      "text": "广大：对。当你拥有主体性，健康就不再是焦虑，而是能力。不再是负担，而是享受。不再是依赖，而是自由。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.672,
+      "rag_top_source": "相信科学 尊重科学 拥有健康",
+      "_episode": "EP068",
+      "_line": 35,
+      "_rag": {
+        "top_similarity": 0.7019,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "相信科学 尊重科学 拥有健康",
+            "similarity": 0.7019,
+            "source_table": "documents",
+            "category": "科学"
+          },
+          {
+            "title": "（明）華亭陳繼儒著",
+            "similarity": 0.6282,
+            "source_table": "guoxue_content",
+            "category": "儒家"
+          },
+          {
+            "title": "论智能气功之路 - 01621",
+            "similarity": 0.6756,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP069",
+      "line_number": 3,
+      "text": "广大：太有体会了。很多人养生坚持不下去，不是方法不对，是太孤独。一个人练，容易懈怠；一个人调，容易放弃；一个人扛，容易焦虑。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.727,
+      "rag_top_source": "（原本）智能气功科学概论辅导材料 - 01535",
+      "_episode": "EP069",
+      "_line": 3,
+      "_rag": {
+        "top_similarity": 0.7483,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "混元整体理论函授辅导材料 - 03010",
+            "similarity": 0.7483,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "千金翼方",
+            "similarity": 0.6986,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "（原本）智能气功科学概论辅导材料 - 01535",
+            "similarity": 0.7477,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP069",
+      "line_number": 27,
+      "text": "广大：还有一个更深层的作用——被需要。海涵春育有一个著名的\"八仙\"，八位患有癌症、白血病、肿瘤的客人自发组成了互助小组。其中有一位大姐，来的时候已经不抱什么希望了，是其他七个人硬拉着她一起练的。",
+      "claim_type": "testimonial",
+      "risk_level": "high",
+      "risk_reason": "个人证言涉及重大疾病（癌症/白血病/肿瘤等）",
+      "medium_subcategory": null,
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [
+          "癌症",
+          "癌",
+          "肿瘤",
+          "白血病"
+        ],
+        "chronic_condition": [],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "_episode": "EP069",
+      "_line": 27,
+      "_rag": {
+        "top_similarity": 0.6628,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "简明智能气功学 - 01339",
+            "similarity": 0.6628,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "由《亚洲周刊",
+            "similarity": 0.563,
+            "source_table": "guoxue_content",
+            "category": "古籍"
+          },
+          {
+            "title": "智能气功-精义辅导 - 01814",
+            "similarity": 0.6474,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP070",
+      "line_number": 23,
+      "text": "广大：对。失眠好了，胃痛减轻了，关节也灵活了。不是功法多神奇，是她找到了活着的意义。而活着的意义，就是爱——爱别人、被别人爱、发现自己的价值。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "失眠"
+        ],
+        "health_verbs": [
+          "减轻"
+        ],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.651,
+      "rag_top_source": "智能气功科学基础——混元整体理论 - 00835",
+      "_episode": "EP070",
+      "_line": 23,
+      "_rag": {
+        "top_similarity": 0.658,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "庞老师的讲话总集最终修改 - 04842",
+            "similarity": 0.658,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "小引",
+            "similarity": 0.6944,
+            "source_table": "guoxue_content",
+            "category": "古籍"
+          },
+          {
+            "title": "简明智能气功学（大字体） > ：“精 足不思欲，气足不思食，神足不思睡”，就是说，练功到一 → ：“精 足不思欲，气足不思食，神足不思睡”，就是说，练功到一",
+            "similarity": 0.6616,
+            "source_table": "textbook_blocks_v2",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP071",
+      "line_number": 9,
+      "text": "慧心：这个太真实了。我前阵子忙一个项目，连续加班了一周，直到有一天突然头晕站不稳，才意识到自己已经严重透支了。但回想起来，身体其实一直在给我发信号，肩膀酸、眼睛干、脾气急，这些都是警告，但我完全忽略了。你说的\"被遮住\"，是不是就是这个意思？",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "头晕"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.65,
+      "rag_top_source": "庞老师的讲话总集最终修改 - 00698",
+      "_episode": "EP071",
+      "_line": 9,
+      "_rag": {
+        "top_similarity": 0.6572,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "庞老师的讲话总集最终修改 - 03541",
+            "similarity": 0.6572,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "一切如来名号陀罗尼经一卷",
+            "similarity": 0.6462,
+            "source_table": "guoxue_content",
+            "category": "佛家"
+          },
+          {
+            "title": "庞老师的讲话总集最终修改 > 下子就完，说明这不是透视。真是透视，看兜里的东西比看身体里面 → 下子就完，说明这不是透视。真是透视，看兜里的东西比看身体里面",
+            "similarity": 0.6572,
+            "source_table": "textbook_blocks_v2",
+            "category": "哲学"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP071",
+      "line_number": 19,
+      "text": "广大：这个体验非常重要。呼吸是自觉智能的入口。当你的呼吸变深变慢，你的副交感神经就被激活了，身体的自我修复机制就开始运转。不需要任何药物和仪器，就是呼吸。气功的核心原理就是这个——通过调息来调动身体内在的自愈力。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "暗示可替代药物治疗",
+      "medium_subcategory": "alternative_medication",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [],
+        "health_verbs": [
+          "自愈",
+          "修复"
+        ],
+        "alternative_treatment": true
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.696,
+      "rag_top_source": "智能气功九大特点 - 00065",
+      "_episode": "EP071",
+      "_line": 19,
+      "_rag": {
+        "top_similarity": 0.781,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "简明智能气功学（大字体） - 00276",
+            "similarity": 0.781,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "张景岳（1563～1640）",
+            "similarity": 0.6743,
+            "source_table": "guoxue_content",
+            "category": "中医"
+          },
+          {
+            "title": "简明智能气功学 - 00265",
+            "similarity": 0.781,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    },
+    {
+      "episode": "EP071",
+      "line_number": 23,
+      "text": "广大：而且自觉智能不只是身体的觉知，还包括情绪的觉知。很多人不知道自己为什么焦虑，为什么易怒，为什么低落。其实情绪也是有信号的，它会在身体上先表现出来——胸闷、胃紧、肩膀僵硬。如果你能在身体信号出现的时候就觉察到，情绪就不会积累到爆发的程度。",
+      "claim_type": "factual",
+      "risk_level": "medium",
+      "risk_reason": "事实声明涉及慢性病，无来源引用",
+      "medium_subcategory": "chronic_factual",
+      "has_source": false,
+      "keywords_found": {
+        "critical_disease": [],
+        "chronic_condition": [
+          "焦虑",
+          "胸闷"
+        ],
+        "health_verbs": [],
+        "alternative_treatment": false
+      },
+      "rag_verified": true,
+      "rag_top_similarity": 0.724,
+      "rag_top_source": "加强智能气功社团党的建设 - 01035",
+      "_episode": "EP071",
+      "_line": 23,
+      "_rag": {
+        "top_similarity": 0.7393,
+        "total_results": 5,
+        "sources": [
+          {
+            "title": "精义 - 00492",
+            "similarity": 0.7393,
+            "source_table": "documents",
+            "category": "气功"
+          },
+          {
+            "title": "三命通会各卷细目",
+            "similarity": 0.6504,
+            "source_table": "guoxue_content",
+            "category": "武术"
+          },
+          {
+            "title": "气功科学概论辅导材料 - 00327",
+            "similarity": 0.7359,
+            "source_table": "documents",
+            "category": "气功"
+          }
+        ],
+        "supported": true,
+        "threshold": 0.6
+      }
+    }
+  ]
+}
