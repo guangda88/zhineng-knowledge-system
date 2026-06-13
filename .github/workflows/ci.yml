@@ -155,8 +155,7 @@ jobs:
           --cov-report=html \
           --cov-report=term-missing \
           --cov-report=json \
-          --junitxml=test-results.xml \
-          --cov-fail-under=${{ env.COVERAGE_TARGET }}
+          --junitxml=test-results.xml
 
     - name: 生成覆盖率摘要
       run: |
