@@ -137,3 +137,4 @@ scripts/emergency_memory_recovery.sh.disabled
 
 # 垃圾文件（误创建的中文文件名）
 灵知介绍.md
+*.jsonl
